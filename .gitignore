@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+vendor/
+frontend/node_modules/
+backend/vendor/
+
+# Build & Cache
+.next/
+frontend/.next/
+frontend/out/
+frontend/build/
+.phpunit.cache/
+.phpunit.result.cache
+
+# Environment & Credentials
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+auth.json
+*.key
+
+# Logs & Temporary
+*.log
+tmp/
+storage/*.key
+storage/pail/
+public/storage
+
+# OS & IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.zed/
+.codex/
+.runtime/
