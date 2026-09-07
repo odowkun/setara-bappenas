@@ -46,6 +46,7 @@ interface GeotaggingMapPickerProps {
   customKmzGeoJson?: any;
   kmzColor?: string;
   delineationGeoJson?: any;
+  customBoundaryGeoJson?: any;
   showBoundary?: boolean;
   boundaryColor?: string;
   boundaryDashStyle?: "dashed" | "solid" | "dotted";
@@ -70,6 +71,7 @@ export default function GeotaggingMapPicker({
   customKmzGeoJson,
   kmzColor = "#7c3aed",
   delineationGeoJson,
+  customBoundaryGeoJson,
   showBoundary = true,
   boundaryColor = "#ef4444",
   boundaryDashStyle = "dashed",
@@ -472,7 +474,9 @@ export default function GeotaggingMapPicker({
           ? "2, 5"
           : undefined;
 
-      const layer = L.geoJSON(halutOfficialBpsBoundary as any, {
+      const boundaryData = customBoundaryGeoJson || (halutOfficialBpsBoundary as any);
+
+      const layer = L.geoJSON(boundaryData, {
         style: {
           color: boundaryColor || "#ef4444",
           weight: 3,
@@ -485,7 +489,7 @@ export default function GeotaggingMapPicker({
 
       officialBoundaryLayerRef.current = layer;
     }
-  }, [showBoundary, boundaryColor, boundaryDashStyle]);
+  }, [showBoundary, boundaryColor, boundaryDashStyle, customBoundaryGeoJson]);
 
   // Dynamically render Sub-District Boundaries (Kecamatan & Desa)
   useEffect(() => {

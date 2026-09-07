@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import {
   Shield,
@@ -18,8 +18,15 @@ import {
   CheckCircle2,
   FileCheck,
   SlidersHorizontal,
+  RotateCcw,
+  AlertTriangle,
+  MapPin,
+  Check,
 } from "lucide-react";
-import { showSuccessSwal, showErrorSwal, showDeleteConfirm, toast } from "@/lib/swal";
+import { showSuccessSwal, showErrorSwal, showDeleteConfirm, showConfirm, toast } from "@/lib/swal";
+import KmzUploader from "@/components/gis/KmzUploader";
+import { ParsedKmzResult } from "@/lib/gis/kmzParser";
+import { geoSettingService, GeoSettingData } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
@@ -41,7 +48,14 @@ export default function RtrwBatasSettingPage() {
   const [activeTab, setActiveTab] = useState<"master" | "styling">("master");
   const [saving, setSaving] = useState(false);
 
-  // Form State for Uploading New Spatial Boundary
+  // GeoSettings & Custom Boundary state from Database
+  const [geoSetting, setGeoSetting] = useState<GeoSettingData | null>(null);
+  const [loadingSetting, setLoadingSetting] = useState(true);
+  const [boundaryUploading, setBoundaryUploading] = useState(false);
+  const [stagedKmzResult, setStagedKmzResult] = useState<ParsedKmzResult | null>(null);
+  const [stagedKmzColor, setStagedKmzColor] = useState<string>("#ef4444");
+
+  // Form State for Uploading New Secondary Spatial Boundary (Kecamatan/RTRW)
   const [newLayerType, setNewLayerType] = useState<"kabupaten" | "kecamatan" | "rtrw">("kecamatan");
   const [newLayerName, setNewLayerName] = useState("");
   const [newLegalBasis, setNewLegalBasis] = useState("");
@@ -88,6 +102,123 @@ export default function RtrwBatasSettingPage() {
       uploadedAt: "30 Jul 2026",
     },
   ]);
+
+  // Load geo-settings on mount
+  const loadGeoSettings = async () => {
+    try {
+      setLoadingSetting(true);
+      const data = await geoSettingService.getSettings();
+      setGeoSetting(data);
+      if (data.custom_boundary_color) {
+        setBoundaryColor(data.custom_boundary_color);
+      }
+    } catch (err) {
+      console.error("Gagal memuat geo settings:", err);
+    } finally {
+      setLoadingSetting(false);
+    }
+  };
+
+  useEffect(() => {
+    loadGeoSettings();
+  }, []);
+
+  // Compute active boundary GeoJSON: Priority 1. Staged KMZ, 2. Database custom GeoJSON, 3. null (fallback to BPS halut-boundary.json)
+  const activeBoundaryGeoJson = useMemo(() => {
+    if (stagedKmzResult?.geojson) {
+      return stagedKmzResult.geojson;
+    }
+    if (geoSetting?.custom_boundary_geojson) {
+      try {
+        return typeof geoSetting.custom_boundary_geojson === "string"
+          ? JSON.parse(geoSetting.custom_boundary_geojson)
+          : geoSetting.custom_boundary_geojson;
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  }, [stagedKmzResult, geoSetting]);
+
+  // Handle file parsed from KmzUploader
+  const handleKmzParsed = (result: ParsedKmzResult, color: string) => {
+    setStagedKmzResult(result);
+    setStagedKmzColor(color);
+    setBoundaryColor(color);
+    toast.success(`File "${result.fileName}" berhasil diurai (${result.summary.totalFeatures} fitur). Siap disinkronkan ke database.`);
+  };
+
+  const handleClearStagedKmz = () => {
+    setStagedKmzResult(null);
+  };
+
+  // Save uploaded KMZ boundary to database via API
+  const handleSaveCustomBoundary = async () => {
+    if (!stagedKmzResult) {
+      showErrorSwal("File Belum Dipilih", "Silakan unggah dan pilih file KMZ/KML terlebih dahulu.");
+      return;
+    }
+
+    try {
+      setBoundaryUploading(true);
+      const res = await geoSettingService.uploadCustomBoundary({
+        file_name: stagedKmzResult.fileName,
+        geojson: stagedKmzResult.geojson,
+        features_count: stagedKmzResult.summary.totalFeatures,
+        area_ha: stagedKmzResult.summary.totalAreaHa,
+        length_km: stagedKmzResult.summary.totalLengthKm,
+        color: stagedKmzColor,
+      });
+
+      if (res.success && res.data) {
+        setGeoSetting(res.data);
+        setStagedKmzResult(null);
+        toast.success("Batas wilayah Halmahera Utara berhasil disinkronkan ke database!");
+        showSuccessSwal(
+          "Sinkronisasi Berhasil!",
+          `Garis batas wilayah Kabupaten Halmahera Utara kini resmi menggunakan file "${res.data.custom_boundary_name}". Seluruh peta WebGIS akan menggunakan batas baru ini.`
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Gagal menyimpan batas wilayah.");
+      showErrorSwal("Gagal Menyimpan", err.message || "Terjadi kesalahan sistem saat menyimpan ke database.");
+    } finally {
+      setBoundaryUploading(false);
+    }
+  };
+
+  // Reset custom boundary back to default official BPS boundary
+  const handleResetToDefault = async () => {
+    const confirm = await showConfirm({
+      title: "Reset Batas Wilayah ke Default BPS?",
+      text: "Garis batas kustom akan dihapus dari server dan sistem akan otomatis kembali menggunakan garis batas resmi bawaan BPS (Permendagri No. 137 Tahun 2017).",
+      confirmButtonText: "Ya, Kembalikan ke BPS",
+      cancelButtonText: "Batal",
+      icon: "warning",
+    });
+
+    if (!confirm.isConfirmed) return;
+
+    try {
+      setBoundaryUploading(true);
+      const res = await geoSettingService.resetCustomBoundary();
+      if (res.success && res.data) {
+        setGeoSetting(res.data);
+        setStagedKmzResult(null);
+        setBoundaryColor("#ef4444");
+        toast.success("Batas wilayah berhasil di-reset ke standar resmi BPS.");
+        showSuccessSwal(
+          "Berhasil Di-Reset!",
+          "Garis batas wilayah Halmahera Utara telah dikembalikan ke standar resmi BPS (Permendagri No. 137)."
+        );
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Gagal mereset batas wilayah.");
+      showErrorSwal("Gagal Reset", err.message || "Terjadi kesalahan saat mereset ke database.");
+    } finally {
+      setBoundaryUploading(false);
+    }
+  };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -158,6 +289,10 @@ export default function RtrwBatasSettingPage() {
     setSaving(true);
 
     try {
+      await geoSettingService.updateSettings({
+        default_layer_color: boundaryColor,
+      });
+
       toast.success("Konfigurasi Batas Administrasi & RTRW berhasil disimpan!");
       showSuccessSwal(
         "Pembaruan Berhasil!",
@@ -184,7 +319,7 @@ export default function RtrwBatasSettingPage() {
               Batas Administrasi & Overlay RTRW
             </h1>
             <p className="text-xs font-medium text-slate-500 mt-0.5">
-              Kelola master data spasial (GeoJSON/KMZ), batas kabupaten, kecamatan, desa & zona peruntukan RTRW Halut.
+              Kelola batas wilayah kabupaten (GeoJSON/KMZ kustom vs BPS resmi), sub-wilayah kecamatan, desa & zona RTRW Halut.
             </p>
           </div>
         </div>
@@ -223,171 +358,325 @@ export default function RtrwBatasSettingPage() {
         <div className="space-y-1 text-xs">
           <h4 className="font-extrabold text-rose-900">Pusat Manajemen Spasial Resmi Bappeda</h4>
           <p className="text-rose-900/80 leading-relaxed font-medium">
-            Unggah file batas resmi (GeoJSON/KMZ) dari BIG/BPN atau Perda RTRW terbaru. Seluruh layer yang diaktifkan di sini akan langsung direfleksikan pada peta WebGIS Bappeda.
+            Unggah file batas kustom (.KMZ / .KML) dari BIG/BPN atau Perda RTRW terbaru untuk menggantikan garis kabupaten default. Jika sewaktu-waktu di-reset, peta akan otomatis kembali menggunakan batas resmi bawaan BPS (Permendagri No. 137).
           </p>
         </div>
       </div>
 
       {/* TAB 1: MASTER DATA & UPLOAD FILE SPASIAL */}
       {activeTab === "master" && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Upload Form Left (5 Cols) */}
-          <div className="lg:col-span-5 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
-            <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
-              <Upload className="w-4 h-4 text-rose-600" />
-              <span>Unggah Data Spasial Baru (GeoJSON / KMZ)</span>
-            </h3>
+        <div className="space-y-6">
+          {/* Section 1: Batas Kabupaten Halmahera Utara Master Control */}
+          <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700 border border-purple-100">
+                  <ShieldCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    Garis Batas Utama Kabupaten Halmahera Utara
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Sumber data garis batas acuan untuk seluruh modul Geotagging, WebGIS, dan Analisis Spasial
+                  </p>
+                </div>
+              </div>
 
-            <form onSubmit={handleAddLayer} className="space-y-4 text-xs">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1.5">Kategori Data Spasial *</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: "kabupaten", name: "Kabupaten" },
-                    { id: "kecamatan", name: "Kecamatan/Desa" },
-                    { id: "rtrw", name: "Zona RTRW" },
-                  ].map((t) => (
+              {/* Status Badge */}
+              <div className="flex items-center gap-2">
+                {geoSetting?.has_custom_boundary ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span>Batas Kustom Aktif</span>
+                    </span>
                     <button
-                      key={t.id}
                       type="button"
-                      onClick={() => setNewLayerType(t.id as any)}
-                      className={`py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                        newLayerType === t.id
-                          ? "border-rose-600 bg-rose-50 text-rose-700 shadow-2xs"
-                          : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                      }`}
+                      onClick={handleResetToDefault}
+                      disabled={boundaryUploading}
+                      className="px-3 py-1.5 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      title="Kembalikan ke batas resmi BPS"
                     >
-                      {t.name}
+                      <RotateCcw className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Reset ke Default BPS</span>
                     </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Nama Layer Spasial *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: Batas Resmi Kec. Tobelo Barat 2026"
-                  value={newLayerName}
-                  onChange={(e) => setNewLayerName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-rose-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Landasan Hukum / No. Perda</label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Perda Halut No. 5 Tahun 2022"
-                  value={newLegalBasis}
-                  onChange={(e) => setNewLegalBasis(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:outline-none focus:border-rose-600"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1.5">Warna Default Stroke / Layer *</label>
-                <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
-                  <input
-                    type="color"
-                    value={newLayerColor}
-                    onChange={(e) => setNewLayerColor(e.target.value)}
-                    className="w-9 h-9 rounded-xl cursor-pointer border-0 bg-transparent p-0 shrink-0"
-                  />
-                  <div className="flex-1">
-                    <span className="text-xs font-black text-slate-900 block font-mono uppercase">{newLayerColor}</span>
-                    <span className="text-[10px] text-slate-500 font-medium">Klik warna untuk mengubah</span>
                   </div>
-                </div>
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1.5">File Spasial (.geojson / .kmz / .kml) *</label>
-                <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50 text-center hover:bg-slate-100 transition cursor-pointer relative">
-                  <input
-                    type="file"
-                    accept=".geojson,.json,.kmz,.kml"
-                    onChange={handleFileUpload}
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  />
-                  <FileCode className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-                  <span className="font-bold text-slate-700 block text-xs">
-                    {selectedFile ? selectedFile.name : "Pilih atau Drag File GeoJSON / KMZ"}
+                ) : (
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Batas Resmi BPS Default (Permendagri No. 137)</span>
                   </span>
-                  <span className="text-[10px] text-slate-500 block mt-0.5">Maksimal file 15MB (SRID EPSG:4326)</span>
-                </div>
+                )}
               </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
-              >
-                <Plus className="w-4 h-4 text-white" />
-                <span>Simpan Layer Spasial Baru</span>
-              </button>
-            </form>
-          </div>
-
-          {/* Master Layers List Right (7 Cols) */}
-          <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-                <Layers className="w-4 h-4 text-rose-600" />
-                <span>Daftar Master Data Layer Spasial Aktif</span>
-              </h3>
-              <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
-                {layersList.length} Layer Terdaftar
-              </span>
             </div>
 
-            <div className="space-y-3">
-              {layersList.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition space-y-2.5"
-                >
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <span
-                        className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
-                        style={{ backgroundColor: item.color }}
-                      ></span>
-                      <div>
-                        <h4 className="font-extrabold text-slate-900 text-xs">{item.name}</h4>
-                        <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
-                          <span className="bg-slate-200 px-2 py-0.5 rounded-md font-bold uppercase text-slate-700">
-                            {item.type}
-                          </span>
-                          <span>• {item.legalBasis}</span>
-                          <span>• {item.featureCount} Feature</span>
-                        </div>
-                      </div>
+            {/* Current Active Info Card */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+              <div>
+                <span className="text-slate-400 block font-medium">Status Sumber Data</span>
+                <strong className="text-slate-800 text-xs block mt-0.5">
+                  {geoSetting?.has_custom_boundary
+                    ? `File KMZ Kustom: ${geoSetting.custom_boundary_name}`
+                    : "BPS / Kemendagri (Permendagri No. 137)"}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Estimasi Luas Wilayah</span>
+                <strong className="text-slate-800 text-xs block mt-0.5">
+                  {geoSetting?.custom_boundary_area_ha
+                    ? `${Number(geoSetting.custom_boundary_area_ha).toLocaleString("id-ID")} Ha`
+                    : "389.162 Ha (3.891,62 km²)"}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Fitur Spasial</span>
+                <strong className="text-slate-800 text-xs block mt-0.5">
+                  {geoSetting?.custom_boundary_features_count
+                    ? `${geoSetting.custom_boundary_features_count} Objek Geometri`
+                    : "1 MultiPolygon Resmi"}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-400 block font-medium">Terakhir Diperbarui</span>
+                <strong className="text-slate-800 text-xs block mt-0.5">
+                  {geoSetting?.custom_boundary_uploaded_at
+                    ? new Date(geoSetting.custom_boundary_uploaded_at).toLocaleDateString("id-ID", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "Standar Sistem Bappeda"}
+                </strong>
+              </div>
+            </div>
+
+            {/* Upload Area for New KMZ Boundary */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                    <Upload className="w-4 h-4 text-purple-600" />
+                    <span>Unggah File Batas Wilayah Baru (.KMZ / .KML)</span>
+                  </h4>
+                  <p className="text-[11px] text-slate-500">
+                    File KMZ akan otomatis diurai di browser dan dapat langsung disinkronkan ke database server
+                  </p>
+                </div>
+              </div>
+
+              <KmzUploader
+                onKmzParsed={handleKmzParsed}
+                onClear={handleClearStagedKmz}
+              />
+
+              {/* Action Bar when Staged KMZ is ready */}
+              {stagedKmzResult && (
+                <div className="p-4 rounded-2xl bg-purple-50 border border-purple-200 flex flex-col sm:flex-row items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-purple-600 text-white shadow-xs">
+                      <FileCheck className="w-5 h-5" />
                     </div>
+                    <div className="text-xs">
+                      <p className="font-bold text-purple-950">
+                        File "{stagedKmzResult.fileName}" siap disimpan sebagai batas resmi!
+                      </p>
+                      <p className="text-purple-700 text-[11px]">
+                        {stagedKmzResult.summary.totalFeatures} fitur • {stagedKmzResult.summary.polygonsCount} poligon • Estimasi {stagedKmzResult.summary.totalAreaHa} Ha
+                      </p>
+                    </div>
+                  </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={item.visible}
-                          onChange={() => toggleLayerVisibility(item.id)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
-                      </label>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("styling")}
+                      className="px-4 py-2.5 rounded-xl border border-purple-300 bg-white text-purple-700 hover:bg-purple-100 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Eye className="w-4 h-4 text-purple-600" />
+                      <span>Lihat Preview di Peta</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSaveCustomBoundary}
+                      disabled={boundaryUploading}
+                      className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white text-xs font-black shadow-md shadow-purple-600/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                    >
+                      {boundaryUploading ? (
+                        <RefreshCw className="w-4 h-4 animate-spin text-white" />
+                      ) : (
+                        <Check className="w-4 h-4 text-white" />
+                      )}
+                      <span>{boundaryUploading ? "Menyimpan ke Database..." : "Simpan & Sinkronkan Batas Resmi"}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
 
+          {/* Section 2: Secondary Spatial Layers (Kecamatan / Desa / RTRW) */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Upload Form Left (5 Cols) */}
+            <div className="lg:col-span-5 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-5">
+              <h3 className="text-sm font-black text-slate-900 border-b border-slate-100 pb-3 flex items-center gap-2">
+                <Upload className="w-4 h-4 text-rose-600" />
+                <span>Unggah Layer Spasial Sub-Wilayah / RTRW</span>
+              </h3>
+
+              <form onSubmit={handleAddLayer} className="space-y-4 text-xs">
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1.5">Kategori Data Spasial *</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { id: "kabupaten", name: "Kabupaten" },
+                      { id: "kecamatan", name: "Kecamatan/Desa" },
+                      { id: "rtrw", name: "Zona RTRW" },
+                    ].map((t) => (
                       <button
+                        key={t.id}
                         type="button"
-                        onClick={() => handleDeleteLayer(item.id, item.name)}
-                        className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
-                        title="Hapus Layer"
+                        onClick={() => setNewLayerType(t.id as any)}
+                        className={`py-2 px-3 rounded-xl border text-xs font-bold transition cursor-pointer ${
+                          newLayerType === t.id
+                            ? "border-rose-600 bg-rose-50 text-rose-700 shadow-2xs"
+                            : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                        }`}
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        {t.name}
                       </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Nama Layer Spasial *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Batas Resmi Kec. Tobelo Barat 2026"
+                    value={newLayerName}
+                    onChange={(e) => setNewLayerName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-rose-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Landasan Hukum / No. Perda</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: Perda Halut No. 5 Tahun 2022"
+                    value={newLegalBasis}
+                    onChange={(e) => setNewLegalBasis(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-medium text-slate-900 focus:outline-none focus:border-rose-600"
+                  />
+                </div>
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1.5">Warna Default Stroke / Layer *</label>
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-200">
+                    <input
+                      type="color"
+                      value={newLayerColor}
+                      onChange={(e) => setNewLayerColor(e.target.value)}
+                      className="w-9 h-9 rounded-xl cursor-pointer border-0 bg-transparent p-0 shrink-0"
+                    />
+                    <div className="flex-1">
+                      <span className="text-xs font-black text-slate-900 block font-mono uppercase">{newLayerColor}</span>
+                      <span className="text-[10px] text-slate-500 font-medium">Klik warna untuk mengubah</span>
                     </div>
                   </div>
                 </div>
-              ))}
+
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1.5">File Spasial (.geojson / .kmz / .kml) *</label>
+                  <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50 text-center hover:bg-slate-100 transition cursor-pointer relative">
+                    <input
+                      type="file"
+                      accept=".geojson,.json,.kmz,.kml"
+                      onChange={handleFileUpload}
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    />
+                    <FileCode className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+                    <span className="font-bold text-slate-700 block text-xs">
+                      {selectedFile ? selectedFile.name : "Pilih atau Drag File GeoJSON / KMZ"}
+                    </span>
+                    <span className="text-[10px] text-slate-500 block mt-0.5">Maksimal file 15MB (SRID EPSG:4326)</span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                >
+                  <Plus className="w-4 h-4 text-white" />
+                  <span>Simpan Layer Spasial Tambahan</span>
+                </button>
+              </form>
+            </div>
+
+            {/* Master Layers List Right (7 Cols) */}
+            <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-rose-600" />
+                  <span>Daftar Master Data Layer Spasial Aktif</span>
+                </h3>
+                <span className="text-xs font-bold text-rose-700 bg-rose-50 px-3 py-1 rounded-full border border-rose-200">
+                  {layersList.length} Layer Terdaftar
+                </span>
+              </div>
+
+              <div className="space-y-3">
+                {layersList.map((item) => (
+                  <div
+                    key={item.id}
+                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition space-y-2.5"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span
+                          className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        ></span>
+                        <div>
+                          <h4 className="font-extrabold text-slate-900 text-xs">{item.name}</h4>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
+                            <span className="bg-slate-200 px-2 py-0.5 rounded-md font-bold uppercase text-slate-700">
+                              {item.type}
+                            </span>
+                            <span>• {item.legalBasis}</span>
+                            <span>• {item.featureCount} Feature</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={item.visible}
+                            onChange={() => toggleLayerVisibility(item.id)}
+                            className="sr-only peer"
+                          />
+                          <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                        </label>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLayer(item.id, item.name)}
+                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                          title="Hapus Layer"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -407,7 +696,11 @@ export default function RtrwBatasSettingPage() {
               <div className="flex items-center justify-between p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
                 <div>
                   <span className="font-extrabold text-slate-900 block text-xs">Tampilkan Garis Batas Kabupaten</span>
-                  <span className="text-[11px] text-slate-500 font-medium">Garis merah luar wilayah Halut</span>
+                  <span className="text-[11px] text-slate-500 font-medium">
+                    {geoSetting?.has_custom_boundary || stagedKmzResult
+                      ? "Garis batas kustom aktif"
+                      : "Garis batas resmi bawaan BPS"}
+                  </span>
                 </div>
                 <label className="relative inline-flex items-center cursor-pointer">
                   <input
@@ -498,22 +791,39 @@ export default function RtrwBatasSettingPage() {
 
           {/* Live Map Preview Right (7 Cols) */}
           <div className="lg:col-span-7 p-5 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 sticky top-20">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-2.5">
               <h4 className="text-xs font-black uppercase text-slate-800 flex items-center gap-1.5">
                 <Eye className="w-4 h-4 text-rose-600" />
                 <span>Live Visual Boundary & RTRW Preview</span>
               </h4>
-              <span className="text-[10px] font-bold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-full border border-rose-200 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-rose-600" />
-                <span>Real-Time Rendering</span>
-              </span>
+
+              {/* Source Indicator Pill */}
+              <div>
+                {stagedKmzResult ? (
+                  <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 flex items-center gap-1">
+                    <AlertTriangle className="w-3 h-3 text-amber-600" />
+                    <span>Preview KMZ Upload: {stagedKmzResult.fileName}</span>
+                  </span>
+                ) : geoSetting?.has_custom_boundary ? (
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span>Batas Kustom Aktif: {geoSetting.custom_boundary_name}</span>
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-blue-600" />
+                    <span>Batas Resmi BPS (Permendagri No. 137)</span>
+                  </span>
+                )}
+              </div>
             </div>
 
-            <div className="h-[400px] rounded-2xl overflow-hidden border border-slate-200 relative">
+            <div className="h-[420px] rounded-2xl overflow-hidden border border-slate-200 relative">
               <GeotaggingMapPicker
                 selectedLat={1.6178}
                 selectedLng={127.8584}
                 zoomLevel={9}
+                customBoundaryGeoJson={activeBoundaryGeoJson}
                 showBoundary={showKabBoundary}
                 boundaryColor={boundaryColor}
                 boundaryDashStyle={dashPattern}
@@ -522,7 +832,14 @@ export default function RtrwBatasSettingPage() {
               />
             </div>
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between pt-2">
+              <div className="text-[11px] text-slate-500 font-medium">
+                {geoSetting?.has_custom_boundary && (
+                  <span className="text-emerald-700 font-bold">
+                    ✓ Sinkron dengan database WebGIS Bappeda
+                  </span>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={handleSubmitStyling}

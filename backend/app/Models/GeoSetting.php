@@ -22,6 +22,14 @@ class GeoSetting extends Model
         'default_layer_color',
         'default_fill_opacity',
         'max_kmz_file_mb',
+        'custom_boundary_name',
+        'custom_boundary_path',
+        'custom_boundary_geojson',
+        'custom_boundary_features_count',
+        'custom_boundary_area_ha',
+        'custom_boundary_length_km',
+        'custom_boundary_color',
+        'custom_boundary_uploaded_at',
         'spatial_reference_srid',
         'unit_luas',
         'unit_panjang',
@@ -35,7 +43,20 @@ class GeoSetting extends Model
         'auto_sync_esri' => 'boolean',
         'default_fill_opacity' => 'float',
         'max_kmz_file_mb' => 'integer',
+        'custom_boundary_features_count' => 'integer',
+        'custom_boundary_area_ha' => 'float',
+        'custom_boundary_length_km' => 'float',
+        'custom_boundary_uploaded_at' => 'datetime',
     ];
+
+    protected $appends = [
+        'has_custom_boundary',
+    ];
+
+    public function getHasCustomBoundaryAttribute(): bool
+    {
+        return ! empty($this->custom_boundary_geojson) || ! empty($this->custom_boundary_path);
+    }
 
     /**
      * Singleton accessor for active GeoSetting

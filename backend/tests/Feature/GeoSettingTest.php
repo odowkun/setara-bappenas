@@ -60,4 +60,74 @@ class GeoSettingTest extends TestCase
             ->assertJsonPath('data.default_basemap', 'googleHybrid')
             ->assertJsonPath('data.auto_sync_esri', false);
     }
+
+    public function test_authorized_admin_can_upload_and_reset_custom_boundary(): void
+    {
+        $role = Role::firstOrCreate(['name' => 'superadmin', 'guard_name' => 'web']);
+        $permission = Permission::firstOrCreate(['name' => 'manage_dashboard', 'guard_name' => 'web']);
+        $role->givePermissionTo($permission);
+
+        $admin = User::create([
+            'name' => 'Super Admin Test',
+            'email' => 'admin_geo@halmaherautarakab.go.id',
+            'password' => bcrypt('password123'),
+            'role' => 'superadmin',
+        ]);
+        $admin->assignRole('superadmin');
+
+        $dummyGeoJson = [
+            'type' => 'FeatureCollection',
+            'features' => [
+                [
+                    'type' => 'Feature',
+                    'geometry' => [
+                        'type' => 'Polygon',
+                        'coordinates' => [
+                            [
+                                [128.0, 1.7],
+                                [128.1, 1.7],
+                                [128.1, 1.8],
+                                [128.0, 1.8],
+                                [128.0, 1.7],
+                            ],
+                        ],
+                    ],
+                    'properties' => ['name' => 'Batas Revisi RTRW 2026'],
+                ],
+            ],
+        ];
+
+        // 1. Upload Custom Boundary
+        $uploadResponse = $this->actingAs($admin)
+            ->postJson('/api/v1/geo-settings/boundary', [
+                'file_name' => 'RTRW_Halut_2026.kmz',
+                'geojson' => $dummyGeoJson,
+                'features_count' => 1,
+                'area_ha' => 12500.5,
+                'length_km' => 45.2,
+                'color' => '#dc2626',
+            ]);
+
+        $uploadResponse->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.custom_boundary_name', 'RTRW_Halut_2026.kmz')
+            ->assertJsonPath('data.has_custom_boundary', true)
+            ->assertJsonPath('data.custom_boundary_features_count', 1);
+
+        // Verify public user also sees custom boundary
+        $publicResponse = $this->getJson('/api/v1/geo-settings');
+        $publicResponse->assertStatus(200)
+            ->assertJsonPath('data.custom_boundary_name', 'RTRW_Halut_2026.kmz')
+            ->assertJsonPath('data.has_custom_boundary', true);
+
+        // 2. Reset Custom Boundary
+        $resetResponse = $this->actingAs($admin)
+            ->deleteJson('/api/v1/geo-settings/boundary');
+
+        $resetResponse->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.custom_boundary_name', null)
+            ->assertJsonPath('data.has_custom_boundary', false);
+    }
 }
+

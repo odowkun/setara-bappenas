@@ -15,6 +15,15 @@ export interface GeoSettingData {
   spatial_reference_srid: string;
   unit_luas: "ha" | "m2";
   unit_panjang: "km" | "m";
+  custom_boundary_name?: string | null;
+  custom_boundary_path?: string | null;
+  custom_boundary_geojson?: any | null;
+  custom_boundary_features_count?: number | null;
+  custom_boundary_area_ha?: number | null;
+  custom_boundary_length_km?: number | null;
+  custom_boundary_color?: string | null;
+  custom_boundary_uploaded_at?: string | null;
+  has_custom_boundary?: boolean;
   updated_by?: string;
   updated_at?: string;
 }
@@ -54,6 +63,7 @@ export const geoSettingService = {
         spatial_reference_srid: "EPSG:4326",
         unit_luas: "ha",
         unit_panjang: "km",
+        has_custom_boundary: false,
       };
     }
   },
@@ -82,4 +92,61 @@ export const geoSettingService = {
       message: json.message,
     };
   },
+
+  /**
+   * Upload and persist custom boundary GeoJSON (parsed from KMZ/KML/GeoJSON)
+   */
+  async uploadCustomBoundary(payload: {
+    file_name: string;
+    geojson: any;
+    features_count?: number;
+    area_ha?: number;
+    length_km?: number;
+    color?: string;
+  }): Promise<{ success: boolean; data?: GeoSettingData; message?: string }> {
+    const response = await authenticatedFetch("/geo-settings/boundary", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || "Gagal menyimpan batas spasial kustom");
+    }
+
+    return {
+      success: true,
+      data: json.data,
+      message: json.message,
+    };
+  },
+
+  /**
+   * Reset custom boundary back to default official BPS boundary
+   */
+  async resetCustomBoundary(): Promise<{ success: boolean; data?: GeoSettingData; message?: string }> {
+    const response = await authenticatedFetch("/geo-settings/boundary", {
+      method: "DELETE",
+      headers: {
+        Accept: "application/json",
+      },
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || "Gagal mereset batas wilayah ke default");
+    }
+
+    return {
+      success: true,
+      data: json.data,
+      message: json.message,
+    };
+  },
 };
+

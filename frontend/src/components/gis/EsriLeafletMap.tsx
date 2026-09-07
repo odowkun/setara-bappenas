@@ -51,6 +51,7 @@ interface EsriLeafletMapProps {
   onOpenAlbum?: (loc: ProjectLocation, index?: number) => void;
   customGeoJsonLayer?: any;
   customLayerColor?: string;
+  customBoundaryGeoJson?: any;
 }
 
 export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
@@ -60,6 +61,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
   onOpenAlbum,
   customGeoJsonLayer,
   customLayerColor = "#7c3aed",
+  customBoundaryGeoJson,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -220,8 +222,8 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     tileLayerRef.current = initialTileLayer;
     mapInstanceRef.current = map;
 
-    // Render Exact Official BPS / Kemendagri Boundary Layer
-    renderBoundaryLayer(map, halutOfficialBpsBoundary);
+    // Render Exact Official BPS / Kemendagri Boundary Layer (or Custom uploaded boundary)
+    renderBoundaryLayer(map, customBoundaryGeoJson || halutOfficialBpsBoundary);
 
     const invalidate = () => {
       if (mapInstanceRef.current) {
@@ -247,6 +249,12 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       mapInstanceRef.current = null;
     };
   }, []);
+
+  // Re-render boundary if custom boundary changes
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    renderBoundaryLayer(mapInstanceRef.current, customBoundaryGeoJson || halutOfficialBpsBoundary);
+  }, [customBoundaryGeoJson]);
 
   const bufferLayerRef = useRef<L.LayerGroup | null>(null);
 

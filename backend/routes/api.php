@@ -35,6 +35,12 @@ Route::prefix('v1')->group(function () {
     Route::put('/geo-settings', [GeoSettingController::class, 'update'])
         ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
         ->name('geo-settings.update');
+    Route::post('/geo-settings/boundary', [GeoSettingController::class, 'uploadBoundary'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('geo-settings.boundary.upload');
+    Route::delete('/geo-settings/boundary', [GeoSettingController::class, 'resetBoundary'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('geo-settings.boundary.reset');
 
     // Dashboard Charts Endpoints
     Route::get('/dashboard/charts', [DashboardChartController::class, 'index']);

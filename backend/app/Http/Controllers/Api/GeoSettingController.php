@@ -55,4 +55,79 @@ class GeoSettingController extends Controller
             'data' => $setting->fresh(),
         ]);
     }
+
+    /**
+     * Upload and set custom boundary for Halmahera Utara
+     */
+    public function uploadBoundary(Request $request)
+    {
+        $validated = $request->validate([
+            'file_name' => 'required|string|max:255',
+            'geojson' => 'required',
+            'features_count' => 'nullable|integer',
+            'area_ha' => 'nullable|numeric',
+            'length_km' => 'nullable|numeric',
+            'color' => 'nullable|string|max:50',
+        ]);
+
+        $geoJsonData = is_array($validated['geojson']) 
+            ? json_encode($validated['geojson']) 
+            : $validated['geojson'];
+
+        // Save GeoJSON to storage
+        $filePath = 'spasial/custom_halut_boundary.geojson';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($filePath, $geoJsonData);
+
+        $setting = GeoSetting::getActive();
+        $setting->update([
+            'custom_boundary_name' => $validated['file_name'],
+            'custom_boundary_path' => $filePath,
+            'custom_boundary_geojson' => $geoJsonData,
+            'custom_boundary_features_count' => $validated['features_count'] ?? 1,
+            'custom_boundary_area_ha' => $validated['area_ha'] ?? null,
+            'custom_boundary_length_km' => $validated['length_km'] ?? null,
+            'custom_boundary_color' => $validated['color'] ?? '#ef4444',
+            'custom_boundary_uploaded_at' => now(),
+            'updated_by' => $request->user()?->name ?: 'Administrator BAPPEDA',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Batas wilayah Kabupaten Halmahera Utara berhasil diperbarui dengan file spasial kustom.',
+            'data' => $setting->fresh(),
+        ]);
+    }
+
+    /**
+     * Reset custom boundary back to default official BPS boundary
+     */
+    public function resetBoundary(Request $request)
+    {
+        $setting = GeoSetting::getActive();
+
+        if ($setting->custom_boundary_path && \Illuminate\Support\Facades\Storage::disk('public')->exists($setting->custom_boundary_path)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($setting->custom_boundary_path);
+        }
+
+        $setting->update([
+            'custom_boundary_name' => null,
+            'custom_boundary_path' => null,
+            'custom_boundary_geojson' => null,
+            'custom_boundary_features_count' => null,
+            'custom_boundary_area_ha' => null,
+            'custom_boundary_length_km' => null,
+            'custom_boundary_color' => '#ef4444',
+            'custom_boundary_uploaded_at' => null,
+            'updated_by' => $request->user()?->name ?: 'Administrator BAPPEDA',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Batas wilayah Kabupaten Halmahera Utara berhasil di-reset ke batas resmi bawaan BPS (Permendagri No. 137).',
+            'data' => $setting->fresh(),
+        ]);
+    }
 }
+
