@@ -49,3 +49,21 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
 - **TypeScript Compilation**: `npx tsc --noEmit` lolos 100% tanpa error.
 - **Visual E2E Testing**: Diverifikasi menggunakan `agent-browser` pada resolusi desktop (`1440x900`) dan mobile (`390x844`).
 - **Koordinasi Drawer**: Verifikasi event dispatching untuk memastikan saat satu drawer dibuka, drawer lain tertutup otomatis tanpa tumpang tindih.
+
+---
+
+## 4. Standar Layering Lightbox & Modal Portal (`MediaAlbumModal`)
+
+### Masalah Stacking Context
+Komponen modal/lightbox yang dirender secara inline dalam pohon DOM section (misalnya di dalam `<section>` halaman) dengan `z-50` rentan mengalami konflik *stacking context*:
+- `Navbar` utama berstatus `fixed top-4 z-50`.
+- Floating controls (`A11yToolbar` & `DocumentQuickMenu`) berstatus `fixed bottom-6 z-[60]`.
+- Akibatnya, overlay/backdrop gelap modal terbuka **di bawah** navbar dan floating buttons, serta teks halaman di belakang modal tampak bocor/tumpang tindih.
+
+### Solusi Standar: `createPortal` ke `document.body`
+Semua tampilan modal media dokumentasi, foto lapangan, dan album galeri (`GalleryGrid.tsx`, `app/galeri/page.tsx`) **wajib** menggunakan `MediaAlbumModal`:
+1. **React Portal**: Modal dirender ke `document.body` via `createPortal(modalContent, document.body)`.
+2. **Elevated Z-Index**: Menggunakan `z-[999999]` dan `backdrop-blur-xl` untuk menjamin overlay menutupi 100% viewport di atas seluruh fixed elements.
+3. **Scroll Lock**: Otomatis mengunci scroll body (`document.body.style.overflow = "hidden"`) saat modal terbuka dan melepaskannya saat tertutup.
+4. **Keyboard & Touch**: Mendukung navigasi panah keyboard (`Escape`, `ArrowLeft`, `ArrowRight`) dan filmstrip thumbnails.
+

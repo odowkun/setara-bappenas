@@ -2,9 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Camera, Maximize2, ArrowRight, X, Calendar, Image as ImageIcon, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Camera, Maximize2, ArrowRight, Calendar, Image as ImageIcon, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
 import { galeriService } from "@/services/galeriService";
+import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 
 interface GalleryPhotoItem {
   id: string;
@@ -13,11 +14,13 @@ interface GalleryPhotoItem {
   image: string;
   eventDate: string;
   photoCount: number;
+  media: MediaItem[];
 }
 
 export const GalleryGrid: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState("ALL");
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [activeMediaList, setActiveMediaList] = useState<MediaItem[] | null>(null);
+  const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   const [galleryItems, setGalleryItems] = useState<GalleryPhotoItem[]>([]);
   const [categories, setCategories] = useState<{ id: string; label: string }[]>([
     { id: "ALL", label: "Semua Dokumentasi" },
@@ -35,7 +38,23 @@ export const GalleryGrid: React.FC = () => {
         category: item.category.toUpperCase(),
         image: item.coverImage,
         eventDate: item.eventDate,
-        photoCount: item.photoCount || 1,
+        photoCount: item.photoCount || (item.media && item.media.length > 0 ? item.media.length : 1),
+        media:
+          item.media && item.media.length > 0
+            ? item.media.map((m) => ({
+                id: m.id,
+                url: m.url,
+                title: m.title || item.title,
+                type: m.type === "video" ? "video" : "foto",
+              }))
+            : [
+                {
+                  id: item.id,
+                  url: item.coverImage,
+                  title: item.title,
+                  type: "foto",
+                },
+              ],
       }));
 
       setGalleryItems(items);
@@ -154,7 +173,10 @@ export const GalleryGrid: React.FC = () => {
                 key={item.id}
                 variants={itemVariants}
                 className="group relative rounded-3xl overflow-hidden shadow-xs hover:shadow-2xl transition-all duration-500 bg-slate-900 aspect-[16/11] cursor-pointer border border-slate-200/80 hover:-translate-y-1.5"
-                onClick={() => setLightboxImage(item.image)}
+                onClick={() => {
+                  setActiveMediaList(item.media);
+                  setActiveMediaIndex(0);
+                }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -223,34 +245,13 @@ export const GalleryGrid: React.FC = () => {
         </div>
       </div>
 
-      {/* LIGHTBOX MODAL */}
-      <AnimatePresence>
-        {lightboxImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-4"
-            onClick={() => setLightboxImage(null)}
-          >
-            <button
-              type="button"
-              onClick={() => setLightboxImage(null)}
-              className="absolute top-6 right-6 p-3 rounded-full bg-white/10 text-white hover:bg-white/20 transition cursor-pointer"
-            >
-              <X className="w-6 h-6" />
-            </button>
-            <div className="relative max-w-4xl max-h-[85vh] rounded-3xl overflow-hidden shadow-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={lightboxImage}
-                alt="Dokumentasi BAPPEDA Halut"
-                className="w-full h-full object-contain rounded-3xl"
-              />
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* FULLSCREEN MEDIA ALBUM MODAL (PORTALED DIRECTLY TO BODY WITH HIGH Z-INDEX) */}
+      <MediaAlbumModal
+        isOpen={Boolean(activeMediaList && activeMediaList.length > 0)}
+        onClose={() => setActiveMediaList(null)}
+        mediaList={activeMediaList || []}
+        initialIndex={activeMediaIndex}
+      />
     </section>
   );
 };

@@ -15,7 +15,8 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
-import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
+import { galeriService, AlbumItem } from "@/services/galeriService";
+import { MediaAlbumModal } from "@/components/ui/MediaAlbumModal";
 
 export default function PublicGaleriPage() {
   const [albums, setAlbums] = useState<AlbumItem[]>([]);
@@ -274,82 +275,19 @@ export default function PublicGaleriPage() {
         )}
       </div>
 
-      {/* LIGHTBOX MODAL */}
+      {/* FULLSCREEN MEDIA ALBUM MODAL (PORTALED ABOVE NAVBAR & FLOATING CONTROLS) */}
       {activeAlbum && activeAlbum.media && activeAlbum.media.length > 0 && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in">
-          {/* Modal Header */}
-          <div className="flex items-center justify-between text-white border-b border-white/10 pb-4">
-            <div>
-              <h2 className="text-base font-black truncate max-w-xl">{activeAlbum.title}</h2>
-              <p className="text-xs text-slate-400 font-medium">
-                Media {activeMediaIndex + 1} dari {activeAlbum.media.length} • {activeAlbum.category}
-              </p>
-            </div>
-            <button
-              onClick={() => setActiveAlbum(null)}
-              className="p-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-            >
-              <X className="w-5 h-5" />
-            </button>
-          </div>
-
-          {/* Modal Media Display */}
-          <div className="relative flex-1 flex items-center justify-center my-4">
-            {activeAlbum.media[activeMediaIndex].type === "video" ? (
-              <video
-                src={activeAlbum.media[activeMediaIndex].url}
-                controls
-                autoPlay
-                className="max-h-[70vh] max-w-full rounded-2xl shadow-2xl"
-              />
-            ) : (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img
-                src={activeAlbum.media[activeMediaIndex].url}
-                alt={activeAlbum.media[activeMediaIndex].title}
-                className="max-h-[70vh] max-w-full object-contain rounded-2xl shadow-2xl"
-              />
-            )}
-
-            {/* Prev/Next Buttons */}
-            {activeAlbum.media.length > 1 && (
-              <>
-                <button
-                  onClick={() =>
-                    setActiveMediaIndex((prev) => (prev > 0 ? prev - 1 : activeAlbum.media.length - 1))
-                  }
-                  className="absolute left-2 p-3 rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition cursor-pointer backdrop-blur-md"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={() =>
-                    setActiveMediaIndex((prev) => (prev < activeAlbum.media.length - 1 ? prev + 1 : 0))
-                  }
-                  className="absolute right-2 p-3 rounded-full bg-slate-900/80 hover:bg-blue-600 text-white transition cursor-pointer backdrop-blur-md"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-              </>
-            )}
-          </div>
-
-          {/* Modal Thumbnails Strip */}
-          <div className="flex items-center justify-center gap-2 overflow-x-auto pt-2 border-t border-white/10">
-            {activeAlbum.media.map((item, idx) => (
-              <button
-                key={item.id}
-                onClick={() => setActiveMediaIndex(idx)}
-                className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition cursor-pointer shrink-0 ${
-                  activeMediaIndex === idx ? "border-blue-500 ring-2 ring-blue-400/50" : "border-transparent opacity-60 hover:opacity-100"
-                }`}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.url} alt={item.title} className="w-full h-full object-cover" />
-              </button>
-            ))}
-          </div>
-        </div>
+        <MediaAlbumModal
+          isOpen={Boolean(activeAlbum)}
+          onClose={() => setActiveAlbum(null)}
+          mediaList={activeAlbum.media.map((m) => ({
+            id: m.id,
+            url: m.url,
+            title: m.title || activeAlbum.title,
+            type: m.type,
+          }))}
+          initialIndex={activeMediaIndex}
+        />
       )}
     </div>
   );
