@@ -262,7 +262,7 @@ export function DocumentQuickMenu({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 80 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: "easeOut" }}
-            className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
+            className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3 sm:bottom-8 sm:right-8"
           >
             <AnimatePresence>
               {isFloatingOpen && (
@@ -319,18 +319,18 @@ export function DocumentQuickMenu({
               aria-expanded={isFloatingOpen}
               aria-controls="floating-document-categories"
               aria-label="Buka filter cepat dokumen"
-              className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-700/80 bg-slate-950/90 px-3.5 sm:px-4.5 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-2xl transition-all duration-200 hover:bg-slate-900 hover:border-amber-500/60 hover:shadow-amber-500/20 active:scale-95"
+              className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/95 px-3.5 sm:px-4.5 text-slate-800 shadow-xl shadow-blue-950/10 backdrop-blur-2xl transition-all duration-200 hover:bg-white hover:border-amber-400 hover:shadow-2xl hover:shadow-amber-900/15 active:scale-95"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30 transition-transform group-hover:scale-105">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700 border border-amber-200/70 transition-all duration-200 group-hover:scale-105 group-hover:bg-amber-500 group-hover:text-white">
                 <FileText className="h-4 w-4" aria-hidden="true" />
               </span>
-              <span className="hidden text-xs font-black tracking-tight text-slate-100 group-hover:text-white sm:inline">
+              <span className="hidden text-xs font-black tracking-tight text-slate-700 transition-colors group-hover:text-amber-950 sm:inline">
                 Kategori Dokumen
               </span>
               <ChevronUp
                 aria-hidden="true"
-                className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block group-hover:text-amber-400 ${
-                  isFloatingOpen ? "rotate-180 text-amber-400" : ""
+                className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block group-hover:text-amber-600 ${
+                  isFloatingOpen ? "rotate-180 text-amber-600" : ""
                 }`}
               />
             </button>

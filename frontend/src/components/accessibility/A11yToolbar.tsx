@@ -68,7 +68,7 @@ export const A11yToolbar: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-5 left-5 z-[60] flex flex-col items-start sm:bottom-6 sm:left-6">
+    <div className="fixed bottom-6 left-6 z-[60] flex flex-col items-start sm:bottom-8 sm:left-8">
       {isOpen && (
         <div className="mb-3 flex min-w-[280px] max-w-[calc(100vw-2rem)] animate-in flex-col gap-3 rounded-3xl border border-slate-200/90 bg-white/95 p-4 text-slate-800 shadow-2xl shadow-blue-950/20 backdrop-blur-2xl fade-in slide-in-from-bottom-5 motion-reduce:animate-none">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
@@ -187,7 +187,7 @@ export const A11yToolbar: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Toggle Button (Executive Frosted Glass Pill) */}
+      {/* Floating Toggle Button (Luminous White Frosted Glass Pill) */}
       <button
         onClick={() => {
           const willOpen = !isOpen;
@@ -200,16 +200,16 @@ export const A11yToolbar: React.FC = () => {
             );
           }
         }}
-        className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-700/80 bg-slate-950/90 px-3.5 sm:px-4.5 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-2xl transition-all duration-200 hover:bg-slate-900 hover:border-blue-500/60 hover:shadow-blue-500/20 active:scale-95"
+        className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/95 px-3.5 sm:px-4.5 text-slate-800 shadow-xl shadow-blue-950/10 backdrop-blur-2xl transition-all duration-200 hover:bg-white hover:border-blue-400 hover:shadow-2xl hover:shadow-blue-900/15 active:scale-95"
         aria-label={
           isOpen ? "Tutup Menu Aksesibilitas" : "Buka Menu Aksesibilitas"
         }
         aria-expanded={isOpen}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-500/20 text-blue-400 border border-blue-400/30 transition-transform group-hover:scale-105">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200/70 transition-all duration-200 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white">
           <Accessibility className="h-4 w-4" aria-hidden="true" />
         </span>
-        <span className="hidden text-xs font-black tracking-tight text-slate-100 group-hover:text-white sm:inline">
+        <span className="hidden text-xs font-black tracking-tight text-slate-700 transition-colors group-hover:text-blue-950 sm:inline">
           Menu Aksesibilitas
         </span>
       </button>

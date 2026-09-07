@@ -12,10 +12,10 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
 
 | Aspek | Sebelum | Sesudah |
 |---|---|---|
-| **Visual Style** | Plain blue solid badge (`bg-blue-700`) | Executive Frosted Glass HUD (`bg-slate-950/90 backdrop-blur-2xl border-slate-700/80`) |
-| **Aksen Ikon** | Ikon putih standar tanpa badge container | Glowing circular badge (`bg-blue-500/20` & `bg-amber-500/20`) berborder halus |
+| **Visual Style** | Plain blue solid badge (`bg-blue-700`) | Luminous White Frosted Glass (`bg-white/95 backdrop-blur-2xl border-slate-200/90 shadow-xl`) |
+| **Aksen Ikon** | Ikon putih standar tanpa badge container | Glowing circular badge (`bg-blue-50 text-blue-600` & `bg-amber-50 text-amber-700`) |
 | **Dimensi & Tinggi** | Tidak seragam (`h-13` / `h-14`) | Seragam vertikal `h-12` (`48px`) dengan `rounded-full` |
-| **Posisi Floating** | Offset tidak simetris | Simetris pada `bottom-5 left-5` dan `bottom-5 right-5` (`sm:bottom-6`) |
+| **Posisi Floating** | Offset tidak simetris | Simetris pada `bottom-6 left-6 sm:bottom-8 sm:left-8` dan `bottom-6 right-6 sm:bottom-8 sm:right-8` |
 | **Interaksi Drawer** | Panel floating terpisah tanpa koordinasi | Terkoordinasi via Custom Event `bappeda:floating-panel-open` (saling menutup otomatis) |
 | **Responsivitas Mobile** | Teks panjang memakan area layar sempit | Otomatis berubah menjadi Floating Action Badge (FAB) sirkular ringkas |
 
@@ -24,8 +24,8 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
 ## 2. Implementasi Komponen
 
 ### A. `A11yToolbar.tsx` (Menu Aksesibilitas)
-- **Lokasi**: Sisi kiri bawah (`bottom-5 left-5 sm:bottom-6 sm:left-6`).
-- **Aksen Warna**: Cyan/Blue (`text-blue-400`, `bg-blue-500/20`, border `border-blue-400/30`).
+- **Lokasi**: Sisi kiri bawah (`bottom-6 left-6 sm:bottom-8 sm:left-8`).
+- **Aksen Warna**: Cyan/Blue (`text-blue-600`, `bg-blue-50`, border `border-blue-200/70`).
 - **Fitur Interaktif**:
   - Penyesuaian ukuran teks (A- / Reset / A+).
   - Mode Kontras Tinggi (High Contrast).
@@ -34,8 +34,8 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
   - Shortcut pencarian instan dokumen (`⌘K`).
 
 ### B. `DocumentQuickMenu.tsx` (Filter Cepat Dokumen)
-- **Lokasi**: Sisi kanan bawah (`bottom-5 right-5 sm:bottom-6 sm:right-6`).
-- **Aksen Warna**: Amber/Emas (`text-amber-400`, `bg-amber-500/20`, border `border-amber-400/30`).
+- **Lokasi**: Sisi kanan bawah (`bottom-6 right-6 sm:bottom-8 sm:right-8`).
+- **Aksen Warna**: Amber/Emas (`text-amber-700`, `bg-amber-50`, border `border-amber-200/70`).
 - **Fitur Interaktif**:
   - Drawer vertikal muncul dengan animasi smooth saat ditekan.
   - Rotasi `ChevronUp` 180° saat drawer terbuka.
