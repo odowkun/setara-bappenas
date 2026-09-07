@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   MapPin,
@@ -17,6 +17,7 @@ import {
   Compass,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { geoSettingService } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
@@ -32,6 +33,7 @@ const OPD_SECTORS = [
 ];
 
 export default function PinKategoriSettingPage() {
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [sectorColors, setSectorColors] = useState<Record<string, string>>({
     pupr: "#2563eb",
@@ -40,6 +42,23 @@ export default function PinKategoriSettingPage() {
     perhubungan: "#d97706",
     bappeda: "#059669",
   });
+
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        setLoading(true);
+        const data = await geoSettingService.getSettings();
+        if (data?.sector_pin_colors_json && typeof data.sector_pin_colors_json === "object") {
+          setSectorColors((prev) => ({ ...prev, ...data.sector_pin_colors_json }));
+        }
+      } catch (err) {
+        console.error("Gagal memuat data sektor pin:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadSettings();
+  }, []);
 
   const handleColorChange = (id: string, color: string) => {
     setSectorColors((prev) => ({ ...prev, [id]: color }));
@@ -50,14 +69,17 @@ export default function PinKategoriSettingPage() {
     setSaving(true);
 
     try {
-      toast.success("Kategori Pin & Ikon Sektoral OPD berhasil diperbarui!");
+      await geoSettingService.updateSettings({
+        sector_pin_colors_json: sectorColors,
+      });
+      toast.success("Kategori Pin & Ikon Sektoral OPD berhasil disimpan ke database!");
       showSuccessSwal(
         "Pembaruan Berhasil!",
-        "Skema warna pin marker & legend sektoral OPD berhasil disimpan."
+        "Skema warna pin marker & legend sektoral OPD berhasil disimpan ke database."
       );
     } catch (err: any) {
       toast.error("Gagal menyimpan konfigurasi.");
-      showErrorSwal("Gagal Menyimpan", "Terjadi kesalahan sistem.");
+      showErrorSwal("Gagal Menyimpan", err.message || "Terjadi kesalahan sistem.");
     } finally {
       setSaving(false);
     }

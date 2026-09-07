@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PejabatController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\ProyekDetailController;
+use App\Http\Controllers\Api\SpatialLayerController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\TautanOpdController;
 use App\Http\Controllers\Api\UserController;
@@ -41,6 +42,18 @@ Route::prefix('v1')->group(function () {
     Route::delete('/geo-settings/boundary', [GeoSettingController::class, 'resetBoundary'])
         ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
         ->name('geo-settings.boundary.reset');
+
+    // Spatial Layers Endpoints (Kecamatan, Desa, RTRW Master Layers)
+    Route::get('/spatial-layers', [SpatialLayerController::class, 'index']);
+    Route::post('/spatial-layers', [SpatialLayerController::class, 'store'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('spatial-layers.store');
+    Route::patch('/spatial-layers/{id}/toggle', [SpatialLayerController::class, 'toggleVisibility'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('spatial-layers.toggle');
+    Route::delete('/spatial-layers/{id}', [SpatialLayerController::class, 'destroy'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('spatial-layers.destroy');
 
     // Dashboard Charts Endpoints
     Route::get('/dashboard/charts', [DashboardChartController::class, 'index']);

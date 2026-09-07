@@ -28,19 +28,24 @@ class GeoSettingController extends Controller
     public function update(Request $request)
     {
         $validated = $request->validate([
-            'default_latitude' => 'required|numeric|between:-90,90',
-            'default_longitude' => 'required|numeric|between:-180,180',
-            'default_zoom_level' => 'required|integer|between:1,22',
-            'default_basemap' => 'required|string|in:esriSatellite,esriTopo,googleHybrid,googleStreet',
+            'default_latitude' => 'sometimes|numeric|between:-90,90',
+            'default_longitude' => 'sometimes|numeric|between:-180,180',
+            'default_zoom_level' => 'sometimes|integer|between:1,22',
+            'default_basemap' => 'sometimes|string|in:esriSatellite,esriTopo,googleHybrid,googleStreet',
             'esri_feature_service_url' => 'nullable|url|max:1000',
             'esri_geoprocessing_url' => 'nullable|url|max:1000',
-            'auto_sync_esri' => 'required|boolean',
-            'default_layer_color' => 'required|string|max:50',
-            'default_fill_opacity' => 'required|numeric|between:0,1',
-            'max_kmz_file_mb' => 'required|integer|between:1,100',
-            'spatial_reference_srid' => 'required|string|max:50',
-            'unit_luas' => 'required|string|in:ha,m2',
-            'unit_panjang' => 'required|string|in:km,m',
+            'auto_sync_esri' => 'sometimes|boolean',
+            'default_layer_color' => 'sometimes|string|max:50',
+            'default_fill_opacity' => 'sometimes|numeric|between:0,1',
+            'default_buffer_radius_meter' => 'sometimes|integer|between:50,50000',
+            'buffer_color' => 'sometimes|string|max:50',
+            'buffer_opacity' => 'sometimes|numeric|between:0,1',
+            'sector_pin_colors_json' => 'nullable|array',
+            'print_layout_config_json' => 'nullable|array',
+            'max_kmz_file_mb' => 'sometimes|integer|between:1,100',
+            'spatial_reference_srid' => 'sometimes|string|max:50',
+            'unit_luas' => 'sometimes|string|in:ha,m2',
+            'unit_panjang' => 'sometimes|string|in:km,m',
         ]);
 
         $setting = GeoSetting::getActive();

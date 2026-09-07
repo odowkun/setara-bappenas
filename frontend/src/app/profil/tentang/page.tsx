@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/apiClient";
 import {
   Building2,
   ChevronRight,
@@ -34,7 +35,7 @@ export default function PublicTentangPage() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const resTentang = await fetch("http://localhost:8000/api/v1/profil/tentang");
+        const resTentang = await fetch(`${API_BASE_URL}/profil/tentang`);
         if (resTentang.ok) {
           const jsonTentang = await resTentang.json();
           if (jsonTentang.success && jsonTentang.data) {
@@ -42,7 +43,7 @@ export default function PublicTentangPage() {
           }
         }
 
-        const resVisi = await fetch("http://localhost:8000/api/v1/profil/visi_misi");
+        const resVisi = await fetch(`${API_BASE_URL}/profil/visi_misi`);
         if (resVisi.ok) {
           const jsonVisi = await resVisi.json();
           if (jsonVisi.success && jsonVisi.data) {

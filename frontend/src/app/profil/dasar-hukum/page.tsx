@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/apiClient";
 import {
   Scale,
   FileText,
@@ -30,7 +31,7 @@ export default function PublicDasarHukumPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/profil/dasar_hukum")
+    fetch(`${API_BASE_URL}/profil/dasar_hukum`)
       .then((r) => r.json())
       .then((jsonDH) => {
         if (jsonDH.success && jsonDH.data) {

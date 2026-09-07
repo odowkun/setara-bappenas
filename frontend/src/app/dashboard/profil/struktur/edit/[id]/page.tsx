@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { OptimizedMediaUploader } from "@/components/ui/OptimizedMediaUploader";
 import {
@@ -57,8 +57,8 @@ export default function EditStrukturPage({ params }: { params: Promise<{ id: str
     const fetchData = async () => {
       try {
         const [allRes, targetRes] = await Promise.all([
-          fetch("http://localhost:8000/api/v1/pejabat"),
-          fetch(`http://localhost:8000/api/v1/pejabat/${id}`),
+          fetch(`${API_BASE_URL}/pejabat`),
+          fetch(`${API_BASE_URL}/pejabat/${id}`),
         ]);
 
         if (allRes.ok) {
@@ -126,12 +126,10 @@ export default function EditStrukturPage({ params }: { params: Promise<{ id: str
     e.preventDefault();
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await authenticatedFetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
+      const res = await authenticatedFetch(`/pejabat/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           position,
@@ -351,7 +349,7 @@ export default function EditStrukturPage({ params }: { params: Promise<{ id: str
               {avatar && (
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-emerald-50 border border-emerald-200 mt-2">
                   <img
-                    src={avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`}
+                    src={avatar.startsWith("http") ? avatar : `${STORAGE_BASE_URL}${avatar}`}
                     alt="Foto Pejabat"
                     className="w-14 h-14 rounded-2xl object-cover border border-emerald-300 shadow-sm"
                   />

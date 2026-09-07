@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { toast } from "@/lib/swal";
 import {
@@ -23,8 +23,10 @@ const KATEGORI_REGULASI_OPTIONS = [
   { value: "Peraturan Pemerintah", label: "Peraturan Pemerintah" },
   { value: "Peraturan Presiden", label: "Peraturan Presiden" },
   { value: "Peraturan Menteri", label: "Peraturan Menteri" },
-  { value: "Peraturan Daerah", label: "Peraturan Daerah (PERDA)" },
-  { value: "Peraturan Bupati", label: "Peraturan Bupati (PERBUP)" },
+  { value: "Peraturan Daerah", label: "Peraturan Daerah" },
+  { value: "Peraturan Bupati", label: "Peraturan Bupati" },
+  { value: "Keputusan Bupati", label: "Keputusan Bupati" },
+  { value: "Instruksi Bupati", label: "Instruksi Bupati" },
 ];
 
 interface RegulasiItem {
@@ -49,7 +51,7 @@ export default function DasarHukumEditorPage() {
   const fetchDasarHukumData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/profil/dasar_hukum");
+      const res = await fetch(`${API_BASE_URL}/profil/dasar_hukum`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -104,7 +106,7 @@ export default function DasarHukumEditorPage() {
     setSaving(true);
 
     try {
-      const res = await authenticatedFetch("http://localhost:8000/api/v1/profil/dasar_hukum", {
+      const res = await authenticatedFetch("/profil/dasar_hukum", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

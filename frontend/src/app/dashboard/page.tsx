@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
+import { API_BASE_URL } from "@/lib/apiClient";
 import { AuditLog } from "@/types/auth";
 import {
   Users,
@@ -58,7 +59,7 @@ export default function DashboardPage() {
     });
 
     // Fetch dynamic charts data from backend MySQL DB
-    fetch("http://localhost:8000/api/v1/dashboard/charts")
+    fetch(`${API_BASE_URL}/dashboard/charts`)
       .then((res) => res.json())
       .then((json) => {
         if (json.status === "success" && json.data) {

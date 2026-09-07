@@ -38,6 +38,7 @@ import Swal from "sweetalert2";
 
 import { proyekService, ProyekDetail } from "@/services/proyekService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
 const EsriLeafletMap = dynamic(
   () => import("@/components/gis/EsriLeafletMap"),
@@ -472,7 +473,7 @@ export const GeospatialSection: React.FC = () => {
                           <a
                             href={
                               att.file_path.startsWith("/storage/")
-                                ? `http://localhost:8000${att.file_path}`
+                                ? `${STORAGE_BASE_URL}${att.file_path}`
                                 : att.file_path
                             }
                             target="_blank"

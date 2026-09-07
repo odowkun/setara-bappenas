@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   Target,
@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { geoSettingService } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
@@ -27,24 +28,44 @@ const PRESET_RADII = [
 ];
 
 export default function BufferRadiusSettingPage() {
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [selectedRadius, setSelectedRadius] = useState<number>(1000);
   const [bufferColor, setBufferColor] = useState("#7c3aed");
   const [bufferOpacity, setBufferOpacity] = useState(0.35);
+
+  useEffect(() => {
+    geoSettingService
+      .getSettings()
+      .then((data) => {
+        if (data) {
+          if (data.default_buffer_radius_meter) setSelectedRadius(data.default_buffer_radius_meter);
+          if (data.buffer_color) setBufferColor(data.buffer_color);
+          if (typeof data.buffer_opacity === "number") setBufferOpacity(data.buffer_opacity);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      toast.success("Konfigurasi Radius Penyangga (Buffer Zone) berhasil diperbarui!");
+      await geoSettingService.updateSettings({
+        default_buffer_radius_meter: selectedRadius,
+        buffer_color: bufferColor,
+        buffer_opacity: bufferOpacity,
+      });
+
+      toast.success("Konfigurasi Radius Penyangga (Buffer Zone) berhasil disimpan ke database!");
       showSuccessSwal(
         "Pembaruan Berhasil!",
-        `Default radius penyangga ${selectedRadius}m berhasil disimpan.`
+        `Default radius penyangga ${selectedRadius}m berhasil disimpan ke database.`
       );
     } catch (err: any) {
-      toast.error("Gagal menyimpan konfigurasi.");
-      showErrorSwal("Gagal Menyimpan", "Terjadi kesalahan sistem.");
+      toast.error(err.message || "Gagal menyimpan konfigurasi.");
+      showErrorSwal("Gagal Menyimpan", err.message || "Terjadi kesalahan sistem.");
     } finally {
       setSaving(false);
     }

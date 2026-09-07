@@ -26,23 +26,12 @@ import {
 import { showSuccessSwal, showErrorSwal, showDeleteConfirm, showConfirm, toast } from "@/lib/swal";
 import KmzUploader from "@/components/gis/KmzUploader";
 import { ParsedKmzResult } from "@/lib/gis/kmzParser";
-import { geoSettingService, GeoSettingData } from "@/services/geoSettingService";
+import { geoSettingService, GeoSettingData, SpatialLayerItem } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
   { ssr: false }
 );
-
-interface SpatialLayerItem {
-  id: string;
-  name: string;
-  type: "kabupaten" | "kecamatan" | "rtrw";
-  legalBasis: string;
-  featureCount: number;
-  color: string;
-  visible: boolean;
-  uploadedAt: string;
-}
 
 export default function RtrwBatasSettingPage() {
   const [activeTab, setActiveTab] = useState<"master" | "styling">("master");
@@ -61,6 +50,7 @@ export default function RtrwBatasSettingPage() {
   const [newLegalBasis, setNewLegalBasis] = useState("");
   const [newLayerColor, setNewLayerColor] = useState("#0284c7");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submittingLayer, setSubmittingLayer] = useState(false);
 
   // Styling Tab Controls
   const [showKabBoundary, setShowKabBoundary] = useState(true);
@@ -69,39 +59,9 @@ export default function RtrwBatasSettingPage() {
   const [showDistrictBoundary, setShowDistrictBoundary] = useState(true);
   const [showRtrwZones, setShowRtrwZones] = useState(true);
 
-  // Active Spatial Layers Master List
-  const [layersList, setLayersList] = useState<SpatialLayerItem[]>([
-    {
-      id: "layer-1",
-      name: "Batas Luar Kabupaten Halmahera Utara (Resmi BPS 2026)",
-      type: "kabupaten",
-      legalBasis: "Permendagri No. 137 Tahun 2017",
-      featureCount: 1,
-      color: "#ef4444",
-      visible: true,
-      uploadedAt: "30 Jul 2026",
-    },
-    {
-      id: "layer-2",
-      name: "Batas Sub-Wilayah Kecamatan (Tobelo, Galela, Kao)",
-      type: "kecamatan",
-      legalBasis: "Perda Halut No. 3 Tahun 2020",
-      featureCount: 5,
-      color: "#0284c7",
-      visible: true,
-      uploadedAt: "30 Jul 2026",
-    },
-    {
-      id: "layer-3",
-      name: "Zona Overlay Peruntukan RTRW (Hutan Lindung & Pemukiman)",
-      type: "rtrw",
-      legalBasis: "Perda RTRW Halut No. 5 Tahun 2022",
-      featureCount: 4,
-      color: "#059669",
-      visible: true,
-      uploadedAt: "30 Jul 2026",
-    },
-  ]);
+  // Active Spatial Layers Master List (Dynamically synced with database)
+  const [layersList, setLayersList] = useState<SpatialLayerItem[]>([]);
+  const [loadingLayers, setLoadingLayers] = useState(false);
 
   // Load geo-settings on mount
   const loadGeoSettings = async () => {
@@ -119,8 +79,22 @@ export default function RtrwBatasSettingPage() {
     }
   };
 
+  // Load secondary spatial layers from database
+  const loadSpatialLayers = async () => {
+    try {
+      setLoadingLayers(true);
+      const layers = await geoSettingService.getSpatialLayers();
+      setLayersList(layers);
+    } catch (err) {
+      console.error("Gagal memuat layer spasial:", err);
+    } finally {
+      setLoadingLayers(false);
+    }
+  };
+
   useEffect(() => {
     loadGeoSettings();
+    loadSpatialLayers();
   }, []);
 
   // Compute active boundary GeoJSON: Priority 1. Staged KMZ, 2. Database custom GeoJSON, 3. null (fallback to BPS halut-boundary.json)
@@ -232,55 +206,67 @@ export default function RtrwBatasSettingPage() {
     }
   };
 
-  const handleAddLayer = (e: React.FormEvent) => {
+  const handleAddLayer = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newLayerName.trim()) {
       showErrorSwal("Input Kurang Lengkap", "Silakan isi nama layer data spasial.");
       return;
     }
 
-    const newLayer: SpatialLayerItem = {
-      id: `layer-${Date.now()}`,
-      name: newLayerName,
-      type: newLayerType,
-      legalBasis: newLegalBasis || "SK Bupati Halut 2026",
-      featureCount: Math.floor(Math.random() * 8) + 1,
-      color: newLayerColor,
-      visible: true,
-      uploadedAt: "Hari ini",
-    };
+    try {
+      setSubmittingLayer(true);
+      const res = await geoSettingService.createSpatialLayer({
+        name: newLayerName.trim(),
+        type: newLayerType,
+        legal_basis: newLegalBasis.trim() || "SK Bupati Halut 2026",
+        feature_count: Math.floor(Math.random() * 8) + 1,
+        color: newLayerColor,
+        visible: true,
+      });
 
-    setLayersList((prev) => [newLayer, ...prev]);
-    setNewLayerName("");
-    setNewLegalBasis("");
-    setSelectedFile(null);
+      setLayersList((prev) => [res.data, ...prev]);
+      setNewLayerName("");
+      setNewLegalBasis("");
+      setSelectedFile(null);
 
-    toast.success("Master layer spasial berhasil ditambahkan!");
-    showSuccessSwal(
-      "Layer Berhasil Ditambahkan!",
-      `Master data "${newLayer.name}" telah disimpan ke database spasial Bappeda.`
-    );
+      toast.success("Master layer spasial berhasil ditambahkan ke database!");
+      showSuccessSwal(
+        "Layer Berhasil Ditambahkan!",
+        `Master data "${res.data.name}" telah disimpan ke database spasial Bappeda.`
+      );
+    } catch (err: any) {
+      toast.error("Gagal menambahkan layer spasial");
+      showErrorSwal("Gagal Menambahkan", err.message || "Terjadi kesalahan sistem.");
+    } finally {
+      setSubmittingLayer(false);
+    }
   };
 
-  const toggleLayerVisibility = (id: string) => {
-    setLayersList((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const nextState = !item.visible;
-          toast.success(`Layer "${item.name}" ${nextState ? "diaktifkan" : "dinonaktifkan"}.`);
-          return { ...item, visible: nextState };
-        }
-        return item;
-      })
-    );
+  const toggleLayerVisibility = async (id: number | string) => {
+    try {
+      const res = await geoSettingService.toggleSpatialLayer(id);
+      setLayersList((prev) =>
+        prev.map((item) => (String(item.id) === String(id) ? { ...item, visible: res.data.visible } : item))
+      );
+      toast.success(`Layer "${res.data.name}" ${res.data.visible ? "diaktifkan" : "dinonaktifkan"}.`);
+    } catch (err: any) {
+      toast.error("Gagal mengubah visibilitas layer");
+      showErrorSwal("Gagal Mengubah Status", err.message || "Terjadi kesalahan.");
+    }
   };
 
-  const handleDeleteLayer = async (id: string, name: string) => {
+  const handleDeleteLayer = async (id: number | string, name: string) => {
     const res = await showDeleteConfirm(name);
 
     if (res.isConfirmed) {
-      setLayersList((prev) => prev.filter((item) => item.id !== id));
-      toast.success(`Layer "${name}" berhasil dihapus.`);
+      try {
+        await geoSettingService.deleteSpatialLayer(id);
+        setLayersList((prev) => prev.filter((item) => String(item.id) !== String(id)));
+        toast.success(`Layer "${name}" berhasil dihapus dari database.`);
+      } catch (err: any) {
+        toast.error("Gagal menghapus layer spasial");
+        showErrorSwal("Gagal Menghapus", err.message || "Terjadi kesalahan sistem.");
+      }
     }
   };
 
@@ -609,10 +595,15 @@ export default function RtrwBatasSettingPage() {
 
                 <button
                   type="submit"
-                  className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                  disabled={submittingLayer}
+                  className="w-full py-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md shadow-rose-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
                 >
-                  <Plus className="w-4 h-4 text-white" />
-                  <span>Simpan Layer Spasial Tambahan</span>
+                  {submittingLayer ? (
+                    <RefreshCw className="w-4 h-4 text-white animate-spin" />
+                  ) : (
+                    <Plus className="w-4 h-4 text-white" />
+                  )}
+                  <span>{submittingLayer ? "Menyimpan ke Database..." : "Simpan Layer Spasial Tambahan"}</span>
                 </button>
               </form>
             </div>
@@ -629,54 +620,65 @@ export default function RtrwBatasSettingPage() {
                 </span>
               </div>
 
-              <div className="space-y-3">
-                {layersList.map((item) => (
-                  <div
-                    key={item.id}
-                    className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition space-y-2.5"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span
-                          className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
-                          style={{ backgroundColor: item.color }}
-                        ></span>
-                        <div>
-                          <h4 className="font-extrabold text-slate-900 text-xs">{item.name}</h4>
-                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
-                            <span className="bg-slate-200 px-2 py-0.5 rounded-md font-bold uppercase text-slate-700">
-                              {item.type}
-                            </span>
-                            <span>• {item.legalBasis}</span>
-                            <span>• {item.featureCount} Feature</span>
+              {loadingLayers ? (
+                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
+                  <RefreshCw className="w-6 h-6 animate-spin text-rose-600" />
+                  <span className="text-xs font-medium">Memuat layer spasial dari database...</span>
+                </div>
+              ) : layersList.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs font-medium bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                  Belum ada layer spasial tersimpan. Tambahkan layer baru melalui formulir di samping.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {layersList.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-4 rounded-2xl bg-slate-50 border border-slate-200 hover:border-slate-300 transition space-y-2.5"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
+                            style={{ backgroundColor: item.color }}
+                          ></span>
+                          <div>
+                            <h4 className="font-extrabold text-slate-900 text-xs">{item.name}</h4>
+                            <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
+                              <span className="bg-slate-200 px-2 py-0.5 rounded-md font-bold uppercase text-slate-700">
+                                {item.type}
+                              </span>
+                              <span>• {item.legal_basis || "Dasar Hukum Resmi"}</span>
+                              <span>• {item.feature_count ?? 1} Feature</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 shrink-0">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={item.visible}
-                            onChange={() => toggleLayerVisibility(item.id)}
-                            className="sr-only peer"
-                          />
-                          <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
-                        </label>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <label className="relative inline-flex items-center cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={item.visible}
+                              onChange={() => toggleLayerVisibility(item.id)}
+                              className="sr-only peer"
+                            />
+                            <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-rose-600"></div>
+                          </label>
 
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLayer(item.id, item.name)}
-                          className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
-                          title="Hapus Layer"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLayer(item.id, item.name)}
+                            className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 transition cursor-pointer"
+                            title="Hapus Layer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

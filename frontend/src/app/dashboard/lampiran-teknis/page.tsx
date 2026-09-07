@@ -8,6 +8,7 @@ import { AdminDocument } from "@/types/auth";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { compressImageFile, CompressionResult } from "@/utils/imageCompressor";
 import { SkeletonImage } from "@/components/ui/SkeletonImage";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 import {
   Paperclip,
   Upload,
@@ -560,7 +561,7 @@ export default function LampiranTeknisPage() {
                         <span>Hapus</span>
                       </button>
                       <a
-                        href={att.file_path.startsWith("/storage/") ? `http://localhost:8000${att.file_path}` : att.file_path}
+                        href={att.file_path.startsWith("/storage/") ? `${STORAGE_BASE_URL}${att.file_path}` : att.file_path}
                         target="_blank"
                         rel="noreferrer"
                         className="px-3 py-1 rounded-xl bg-blue-600 text-white font-bold text-[10px] hover:bg-blue-700 transition flex items-center gap-1"

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 import { StrukturOrganisasiChart, OrgNode } from "@/components/ui/StrukturOrganisasiChart";
 import {
   Plus,
@@ -69,7 +69,7 @@ export default function StrukturEditorPage() {
   const fetchPejabatData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/pejabat");
+      const res = await fetch(`${API_BASE_URL}/pejabat`);
       if (res.ok) {
         const json = await res.json();
         setTreeData(json.data.tree);
@@ -95,13 +95,11 @@ export default function StrukturEditorPage() {
     setModalError(null);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await authenticatedFetch("http://localhost:8000/api/v1/pejabat", {
+      const res = await authenticatedFetch("/pejabat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
-          Authorization: token ? `Bearer ${token}` : "",
         },
         body: JSON.stringify({
           position: modalPositionName,
@@ -175,12 +173,8 @@ export default function StrukturEditorPage() {
     }
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await authenticatedFetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
+      const res = await authenticatedFetch(`/pejabat/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: token ? `Bearer ${token}` : "",
-        },
       });
 
       if (res.ok) {
@@ -326,7 +320,7 @@ export default function StrukturEditorPage() {
                         {/* Avatar Image or Initials */}
                         {item.avatar ? (
                           <img
-                            src={item.avatar.startsWith("http") ? item.avatar : `http://localhost:8000${item.avatar}`}
+                            src={item.avatar.startsWith("http") ? item.avatar : `${STORAGE_BASE_URL}${item.avatar}`}
                             alt={item.position}
                             className="w-10 h-10 rounded-2xl object-cover border border-blue-300 shadow-sm shrink-0"
                           />
@@ -429,7 +423,7 @@ export default function StrukturEditorPage() {
                         {/* Avatar Image or Initials Circle */}
                         {item.avatar ? (
                           <img
-                            src={item.avatar.startsWith("http") ? item.avatar : `http://localhost:8000${item.avatar}`}
+                            src={item.avatar.startsWith("http") ? item.avatar : `${STORAGE_BASE_URL}${item.avatar}`}
                             alt={item.name}
                             className="w-11 h-11 rounded-2xl object-cover border border-blue-300 shadow-sm shrink-0"
                           />

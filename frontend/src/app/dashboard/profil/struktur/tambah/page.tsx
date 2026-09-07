@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { OptimizedMediaUploader } from "@/components/ui/OptimizedMediaUploader";
 import {
@@ -54,7 +54,7 @@ export default function TambahStrukturPage() {
   useEffect(() => {
     const fetchPejabat = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/pejabat");
+        const res = await fetch(`${API_BASE_URL}/pejabat`);
         if (res.ok) {
           const json = await res.json();
           setOfficials(json.data.flat);
@@ -108,12 +108,10 @@ export default function TambahStrukturPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      const token = localStorage.getItem("token");
-      const res = await authenticatedFetch("http://localhost:8000/api/v1/pejabat", {
+      const res = await authenticatedFetch("/pejabat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           position,
@@ -323,7 +321,7 @@ export default function TambahStrukturPage() {
               {avatar && (
                 <div className="flex items-center gap-3 p-3 rounded-2xl bg-blue-50 border border-blue-200 mt-2">
                   <img
-                    src={avatar.startsWith("http") ? avatar : `http://localhost:8000${avatar}`}
+                    src={avatar.startsWith("http") ? avatar : `${STORAGE_BASE_URL}${avatar}`}
                     alt="Foto Pejabat"
                     className="w-12 h-12 rounded-xl object-cover border border-blue-300 shadow-sm"
                   />

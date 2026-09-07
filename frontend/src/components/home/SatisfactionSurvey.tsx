@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Info, X, Send, CheckCircle2, HeartHandshake, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 type SatisfactionLevel = "sangat" | "cukup" | "kurang" | null;
 
@@ -23,7 +24,7 @@ export const SatisfactionSurvey: React.FC = () => {
   useEffect(() => {
     const fetchIkmConfig = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/surveys/config");
+        const res = await fetch(`${API_BASE_URL}/surveys/config`);
         if (res.ok) {
           const json = await res.json();
           if (json.data && json.data.stats) {

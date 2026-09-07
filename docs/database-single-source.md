@@ -23,6 +23,8 @@ Jika API gagal, UI menampilkan keadaan kosong/pesan gagal. UI tidak boleh mengga
 | Proyek | `proyek_details`, `proyek_attachments` | `/proyek-details` | Admin berizin `manage_gis` |
 | Geoprocessing | `geoprocessing_analyses` | `/gis/geoprocessing/analyses` | Admin berizin `manage_gis` |
 | Jenis dokumen | `jenis_dokuments` | `/jenis-dokumen` | Admin berizin `manage_document_types` |
+| Pengaturan Spasial & GIS | `geo_settings` (buffer, pin sektor OPD, layout cetak) | `/geo-settings` | Admin berizin `manage_gis` |
+| Master Layer Spasial | `spatial_layers` (kecamatan, desa, rtrw) | `/spatial-layers` | Admin berizin `manage_gis` |
 | Berita/profil/chart/pejabat | Tabel domain masing-masing | API domain masing-masing | Permission domain masing-masing |
 
 Agenda dan Pengumuman mempunyai endpoint publik yang hanya mengembalikan record terbit. Pengumuman kedaluwarsa tidak masuk daftar publik. Kategori yang sudah dipakai tidak dihapus secara merusak; kategori dinonaktifkan.

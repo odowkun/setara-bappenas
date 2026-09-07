@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import {
@@ -33,7 +33,7 @@ export default function TupoksiEditorPage() {
   const fetchTupoksiData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/profil/tugas_fungsi");
+      const res = await fetch(`${API_BASE_URL}/profil/tugas_fungsi`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -79,7 +79,7 @@ export default function TupoksiEditorPage() {
     setSaving(true);
 
     try {
-      const res = await authenticatedFetch("http://localhost:8000/api/v1/profil/tugas_fungsi", {
+      const res = await authenticatedFetch("/profil/tugas_fungsi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

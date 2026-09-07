@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import {
@@ -96,7 +96,7 @@ export default function DashboardTentangEditorPage() {
   const fetchTentangData = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/profil/tentang");
+      const res = await fetch(`${API_BASE_URL}/profil/tentang`);
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -114,7 +114,7 @@ export default function DashboardTentangEditorPage() {
       }
 
       // Load Visi & Misi data
-      const resVisi = await fetch("http://localhost:8000/api/v1/profil/visi_misi");
+      const resVisi = await fetch(`${API_BASE_URL}/profil/visi_misi`);
       if (resVisi.ok) {
         const jsonVisi = await resVisi.json();
         if (jsonVisi.success && jsonVisi.data) {
@@ -143,7 +143,7 @@ export default function DashboardTentangEditorPage() {
 
     try {
       // 1. Save Tentang & Informasi Instansi
-      const resTentang = await authenticatedFetch("http://localhost:8000/api/v1/profil/tentang", {
+      const resTentang = await authenticatedFetch("/profil/tentang", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -164,7 +164,7 @@ export default function DashboardTentangEditorPage() {
       });
 
       // 2. Save Visi & Misi
-      const resVisi = await authenticatedFetch("http://localhost:8000/api/v1/profil/visi_misi", {
+      const resVisi = await authenticatedFetch("/profil/visi_misi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

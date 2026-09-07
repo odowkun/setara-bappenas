@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import {
   Printer,
@@ -15,6 +15,7 @@ import {
   Check,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { geoSettingService } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
@@ -34,19 +35,53 @@ export default function CetakLayoutSettingPage() {
   const [orientation, setOrientation] = useState<"landscape" | "portrait">("landscape");
   const [exportFormat, setExportFormat] = useState<"pdf" | "png">("pdf");
 
+  useEffect(() => {
+    async function loadSettings() {
+      try {
+        const data = await geoSettingService.getSettings();
+        if (data?.print_layout_config_json) {
+          const cfg = data.print_layout_config_json;
+          if (cfg.map_title) setMapTitle(cfg.map_title);
+          if (cfg.map_subtitle) setMapSubtitle(cfg.map_subtitle);
+          if (typeof cfg.show_logo === "boolean") setShowLogo(cfg.show_logo);
+          if (typeof cfg.show_compass === "boolean") setShowCompass(cfg.show_compass);
+          if (typeof cfg.show_legend === "boolean") setShowLegend(cfg.show_legend);
+          if (cfg.paper_size) setPaperSize(cfg.paper_size);
+          if (cfg.orientation) setOrientation(cfg.orientation);
+          if (cfg.export_format) setExportFormat(cfg.export_format);
+        }
+      } catch (err) {
+        console.error("Gagal memuat template cetak layout:", err);
+      }
+    }
+    loadSettings();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
 
     try {
-      toast.success("Konfigurasi Template Cetak Layout Executive berhasil diperbarui!");
+      await geoSettingService.updateSettings({
+        print_layout_config_json: {
+          map_title: mapTitle,
+          map_subtitle: mapSubtitle,
+          show_logo: showLogo,
+          show_compass: showCompass,
+          show_legend: showLegend,
+          paper_size: paperSize,
+          orientation: orientation,
+          export_format: exportFormat,
+        },
+      });
+      toast.success("Konfigurasi Template Cetak Layout Executive berhasil disimpan ke database!");
       showSuccessSwal(
         "Pembaruan Berhasil!",
-        "Template cetak peta executive untuk Bupati & Bappeda berhasil disimpan."
+        "Template cetak peta executive untuk Bupati & Bappeda berhasil disimpan ke database."
       );
     } catch (err: any) {
       toast.error("Gagal menyimpan konfigurasi.");
-      showErrorSwal("Gagal Menyimpan", "Terjadi kesalahan sistem.");
+      showErrorSwal("Gagal Menyimpan", err.message || "Terjadi kesalahan sistem.");
     } finally {
       setSaving(false);
     }

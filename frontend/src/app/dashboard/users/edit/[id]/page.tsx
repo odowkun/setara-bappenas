@@ -8,6 +8,7 @@ import { adminService } from "@/services/adminService";
 import { User, Role, BidangType } from "@/types/auth";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { toast } from "@/lib/swal";
+import { API_BASE_URL } from "@/lib/apiClient";
 import {
   ArrowLeft,
   Save,
@@ -117,7 +118,7 @@ export default function EditUserPage() {
   useEffect(() => {
     const fetchPejabatData = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/pejabat");
+        const res = await fetch(`${API_BASE_URL}/pejabat`);
         if (res.ok) {
           const json = await res.json();
           if (json.success && Array.isArray(json.data)) {

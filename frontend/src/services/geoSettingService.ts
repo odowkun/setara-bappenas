@@ -15,6 +15,20 @@ export interface GeoSettingData {
   spatial_reference_srid: string;
   unit_luas: "ha" | "m2";
   unit_panjang: "km" | "m";
+  default_buffer_radius_meter?: number;
+  buffer_color?: string;
+  buffer_opacity?: number;
+  sector_pin_colors_json?: Record<string, string>;
+  print_layout_config_json?: {
+    map_title?: string;
+    map_subtitle?: string;
+    show_logo?: boolean;
+    show_compass?: boolean;
+    show_legend?: boolean;
+    paper_size?: "A4" | "A3" | "A2";
+    orientation?: "landscape" | "portrait";
+    export_format?: "pdf" | "png";
+  };
   custom_boundary_name?: string | null;
   custom_boundary_path?: string | null;
   custom_boundary_geojson?: any | null;
@@ -25,6 +39,22 @@ export interface GeoSettingData {
   custom_boundary_uploaded_at?: string | null;
   has_custom_boundary?: boolean;
   updated_by?: string;
+  updated_at?: string;
+}
+
+export interface SpatialLayerItem {
+  id: number | string;
+  name: string;
+  type: "kabupaten" | "kecamatan" | "rtrw";
+  legal_basis?: string | null;
+  feature_count?: number;
+  color: string;
+  visible: boolean;
+  file_name?: string | null;
+  file_path?: string | null;
+  geojson?: any;
+  created_by?: string;
+  created_at?: string;
   updated_at?: string;
 }
 
@@ -145,6 +175,102 @@ export const geoSettingService = {
     return {
       success: true,
       data: json.data,
+      message: json.message,
+    };
+  },
+
+  /**
+   * Fetch all master secondary spatial layers (Kecamatan, Desa, RTRW)
+   */
+  async getSpatialLayers(): Promise<SpatialLayerItem[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/spatial-layers`, {
+        headers: { Accept: "application/json" },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error ${response.status}`);
+      }
+
+      const json = await response.json();
+      return json.data || [];
+    } catch (error) {
+      console.warn("Failed to fetch spatial-layers from server:", error);
+      return [];
+    }
+  },
+
+  /**
+   * Create a new secondary spatial layer
+   */
+  async createSpatialLayer(payload: {
+    name: string;
+    type: "kabupaten" | "kecamatan" | "rtrw";
+    legal_basis?: string;
+    feature_count?: number;
+    color?: string;
+    visible?: boolean;
+    file_name?: string;
+    geojson?: any;
+  }): Promise<{ success: boolean; data: SpatialLayerItem; message: string }> {
+    const response = await authenticatedFetch("/spatial-layers", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || "Gagal membuat layer spasial baru");
+    }
+
+    return {
+      success: true,
+      data: json.data,
+      message: json.message,
+    };
+  },
+
+  /**
+   * Toggle spatial layer visibility
+   */
+  async toggleSpatialLayer(id: number | string): Promise<{ success: boolean; data: SpatialLayerItem; message: string }> {
+    const response = await authenticatedFetch(`/spatial-layers/${id}/toggle`, {
+      method: "PATCH",
+      headers: { Accept: "application/json" },
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || "Gagal mengubah visibilitas layer");
+    }
+
+    return {
+      success: true,
+      data: json.data,
+      message: json.message,
+    };
+  },
+
+  /**
+   * Delete a spatial layer
+   */
+  async deleteSpatialLayer(id: number | string): Promise<{ success: boolean; message: string }> {
+    const response = await authenticatedFetch(`/spatial-layers/${id}`, {
+      method: "DELETE",
+      headers: { Accept: "application/json" },
+    });
+
+    const json = await response.json();
+
+    if (!response.ok) {
+      throw new Error(json.message || "Gagal menghapus layer spasial");
+    }
+
+    return {
+      success: true,
       message: json.message,
     };
   },

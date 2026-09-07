@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { StrukturOrganisasiChart, OrgNode } from "@/components/ui/StrukturOrganisasiChart";
+import { API_BASE_URL } from "@/lib/apiClient";
 import {
   ChevronRight,
   Network,
@@ -13,7 +14,7 @@ export default function PublicStrukturPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/pejabat")
+    fetch(`${API_BASE_URL}/pejabat`)
       .then((r) => r.json())
       .then((jsonPejabat) => {
         if (jsonPejabat.success && jsonPejabat.data) {

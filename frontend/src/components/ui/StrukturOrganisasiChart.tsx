@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, STORAGE_BASE_URL } from "@/lib/apiClient";
 import { createPortal } from "react-dom";
 import {
   LayoutGrid,
@@ -448,7 +448,7 @@ const InteractiveCanvasOrgChart: React.FC<{
         y: Math.round(n.y),
       }));
 
-      const res = await authenticatedFetch("http://localhost:8000/api/v1/pejabat/save-positions", {
+      const res = await authenticatedFetch("/pejabat/save-positions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -780,7 +780,7 @@ const InteractiveCanvasOrgChart: React.FC<{
                   {/* Photo Avatar or Initials Circle */}
                   {node.avatar ? (
                     <img
-                      src={node.avatar.startsWith("http") ? node.avatar : `http://localhost:8000${node.avatar}`}
+                      src={node.avatar.startsWith("http") ? node.avatar : `${STORAGE_BASE_URL}${node.avatar}`}
                       alt={node.name}
                       className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-sm shrink-0"
                     />
@@ -855,7 +855,7 @@ const RenderVerticalNode: React.FC<{
           {/* Avatar / Initial Circle */}
           {node.avatar ? (
             <img
-              src={node.avatar.startsWith("http") ? node.avatar : `http://localhost:8000${node.avatar}`}
+              src={node.avatar.startsWith("http") ? node.avatar : `${STORAGE_BASE_URL}${node.avatar}`}
               alt={node.name}
               className="w-12 h-12 rounded-2xl object-cover border border-blue-300 shadow-sm shrink-0"
             />

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/apiClient";
 import {
   Briefcase,
   CheckCircle2,
@@ -23,7 +24,7 @@ export default function PublicTugasFungsiPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/v1/profil/tugas_fungsi")
+    fetch(`${API_BASE_URL}/profil/tugas_fungsi`)
       .then((r) => r.json())
       .then((jsonTF) => {
         if (jsonTF.success && jsonTF.data) {

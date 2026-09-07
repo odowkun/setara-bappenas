@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { X, ChevronLeft, ChevronRight, Download, Film } from "lucide-react";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
 export interface MediaItem {
   id: string | number;
@@ -78,7 +79,7 @@ export const MediaAlbumModal: React.FC<MediaAlbumModalProps> = ({
 
   const formattedUrl = (url: string) => {
     if (!url) return "";
-    return url.startsWith("/storage/") ? `http://localhost:8000${url}` : url;
+    return url.startsWith("/storage/") ? `${STORAGE_BASE_URL}${url}` : url;
   };
 
   const isVideo =

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import halutOfficialBpsBoundary from "@/data/halut-boundary.json";
 import { proyekService } from "@/services/proyekService";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
 // Fix Leaflet Default Icon asset paths in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -367,7 +368,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       }
 
       const rawImgUrl = loc.image && loc.image.trim() !== "" ? loc.image : DEFAULT_BAPPEDA_PROYEK_SVG;
-      const imgUrl = rawImgUrl.startsWith("/storage/") ? `http://localhost:8000${rawImgUrl}` : rawImgUrl;
+      const imgUrl = rawImgUrl.startsWith("/storage/") ? `${STORAGE_BASE_URL}${rawImgUrl}` : rawImgUrl;
       const mediaCount = loc.images?.length || (loc.image ? 1 : 0);
 
       const photoHtml = `<div class="popup-photo-trigger" style="position: relative; width: 100%; height: 115px; border-radius: 12px; overflow: hidden; margin-top: 8px; margin-bottom: 8px; background: #0f172a; cursor: pointer;">
