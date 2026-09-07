@@ -262,7 +262,7 @@ export function DocumentQuickMenu({
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={reduceMotion ? { opacity: 0 } : { opacity: 0, x: 80 }}
             transition={{ duration: reduceMotion ? 0 : 0.28, ease: "easeOut" }}
-            className="fixed bottom-4 right-4 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
+            className="fixed bottom-5 right-5 z-[60] flex flex-col items-end gap-3 sm:bottom-6 sm:right-6"
           >
             <AnimatePresence>
               {isFloatingOpen && (
@@ -279,22 +279,22 @@ export function DocumentQuickMenu({
                       : { opacity: 0, y: 12, scale: 0.97 }
                   }
                   transition={{ duration: reduceMotion ? 0 : 0.2 }}
-                  className="w-[calc(100vw-2rem)] max-w-sm rounded-[28px] border border-blue-100 bg-white/95 p-3 text-slate-900 shadow-2xl shadow-blue-950/20 backdrop-blur-xl"
+                  className="w-[calc(100vw-2.5rem)] max-w-sm rounded-[28px] border border-slate-200/90 bg-white/95 p-3.5 text-slate-900 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl"
                 >
-                  <div className="mb-2 flex items-center justify-between px-2 py-1">
-                    <span className="text-xs font-black uppercase tracking-wider text-slate-500">
-                      Kategori Dokumen
+                  <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 px-1">
+                    <span className="text-xs font-black uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5 text-amber-500" /> Kategori Dokumen
                     </span>
                     <button
                       type="button"
                       onClick={() => setIsFloatingOpen(false)}
-                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
                       aria-label="Tutup panel"
                     >
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="flex flex-col gap-1">
+                  <div className="flex flex-col gap-1.5">
                     {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
                       renderCategory(code, label, true)
                     )}
@@ -319,16 +319,18 @@ export function DocumentQuickMenu({
               aria-expanded={isFloatingOpen}
               aria-controls="floating-document-categories"
               aria-label="Buka filter cepat dokumen"
-              className="group flex h-13 cursor-pointer items-center gap-2 rounded-full border border-blue-500 bg-blue-700 px-4 text-white shadow-xl shadow-blue-950/30 outline-none transition-colors hover:bg-blue-800 focus-visible:ring-4 focus-visible:ring-amber-300 sm:h-14 sm:px-5"
+              className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-700/80 bg-slate-950/90 px-3.5 sm:px-4.5 text-white shadow-2xl shadow-slate-950/50 backdrop-blur-2xl transition-all duration-200 hover:bg-slate-900 hover:border-amber-500/60 hover:shadow-amber-500/20 active:scale-95"
             >
-              <FileText className="h-5 w-5" aria-hidden="true" />
-              <span className="hidden text-xs font-black sm:inline">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 border border-amber-400/30 transition-transform group-hover:scale-105">
+                <FileText className="h-4 w-4" aria-hidden="true" />
+              </span>
+              <span className="hidden text-xs font-black tracking-tight text-slate-100 group-hover:text-white sm:inline">
                 Kategori Dokumen
               </span>
               <ChevronUp
                 aria-hidden="true"
-                className={`hidden h-4 w-4 transition-transform sm:block ${
-                  isFloatingOpen ? "rotate-180" : ""
+                className={`hidden h-4 w-4 text-slate-400 transition-transform duration-200 sm:block group-hover:text-amber-400 ${
+                  isFloatingOpen ? "rotate-180 text-amber-400" : ""
                 }`}
               />
             </button>
