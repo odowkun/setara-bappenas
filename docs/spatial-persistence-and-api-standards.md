@@ -70,3 +70,14 @@ Seluruh referensi `http://localhost:8000` telah dihapus dari antarmuka frontend:
 - Menggunakan `API_BASE_URL` dari `@/lib/apiClient` untuk endpoint REST API.
 - Menggunakan `STORAGE_BASE_URL` dari `@/lib/apiClient` untuk lampiran file, avatar pejabat, dan gambar album lapangan.
 - `authenticatedFetch` secara otomatis menyematkan base URL ketika diberikan path relatif (misal: `/pejabat`, `/profil/tentang`, `/spatial-layers`).
+
+---
+
+## 5. Perbaikan & Polish UI DocumentQuickMenu
+
+Perbaikan menyeluruh pada bilah navigasi cepat kategori dokumen (`DocumentQuickMenu.tsx`):
+- **Eradikasi Text Wrapping 3 Baris**: Mengganti teks panjang "Dokumen Publik Lainnya" yang terpotong menjadi "Lainnya" (`whitespace-nowrap`), sehingga seluruh 6 kategori rapi dalam 1 baris.
+- **Ikon Spesifik per Kategori**: Mengganti 6 ikon buku identik menjadi ikon semantik Lucide yang spesifik (RKPD: `CalendarRange`, RTRW: `Map`, RPJPD: `Award`, RPJMD: `Briefcase`, LKPJ: `CheckCircle2`, Lainnya: `FolderArchive`).
+- **Active Pill State Elegan**: Mengganti background kotak kaku dengan pill royal blue ber-rounded proporsional (`rounded-xl sm:rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30`), serasi dengan kurva container luar.
+- **Layout Responsif Seimbang**: Desktop menampilkan 1 baris 6 kolom seimbang (`lg:grid-cols-6`), sedangkan mobile menampilkan grid 2 baris x 3 kolom yang simetris (`grid-cols-3`).
+
