@@ -3,14 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Kritik;
 use Illuminate\Http\Request;
-use DB;
 
 class KritikController extends Controller
 {
     public function index()
     {
-        $kritiks = DB::table('kritiks')->orderBy('created_at', 'desc')->get();
+        $kritiks = Kritik::query()->latest()->get();
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
@@ -21,15 +22,15 @@ class KritikController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string',
-            'email' => 'required|email',
-            'telepon' => 'nullable|string',
-            'skpd_tujuan' => 'nullable|string',
-            'subjek' => 'required|string',
-            'pesan' => 'required|string',
+            'nama' => 'required|string|max:255',
+            'email' => 'required|email|max:255',
+            'telepon' => 'nullable|string|max:30',
+            'skpd_tujuan' => 'nullable|string|max:255',
+            'subjek' => 'required|string|max:255',
+            'pesan' => 'required|string|max:5000',
         ]);
 
-        $id = DB::table('kritiks')->insertGetId([
+        $kritik = Kritik::query()->create([
             'nama' => $request->nama,
             'email' => $request->email,
             'telepon' => $request->telepon,
@@ -47,32 +48,30 @@ class KritikController extends Controller
             'code' => 201,
             'message' => 'Kritik & Saran Anda berhasil disampaikan ke BAPPEDA.',
             'data' => [
-                'id' => $id,
+                'id' => $kritik->id,
                 'status' => 'Menunggu Tanggapan',
-            ]
-        ]);
+            ],
+        ], 201);
     }
 
     public function updateTanggapan(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string',
-            'catatan_balasan' => 'nullable|string',
+            'status' => 'required|string|in:Menunggu Tanggapan,Dalam Proses,Sudah Ditanggapi,Ditutup',
+            'catatan_balasan' => 'nullable|string|max:5000',
         ]);
 
-        DB::table('kritiks')->where('id', $id)->update([
+        $item = Kritik::query()->findOrFail($id);
+        $item->update([
             'status' => $request->status,
             'catatan_balasan' => $request->catatan_balasan,
-            'updated_at' => now(),
         ]);
-
-        $item = DB::table('kritiks')->where('id', $id)->first();
 
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'message' => 'Tanggapan Kritik & Saran berhasil disimpan',
-            'data' => $item,
+            'data' => $item->fresh(),
         ]);
     }
 }

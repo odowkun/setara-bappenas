@@ -1,3 +1,5 @@
+import { authenticatedFetch } from "@/lib/apiClient";
+
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
 export type QuestionType =
@@ -69,58 +71,6 @@ export interface KritikSaranItem {
   created_at: string;
 }
 
-export const defaultSurveys: SurveyResponseItem[] = [
-  {
-    id: 1,
-    nama_responden: "Drs. M. Tani",
-    email: "mtani@halutkab.go.id",
-    pekerjaan: "ASN Perangkat Daerah",
-    jenis_layanan: "Layanan Konsultasi RKPD & Perencanaan Daerah",
-    u1_persyaratan: 5,
-    u2_prosedur: 5,
-    u3_kecepatan: 5,
-    u4_produk: 5,
-    u5_sikap: 5,
-    ikm_score: 100.0,
-    saran_masukan: "Proses verifikasi dokumen usulan sangat cepat dan responsif.",
-    created_at: "2026-07-24 10:15:00",
-  },
-  {
-    id: 2,
-    nama_responden: "Sarah M. Pdt",
-    email: "sarah.m@gmail.com",
-    pekerjaan: "Wiraswasta / Masyarakat",
-    jenis_layanan: "Pelayanan Informasi Publik & GIS Peta Spasial",
-    u1_persyaratan: 4,
-    u2_prosedur: 5,
-    u3_kecepatan: 4,
-    u4_produk: 5,
-    u5_sikap: 5,
-    ikm_score: 92.0,
-    saran_masukan: "Sistem peta digital sangat membantu dalam konsultasi tata ruang.",
-    created_at: "2026-07-24 11:30:00",
-  },
-];
-
-export const defaultQuestions: SurveyQuestionItem[] = [
-  { id: 1, service_id: null, title: "1. Kejelasan Persyaratan Pelayanan", description: "Keselarasan persyaratan pelayanan dengan jenis pelayanannya.", question_type: "rating", order_index: 1, is_active: true },
-  { id: 2, service_id: null, title: "2. Kemudahan Prosedur & Alur Pelayanan", description: "Kemudahan tahapan pelayanan yang diberikan kepada masyarakat.", question_type: "rating", order_index: 2, is_active: true },
-  { id: 3, service_id: null, title: "3. Kecepatan Waktu Pelayanan", description: "Target waktu penyelesaian pelayanan sesuai standar yang ditetapkan.", question_type: "rating", order_index: 3, is_active: true },
-  { id: 4, service_id: null, title: "4. Kualitas Produk / Informasi Hasil Layanan", description: "Kesesuaian hasil pelayanan dengan dokumen/informasi yang dijanjikan.", question_type: "rating", order_index: 4, is_active: true },
-  { id: 5, service_id: null, title: "5. Sikap & Keramahan Petugas BAPPEDA", description: "Kematangan, kesopanan, dan kesiapan petugas dalam merespons publik.", question_type: "rating", order_index: 5, is_active: true },
-];
-
-export const defaultServices: SurveyServiceItem[] = [
-  { id: 1, name: "BAPPEDA Halmahera Utara (Kantor Utama)", is_active: true },
-  { id: 2, name: "Bidang Perencanaan Pembangunan & Evaluasi", is_active: true },
-  { id: 3, name: "Bidang Pembangunan Manusia & Masyarakat (PMM)", is_active: true },
-  { id: 4, name: "Bidang Ekonomi & Sumber Daya Alam (SDA)", is_active: true },
-  { id: 5, name: "Bidang Infrastruktur & Pengembangan Wilayah (IPW)", is_active: true },
-  { id: 6, name: "Bidang Pengendalian, Evaluasi & Pelaporan (PEP)", is_active: true },
-  { id: 7, name: "Sekretariat BAPPEDA", is_active: true },
-  { id: 8, name: "Layanan Informasi Publik & GIS Peta Spasial", is_active: true },
-];
-
 export async function fetchSurveyConfig(): Promise<{ questions: SurveyQuestionItem[]; services: SurveyServiceItem[] }> {
   try {
     const res = await fetch(`${API_BASE}/surveys/config`, { cache: "no-store" });
@@ -128,25 +78,16 @@ export async function fetchSurveyConfig(): Promise<{ questions: SurveyQuestionIt
       const json = await res.json();
       if (json.data) {
         return {
-          questions: json.data.questions || defaultQuestions,
-          services: json.data.services || defaultServices,
+          questions: Array.isArray(json.data.questions) ? json.data.questions : [],
+          services: Array.isArray(json.data.services) ? json.data.services : [],
         };
       }
     }
   } catch (e) {
-    console.warn("API fetch survey config failed, fallback to local storage / defaults:", e);
+    console.error("Konfigurasi survei resmi gagal dimuat:", e);
   }
 
-  if (typeof window !== "undefined") {
-    const qStored = localStorage.getItem("bappeda_survey_questions");
-    const sStored = localStorage.getItem("bappeda_survey_services");
-    return {
-      questions: qStored ? JSON.parse(qStored) : defaultQuestions,
-      services: sStored ? JSON.parse(sStored) : defaultServices,
-    };
-  }
-
-  return { questions: defaultQuestions, services: defaultServices };
+  return { questions: [], services: [] };
 }
 
 export async function addSurveyQuestion(
@@ -158,55 +99,31 @@ export async function addSurveyQuestion(
   is_required: boolean = false
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/surveys/questions`, {
+    const res = await authenticatedFetch(`${API_BASE}/surveys/questions`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, description, service_id, question_type, options, is_required }),
     });
     if (res.ok) return true;
   } catch (e) {
-    console.warn("API add question fallback to local:", e);
+    console.warn("API add question failed:", e);
   }
-
-  if (typeof window !== "undefined") {
-    const qStored = localStorage.getItem("bappeda_survey_questions");
-    const list: SurveyQuestionItem[] = qStored ? JSON.parse(qStored) : defaultQuestions;
-    const newItem: SurveyQuestionItem = {
-      id: Date.now(),
-      service_id,
-      title,
-      description,
-      question_type,
-      options,
-      is_required,
-      order_index: list.length + 1,
-      is_active: true,
-    };
-    localStorage.setItem("bappeda_survey_questions", JSON.stringify([...list, newItem]));
-  }
-  return true;
+  return false;
 }
 
 export async function deleteSurveyQuestion(id: number): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/surveys/questions/${id}`, { method: "DELETE" });
+    const res = await authenticatedFetch(`${API_BASE}/surveys/questions/${id}`, { method: "DELETE" });
     if (res.ok) return true;
   } catch (e) {
-    console.warn("API delete question fallback to local:", e);
+    console.warn("API delete question failed:", e);
   }
-
-  if (typeof window !== "undefined") {
-    const qStored = localStorage.getItem("bappeda_survey_questions");
-    const list: SurveyQuestionItem[] = qStored ? JSON.parse(qStored) : defaultQuestions;
-    const updated = list.filter((q) => q.id !== id);
-    localStorage.setItem("bappeda_survey_questions", JSON.stringify(updated));
-  }
-  return true;
+  return false;
 }
 
 export async function reorderSurveyQuestions(orderedIds: number[]): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/surveys/questions/reorder`, {
+    const res = await authenticatedFetch(`${API_BASE}/surveys/questions/reorder`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ordered_ids: orderedIds }),
@@ -216,106 +133,73 @@ export async function reorderSurveyQuestions(orderedIds: number[]): Promise<bool
     console.warn("API reorder question fallback to local:", e);
   }
 
-  return true;
+  return false;
 }
 
 export async function addSurveyService(name: string): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/surveys/services`, {
+    const res = await authenticatedFetch(`${API_BASE}/surveys/services`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     });
     if (res.ok) return true;
   } catch (e) {
-    console.warn("API add service fallback to local:", e);
+    console.warn("API add service failed:", e);
   }
-
-  if (typeof window !== "undefined") {
-    const sStored = localStorage.getItem("bappeda_survey_services");
-    const list: SurveyServiceItem[] = sStored ? JSON.parse(sStored) : defaultServices;
-    const newItem: SurveyServiceItem = { id: Date.now(), name, is_active: true };
-    localStorage.setItem("bappeda_survey_services", JSON.stringify([...list, newItem]));
-  }
-  return true;
+  return false;
 }
 
 export async function deleteSurveyService(id: number): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/surveys/services/${id}`, { method: "DELETE" });
+    const res = await authenticatedFetch(`${API_BASE}/surveys/services/${id}`, { method: "DELETE" });
     if (res.ok) return true;
   } catch (e) {
-    console.warn("API delete service fallback to local:", e);
+    console.warn("API delete service failed:", e);
   }
-
-  if (typeof window !== "undefined") {
-    const sStored = localStorage.getItem("bappeda_survey_services");
-    const list: SurveyServiceItem[] = sStored ? JSON.parse(sStored) : defaultServices;
-    const updated = list.filter((s) => s.id !== id);
-    localStorage.setItem("bappeda_survey_services", JSON.stringify(updated));
-  }
-  return true;
+  return false;
 }
 
 export async function fetchSurveysSummary(): Promise<{ surveys: SurveyResponseItem[]; summary: SurveySummaryData }> {
   try {
-    const res = await fetch(`${API_BASE}/surveys`, { cache: "no-store" });
+    const res = await authenticatedFetch(`${API_BASE}/surveys`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       if (json.data) {
         return {
-          surveys: json.data.surveys || defaultSurveys,
+          surveys: Array.isArray(json.data.surveys) ? json.data.surveys : [],
           summary: json.data.summary,
         };
       }
     }
   } catch (e) {
-    console.warn("API fetch surveys failed, fallback to local storage:", e);
-  }
-
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("bappeda_surveys");
-    const list: SurveyResponseItem[] = stored ? JSON.parse(stored) : defaultSurveys;
-    const total = list.length;
-    const avg = total > 0 ? list.reduce((acc, curr) => acc + curr.ikm_score, 0) / total : 90.0;
-
-    let mutu = "A";
-    let kategori = "Sangat Baik";
-    if (avg < 76.61) {
-      mutu = "B";
-      kategori = "Baik";
-    }
-
-    return {
-      surveys: list,
-      summary: {
-        total_responden: total,
-        ikm_score: Number(avg.toFixed(2)),
-        mutu_pelayanan: mutu,
-        kategori,
-        u1_avg: 4.8,
-        u2_avg: 4.7,
-        u3_avg: 4.6,
-        u4_avg: 4.8,
-        u5_avg: 4.9,
-      },
-    };
+    console.warn("API fetch surveys failed:", e);
   }
 
   return {
-    surveys: defaultSurveys,
+    surveys: [],
     summary: {
-      total_responden: defaultSurveys.length,
-      ikm_score: 96.0,
-      mutu_pelayanan: "A",
-      kategori: "Sangat Baik",
-      u1_avg: 4.8,
-      u2_avg: 4.7,
-      u3_avg: 4.6,
-      u4_avg: 4.8,
-      u5_avg: 4.9,
+      total_responden: 0,
+      ikm_score: 0,
+      mutu_pelayanan: "-",
+      kategori: "Data tidak tersedia",
+      u1_avg: 0,
+      u2_avg: 0,
+      u3_avg: 0,
+      u4_avg: 0,
+      u5_avg: 0,
     },
   };
+}
+
+export async function fetchPublicSurveySummary(): Promise<SurveySummaryData> {
+  const res = await fetch(`${API_BASE}/surveys/summary`, { cache: "no-store" });
+  if (!res.ok) {
+    throw new Error("Ringkasan survei tidak dapat dimuat.");
+  }
+
+  const json = await res.json();
+  return json.data.summary as SurveySummaryData;
 }
 
 export async function submitSurvey(data: any): Promise<boolean> {
@@ -329,39 +213,7 @@ export async function submitSurvey(data: any): Promise<boolean> {
       return true;
     }
   } catch (e) {
-    console.warn("API submit survey failed, storing to localStorage:", e);
-  }
-
-  // Fallback save to localStorage
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("bappeda_surveys");
-    const list: SurveyResponseItem[] = stored ? JSON.parse(stored) : defaultSurveys;
-    const u1 = Number(data.u1_persyaratan || 5);
-    const u2 = Number(data.u2_prosedur || 5);
-    const u3 = Number(data.u3_kecepatan || 5);
-    const u4 = Number(data.u4_produk || 5);
-    const u5 = Number(data.u5_sikap || 5);
-    const rawAvg = (u1 + u2 + u3 + u4 + u5) / 5;
-    const ikmScore = (rawAvg / 5) * 100;
-
-    const newItem: SurveyResponseItem = {
-      id: Date.now(),
-      nama_responden: data.nama_responden || "Masyarakat Umum",
-      email: data.email,
-      pekerjaan: data.pekerjaan || "Wiraswasta / Masyarakat",
-      jenis_layanan: data.jenis_layanan,
-      u1_persyaratan: u1,
-      u2_prosedur: u2,
-      u3_kecepatan: u3,
-      u4_produk: u4,
-      u5_sikap: u5,
-      ikm_score: Number(ikmScore.toFixed(2)),
-      saran_masukan: data.saran_masukan,
-      created_at: new Date().toISOString().replace("T", " ").substring(0, 19),
-    };
-
-    localStorage.setItem("bappeda_surveys", JSON.stringify([newItem, ...list]));
-    return true;
+    console.warn("API submit survey failed:", e);
   }
 
   return false;
@@ -370,7 +222,7 @@ export async function submitSurvey(data: any): Promise<boolean> {
 export async function fetchKritikList(): Promise<KritikSaranItem[]> {
   let apiItems: KritikSaranItem[] = [];
   try {
-    const res = await fetch(`${API_BASE}/kritik`, { cache: "no-store" });
+    const res = await authenticatedFetch(`${API_BASE}/kritik`, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       if (json.data && Array.isArray(json.data)) {
@@ -378,31 +230,9 @@ export async function fetchKritikList(): Promise<KritikSaranItem[]> {
       }
     }
   } catch (e) {
-    console.warn("API fetch kritik failed, fallback to local storage:", e);
+    console.warn("API fetch kritik failed:", e);
   }
-
-  let localItems: KritikSaranItem[] = [];
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("bappeda_kritiks");
-    if (stored) {
-      try {
-        localItems = JSON.parse(stored);
-      } catch (err) {
-        console.error(err);
-      }
-    }
-  }
-
-  // Combine both API items and local items seamlessly!
-  const combinedMap = new Map<number, KritikSaranItem>();
-  apiItems.forEach((item) => combinedMap.set(item.id, item));
-  localItems.forEach((item) => combinedMap.set(item.id, item));
-
-  const result = Array.from(combinedMap.values()).sort((a, b) =>
-    b.created_at > a.created_at ? 1 : -1
-  );
-
-  return result;
+  return apiItems;
 }
 
 export async function submitKritik(data: {
@@ -413,7 +243,6 @@ export async function submitKritik(data: {
   subjek: string;
   pesan: string;
 }): Promise<boolean> {
-  let success = false;
   try {
     const res = await fetch(`${API_BASE}/kritik`, {
       method: "POST",
@@ -421,25 +250,10 @@ export async function submitKritik(data: {
       body: JSON.stringify(data),
     });
     if (res.ok) {
-      success = true;
+      return true;
     }
   } catch (e) {
-    console.warn("API submit kritik failed, storing to local storage:", e);
+    console.warn("API submit kritik failed:", e);
   }
-
-  // Always store to localStorage as well for instant frontend & admin dashboard sync
-  if (typeof window !== "undefined") {
-    const stored = localStorage.getItem("bappeda_kritiks");
-    const list: KritikSaranItem[] = stored ? JSON.parse(stored) : [];
-    const newItem: KritikSaranItem = {
-      id: Date.now(),
-      ...data,
-      status: "Menunggu Tanggapan",
-      created_at: new Date().toISOString().replace("T", " ").substring(0, 19),
-    };
-    localStorage.setItem("bappeda_kritiks", JSON.stringify([newItem, ...list]));
-    success = true;
-  }
-
-  return success;
+  return false;
 }

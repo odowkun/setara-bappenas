@@ -69,6 +69,12 @@ const ALL_SPATIE_PERMISSIONS = [
     label: "Kelola Pengguna & Hak Akses (SuperAdmin)",
     desc: "Akses penuh mengelola akun pengelola dan role permissions Spatie",
   },
+  { id: "manage_dashboard", label: "Kelola Statistik Dashboard", desc: "Akses memperbarui data statistik eksekutif" },
+  { id: "manage_survey", label: "Kelola Survei Kepuasan", desc: "Akses data responden dan konfigurasi survei" },
+  { id: "manage_kritik", label: "Kelola Kritik & Saran", desc: "Akses identitas pengirim dan tanggapan" },
+  { id: "view_download_logs", label: "Lihat Riwayat Pengunduh", desc: "Akses email dan metadata unduhan dokumen" },
+  { id: "view_audit_logs", label: "Lihat Audit Log SPBE", desc: "Akses aktivitas admin dan alamat IP" },
+  { id: "manage_document_types", label: "Kelola Jenis Dokumen", desc: "Akses master kategori dokumen" },
 ];
 
 export default function EditUserPage() {
@@ -131,9 +137,10 @@ export default function EditUserPage() {
 
     fetchPejabatData();
 
-    // Load User Data
-    if (userId) {
-      const allUsers = adminService.getUsers();
+    // Load User Data from the protected server endpoint.
+    const loadTargetUser = async () => {
+      if (!userId) return;
+      const allUsers = await adminService.fetchUsers();
       const targetUser = allUsers.find((u) => u.id === userId);
 
       if (targetUser) {
@@ -147,8 +154,10 @@ export default function EditUserPage() {
       } else {
         setErrorMessage("Pengguna dengan ID ini tidak ditemukan!");
       }
-    }
-    setLoading(false);
+      setLoading(false);
+    };
+
+    loadTargetUser();
   }, [userId]);
 
   const togglePermission = (permId: string) => {
@@ -157,7 +166,7 @@ export default function EditUserPage() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
@@ -168,8 +177,16 @@ export default function EditUserPage() {
       return;
     }
 
-    if (password && password.length < 6) {
-      const msg = "Password baru minimal 6 karakter!";
+    if (
+      password &&
+      (
+        password.length < 12 ||
+        !/[a-z]/.test(password) ||
+        !/[A-Z]/.test(password) ||
+        !/[0-9]/.test(password)
+      )
+    ) {
+      const msg = "Password baru minimal 12 karakter serta memiliki huruf besar, huruf kecil, dan angka!";
       setErrorMessage(msg);
       toast.error(msg);
       return;
@@ -182,21 +199,30 @@ export default function EditUserPage() {
       return;
     }
 
-    adminService.updateUser(userId, {
-      name,
-      email,
-      role,
-      bidang: role === "admin_bidang" ? bidang : undefined,
-      nip,
-      jabatan,
-      permissions: selectedPermissions,
-    });
+    try {
+      await adminService.updateUser(userId, {
+        name,
+        email,
+        role,
+        bidang: role === "admin_bidang" ? bidang : undefined,
+        nip,
+        jabatan,
+        permissions: selectedPermissions,
+        ...(password
+          ? { password, passwordConfirmation: confirmPassword }
+          : {}),
+      });
 
-    toast.success(`Data pengguna ${name} berhasil diperbarui!`);
-    setIsSaved(true);
-    setTimeout(() => {
-      router.push("/dashboard/users");
-    }, 1500);
+      toast.success(`Data pengguna ${name} berhasil diperbarui!`);
+      setIsSaved(true);
+      setTimeout(() => {
+        router.push("/dashboard/users");
+      }, 1500);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Gagal memperbarui pengguna.";
+      setErrorMessage(msg);
+      toast.error(msg);
+    }
   };
 
   if (!isSuperAdmin) {

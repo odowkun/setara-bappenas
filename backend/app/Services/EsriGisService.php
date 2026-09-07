@@ -7,240 +7,218 @@ use Illuminate\Support\Facades\Log;
 
 class EsriGisService
 {
-    protected string $featureServiceUrl;
-    protected string $geoprocessingUrl;
+    private ?string $featureServiceUrl;
+
+    private ?string $geoprocessingUrl;
 
     public function __construct()
     {
-        $this->featureServiceUrl = config('services.esri.feature_service_url', 'https://services.arcgis.com/mock/arcgis/rest/services/BappedaHalut/FeatureServer/0');
-        $this->geoprocessingUrl = config('services.esri.geoprocessing_url', 'https://services.arcgis.com/mock/arcgis/rest/services/Analysis/BufferService/GPServer/BufferTask');
+        $this->featureServiceUrl = config('services.esri.feature_service_url');
+        $this->geoprocessingUrl = config('services.esri.geoprocessing_url');
     }
 
-    /**
-     * Fitur 2: Geotagging Proyek Pembangunan (POST /addFeatures ke ArcGIS REST API)
-     */
-    public function addFeature(array $proyek)
+    public function addFeature(array $project): array
     {
-        $payload = [
-            'f' => 'json',
-            'features' => json_encode([
-                [
-                    'geometry' => [
-                        'x' => (float) $proyek['longitude'],
-                        'y' => (float) $proyek['latitude'],
-                        'spatialReference' => ['wkid' => 4326]
-                    ],
-                    'attributes' => [
-                        'kode_proyek' => $proyek['kode_proyek'] ?? 'PRJ-' . time(),
-                        'nama_proyek' => $proyek['nama_proyek'],
-                        'bidang' => $proyek['bidang'] ?? 'Infrastruktur',
-                        'pagu_anggaran' => (float) ($proyek['pagu_anggaran'] ?? 0),
-                        'persentase_progres' => (int) ($proyek['persentase_progres'] ?? 0),
-                        'status_progres' => $proyek['status_progres'] ?? 'belum_mulai'
-                    ]
-                ]
-            ])
-        ];
-
-        try {
-            $endpoint = rtrim($this->featureServiceUrl, '/') . '/addFeatures';
-            $response = Http::asForm()->timeout(10)->post($endpoint, $payload);
-
-            if ($response->successful()) {
-                $json = $response->json();
-                if (isset($json['addResults'][0]['objectId'])) {
-                    return [
-                        'success' => true,
-                        'objectId' => $json['addResults'][0]['objectId'],
-                        'raw' => $json
-                    ];
-                }
-            }
-        } catch (\Exception $e) {
-            Log::warning('ESRI addFeatures API fallback triggered: ' . $e->getMessage());
+        if (! $this->featureServiceUrl) {
+            return $this->notConfigured();
         }
-
-        // Fallback / Mock ObjectID generation for local dev or offline ESRI server
-        $mockObjectId = rand(1000, 9999);
-        return [
-            'success' => true,
-            'objectId' => $mockObjectId,
-            'is_mock' => true,
-            'message' => 'Simulated ESRI OBJECTID generated (Offline/Fallback mode)'
-        ];
-    }
-
-    /**
-     * Fitur 3: Update Data Sektoral & Progres (POST /updateFeatures)
-     */
-    public function updateFeature(int $objectId, array $attributes)
-    {
-        $payloadAttributes = array_merge(['OBJECTID' => $objectId], $attributes);
 
         $payload = [
             'f' => 'json',
-            'features' => json_encode([
-                [
-                    'attributes' => $payloadAttributes
-                ]
-            ])
+            'features' => json_encode([[
+                'geometry' => [
+                    'x' => (float) $project['longitude'],
+                    'y' => (float) $project['latitude'],
+                    'spatialReference' => ['wkid' => 4326],
+                ],
+                'attributes' => [
+                    'kode_proyek' => $project['kode_proyek'],
+                    'nama_proyek' => $project['nama_proyek'],
+                    'bidang' => $project['bidang'] ?? 'infrastruktur',
+                    'pagu_anggaran' => (float) ($project['pagu_anggaran'] ?? 0),
+                    'persentase_progres' => (int) ($project['persentase_progres'] ?? 0),
+                    'status_progres' => $project['status_progres'] ?? 'belum_mulai',
+                ],
+            ]]),
         ];
 
         try {
-            $endpoint = rtrim($this->featureServiceUrl, '/') . '/updateFeatures';
-            $response = Http::asForm()->timeout(10)->post($endpoint, $payload);
-
-            if ($response->successful()) {
-                return [
-                    'success' => true,
-                    'raw' => $response->json()
-                ];
+            $response = Http::asForm()->timeout(10)
+                ->post(rtrim($this->featureServiceUrl, '/').'/addFeatures', $payload);
+            $json = $response->json();
+            $objectId = $json['addResults'][0]['objectId'] ?? null;
+            if ($response->successful() && $objectId) {
+                return ['success' => true, 'objectId' => $objectId, 'raw' => $json];
             }
-        } catch (\Exception $e) {
-            Log::warning('ESRI updateFeatures API fallback triggered: ' . $e->getMessage());
-        }
 
-        return [
-            'success' => true,
-            'is_mock' => true,
-            'message' => 'ESRI Feature updated locally (Fallback mode)'
-        ];
+            return $this->failed('ESRI menolak penambahan feature.', $json);
+        } catch (\Throwable $exception) {
+            return $this->exceptionResult('addFeatures', $exception);
+        }
     }
 
-    /**
-     * Delete Feature from ESRI (POST /deleteFeatures)
-     */
-    public function deleteFeature(int $objectId)
+    public function updateFeature(int $objectId, array $attributes): array
     {
-        $payload = [
-            'f' => 'json',
-            'objectIds' => $objectId
-        ];
-
-        try {
-            $endpoint = rtrim($this->featureServiceUrl, '/') . '/deleteFeatures';
-            $response = Http::asForm()->timeout(10)->post($endpoint, $payload);
-
-            if ($response->successful()) {
-                return [
-                    'success' => true,
-                    'raw' => $response->json()
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning('ESRI deleteFeatures API fallback triggered: ' . $e->getMessage());
+        if (! $this->featureServiceUrl) {
+            return $this->notConfigured();
         }
 
-        return [
-            'success' => true,
-            'is_mock' => true,
-            'message' => 'ESRI Feature deleted locally (Fallback mode)'
-        ];
+        try {
+            $response = Http::asForm()->timeout(10)
+                ->post(rtrim($this->featureServiceUrl, '/').'/updateFeatures', [
+                    'f' => 'json',
+                    'features' => json_encode([[
+                        'attributes' => array_merge(['OBJECTID' => $objectId], $attributes),
+                    ]]),
+                ]);
+            $json = $response->json();
+            $success = (bool) ($json['updateResults'][0]['success'] ?? false);
+
+            return $success
+                ? ['success' => true, 'raw' => $json]
+                : $this->failed('ESRI menolak pembaruan feature.', $json);
+        } catch (\Throwable $exception) {
+            return $this->exceptionResult('updateFeatures', $exception);
+        }
     }
 
-    /**
-     * Fitur 4: Upload Lampiran Spasial Teknis (POST /{objectId}/addAttachment)
-     */
-    public function addAttachment(int $objectId, $filePath, string $originalName)
+    public function deleteFeature(int $objectId): array
     {
+        if (! $this->featureServiceUrl) {
+            return $this->notConfigured();
+        }
+
         try {
-            $endpoint = rtrim($this->featureServiceUrl, '/') . "/{$objectId}/addAttachment";
-            
+            $response = Http::asForm()->timeout(10)
+                ->post(rtrim($this->featureServiceUrl, '/').'/deleteFeatures', [
+                    'f' => 'json',
+                    'objectIds' => $objectId,
+                ]);
+            $json = $response->json();
+            $success = (bool) ($json['deleteResults'][0]['success'] ?? false);
+
+            return $success
+                ? ['success' => true, 'raw' => $json]
+                : $this->failed('ESRI menolak penghapusan feature.', $json);
+        } catch (\Throwable $exception) {
+            return $this->exceptionResult('deleteFeatures', $exception);
+        }
+    }
+
+    public function addAttachment(int $objectId, string $filePath, string $originalName): array
+    {
+        if (! $this->featureServiceUrl) {
+            return $this->notConfigured();
+        }
+
+        try {
             $response = Http::timeout(30)
                 ->attach('attachment', file_get_contents($filePath), $originalName)
-                ->post($endpoint, ['f' => 'json']);
+                ->post(rtrim($this->featureServiceUrl, '/')."/{$objectId}/addAttachment", ['f' => 'json']);
+            $json = $response->json();
+            $attachmentId = $json['addAttachmentResult']['objectId'] ?? null;
 
-            if ($response->successful()) {
-                $json = $response->json();
-                if (isset($json['addAttachmentResult']['objectId'])) {
+            return ($response->successful() && $attachmentId)
+                ? ['success' => true, 'attachmentId' => $attachmentId, 'raw' => $json]
+                : $this->failed('ESRI menolak lampiran feature.', $json);
+        } catch (\Throwable $exception) {
+            return $this->exceptionResult('addAttachment', $exception);
+        }
+    }
+
+    public function executeBuffer(float $lat, float $lng, float $radiusMeters): array
+    {
+        if ($this->geoprocessingUrl) {
+            try {
+                $response = Http::asForm()->timeout(15)
+                    ->post(rtrim($this->geoprocessingUrl, '/').'/execute', [
+                        'f' => 'json',
+                        'Input_Features' => json_encode([
+                            'type' => 'FeatureCollection',
+                            'features' => [[
+                                'type' => 'Feature',
+                                'geometry' => [
+                                    'type' => 'Point',
+                                    'coordinates' => [$lng, $lat],
+                                ],
+                            ]],
+                        ]),
+                        'Distance' => "{$radiusMeters} Meters",
+                    ]);
+
+                if ($response->successful() && $response->json('results')) {
                     return [
                         'success' => true,
-                        'attachmentId' => $json['addAttachmentResult']['objectId'],
-                        'raw' => $json
+                        'source' => 'esri',
+                        'geojson' => $response->json(),
                     ];
                 }
+            } catch (\Throwable $exception) {
+                Log::warning('ESRI execute buffer gagal; memakai kalkulasi lokal yang transparan.', [
+                    'exception' => $exception->getMessage(),
+                ]);
             }
-        } catch (\Exception $e) {
-            Log::warning('ESRI addAttachment API fallback triggered: ' . $e->getMessage());
         }
 
         return [
             'success' => true,
-            'attachmentId' => rand(500, 999),
-            'is_mock' => true,
-            'message' => 'ESRI Attachment uploaded to local geodatabase fallback'
+            'source' => 'local_calculation',
+            'geojson' => $this->calculateBuffer($lat, $lng, $radiusMeters),
         ];
     }
 
-    /**
-     * Fitur 5: Integrasi Geoprocessing Analisis (POST /execute)
-     */
-    public function executeBuffer(float $lat, float $lng, float $radiusMeters)
+    private function calculateBuffer(float $lat, float $lng, float $radiusMeters): array
     {
-        $inputGeoJson = [
-            'type' => 'FeatureCollection',
-            'features' => [
-                [
-                    'type' => 'Feature',
-                    'geometry' => [
-                        'type' => 'Point',
-                        'coordinates' => [$lng, $lat]
-                    ]
-                ]
-            ]
-        ];
-
-        try {
-            $endpoint = rtrim($this->geoprocessingUrl, '/') . '/execute';
-            $response = Http::asForm()->timeout(15)->post($endpoint, [
-                'f' => 'json',
-                'Input_Features' => json_encode($inputGeoJson),
-                'Distance' => "{$radiusMeters} Meters"
-            ]);
-
-            if ($response->successful()) {
-                return [
-                    'success' => true,
-                    'results' => $response->json()
-                ];
-            }
-        } catch (\Exception $e) {
-            Log::warning('ESRI Geoprocessing API fallback triggered: ' . $e->getMessage());
-        }
-
-        // Return calculated GeoJSON Circle/Polygon Buffer fallback
-        $steps = 32;
         $coordinates = [];
-        $earthRadius = 6378137; // meters
-        $dLat = $radiusMeters / $earthRadius;
-        $dLng = $radiusMeters / ($earthRadius * cos(deg2rad($lat)));
+        $earthRadius = 6378137;
+        $latitudeDelta = $radiusMeters / $earthRadius;
+        $longitudeDelta = $radiusMeters / ($earthRadius * cos(deg2rad($lat)));
 
-        for ($i = 0; $i <= $steps; $i++) {
-            $theta = ($i / $steps) * 2 * M_PI;
-            $pLat = $lat + rad2deg($dLat * sin($theta));
-            $pLng = $lng + rad2deg($dLng * cos($theta));
-            $coordinates[] = [$pLng, $pLat];
+        for ($index = 0; $index <= 64; $index++) {
+            $theta = ($index / 64) * 2 * M_PI;
+            $coordinates[] = [
+                $lng + rad2deg($longitudeDelta * cos($theta)),
+                $lat + rad2deg($latitudeDelta * sin($theta)),
+            ];
         }
 
         return [
-            'success' => true,
-            'is_mock' => false,
-            'buffer_geojson' => [
-                'type' => 'FeatureCollection',
-                'features' => [
-                    [
-                        'type' => 'Feature',
-                        'properties' => [
-                            'radius_meters' => $radiusMeters,
-                            'center' => [$lat, $lng]
-                        ],
-                        'geometry' => [
-                            'type' => 'Polygon',
-                            'coordinates' => [$coordinates]
-                        ]
-                    ]
-                ]
-            ]
+            'type' => 'FeatureCollection',
+            'features' => [[
+                'type' => 'Feature',
+                'properties' => [
+                    'radius_meters' => $radiusMeters,
+                    'center' => [$lng, $lat],
+                    'calculation' => 'geodesic_approximation',
+                ],
+                'geometry' => [
+                    'type' => 'Polygon',
+                    'coordinates' => [$coordinates],
+                ],
+            ]],
+        ];
+    }
+
+    private function notConfigured(): array
+    {
+        return [
+            'success' => false,
+            'message' => 'Integrasi ESRI belum dikonfigurasi; database tetap menjadi sumber resmi.',
+        ];
+    }
+
+    private function failed(string $message, mixed $raw = null): array
+    {
+        return ['success' => false, 'message' => $message, 'raw' => $raw];
+    }
+
+    private function exceptionResult(string $operation, \Throwable $exception): array
+    {
+        Log::warning("ESRI {$operation} gagal.", ['exception' => $exception->getMessage()]);
+
+        return [
+            'success' => false,
+            'message' => "Sinkronisasi ESRI {$operation} gagal; tidak ada ID palsu yang dibuat.",
         ];
     }
 }

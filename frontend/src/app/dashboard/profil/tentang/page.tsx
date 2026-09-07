@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { authenticatedFetch } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import {
@@ -35,21 +36,14 @@ export default function DashboardTentangEditorPage() {
   const [sejarahContent, setSejarahContent] = useState("");
 
   // 2. Visi & Misi State
-  const [visiContent, setVisiContent] = useState(
-    "Terwujudnya Kabupaten Halmahera Utara yang Maju, Sejahtera, Berdaya Saing, dan Berkelanjutan Berbasis Sumber Daya Lokal."
-  );
-  const [misiList, setMisiList] = useState<string[]>([
-    "Mewujudkan tata kelola pemerintahan yang profesional, transparan, dan berakuntabilitas tinggi berbasis SPBE.",
-    "Meningkatkan kualitas sumber daya manusia melalui akses pendidikan dan pelayanan kesehatan yang memadai.",
-    "Mempercepat pembangunan infrastruktur daerah yang terintegrasi dan berwawasan lingkungan.",
-    "Mengembangkan perekonomian daerah berbasis potensi pertanian, kelautan, perikanan, dan pariwisata daerah.",
-  ]);
+  const [visiContent, setVisiContent] = useState("");
+  const [misiList, setMisiList] = useState<string[]>([]);
 
   // 3. Informasi Instansi State
-  const [tahunBerdiri, setTahunBerdiri] = useState("2003");
-  const [alamat, setAlamat] = useState("Jl. Kawasan Pemerintahan Tobelo, Halmahera Utara, Maluku Utara");
-  const [telepon, setTelepon] = useState("(0924) 262211");
-  const [email, setEmail] = useState("info@bappeda.halmaherautarakab.go.id");
+  const [tahunBerdiri, setTahunBerdiri] = useState("");
+  const [alamat, setAlamat] = useState("");
+  const [telepon, setTelepon] = useState("");
+  const [email, setEmail] = useState("");
 
   // Jam Kerja Builder State
   const [seninJumatActive, setSeninJumatActive] = useState(true);
@@ -149,7 +143,7 @@ export default function DashboardTentangEditorPage() {
 
     try {
       // 1. Save Tentang & Informasi Instansi
-      const resTentang = await fetch("http://localhost:8000/api/v1/profil/tentang", {
+      const resTentang = await authenticatedFetch("http://localhost:8000/api/v1/profil/tentang", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -170,7 +164,7 @@ export default function DashboardTentangEditorPage() {
       });
 
       // 2. Save Visi & Misi
-      const resVisi = await fetch("http://localhost:8000/api/v1/profil/visi_misi", {
+      const resVisi = await authenticatedFetch("http://localhost:8000/api/v1/profil/visi_misi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

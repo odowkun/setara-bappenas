@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Newspaper, Calendar, Eye, User, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 interface NewsCardItem {
   id: string;
@@ -18,86 +19,36 @@ interface NewsCardItem {
   link: string;
 }
 
-const DEFAULT_NEWS_ITEMS: NewsCardItem[] = [
-  {
-    id: "1",
-    slug: "bupati-halmahera-utara-buka-fgd-percepatan-akses-keuangan-daerah",
-    date: "2026-07-21",
-    title: "Bupati Halmahera Utara Buka FGD Percepatan Akses Keuangan Daerah, Bappeda Dukung IKAD & SASKAD",
-    category: "Pembangunan & Ekonomi",
-    author: "Redaksi Bappeda",
-    views: 412,
-    desc: "Langkah sinergis Bappeda Halut bersama Tim Percepatan Akses Keuangan Daerah untuk penguatan ekonomi masyarakat.",
-    image: "/images/bappeda/fgd-keuangan.png",
-    link: "/berita/bupati-halmahera-utara-buka-fgd-percepatan-akses-keuangan-daerah",
-  },
-  {
-    id: "2",
-    slug: "kepala-bappeda-narasumber-konferensi-pendidikan",
-    date: "2026-07-02",
-    title: "Kepala Bappeda Halmahera Utara Jadi Narasumber Konferensi Pendidikan Indonesia 2026",
-    category: "Pendidikan & SDM",
-    author: "Redaksi Bappeda",
-    views: 396,
-    desc: "Pemaparan program strategis alokasi anggaran pendidikan & pemerataan fasilitas sekolah di wilayah kepulauan Halut.",
-    image: "/images/bappeda/kepala-bappeda.png",
-    link: "/berita/kepala-bappeda-narasumber-konferensi-pendidikan",
-  },
-  {
-    id: "3",
-    slug: "rakor-sekolah-rakyat-permanen",
-    date: "2026-06-17",
-    title: "Kepala Bappeda Halut Hadiri Rakor Optimalisasi Pembangunan Sekolah Rakyat Permanen",
-    category: "Infrastruktur Publik",
-    author: "Redaksi Bappeda",
-    views: 366,
-    desc: "Koordinasi bersama kementerian pusat guna memastikan percepatan proyek sekolah rakyat permanen di Halut.",
-    image: "/images/bappeda/rakor-sekolah.png",
-    link: "/berita/rakor-sekolah-rakyat-permanen",
-  },
-  {
-    id: "4",
-    slug: "peresmian-jembatan-garuda-kao-barat",
-    date: "2026-06-11",
-    title: "Kepala Bappeda Dampingi Bupati Hadiri Peresmian Jembatan Garuda di Kao Barat",
-    category: "Konektivitas Wilayah",
-    author: "Redaksi Bappeda",
-    views: 280,
-    desc: "Peresmian infrastruktur jembatan vital penghubung antar kecamatan untuk kelancaran konektivitas warga Kao Barat.",
-    image: "/images/bappeda/jembatan-garuda.png",
-    link: "/berita/peresmian-jembatan-garuda-kao-barat",
-  },
-];
-
 export const LatestNewsCarousel: React.FC = () => {
-  const [newsItems, setNewsItems] = useState<NewsCardItem[]>(DEFAULT_NEWS_ITEMS);
+  const [newsItems, setNewsItems] = useState<NewsCardItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchNews = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/news");
+        const res = await fetch(`${API_BASE_URL}/news`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+          if (json.data && Array.isArray(json.data)) {
             const mapped = json.data.map((item: any) => ({
               id: String(item.id),
               slug: item.slug || `news-${item.id}`,
-              date: item.date || item.created_at?.split("T")[0] || "2026-07-21",
+              date: item.date || item.created_at?.split("T")[0] || "",
               title: item.title,
-              category: item.category || "Berita Utama",
-              author: item.author || "Redaksi Bappeda",
+              category: item.category || "Belum dikategorikan",
+              author: item.author || "Belum tersedia",
               views: item.views || 0,
               desc: item.summary || (item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 140) + "..." : item.title),
-              image: item.image || item.image_url || "/images/bappeda/fgd-keuangan.png",
+              image: item.image || item.image_url || "",
               link: `/berita/${item.slug || item.id}`,
             }));
             setNewsItems(mapped);
           }
         }
       } catch (err) {
-        console.warn("[LatestNewsCarousel] API offline, using seeded news:", err);
+        console.error("[LatestNewsCarousel] Data resmi gagal dimuat:", err);
+        setNewsItems([]);
       } finally {
         setLoading(false);
       }

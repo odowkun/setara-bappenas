@@ -1,68 +1,74 @@
-# API CONTRACT SPECIFICATION — BAPPEDA HALUT
+# API CONTRACT — BAPPEDA HALUT
 
-## 🌐 Protocol & Base URL
-- **Base Endpoint**: `https://api.bappeda.halmaherautarakab.go.id/api/v1`
-- **Development**: `http://localhost:8000/api/v1`
-- **Format**: JSON (UTF-8)
+## Protokol
 
----
+- Production: `https://api.bappeda.halmaherautarakab.go.id/api/v1`
+- Development: `http://localhost:8000/api/v1`
+- Format: JSON UTF-8, kecuali endpoint berkas.
+- Endpoint admin memakai header `Authorization: Bearer <token>` dari Laravel Sanctum.
+- Input tidak valid menghasilkan `422`, sesi tidak valid `401`, dan permission tidak cukup `403`.
+- Endpoint publik yang menerima input atau mencatat counter memakai rate limit.
 
-## 📦 Standard Response Envelope Protocol
+## Autentikasi
 
-### Success Response (`200 OK`, `201 Created`)
+| Method | Endpoint | Akses | Keterangan |
+|---|---|---|---|
+| `POST` | `/auth/login` | Publik, 5/menit | Membuat token dan mengembalikan user beserta permission dari server |
+| `GET` | `/auth/me` | Login | Memvalidasi token dan memuat ulang role/permission |
+| `POST` | `/auth/logout` | Login | Mencabut token yang sedang digunakan |
+| `PATCH` | `/auth/profile` | Login | Mengubah nama, email, NIP, jabatan |
+| `PUT` | `/auth/password` | Login | Mengubah password dan mencabut sesi lain |
+
+Password baru minimal 12 karakter serta mengandung huruf besar, huruf kecil, dan angka. Frontend tidak boleh menentukan role, permission, atau identitas aktor audit.
+
+## Batas data publik dan admin
+
+| Data | Endpoint publik | Endpoint admin | Batas utama |
+|---|---|---|---|
+| Dokumen | `GET /documents` | `GET /admin/documents` | Publik hanya current version `approved`, klasifikasi `public`, storage privat, checksum valid; Admin Bidang hanya bidang sendiri |
+| Proyek | `GET /proyek-details` | `GET /admin/proyek-details` | Publik hanya proyek dari dokumen publik; Admin Bidang hanya bidang sendiri |
+| Berita | `GET /news`, `GET /news/{id}` | `GET /admin/news` | Publik hanya berita terbit |
+| Survei | `GET /surveys/summary`, `GET /surveys/config` | `GET /surveys` | Ringkasan publik tidak mengandung PII |
+| Kritik/saran | `POST /kritik` | `GET /kritik` | Daftar dan tanggapan hanya admin berizin |
+| Riwayat unduhan | Tidak ada | `GET /document-download-logs` | Email hanya tersedia untuk admin berizin |
+| User | Tidak ada | `/users` | CRUD hanya role `superadmin` |
+| Audit | Tidak ada | `GET /audit-logs` | Hanya permission `view_audit_logs` |
+| Agenda | `GET /agendas`, `GET /agenda-categories` | `GET /admin/agendas` | Publik hanya agenda terbit |
+| Pengumuman | `GET /pengumuman`, `GET /announcement-types` | `GET /admin/pengumuman` | Publik hanya terbit dan belum kedaluwarsa |
+| Kategori berita | `GET /news-categories` | endpoint mutasi yang sama | Kategori master berasal dari database |
+| Geoprocessing | `GET /gis/geoprocessing/analyses` | endpoint mutasi yang sama | Hasil dan sumber kalkulasi disimpan di database |
+
+Endpoint admin serta seluruh mutasi konten wajib Bearer token dan permission yang sesuai.
+
+## Transisi publikasi resmi
+
+Semua konten baru dapat disimpan sebagai draf. Perubahan status memakai endpoint khusus berikut:
+
+| Method | Endpoint | Permission |
+|---|---|---|
+| `PATCH` | `/news/{id}/publication` | `manage_berita` |
+| `PATCH` | `/agendas/{id}/publication` | `manage_pengumuman` |
+| `PATCH` | `/pengumuman/{id}/publication` | `manage_pengumuman` |
+| `PATCH` | `/galeri/{id}/publication` | `manage_galeri` |
+| `PATCH` | `/documents/{id}/publication` | `publish_documents` |
+
+Payload:
+
 ```json
 {
-  "status": "success",
-  "code": 200,
-  "message": "Data berhasil diambil",
-  "data": {},
-  "meta": {
-    "page": 1,
-    "limit": 10,
-    "total": 120
-  }
+  "is_published": true
 }
 ```
 
-### Error Response (`400 Bad Request`, `401 Unauthorized`, `500 Server Error`)
-```json
-{
-  "status": "error",
-  "code": 400,
-  "message": "Validasi input gagal",
-  "errors": [
-    {
-      "field": "title",
-      "message": "Judul berita tidak boleh kosong"
-    }
-  ]
-}
-```
+Dokumen tetap mengembalikan field domain `is_public`; endpoint menerima `is_published` agar kontrak tombol publikasi konsisten. Publikasi mencatat `published_at` dan `published_by_user_id`; unpublish mengosongkan keduanya. Konten yang belum memenuhi syarat minimum menghasilkan `422`.
 
----
+## Repository dokumen publik
 
-## 🔑 Endpoint Contracts
-
-### 1. Global Instant Search
-- `GET /search` — Instant search query serentak (Query: `q=rkpd`, `type=all|news|doc|gis`).
-
-### 2. Executive Dashboard Widgets & Export Data
-- `GET /dashboard/macro-stats` — Mengambil data real-time stunting, inflasi, kemiskinan, & IPM Halut.
-- `GET /dashboard/budget-realization` — Mengambil persentase realisasi fisik vs keuangan APBD per bulan.
-- `GET /export/dashboard/pdf` — Stream download PDF laporan statistik eksekutif.
-- `GET /export/realization/excel` — Stream download Excel data realisasi anggaran OPD.
-
-### 3. Portal Publik (Berita, Pengumuman, Galeri)
-- `GET /news` — Daftar berita terbaru Bappeda (Query: `search`, `category`, `page`).
-- `GET /news/:slug` — Detail artikel berita.
-- `GET /announcements` — Daftar pengumuman resmi (contoh: Renstra, Musrenbang).
-- `GET /gallery` — Album foto & video (Query: `category_id`).
-
-### 4. Repository Dokumen Publik
-- `GET /documents` — Daftar dokumen terpublikasi (RPJMD, RKPD, Popeda).
-- `POST /documents/:id/preview` — Mencatat satu pembukaan preview dan mengembalikan total tayangan terbaru.
-- `POST /documents/:id/download` — Memvalidasi email masyarakat, mencatat log, menaikkan total unduhan, dan mengembalikan URL berkas.
-- `GET /document-download-logs` — Riwayat email pengunduh dan ringkasan statistik. Wajib Bearer token admin Sanctum.
+- `GET /documents` — daftar dokumen dengan current version approved/public/private/valid.
+- `POST /documents/{id}/preview` — membuat grant preview terikat versi, mencatat total view dan unique view harian.
+- `GET /documents/{document}/versions/{version}/preview-file?...` — signed inline stream.
+- `POST /documents/{id}/download` — memvalidasi email dan membuat one-time signed grant; belum menambah counter.
+- `GET /documents/{document}/versions/{version}/file?...` — mengirim attachment, lalu mencatat log/counter satu kali saat grant dikonsumsi.
 
 Payload unduhan:
 
@@ -72,12 +78,42 @@ Payload unduhan:
 }
 ```
 
-Setiap log unduhan menyimpan ID dokumen, email, waktu unduh, alamat IP, dan user agent.
+Riwayat menyimpan ID dokumen, ID versi, grant yang dikonsumsi, email terenkripsi, hash email untuk hitungan unik/filter tepat, dan waktu unduh. IP serta user-agent pengunduh tidak dikumpulkan. Raw path, raw token, checksum, dan full text tidak diekspos publik.
 
-### 5. Esri GIS Spatial Map Layers
-- `GET /gis/projects` — Data GeoJSON / titik spasial proyek pembangunan & infrastruktur.
-- `GET /gis/districts` — Poligon GeoJSON batas wilayah 17 kecamatan di Halmahera Utara.
-- `GET /export/gis/geojson` — Export file GeoJSON peta proyek publik.
+## Tata kelola arsip dokumen
 
-### 6. SPBE Security & Audit Logs (Admin Only)
-- `GET /admin/audit-logs` — Mengambil log aktivitas perubahan data oleh admin/staff.
+| Method | Endpoint | Permission/fungsi |
+|---|---|---|
+| `GET` | `/admin/documents/{id}/governance` | `manage_dokumen`; detail metadata, versi, dan approval |
+| `PUT` | `/admin/documents/{id}/governance` | `classify_documents` atau `manage_document_retention` |
+| `POST` | `/documents/{id}/versions` | `manage_dokumen`; menambah path PDF watermark privat |
+| `PATCH` | `/documents/{id}/workflow/submit` | `manage_dokumen` |
+| `PATCH` | `/documents/{id}/workflow/review` | `review_documents` |
+| `POST` | `/documents/{id}/integrity` | `verify_document_integrity` |
+| `POST` | `/documents/{id}/versions/{version}/extract` | `manage_dokumen` |
+| `PATCH` | `/documents/{id}/publication` | `publish_documents` |
+| `DELETE` | `/documents/{id}` | Lifecycle archive; legal hold menghasilkan `422` |
+
+Governance status: `draft`, `pending_review`, `approved`, `rejected`, `pending_migration`, `archived`. Klasifikasi: `public`, `internal`, `confidential`, `restricted`. Hanya reviewer yang berbeda dari pembuat/pengaju yang dapat approve dalam alur normal; Super Admin merupakan break-glass exception.
+
+## Mutasi konten admin
+
+Mutasi dokumen, jenis dokumen, berita, profil, galeri, pejabat, tautan OPD, survei, kritik/saran, proyek, lampiran, dan grafik dashboard dilindungi middleware Sanctum serta permission. Mutasi yang berhasil dicatat oleh audit middleware dengan identitas aktor dari sesi server; body request tidak disalin ke audit log.
+
+Admin Bidang hanya dapat mengelola dokumen dan proyek yang mempunyai `bidang` sama dengan akun. Super Admin mendapat seluruh permission melalui server-side gate, dan hanya role `superadmin` yang boleh mengelola user.
+
+## Data pribadi dan cache
+
+- Nama/email/pekerjaan/saran survei dienkripsi.
+- Nama/email/telepon/subjek/pesan/balasan kritik dienkripsi.
+- Email pengunduh dienkripsi.
+- Respons autentikasi, user, audit, survei lengkap, kritik, dan riwayat unduhan memakai `Cache-Control: no-store, private`.
+- `APP_KEY` adalah bagian wajib dari backup; tanpa key tersebut data terenkripsi tidak dapat dipulihkan.
+
+Detail permission, deployment, rollback, dan dampak perubahan ada di [docs/security-rbac-privacy.md](docs/security-rbac-privacy.md).
+
+Kontrak sumber data tunggal dan perilaku saat API/ESRI gagal ada di [docs/database-single-source.md](docs/database-single-source.md).
+
+Kontrak workflow publikasi lengkap ada di [docs/official-publication-workflow.md](docs/official-publication-workflow.md).
+
+Kontrak lengkap arsip dokumen, status, signed grant, OCR, checksum, retensi, migration, rollback, dan troubleshooting ada di [docs/document-knowledge-archive.md](docs/document-knowledge-archive.md).

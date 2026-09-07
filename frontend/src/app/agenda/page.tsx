@@ -22,13 +22,12 @@ import {
 } from "lucide-react";
 import {
   AgendaEvent,
-  defaultAgendas,
-  DEFAULT_AGENDA_CATEGORIES,
   getCategoryStyle,
   formatAgendaDateRange,
   assignEventTracks,
   computeAgendaStatus,
 } from "@/types/agenda";
+import { officialContentService } from "@/services/officialContentService";
 
 const DAYS_NAME = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 const MONTHS_NAME = [
@@ -47,9 +46,9 @@ const MONTHS_NAME = [
 ];
 
 export default function AgendaPage() {
-  const [events, setEvents] = useState<AgendaEvent[]>(defaultAgendas);
-  const [categories, setCategories] = useState<string[]>(DEFAULT_AGENDA_CATEGORIES);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 24)); // Default Juli 2026
+  const [events, setEvents] = useState<AgendaEvent[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<AgendaEvent | null>(null);
@@ -57,31 +56,19 @@ export default function AgendaPage() {
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedEvents = localStorage.getItem("bappeda_agendas");
-      if (storedEvents) {
-        try {
-          const parsed = JSON.parse(storedEvents);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setEvents(parsed);
-          }
-        } catch (e) {
-          console.error("Error loading local agendas:", e);
-        }
-      }
-
-      const storedCats = localStorage.getItem("bappeda_agenda_categories");
-      if (storedCats) {
-        try {
-          const parsed = JSON.parse(storedCats);
-          if (Array.isArray(parsed)) {
-            setCategories(Array.from(new Set([...DEFAULT_AGENDA_CATEGORIES, ...parsed])));
-          }
-        } catch (e) {
-          console.error("Error loading local categories:", e);
-        }
-      }
-    }
+    Promise.all([
+      officialContentService.getAgendas(),
+      officialContentService.getAgendaCategories(),
+    ])
+      .then(([agendaRows, categoryRows]) => {
+        setEvents(agendaRows);
+        setCategories(categoryRows.map((item) => item.name));
+      })
+      .catch((error) => {
+        console.error("Data agenda resmi tidak dapat dimuat:", error);
+        setEvents([]);
+        setCategories([]);
+      });
   }, []);
 
   const filteredEvents = events.filter((item) => {
@@ -127,10 +114,11 @@ export default function AgendaPage() {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const today = () => setCurrentDate(new Date(2026, 6, 24));
+  const today = () => setCurrentDate(new Date());
 
   const isToday = (dayNum: number) => {
-    return dayNum === 24 && month === 6 && year === 2026;
+    const now = new Date();
+    return dayNum === now.getDate() && month === now.getMonth() && year === now.getFullYear();
   };
 
   const getEventsForDate = (dayNum: number) => {

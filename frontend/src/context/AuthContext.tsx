@@ -2,7 +2,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, Role } from "@/types/auth";
-import { adminService } from "@/services/adminService";
+import {
+  API_BASE_URL,
+  AUTH_TOKEN_KEY,
+  AUTH_USER_KEY,
+  authenticatedFetch,
+} from "@/lib/apiClient";
 
 interface AuthContextType {
   user: User | null;
@@ -11,15 +16,15 @@ interface AuthContextType {
   logout: () => void;
   hasRole: (roles: Role[]) => boolean;
   hasPermission: (permission: string) => boolean;
-  updateProfile: (updatedData: Partial<User>) => void;
+  updateProfile: (updatedData: Partial<User>) => Promise<boolean>;
+  changePassword: (
+    currentPassword: string,
+    password: string,
+    passwordConfirmation: string
+  ) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const AUTH_STORAGE_KEY = "bappeda_auth_user";
-const TOKEN_STORAGE_KEY = "bappeda_sanctum_token";
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
 
 interface LoginResponse {
   data: {
@@ -33,16 +38,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-    if (stored && token) {
-      try {
-        setUser(JSON.parse(stored));
-      } catch (e) {
-        console.error("Failed to parse stored user session", e);
+    const validateSession = async () => {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) {
+        localStorage.removeItem(AUTH_USER_KEY);
+        setLoading(false);
+        return;
       }
-    }
-    setLoading(false);
+
+      try {
+        const response = await authenticatedFetch("/auth/me", {
+          cache: "no-store",
+        });
+        if (!response.ok) {
+          throw new Error(`Session validation failed: ${response.status}`);
+        }
+
+        const result = (await response.json()) as { data: User };
+        setUser(result.data);
+      } catch {
+        setUser(null);
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    validateSession();
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -60,8 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       const result = (await response.json()) as LoginResponse;
       setUser(result.data.user);
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(result.data.user));
-      localStorage.setItem(TOKEN_STORAGE_KEY, result.data.token);
+      localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
       return true;
     } catch {
       return false;
@@ -69,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const token = localStorage.getItem(AUTH_TOKEN_KEY);
     if (token) {
       fetch(`${API_BASE_URL}/auth/logout`, {
         method: "POST",
@@ -79,20 +101,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       }).catch(() => undefined);
     }
-    if (user) {
-      adminService.addLog(user.name, user.role, "LOGOUT", "Keluar dari sesi dashboard");
-    }
     setUser(null);
-    localStorage.removeItem(AUTH_STORAGE_KEY);
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+    localStorage.removeItem(AUTH_TOKEN_KEY);
   };
 
-  const updateProfile = (updatedData: Partial<User>) => {
-    if (!user) return;
-    const updatedUser = { ...user, ...updatedData };
-    setUser(updatedUser);
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updatedUser));
-    adminService.updateUser(user.id, updatedData);
+  const updateProfile = async (updatedData: Partial<User>): Promise<boolean> => {
+    if (!user) return false;
+
+    try {
+      const response = await authenticatedFetch("/auth/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatedData),
+      });
+      if (!response.ok) return false;
+
+      const result = (await response.json()) as { data: User };
+      setUser(result.data);
+      return true;
+    } catch {
+      return false;
+    }
+  };
+
+  const changePassword = async (
+    currentPassword: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<boolean> => {
+    try {
+      const response = await authenticatedFetch("/auth/password", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          current_password: currentPassword,
+          password,
+          password_confirmation: passwordConfirmation,
+        }),
+      });
+
+      return response.ok;
+    } catch {
+      return false;
+    }
   };
 
   const hasRole = (allowedRoles: Role[]): boolean => {
@@ -126,6 +178,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         hasRole,
         hasPermission,
         updateProfile,
+        changePassword,
       }}
     >
       {children}

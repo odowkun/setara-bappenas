@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { authenticatedFetch } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import {
@@ -23,17 +24,10 @@ export default function TupoksiEditorPage() {
   const [saved, setSaved] = useState(false);
 
   // 1. Tugas Pokok
-  const [tugasPokok, setTugasPokok] = useState(
-    "<p>BAPPEDA Kabupaten Halmahera Utara mempunyai tugas membantu Bupati dalam melaksanakan fungsi penunjang urusan pemerintahan bidang perencanaan, penelitian, dan pengawasan pembangunan daerah.</p>"
-  );
+  const [tugasPokok, setTugasPokok] = useState("");
 
   // 2. Rincian Fungsi Strategis (List of strings)
-  const [fungsiList, setFungsiList] = useState<string[]>([
-    "Penyusunan kebijakan teknis bidang perencanaan pembangunan daerah.",
-    "Pelaksanaan tugas dukungan teknis perencanaan, pengendalian, dan evaluasi pembangunan.",
-    "Pemantauan, evaluasi, dan pelaporan pelaksanaan fungsi penunjang perencanaan pembangunan daerah.",
-    "Pembinaan teknis penyelenggaraan fungsi-fungsi penunjang perencanaan pada Perangkat Daerah.",
-  ]);
+  const [fungsiList, setFungsiList] = useState<string[]>([]);
 
   // Load data from Laravel API
   const fetchTupoksiData = async () => {
@@ -85,7 +79,7 @@ export default function TupoksiEditorPage() {
     setSaving(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/profil/tugas_fungsi", {
+      const res = await authenticatedFetch("http://localhost:8000/api/v1/profil/tugas_fungsi", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

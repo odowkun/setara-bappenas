@@ -15,14 +15,22 @@ interface ApiErrorBody {
 interface PreviewApiResponse {
   data: {
     document_id: string | number;
+    version_id: string | number;
+    version: string;
+    preview_url: string;
+    expires_at: string;
     views: number;
+    unique_views: number;
   };
 }
 
 interface DownloadApiResponse {
   data: {
     document_id: string | number;
+    version_id: string | number;
+    version: string;
     download_url: string;
+    expires_at: string;
     downloads: number;
     views: number;
   };
@@ -71,19 +79,42 @@ async function requestJson<T>(endpoint: string, options?: RequestInit): Promise<
 }
 
 export function resolveDocumentUrl(url: string): string {
-  return url.startsWith("/storage/") ? `${BACKEND_BASE_URL}${url}` : url;
+  return url.startsWith("/storage/") || url.startsWith("/api/")
+    ? `${BACKEND_BASE_URL}${url}`
+    : url;
 }
 
 export const documentAnalyticsService = {
   async recordPreview(documentId: string): Promise<DocumentPreviewResult> {
+    const visitorStorageKey = "bappeda_document_visitor_id";
+    let visitorId =
+      typeof window !== "undefined"
+        ? localStorage.getItem(visitorStorageKey)
+        : null;
+    if (!visitorId && typeof window !== "undefined") {
+      visitorId =
+        typeof crypto.randomUUID === "function"
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem(visitorStorageKey, visitorId);
+    }
+
     const response = await requestJson<PreviewApiResponse>(
       `/documents/${documentId}/preview`,
-      { method: "POST" }
+      {
+        method: "POST",
+        body: JSON.stringify({ visitor_id: visitorId }),
+      }
     );
 
     return {
       documentId: String(response.data.document_id),
+      versionId: String(response.data.version_id),
+      version: response.data.version,
+      previewUrl: response.data.preview_url,
+      expiresAt: response.data.expires_at,
       views: response.data.views,
+      uniqueViews: response.data.unique_views,
     };
   },
 
@@ -101,7 +132,10 @@ export const documentAnalyticsService = {
 
     return {
       documentId: String(response.data.document_id),
+      versionId: String(response.data.version_id),
+      version: response.data.version,
       downloadUrl: response.data.download_url,
+      expiresAt: response.data.expires_at,
       downloads: response.data.downloads,
       views: response.data.views,
     };

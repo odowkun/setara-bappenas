@@ -47,7 +47,10 @@ export interface AdminNews {
 
 export interface AdminDocument {
   id: string;
+  archiveCode?: string;
+  documentNumber?: string;
   title: string;
+  summary?: string;
   jenis: string; // rpjpd, rpjmd, rkpd, lkpj, renstra, renja, dik_sektoral, data_sektoral
   bidang: BidangType;
   tahun: string;
@@ -56,8 +59,32 @@ export interface AdminDocument {
   ukuran: string;
   downloads: number;
   views: number;
+  uniqueViews?: number;
   fileUrl: string;
   isPublic: boolean;
+  ownerOpd?: string;
+  keywords?: string[];
+  classification?: "public" | "internal" | "confidential" | "restricted";
+  governanceStatus?: "draft" | "pending_review" | "approved" | "rejected" | "archived" | "pending_migration";
+  storageStatus?: "private" | "legacy_external" | "missing";
+  retentionPolicy?: "permanent" | "active_5_years" | "active_10_years" | "custom";
+  retentionUntil?: string;
+  retentionStatus?: "active" | "due" | "held";
+  legalHold?: boolean;
+  currentVersion?: {
+    id: string;
+    versionLabel: string;
+    status: string;
+    integrityStatus: string;
+    extractionStatus: string;
+  } | null;
+  latestVersion?: {
+    id: string;
+    versionLabel: string;
+    status: string;
+    integrityStatus: string;
+    extractionStatus: string;
+  } | null;
   uploadedBy: string;
   createdAt: string;
 }

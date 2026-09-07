@@ -87,7 +87,7 @@ export default function PublicTugasFungsiPage() {
 
               <div className="p-6 sm:p-8 rounded-2xl bg-white border border-blue-100/60 shadow-sm">
                 <p className="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">
-                  {data?.content || "Badan Perencanaan Pembangunan Daerah bertugas membantu Bupati dalam melaksanakan fungsi penunjang urusan pemerintahan yang menjadi kewenangan daerah di bidang perencanaan dan pengendalian pembangunan daerah."}
+                  {data?.content || "Data tugas pokok belum tersedia."}
                 </p>
               </div>
             </div>
@@ -105,12 +105,7 @@ export default function PublicTugasFungsiPage() {
               </div>
 
               <div className="space-y-3">
-                {(data?.meta_json?.fungsi || [
-                  "Penyusunan kebijakan teknis di bidang perencanaan dan pemantauan pembangunan daerah.",
-                  "Pelaksanaan tugas dukungan teknis perencanaan daerah secara terpadu.",
-                  "Pemantauan, evaluasi, dan pelaporan pelaksanaan tugas perencanaan pembangunan.",
-                  "Pembinaan teknis penyelenggaraan fungsi-fungsi perencanaan kelembagaan daerah.",
-                ]).map((fungsiText, idx) => (
+                {(data?.meta_json?.fungsi ?? []).map((fungsiText, idx) => (
                   <div
                     key={idx}
                     className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm hover:shadow-md transition flex items-center gap-3.5"

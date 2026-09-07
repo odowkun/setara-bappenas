@@ -34,40 +34,28 @@ export default function DashboardPage() {
   // Chart Data State (Fetched dynamically from Database)
   const [programPerformance, setProgramPerformance] = useState<
     { id?: number; sector: string; realisasi: number; target: number; color: string; textColor: string }[]
-  >([
-    { sector: "Infrastruktur & Aksesibilitas", realisasi: 88, target: 90, color: "bg-blue-600", textColor: "text-blue-700" },
-    { sector: "Kesehatan & Penurunan Stunting", realisasi: 94, target: 95, color: "bg-emerald-600", textColor: "text-emerald-700" },
-    { sector: "Pendidikan & Sarana Keaksaraan", realisasi: 82, target: 88, color: "bg-indigo-600", textColor: "text-indigo-700" },
-    { sector: "Pertanian & Perikanan Pesisir", realisasi: 79, target: 85, color: "bg-amber-600", textColor: "text-amber-800" },
-    { sector: "Pariwisata & Ekonomi Kreatif", realisasi: 85, target: 87, color: "bg-rose-600", textColor: "text-rose-700" },
-  ]);
+  >([]);
 
   const [monthlyTrends, setMonthlyTrends] = useState<
     { id?: number; month: string; keuangan: number; fisik: number }[]
-  >([
-    { month: "Jan", keuangan: 24, fisik: 28 },
-    { month: "Feb", keuangan: 38, fisik: 42 },
-    { month: "Mar", keuangan: 52, fisik: 58 },
-    { month: "Apr", keuangan: 65, fisik: 70 },
-    { month: "Mei", keuangan: 74, fisik: 79 },
-    { month: "Jun", keuangan: 83, fisik: 86 },
-    { month: "Jul", keuangan: 89, fisik: 92 },
-  ]);
+  >([]);
 
   const [chartMeta, setChartMeta] = useState({
-    source_text: "Sistem Informasi Akuntansi Keuangan Daerah BAPPEDA Halut",
-    status_text: "Q3 2026 Status: 89.4% (On-Track)",
-    total_target_met: 5,
+    source_text: "",
+    status_text: "",
+    total_target_met: 0,
   });
 
   useEffect(() => {
-    const users = adminService.getUsers();
-    const docs = adminService.getDocuments(user?.bidang);
-    const auditLogs = adminService.getLogs();
-
-    setUsersCount(users.length);
-    setDocsCount(docs.length);
-    setLogs(auditLogs.slice(0, 5));
+    Promise.all([
+      adminService.fetchUsers(),
+      adminService.fetchDocuments(user?.bidang, user?.role),
+      adminService.fetchLogs(),
+    ]).then(([users, docs, auditLogs]) => {
+      setUsersCount(users.length);
+      setDocsCount(docs.length);
+      setLogs(auditLogs.slice(0, 5));
+    });
 
     // Fetch dynamic charts data from backend MySQL DB
     fetch("http://localhost:8000/api/v1/dashboard/charts")
@@ -101,7 +89,7 @@ export default function DashboardPage() {
           }
         }
       })
-      .catch((err) => console.warn("Menggunakan chart data fallback:", err));
+      .catch((err) => console.error("Data chart database gagal dimuat:", err));
   }, [user]);
 
   const getRoleDisplayName = () => {

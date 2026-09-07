@@ -18,6 +18,8 @@ import {
   ChevronLeft,
   ChevronRight,
   FolderOpen,
+  BadgeCheck,
+  CircleDashed,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
@@ -40,12 +42,18 @@ export default function GaleriManagementPage() {
 
   const fetchDatabaseAlbums = async () => {
     setLoading(true);
-    const loadedAlbums = await galeriService.getAlbums();
-    setAlbums(loadedAlbums);
+    try {
+      const loadedAlbums = await galeriService.getAlbums(undefined, undefined, true);
+      setAlbums(loadedAlbums);
 
-    const cats = Array.from(new Set(loadedAlbums.map((a) => a.category)));
-    setCategoryOptions(["Semua", ...cats]);
-    setLoading(false);
+      const cats = Array.from(new Set(loadedAlbums.map((a) => a.category)));
+      setCategoryOptions(["Semua", ...cats]);
+    } catch (error) {
+      setAlbums([]);
+      toast.error(error instanceof Error ? error.message : "Galeri gagal dimuat.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -56,13 +64,22 @@ export default function GaleriManagementPage() {
     const res = await showDeleteConfirm(title);
     if (!res.isConfirmed) return;
 
-    const success = await galeriService.deleteAlbum(id);
-    if (success) {
+    try {
+      await galeriService.deleteAlbum(id);
       toast.success(`Album "${title}" berhasil dihapus dari database.`);
-      fetchDatabaseAlbums();
-    } else {
-      setAlbums((prev) => prev.filter((a) => a.id !== id));
-      toast.success(`Album "${title}" berhasil dihapus.`);
+      setAlbums((current) => current.filter((album) => album.id !== id));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Album gagal dihapus.");
+    }
+  };
+
+  const handleTogglePublication = async (album: AlbumItem) => {
+    try {
+      const updated = await galeriService.updatePublication(album.id, !album.isPublished);
+      setAlbums((current) => current.map((row) => row.id === album.id ? updated : row));
+      toast.success(updated.isPublished ? "Album berhasil diterbitkan." : "Album ditarik menjadi draf.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Status publikasi gagal diperbarui.");
     }
   };
 
@@ -222,6 +239,13 @@ export default function GaleriManagementPage() {
                         <Calendar className="w-3 h-3" />
                         {alb.eventDate}
                       </span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${
+                        alb.isPublished
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                          : "bg-amber-50 text-amber-700 border-amber-200"
+                      }`}>
+                        {alb.isPublished ? "Tayang" : "Draf"}
+                      </span>
                     </div>
 
                     <h3 className="text-sm font-black text-slate-900 tracking-tight leading-snug line-clamp-2">
@@ -248,6 +272,20 @@ export default function GaleriManagementPage() {
                   </button>
 
                   <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublication(alb)}
+                      className={`p-2 rounded-xl transition border cursor-pointer ${
+                        alb.isPublished
+                          ? "bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+                          : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                      }`}
+                      title={alb.isPublished ? "Tarik menjadi draf" : "Terbitkan album"}
+                    >
+                      {alb.isPublished
+                        ? <CircleDashed className="w-3.5 h-3.5" />
+                        : <BadgeCheck className="w-3.5 h-3.5" />}
+                    </button>
                     <Link
                       href={`/dashboard/galeri/edit/${alb.id}`}
                       className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 transition border border-slate-200"

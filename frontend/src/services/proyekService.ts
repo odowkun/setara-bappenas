@@ -1,3 +1,8 @@
+import {
+  API_BASE_URL,
+  authenticatedFetch,
+} from "@/lib/apiClient";
+
 export interface ProyekAttachment {
   id: string | number;
   proyek_detail_id: string | number;
@@ -22,6 +27,9 @@ export interface ProyekDetail {
   latitude: number;
   longitude: number;
   esri_objectid?: number;
+  esri_sync_status?: 'pending' | 'synced' | 'failed';
+  esri_synced_at?: string;
+  esri_last_error?: string;
   pagu_anggaran: number;
   realisasi_anggaran: number;
   persentase_progres: number;
@@ -29,55 +37,57 @@ export interface ProyekDetail {
   opd_penanggung_jawab?: string;
   created_by?: string;
   created_at?: string;
+  document?: {
+    id: string | number;
+    title?: string;
+    tahun?: string;
+  };
   attachments?: ProyekAttachment[];
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-const PROYEK_LOCAL_KEY = "bappeda_proyek_details";
-
 export const proyekService = {
   // 1. Fetch List Proyek langsung dari Database API
-  getProjects: async (documentId?: string | number, bidang?: string): Promise<ProyekDetail[]> => {
+  getProjects: async (
+    documentId?: string | number,
+    bidang?: string,
+    adminMode = false
+  ): Promise<ProyekDetail[]> => {
     try {
-      let url = `${API_BASE_URL}/proyek-details`;
+      let endpoint = adminMode ? "/admin/proyek-details" : "/proyek-details";
       const params = new URLSearchParams();
       if (documentId) params.append('document_id', String(documentId));
       if (bidang && bidang !== 'semua') params.append('bidang', bidang);
-      if (params.toString()) url += `?${params.toString()}`;
+      if (params.toString()) endpoint += `?${params.toString()}`;
 
-      const res = await fetch(url, { headers: { Accept: "application/json" } });
+      const res = adminMode
+        ? await authenticatedFetch(endpoint, { cache: "no-store" })
+        : await fetch(`${API_BASE_URL}${endpoint}`, {
+            cache: "no-store",
+            headers: { Accept: "application/json" },
+          });
       if (res.ok) {
         const json = await res.json();
         if (json.data && Array.isArray(json.data)) {
-          if (typeof window !== "undefined") {
-            localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(json.data));
-          }
           return json.data;
         }
       }
     } catch (e) {
-      console.warn("[proyekService] Backend API connection check, reading cached database records:", e);
+      console.error("[proyekService] Data proyek resmi gagal dimuat:", e);
     }
 
-    // Local Storage Cache (hanya jika offline, tidak ada dummy fallback)
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(PROYEK_LOCAL_KEY);
-    const list: ProyekDetail[] = stored ? JSON.parse(stored) : [];
-
-    return list.filter((p) => {
-      if (documentId && String(p.document_id) !== String(documentId)) return false;
-      if (bidang && bidang !== 'semua' && p.bidang !== bidang) return false;
-      return true;
-    });
+    return [];
   },
 
   // 2. Geotagging Proyek Pembangunan (Fitur 2: Geotagging Spasial)
   addProjectGeotag: async (
     documentId: string | number,
-    data: Omit<ProyekDetail, "id" | "document_id" | "kode_proyek" | "created_at">
+    data: Omit<
+      ProyekDetail,
+      "id" | "document_id" | "kode_proyek" | "created_at" | "created_by" | "document" | "attachments"
+    >
   ): Promise<{ success: boolean; data: ProyekDetail; esri_status?: any }> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/documents/${documentId}/proyek`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/documents/${documentId}/proyek`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(data),
@@ -87,32 +97,11 @@ export const proyekService = {
         const json = await res.json();
         return { success: true, data: json.data, esri_status: json.esri_status };
       }
+      throw new Error(`Server menolak geotagging proyek (${res.status}).`);
     } catch (e) {
-      console.warn("[proyekService] Failed to post to backend, using local fallback", e);
+      console.warn("[proyekService] Failed to post to backend", e);
+      throw e;
     }
-
-    // Fallback Local Storage
-    const newProject: ProyekDetail = {
-      ...data,
-      id: `prj-${Date.now()}`,
-      document_id: documentId,
-      kode_proyek: `PRJ-RENJA-2026-${Math.floor(100 + Math.random() * 900)}`,
-      esri_objectid: Math.floor(1000 + Math.random() * 9000), // Simulated ESRI OBJECTID
-      created_at: new Date().toISOString(),
-      attachments: [],
-    };
-
-    const projects = await proyekService.getProjects();
-    const updated = [newProject, ...projects];
-    if (typeof window !== "undefined") {
-      localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(updated));
-    }
-
-    return {
-      success: true,
-      data: newProject,
-      esri_status: { success: true, objectId: newProject.esri_objectid, is_mock: true },
-    };
   },
 
   // 3. Tabular Update Data Sektoral & Progres (Fitur 3: Tabular Update 2-Way ESRI Sync)
@@ -123,7 +112,7 @@ export const proyekService = {
     realisasi_anggaran?: number
   ): Promise<{ success: boolean; data: ProyekDetail }> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/proyek-details/${projectId}/progres`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-details/${projectId}/progres`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify({ persentase_progres, status_progres, realisasi_anggaran }),
@@ -133,25 +122,11 @@ export const proyekService = {
         const json = await res.json();
         return { success: true, data: json.data };
       }
+      throw new Error(`Server menolak pembaruan progres (${res.status}).`);
     } catch (e) {
-      console.warn("[proyekService] Failed backend update, fallback to LocalStorage", e);
+      console.warn("[proyekService] Failed backend update", e);
+      throw e;
     }
-
-    // Local Storage update fallback
-    const projects = await proyekService.getProjects();
-    const idx = projects.findIndex((p) => String(p.id) === String(projectId));
-    if (idx !== -1) {
-      projects[idx].persentase_progres = persentase_progres;
-      projects[idx].status_progres = status_progres;
-      if (realisasi_anggaran !== undefined) projects[idx].realisasi_anggaran = realisasi_anggaran;
-
-      if (typeof window !== "undefined") {
-        localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(projects));
-      }
-      return { success: true, data: projects[idx] };
-    }
-
-    throw new Error("Proyek tidak ditemukan");
   },
 
   // 4. Upload Lampiran Spasial Teknis (Fitur 4: ESRI Attachments)
@@ -165,7 +140,7 @@ export const proyekService = {
       formData.append("file", file);
       formData.append("file_type", fileType);
 
-      const res = await fetch(`${API_BASE_URL}/proyek-details/${projectId}/attachment`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-details/${projectId}/attachment`, {
         method: "POST",
         headers: { Accept: "application/json" },
         body: formData,
@@ -175,131 +150,115 @@ export const proyekService = {
         const json = await res.json();
         return { success: true, data: json.data };
       }
+      throw new Error(`Server menolak lampiran (${res.status}).`);
     } catch (e) {
-      console.warn("[proyekService] Attachment upload API offline, using local fallback", e);
+      console.warn("[proyekService] Attachment upload API failed", e);
+      throw e;
     }
-
-    // Local Storage Attachment fallback
-    const newAttachment: ProyekAttachment = {
-      id: `att-${Date.now()}`,
-      proyek_detail_id: projectId,
-      file_name: file.name,
-      file_path: URL.createObjectURL(file),
-      file_type: fileType,
-      file_size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`,
-      esri_attachment_id: Math.floor(500 + Math.random() * 500),
-      created_at: new Date().toISOString(),
-    };
-
-    const projects = await proyekService.getProjects();
-    const idx = projects.findIndex((p) => String(p.id) === String(projectId));
-    if (idx !== -1) {
-      if (!projects[idx].attachments) projects[idx].attachments = [];
-      projects[idx].attachments!.push(newAttachment);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(projects));
-      }
-    }
-
-    return { success: true, data: newAttachment };
   },
 
   deleteAttachment: async (attachmentId: string | number): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/proyek-attachments/${attachmentId}`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-attachments/${attachmentId}`, {
         method: "DELETE",
         headers: { Accept: "application/json" },
       });
-      if (res.ok) return true;
+      return res.ok;
     } catch (e) {
       console.warn("[proyekService] Failed to delete attachment from API", e);
     }
 
-    // Local Storage Fallback
-    const projects = await proyekService.getProjects();
-    let updated = false;
-    for (const p of projects) {
-      if (p.attachments) {
-        const initialLen = p.attachments.length;
-        p.attachments = p.attachments.filter((a) => String(a.id) !== String(attachmentId));
-        if (p.attachments.length !== initialLen) updated = true;
-      }
-    }
-    if (updated && typeof window !== "undefined") {
-      localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(projects));
-    }
-    return true;
+    return false;
   },
 
   deleteProject: async (projectId: string | number): Promise<boolean> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/proyek-details/${projectId}`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-details/${projectId}`, {
         method: "DELETE",
         headers: { Accept: "application/json" },
       });
-      if (res.ok) return true;
+      return res.ok;
     } catch (e) {
       console.warn("[proyekService] Failed to delete project from API", e);
     }
 
-    // Local Storage Fallback
-    const projects = await proyekService.getProjects();
-    const updated = projects.filter((p) => String(p.id) !== String(projectId));
-    if (updated.length !== projects.length && typeof window !== "undefined") {
-      localStorage.setItem(PROYEK_LOCAL_KEY, JSON.stringify(updated));
-    }
-    return true;
+    return false;
   },
 
   // 5. Geoprocessing Buffer Analysis (Fitur 5: Geoprocessing ESRI Analysis)
   runBufferAnalysis: async (
     lat: number,
     lng: number,
-    radiusMeters: number
+    radiusMeters: number,
+    metadata: {
+      id?: string;
+      name: string;
+      projectId?: string | number;
+      category?: string;
+      color?: string;
+      notes?: string;
+    }
   ): Promise<{ success: boolean; data: any }> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/gis/geoprocessing/buffer`, {
-        method: "POST",
+      const endpoint = metadata.id
+        ? `${API_BASE_URL}/gis/geoprocessing/analyses/${metadata.id}`
+        : `${API_BASE_URL}/gis/geoprocessing/buffer`;
+      const res = await authenticatedFetch(endpoint, {
+        method: metadata.id ? "PUT" : "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ latitude: lat, longitude: lng, radius: radiusMeters }),
+        body: JSON.stringify({
+          name: metadata.name,
+          proyek_detail_id: metadata.projectId,
+          category: metadata.category,
+          color: metadata.color,
+          notes: metadata.notes,
+          latitude: lat,
+          longitude: lng,
+          radius: radiusMeters,
+        }),
       });
 
       if (res.ok) {
         const json = await res.json();
         return { success: true, data: json.data };
       }
+      throw new Error(`Server menolak analisis GIS (${res.status}).`);
     } catch (e) {
-      console.warn("[proyekService] Geoprocessing API offline, using dynamic math calculation", e);
+      console.warn("[proyekService] Geoprocessing API failed", e);
+      throw e;
     }
+  },
 
-    // Fallback Math calculation for circle polygon GeoJSON
-    const steps = 32;
-    const coordinates: [number, number][] = [];
-    const earthRadius = 6378137;
-    const dLat = radiusMeters / earthRadius;
-    const dLng = radiusMeters / (earthRadius * Math.cos((lat * Math.PI) / 180));
-
-    for (let i = 0; i <= steps; i++) {
-      const theta = (i / steps) * 2 * Math.PI;
-      const pLat = lat + (dLat * Math.sin(theta) * 180) / Math.PI;
-      const pLng = lng + (dLng * Math.cos(theta) * 180) / Math.PI;
-      coordinates.push([pLng, pLat]);
+  getBufferAnalyses: async (): Promise<any[]> => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/gis/geoprocessing/analyses`, {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      });
+      if (!res.ok) throw new Error(`Server gagal memuat analisis (${res.status}).`);
+      const json = await res.json();
+      return Array.isArray(json.data) ? json.data : [];
+    } catch (error) {
+      console.error("[proyekService] Riwayat analisis resmi gagal dimuat:", error);
+      return [];
     }
+  },
 
-    return {
-      success: true,
-      data: {
-        buffer_geojson: {
-          type: "FeatureCollection",
-          features: [
-            {
-              type: "Feature",
-              properties: { radius_meters: radiusMeters, center: [lat, lng] },
-              geometry: { type: "Polygon", coordinates: [coordinates] },
-            },
-          ],
-        },
-      },
-    };
+  deleteBufferAnalysis: async (id: string | number): Promise<void> => {
+    const res = await authenticatedFetch(`${API_BASE_URL}/gis/geoprocessing/analyses/${id}`, {
+      method: "DELETE",
+      headers: { Accept: "application/json" },
+    });
+    if (!res.ok) throw new Error(`Analisis gagal dihapus (${res.status}).`);
+  },
+
+  resyncEsri: async (id: string | number): Promise<{ success: boolean; message: string; data: any }> => {
+    const res = await authenticatedFetch(`${API_BASE_URL}/admin/proyek-details/${id}/resync-esri`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+    });
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message || `Re-sync ESRI gagal (${res.status}).`);
+    return { success: true, message: json.message, data: json.data };
   },
 };

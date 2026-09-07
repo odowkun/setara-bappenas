@@ -17,33 +17,23 @@ import {
   X,
   Image as ImageIcon,
 } from "lucide-react";
-
-const DEFAULT_CATEGORIES = [
-  "Pembangunan",
-  "Infrastruktur",
-  "Ekonomi & Keuangan",
-  "Sosial Budaya",
-  "SPBE & Digital",
-  "Inovasi Daerah",
-];
-
-const CATEGORIES_KEY = "bappeda_news_categories";
+import { officialContentService } from "@/services/officialContentService";
+import { adminService } from "@/services/adminService";
+import { toast } from "@/lib/swal";
 
 export default function TambahBeritaPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
-  const [categoryList, setCategoryList] = useState<string[]>(DEFAULT_CATEGORIES);
-  const [selectedCategory, setSelectedCategory] = useState("Pembangunan");
+  const [categoryList, setCategoryList] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("");
 
   // Inline Category Creator State
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
-  const [content, setContent] = useState(
-    "<p><strong>TOBELO, BAPPEDA HALUT</strong> — Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara menyelenggarakan agenda kerja tahunan...</p><h3>Poin Utama Pembahasan:</h3><ol><li>Penetapan skala prioritas pembangunan daerah</li><li>Integrasi data statistik sektoral</li><li>Penguatan tata kelola SPBE berbasis teknologi</li></ol>"
-  );
+  const [content, setContent] = useState("");
 
   const [mediaData, setMediaData] = useState<{
     masterUrl: string;
@@ -51,37 +41,56 @@ export default function TambahBeritaPage() {
     thumbUrl: string;
   } | null>(null);
 
-  const [isSaved, setIsSaved] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Load saved categories from localStorage
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(CATEGORIES_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategoryList(Array.from(new Set([...DEFAULT_CATEGORIES, ...parsed])));
-          }
-        } catch (e) {
-          console.error("Gagal parse kategori dari storage:", e);
-        }
-      }
-    }
+    officialContentService.getNewsCategories()
+      .then((rows) => {
+        const names = rows.map((item) => item.name);
+        setCategoryList(names);
+        setSelectedCategory((current) => current || names[0] || "");
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Kategori berita gagal dimuat."));
   }, []);
 
-  // Handle adding new category
-  const handleAddNewCategory = (e: React.FormEvent) => {
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get("edit");
+    if (!id) return;
+
+    setEditingId(id);
+    adminService.fetchNewsById(id)
+      .then((item) => {
+        setTitle(String(item.title ?? ""));
+        setSummary(String(item.summary ?? ""));
+        setSelectedCategory(String(item.category ?? ""));
+        setContent(String(item.content ?? ""));
+        setIsPublished(Boolean(item.is_published));
+        const image = String(item.image ?? "");
+        if (image) {
+          setMediaData({ masterUrl: image, webUrl: image, thumbUrl: image });
+        }
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Berita gagal dimuat.");
+        router.push("/dashboard/berita");
+      });
+  }, [router]);
+
+  const handleAddNewCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newCategoryName.trim();
     if (!trimmed) return;
 
     if (!categoryList.includes(trimmed)) {
-      const updated = [...categoryList, trimmed];
-      setCategoryList(updated);
-      setSelectedCategory(trimmed);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(CATEGORIES_KEY, JSON.stringify(updated));
+      try {
+        const created = await officialContentService.createNewsCategory(trimmed);
+        setCategoryList((current) => [...current, created.name]);
+        setSelectedCategory(created.name);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Kategori gagal disimpan.");
+        return;
       }
     } else {
       setSelectedCategory(trimmed);
@@ -100,14 +109,37 @@ export default function TambahBeritaPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title || !content) return;
+  const handleSave = async (publish: boolean) => {
+    if (!title.trim() || !content.trim() || !selectedCategory) {
+      toast.error("Judul, kategori, dan isi berita wajib diisi.");
+      return;
+    }
 
-    setIsSaved(true);
-    setTimeout(() => {
+    setSaving(true);
+    try {
+      const payload = {
+        title: title.trim(),
+        summary,
+        category: selectedCategory,
+        content,
+        image: mediaData?.webUrl || mediaData?.masterUrl || "",
+        is_published: publish,
+      };
+      if (editingId) {
+        await adminService.updateNews(editingId, payload);
+      } else {
+        await adminService.addNews(payload);
+      }
+      setIsPublished(publish);
+      toast.success(publish
+        ? "Artikel tersimpan dan diterbitkan."
+        : "Artikel tersimpan sebagai draf.");
       router.push("/dashboard/berita");
-    }, 1500);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Artikel berita gagal disimpan.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -125,7 +157,7 @@ export default function TambahBeritaPage() {
           <div className="space-y-0.5">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Newspaper className="w-6 h-6 text-blue-600 shrink-0" />
-              <span>Tulis & Publikasikan Artikel Berita Baru</span>
+              <span>{editingId ? "Edit Artikel Berita" : "Tulis Artikel Berita Baru"}</span>
             </h1>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
               Tulis narasi berita resmi, sertakan foto sampul utama, dan pilih/buat kategori topik.
@@ -133,16 +165,19 @@ export default function TambahBeritaPage() {
           </div>
         </div>
 
-        {isSaved && (
-          <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center gap-2 animate-in fade-in shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Artikel Berita Berhasil Diterbitkan!</span>
-          </div>
+        {editingId && (
+          <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${
+            isPublished
+              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+              : "bg-amber-50 text-amber-700 border-amber-200"
+          }`}>
+            {isPublished ? "Sedang Tayang" : "Draf"}
+          </span>
         )}
       </div>
 
       {/* FORM UTAMA */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
         <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -239,7 +274,11 @@ export default function TambahBeritaPage() {
               <input
                 type="text"
                 disabled
-                value={`${user?.name || "Redaksi Humas BAPPEDA"} (${user?.role || "Humas"})`}
+                value={
+                  user
+                    ? `${user.name} (${user.role})`
+                    : "Memuat identitas pengelola dari server..."
+                }
                 className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 cursor-not-allowed"
               />
             </div>
@@ -280,11 +319,22 @@ export default function TambahBeritaPage() {
           </Link>
 
           <button
-            type="submit"
-            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95"
+            type="button"
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            className="px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs border border-slate-300 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Publikasikan Artikel Berita</span>
+            <span>Simpan Draf</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
+            disabled={saving}
+            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>{editingId ? "Simpan & Terbitkan" : "Terbitkan Artikel"}</span>
           </button>
         </div>
       </form>

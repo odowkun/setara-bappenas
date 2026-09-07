@@ -13,6 +13,7 @@ import {
   DocumentDownloadLog,
   DocumentDownloadSummary,
 } from "@/types/documentAnalytics";
+import { useAuth } from "@/context/AuthContext";
 
 const EMPTY_SUMMARY: DocumentDownloadSummary = {
   totalDownloads: 0,
@@ -21,6 +22,7 @@ const EMPTY_SUMMARY: DocumentDownloadSummary = {
 };
 
 function DownloadHistoryContent() {
+  const { user } = useAuth();
   const searchParams = useSearchParams();
   const initialDocumentId = searchParams.get("documentId") || "semua";
   const [documents, setDocuments] = useState<AdminDocument[]>([]);
@@ -44,9 +46,9 @@ function DownloadHistoryContent() {
   };
 
   useEffect(() => {
-    adminService.fetchDocuments().then(setDocuments);
+    adminService.fetchDocuments(user?.bidang, user?.role).then(setDocuments);
     loadLogs(initialDocumentId);
-  }, [initialDocumentId]);
+  }, [initialDocumentId, user]);
 
   const filteredLogs = useMemo(() => {
     const normalizedSearch = searchEmail.trim().toLowerCase();

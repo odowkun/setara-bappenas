@@ -15,16 +15,16 @@ import {
   Navigation,
 } from "lucide-react";
 import {
-  AgendaEvent,
-  defaultAgendas,
-  DEFAULT_AGENDA_CATEGORIES,
-  DEFAULT_ORGANIZERS,
   AGENDA_COLOR_PALETTES,
   computeAgendaStatus,
   formatAgendaDateRange,
 } from "@/types/agenda";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
 import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
+import {
+  officialContentService,
+  type TaxonomyItem,
+} from "@/services/officialContentService";
 
 export default function EditAgendaPage() {
   const router = useRouter();
@@ -32,22 +32,24 @@ export default function EditAgendaPage() {
   const id = params?.id as string;
 
   const [title, setTitle] = useState("");
-  const [categories, setCategories] = useState<string[]>(DEFAULT_AGENDA_CATEGORIES);
-  const [selectedCategory, setSelectedCategory] = useState<string>("Musrenbang");
+  const [categoryItems, setCategoryItems] = useState<TaxonomyItem[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [customCategory, setCustomCategory] = useState<string>("");
   const [isCustomCategory, setIsCustomCategory] = useState<boolean>(false);
 
   // ORGANIZERS FROM STRUCTURE DATA
-  const [organizersList, setOrganizersList] = useState<string[]>(DEFAULT_ORGANIZERS);
-  const [selectedOrganizer, setSelectedOrganizer] = useState<string>(DEFAULT_ORGANIZERS[1]);
+  const [organizersList, setOrganizersList] = useState<string[]>([]);
+  const [selectedOrganizer, setSelectedOrganizer] = useState<string>("");
   const [customOrganizer, setCustomOrganizer] = useState<string>("");
   const [isCustomOrganizer, setIsCustomOrganizer] = useState<boolean>(false);
 
   // CHECKBOX FOR MULTI-DAY EVENT
   const [isMultiDay, setIsMultiDay] = useState<boolean>(false);
 
-  const [startDate, setStartDate] = useState<string>("2026-07-28");
-  const [endDate, setEndDate] = useState<string>("2026-07-28");
+  const todayValue = new Date().toISOString().slice(0, 10);
+  const [startDate, setStartDate] = useState<string>(todayValue);
+  const [endDate, setEndDate] = useState<string>(todayValue);
   const [startTime, setStartTime] = useState("09:00");
   const [endTime, setEndTime] = useState("12:00");
 
@@ -57,48 +59,20 @@ export default function EditAgendaPage() {
 
   const [description, setDescription] = useState("");
   const [selectedColor, setSelectedColor] = useState<string>("blue");
+  const [isPublished, setIsPublished] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Load saved categories
-      const storedCats = localStorage.getItem("bappeda_agenda_categories");
-      if (storedCats) {
-        try {
-          const parsed = JSON.parse(storedCats);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategories(Array.from(new Set([...DEFAULT_AGENDA_CATEGORIES, ...parsed])));
-          }
-        } catch (e) {
-          console.error("Error load local cats:", e);
-        }
-      }
-
-      // Load dynamic structural positions from Pejabat / Org Structure if available
-      let currentOrganizersList = DEFAULT_ORGANIZERS;
-      const storedPejabats = localStorage.getItem("bappeda_pejabats");
-      if (storedPejabats) {
-        try {
-          const parsed = JSON.parse(storedPejabats);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            const extractedPositions = parsed
-              .map((p: { position?: string }) => p.position)
-              .filter((pos): pos is string => Boolean(pos));
-            currentOrganizersList = Array.from(new Set([...DEFAULT_ORGANIZERS, ...extractedPositions]));
-            setOrganizersList(currentOrganizersList);
-          }
-        } catch (e) {
-          console.error("Error load pejabats:", e);
-        }
-      }
-
-      // Load agenda details
-      const stored = localStorage.getItem("bappeda_agendas");
-      const list: AgendaEvent[] = stored ? JSON.parse(stored) : defaultAgendas;
-      const found = list.find((item) => item.id === id);
-
-      if (found) {
+    Promise.all([
+      officialContentService.getAgendaCategories(),
+      officialContentService.getOrganizers(),
+      officialContentService.getAgenda(id),
+    ])
+      .then(([categoryRows, organizerRows, found]) => {
+        setCategoryItems(categoryRows);
+        setCategories(categoryRows.map((item) => item.name));
+        setOrganizersList(organizerRows);
         setTitle(found.title);
-        const s = found.startDate || found.date || "2026-07-28";
+        const s = found.startDate || found.date || todayValue;
         const ed = found.endDate || s;
         setStartDate(s);
         setEndDate(ed);
@@ -110,28 +84,22 @@ export default function EditAgendaPage() {
         setMapInput(found.mapUrl || found.coordinates || "");
         setDescription(found.description || "");
         if (found.color) setSelectedColor(found.color);
+        setIsPublished(Boolean(found.isPublished));
 
-        // Category matching
-        if (DEFAULT_AGENDA_CATEGORIES.includes(found.category)) {
-          setSelectedCategory(found.category);
-          setIsCustomCategory(false);
-        } else {
-          setIsCustomCategory(true);
-          setCustomCategory(found.category);
-        }
+        setSelectedCategory(found.category);
+        setIsCustomCategory(false);
 
-        // Organizer matching
-        const orgVal = found.organizer || "BAPPEDA Halmahera Utara";
-        if (currentOrganizersList.includes(orgVal)) {
+        const orgVal = found.organizer || "";
+        if (organizerRows.includes(orgVal)) {
           setSelectedOrganizer(orgVal);
           setIsCustomOrganizer(false);
         } else {
           setIsCustomOrganizer(true);
           setCustomOrganizer(orgVal);
         }
-      }
-    }
-  }, [id]);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Agenda gagal dimuat."));
+  }, [id, todayValue]);
 
   const finalEndDate = isMultiDay ? endDate : startDate;
   const computedStatus = computeAgendaStatus(startDate, finalEndDate);
@@ -168,9 +136,7 @@ export default function EditAgendaPage() {
     return `https://www.google.com/maps?q=${encodeURIComponent(trimmed)}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-
+  const handleSave = async (publish: boolean) => {
     const finalCategory = isCustomCategory ? customCategory.trim() : selectedCategory;
     const finalOrganizer = isCustomOrganizer ? customOrganizer.trim() : selectedOrganizer;
 
@@ -194,56 +160,58 @@ export default function EditAgendaPage() {
       return;
     }
 
-    if (isCustomCategory && finalCategory) {
-      const updatedCats = Array.from(new Set([...categories, finalCategory]));
-      setCategories(updatedCats);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("bappeda_agenda_categories", JSON.stringify(updatedCats));
-      }
-    }
-
     // Process mapInput (Optional single field for Google Maps URL or Lat,Lng)
     const trimmedMap = mapInput.trim();
     let finalMapUrl: string | undefined = undefined;
-    let finalCoordinates: string | undefined = undefined;
+    let latitude: number | undefined;
+    let longitude: number | undefined;
 
     if (trimmedMap) {
       if (trimmedMap.startsWith("http://") || trimmedMap.startsWith("https://")) {
         finalMapUrl = trimmedMap;
       } else {
-        finalCoordinates = trimmedMap;
+        const coordinates = trimmedMap.split(",").map(Number);
+        if (coordinates.length !== 2 || coordinates.some(Number.isNaN)) {
+          toast.error("Koordinat harus berformat latitude, longitude.");
+          return;
+        }
+        [latitude, longitude] = coordinates;
         finalMapUrl = `https://www.google.com/maps?q=${encodeURIComponent(trimmedMap)}`;
       }
     }
 
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("bappeda_agendas");
-      const list: AgendaEvent[] = stored ? JSON.parse(stored) : defaultAgendas;
-      const updated = list.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              title,
-              category: finalCategory,
-              startDate,
-              endDate: finalEndDate,
-              startTime,
-              endTime,
-              location,
-              organizer: finalOrganizer || "BAPPEDA Halmahera Utara",
-              status: computedStatus,
-              color: selectedColor,
-              coordinates: finalCoordinates,
-              mapUrl: finalMapUrl,
-              description,
-            }
-          : item
-      );
-      localStorage.setItem("bappeda_agendas", JSON.stringify(updated));
-    }
+    try {
+      let category = categoryItems.find((item) => item.name === finalCategory);
+      if (!category && isCustomCategory) {
+        category = await officialContentService.createAgendaCategory(finalCategory, selectedColor);
+      }
+      if (!category) {
+        toast.error("Kategori agenda resmi belum dipilih.");
+        return;
+      }
 
-    toast.success("Perubahan agenda kegiatan berhasil disimpan!");
-    router.push("/dashboard/agenda");
+      await officialContentService.updateAgenda(id, {
+        agenda_category_id: category.id,
+        title,
+        start_at: `${startDate}T${startTime}:00`,
+        end_at: `${finalEndDate}T${endTime}:00`,
+        location,
+        organizer: finalOrganizer,
+        description,
+        color: selectedColor,
+        map_url: finalMapUrl,
+        latitude,
+        longitude,
+        is_published: publish,
+      });
+      setIsPublished(publish);
+      toast.success(publish
+        ? "Perubahan tersimpan dan agenda diterbitkan."
+        : "Perubahan tersimpan sebagai draf.");
+      router.push("/dashboard/agenda");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Agenda gagal diperbarui.");
+    }
   };
 
   return (
@@ -271,7 +239,7 @@ export default function EditAgendaPage() {
       </div>
 
       {/* FORM CARD */}
-      <form onSubmit={handleSubmit} className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-6">
+      <form onSubmit={(event) => event.preventDefault()} className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-6">
         <div className="space-y-5">
           <div>
             <label className="block text-xs font-black uppercase text-slate-700 mb-1.5">
@@ -591,11 +559,20 @@ export default function EditAgendaPage() {
             Batal
           </Link>
           <button
-            type="submit"
-            className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95"
+            type="button"
+            onClick={() => handleSave(false)}
+            className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs flex items-center gap-2 border border-slate-300 transition cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Simpan Perubahan Agenda</span>
+            <span>Simpan sebagai Draf</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
+            className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95"
+          >
+            <Edit className="w-4 h-4" />
+            <span>{isPublished ? "Simpan Tetap Tayang" : "Simpan & Terbitkan"}</span>
           </button>
         </div>
       </form>

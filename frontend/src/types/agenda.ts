@@ -1,5 +1,6 @@
 export interface AgendaEvent {
   id: string;
+  categoryId?: number;
   title: string;
   category: string;
   startDate: string; // YYYY-MM-DD
@@ -14,33 +15,8 @@ export interface AgendaEvent {
   mapUrl?: string;      // Optional Google Maps link or OpenStreetMap URL
   coordinates?: string; // Optional Latitude, Longitude (e.g., "1.7285, 128.0051")
   date?: string;        // fallback
+  isPublished?: boolean;
 }
-
-export const DEFAULT_AGENDA_CATEGORIES = [
-  "Musrenbang",
-  "Rapat Koordinasi",
-  "Peninjauan Lapangan",
-  "Bimtek & Pelatihan",
-  "Evaluasi",
-];
-
-export const DEFAULT_ORGANIZERS = [
-  "Sekretariat BAPPEDA",
-  "Bidang Perencanaan Pembangunan & Evaluasi",
-  "Bidang Pembangunan Manusia & Masyarakat (PMM)",
-  "Bidang Ekonomi & Sumber Daya Alam (SDA)",
-  "Bidang Infrastruktur & Pengembangan Wilayah (IPW)",
-  "Bidang Pengendalian, Evaluasi & Pelaporan (PEP)",
-  "Subag Perencanaan & Evaluasi",
-  "Subag Keuangan",
-  "Subag Umum & Kepegawaian",
-  "Subid Pembangunan Sumber Daya Manusia",
-  "Subid Pembangunan Ketahanan Masyarakat",
-  "Subid Ekonomi & Keuangan Daerah",
-  "Subid Sumber Daya Alam",
-  "Subid Infrastruktur & Permukiman",
-  "Subid Kecamatan & Desa",
-];
 
 export const AGENDA_COLOR_PALETTES = [
   {
@@ -136,11 +112,11 @@ export const AGENDA_COLOR_PALETTES = [
 export function computeAgendaStatus(
   startDate: string,
   endDate?: string,
-  referenceDateStr: string = "2026-07-24"
+  referenceDateStr: string = new Date().toISOString().slice(0, 10)
 ): "Mendatang" | "Berlangsung" | "Selesai" {
   const s = startDate || "";
   const e = endDate || s;
-  const ref = referenceDateStr || "2026-07-24";
+  const ref = referenceDateStr || new Date().toISOString().slice(0, 10);
 
   if (e < ref) {
     return "Selesai";
@@ -150,85 +126,6 @@ export function computeAgendaStatus(
   }
   return "Mendatang";
 }
-
-export const defaultAgendas: AgendaEvent[] = [
-  {
-    id: "ag-1",
-    title: "Musrenbang Rencana Kerja Pemerintah Daerah (RKPD) TA 2027",
-    category: "Musrenbang",
-    startDate: "2026-07-28",
-    endDate: "2026-07-30",
-    startTime: "09:00",
-    endTime: "15:00",
-    location: "Aula Utama BAPPEDA Kab. Halmahera Utara",
-    organizer: "Bidang Perencanaan Pembangunan & Evaluasi",
-    status: "Mendatang",
-    color: "blue",
-    coordinates: "1.7285, 128.0051",
-    mapUrl: "https://www.google.com/maps?q=1.7285,128.0051",
-    description: "Pelaksanaan Forum Musrenbang RKPD 2027 selama 3 hari bersama SKPD, Camat, dan tokoh masyarakat untuk menyepakati prioritas pembangunan daerah tahun anggaran 2027.",
-  },
-  {
-    id: "ag-2",
-    title: "Rapat Koordinasi Evaluasi Realisasi Fisik & Keuangan Triwulan II",
-    category: "Rapat Koordinasi",
-    startDate: "2026-07-24",
-    endDate: "2026-07-25",
-    startTime: "10:00",
-    endTime: "12:30",
-    location: "Ruang Rapat Kepala BAPPEDA Halut",
-    organizer: "Sekretariat & Bidang Pengendalian",
-    status: "Berlangsung",
-    color: "amber",
-    coordinates: "1.7285, 128.0051",
-    mapUrl: "https://www.google.com/maps?q=1.7285,128.0051",
-    description: "Evaluasi capaian kinerja program kerja triwulan II dan inventarisasi kendala pelaksanaan pembangunan sektoral di lapangan.",
-  },
-  {
-    id: "ag-3",
-    title: "Peninjauan Lapangan Proyek Strategis Daerah Kawasan Tobelo Tengah",
-    category: "Peninjauan Lapangan",
-    startDate: "2026-07-30",
-    endDate: "2026-08-01",
-    startTime: "08:30",
-    endTime: "16:00",
-    location: "Kawasan Industri & Infrastruktur Tobelo Tengah",
-    organizer: "Bidang Infrastruktur & Kewilayahan (IPW)",
-    status: "Mendatang",
-    color: "emerald",
-    coordinates: "1.7410, 128.0120",
-    mapUrl: "https://www.google.com/maps?q=1.7410,128.0120",
-    description: "Inspeksi fisik progres pembangunan drainase perkotaan dan fasilitas umum penunjang pusat pemerintahan baru.",
-  },
-  {
-    id: "ag-4",
-    title: "Bimtek Penggunaan Aplikasi SIPD-RI bagi Kasubag Perencanaan SKPD",
-    category: "Bimtek & Pelatihan",
-    startDate: "2026-08-03",
-    endDate: "2026-08-05",
-    startTime: "08:30",
-    endTime: "16:00",
-    location: "Laboratorium Komputer BAPPEDA Halut",
-    organizer: "Subbag Program & Data",
-    status: "Mendatang",
-    color: "purple",
-    description: "Bimbingan teknis penginputan dokumen RKA dan Renja Perangkat Daerah tahun anggaran 2027 sesuai standar SIPD Kementerian Dalam Negeri.",
-  },
-  {
-    id: "ag-5",
-    title: "Sidang Pleno Tim Koordinasi Penanggulangan Kemiskinan Daerah (TKPKD)",
-    category: "Evaluasi",
-    startDate: "2026-08-10",
-    endDate: "2026-08-10",
-    startTime: "09:00",
-    endTime: "14:00",
-    location: "Ruang Balai Praja Kantor Bupati Halut",
-    organizer: "Bidang Pembangunan Manusia & Masyarakat (PMM)",
-    status: "Mendatang",
-    color: "rose",
-    description: "Penyampaian pemutakhiran data P3KE dan verifikasi pensasaran percepatan penghapusan kemiskinan ekstrem di Halmahera Utara.",
-  },
-];
 
 const categoryColors: Record<
   string,

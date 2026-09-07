@@ -35,12 +35,18 @@ export default function PublicGaleriPage() {
   useEffect(() => {
     const fetchGaleriFromDatabase = async () => {
       setLoading(true);
-      const data = await galeriService.getAlbums();
-      setAlbums(data);
+      try {
+        const data = await galeriService.getAlbums();
+        setAlbums(data);
 
-      const cats = Array.from(new Set(data.map((m) => m.category)));
-      setCategories(["Semua", ...cats]);
-      setLoading(false);
+        const cats = Array.from(new Set(data.map((m) => m.category)));
+        setCategories(["Semua", ...cats]);
+      } catch (error) {
+        console.error("Galeri resmi gagal dimuat:", error);
+        setAlbums([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchGaleriFromDatabase();

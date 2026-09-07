@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { authenticatedFetch } from "@/lib/apiClient";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { toast } from "@/lib/swal";
 import {
@@ -42,32 +43,7 @@ export default function DasarHukumEditorPage() {
   const [saved, setSaved] = useState(false);
 
   // Daftar Regulasi Item
-  const [regulasiList, setRegulasiList] = useState<RegulasiItem[]>([
-    {
-      nama: "Undang-Undang Nomor 25 Tahun 2004",
-      tentang: "Sistem Perencanaan Pembangunan Nasional (SPPN)",
-      kategori: "Undang-Undang",
-      file_url: "/documents/dokumen-bappeda-halut.pdf",
-    },
-    {
-      nama: "Undang-Undang Nomor 23 Tahun 2014",
-      tentang: "Pemerintahan Daerah",
-      kategori: "Undang-Undang",
-      file_url: "/documents/dokumen-bappeda-halut.pdf",
-    },
-    {
-      nama: "Permendagri Nomor 86 Tahun 2017",
-      tentang: "Tata Cara Perencanaan, Pengendalian dan Evaluasi Pembangunan Daerah",
-      kategori: "Peraturan Menteri",
-      file_url: "/documents/dokumen-bappeda-halut.pdf",
-    },
-    {
-      nama: "Perda Kabupaten Halmahera Utara No. 5 Tahun 2021",
-      tentang: "RPJMD Kabupaten Halmahera Utara Tahun 2021-2026",
-      kategori: "Peraturan Daerah",
-      file_url: "/documents/dokumen-bappeda-halut.pdf",
-    },
-  ]);
+  const [regulasiList, setRegulasiList] = useState<RegulasiItem[]>([]);
 
   // Load data from API
   const fetchDasarHukumData = async () => {
@@ -120,8 +96,7 @@ export default function DasarHukumEditorPage() {
 
   // Compact File Upload Handler
   const handleFileUpload = (index: number, file: File) => {
-    const fakeUrl = `/documents/${file.name}`;
-    handleRegulasiChange(index, "file_url", fakeUrl);
+    toast.error(`Lampiran "${file.name}" belum diunggah. Gunakan repository Dokumen agar file memiliki URL resmi.`);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -129,7 +104,7 @@ export default function DasarHukumEditorPage() {
     setSaving(true);
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/profil/dasar_hukum", {
+      const res = await authenticatedFetch("http://localhost:8000/api/v1/profil/dasar_hukum", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

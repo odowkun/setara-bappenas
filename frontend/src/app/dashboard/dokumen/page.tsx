@@ -9,7 +9,7 @@ import SearchableSelect from "@/components/ui/SearchableSelect";
 import {
   FileText,
   FileUp,
-  Trash2,
+  Archive,
   Download,
   Eye,
   History,
@@ -17,8 +17,11 @@ import {
   Building2,
   MapPin,
   ExternalLink,
+  GitBranch,
+  ShieldCheck,
 } from "lucide-react";
-import { showDeleteConfirm, toast } from "@/lib/swal";
+import { showConfirm, toast } from "@/lib/swal";
+import { resolveDocumentUrl } from "@/services/documentAnalyticsService";
 
 export default function DocumentManagementPage() {
   const { user } = useAuth();
@@ -33,13 +36,40 @@ export default function DocumentManagementPage() {
     });
   }, [user]);
 
-  const handleDeleteDocument = async (id: string, docTitle: string) => {
-    const res = await showDeleteConfirm(docTitle);
+  const handleArchiveDocument = async (id: string, docTitle: string) => {
+    const res = await showConfirm({
+      title: "Arsipkan Dokumen?",
+      text: `Dokumen "${docTitle}" ditarik dari publik, tetapi versi, checksum, log akses, dan histori persetujuan tetap dipertahankan.`,
+      icon: "warning",
+      confirmButtonText: "Ya, Arsipkan",
+    });
     if (res.isConfirmed) {
-      adminService.deleteDocument(id, user?.name || "Admin");
-      const activeBidang = user?.role === "admin_bidang" ? user.bidang : undefined;
-      setDocuments(adminService.getDocuments(activeBidang, user?.role));
-      toast.success(`Dokumen "${docTitle}" berhasil dihapus!`);
+      const deleted = await adminService.deleteDocument(id);
+      if (deleted) {
+        const activeBidang = user?.role === "admin_bidang" ? user.bidang : undefined;
+        const refreshed = await adminService.fetchDocuments(activeBidang, user?.role);
+        setDocuments(refreshed);
+        toast.success(`Dokumen "${docTitle}" berhasil diarsipkan.`);
+      } else {
+        toast.error(`Dokumen "${docTitle}" gagal diarsipkan.`);
+      }
+    }
+  };
+
+  const handleTogglePublication = async (document: AdminDocument) => {
+    try {
+      const updated = await adminService.updateDocumentPublication(
+        document.id,
+        !document.isPublic
+      );
+      setDocuments((current) =>
+        current.map((row) => row.id === document.id ? updated : row)
+      );
+      toast.success(updated.isPublic
+        ? "Dokumen berhasil diterbitkan."
+        : "Dokumen ditarik menjadi draf.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Status publikasi gagal diperbarui.");
     }
   };
 
@@ -48,6 +78,16 @@ export default function DocumentManagementPage() {
     const matchJenis = selectedJenis === "semua" || doc.jenis === selectedJenis;
     return matchSearch && matchJenis;
   });
+  const pendingReview = documents.filter(
+    (document) => document.governanceStatus === "pending_review"
+  ).length;
+  const migrationQueue = documents.filter(
+    (document) => document.storageStatus !== "private"
+  ).length;
+  const retentionAttention = documents.filter(
+    (document) =>
+      document.retentionStatus === "due" || document.retentionStatus === "held"
+  ).length;
 
   const jenisSelectOptions = [
     { value: "semua", label: "Semua Jenis Dokumen" },
@@ -97,6 +137,50 @@ export default function DocumentManagementPage() {
         </div>
       </div>
 
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {[
+          {
+            label: "Menunggu Review",
+            value: pendingReview,
+            detail: "Perlu keputusan reviewer resmi",
+            icon: GitBranch,
+            tone: "text-amber-700 bg-amber-50 border-amber-200",
+          },
+          {
+            label: "Perlu Migrasi",
+            value: migrationQueue,
+            detail: "Berkas lama belum valid di storage privat",
+            icon: Archive,
+            tone: "text-rose-700 bg-rose-50 border-rose-200",
+          },
+          {
+            label: "Perhatian Retensi",
+            value: retentionAttention,
+            detail: "Jatuh tempo atau dalam legal hold",
+            icon: ShieldCheck,
+            tone: "text-blue-700 bg-blue-50 border-blue-200",
+          },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className={`rounded-2xl border p-4 ${item.tone}`}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[11px] font-extrabold uppercase tracking-wide">
+                  {item.label}
+                </p>
+                <p className="mt-1 text-2xl font-black">{item.value}</p>
+              </div>
+              <item.icon className="h-5 w-5" />
+            </div>
+            <p className="mt-2 text-[10px] font-semibold opacity-80">
+              {item.detail}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row items-center gap-3">
         <div className="relative flex-1 w-full">
@@ -133,18 +217,37 @@ export default function DocumentManagementPage() {
                 <div className="w-11 h-11 rounded-2xl bg-blue-50/80 border border-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0 shadow-2xs">
                   <FileText className="w-5 h-5 text-blue-600" />
                 </div>
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex max-w-[75%] flex-wrap items-center justify-end gap-1.5">
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200/80 font-mono">
                     {doc.jenis.replace("_", " ")}
                   </span>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
                     {doc.tahun}
                   </span>
+                  <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
+                    doc.isPublic
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
+                  }`}>
+                    {doc.isPublic ? "Tayang" : "Draf"}
+                  </span>
+                  <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black text-blue-800">
+                    {doc.governanceStatus?.replace("_", " ") ?? "draft"}
+                  </span>
+                  <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[10px] font-black text-slate-700">
+                    {doc.classification ?? "internal"}
+                  </span>
                 </div>
               </div>
 
               <div>
                 <h3 className="text-sm font-black text-slate-900 line-clamp-2 leading-snug">{doc.title}</h3>
+                <p className="mt-1 font-mono text-[10px] font-bold text-blue-700">
+                  {doc.archiveCode || "Kode arsip dibuat saat migrasi"}
+                  {doc.latestVersion?.versionLabel
+                    ? ` · v${doc.latestVersion.versionLabel}`
+                    : ""}
+                </p>
                 <div className="mt-2 flex items-center justify-between text-[11px] text-slate-500 font-medium">
                   <span className="flex items-center gap-1">
                     <Building2 className="w-3.5 h-3.5 text-slate-400" />
@@ -157,15 +260,24 @@ export default function DocumentManagementPage() {
 
             <div className="space-y-3 pt-2">
               {/* Spatial Geotagging Quick Link */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                <Link
-                  href={`/dashboard/dokumen/${doc.id}`}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-[11px] transition shadow-2xs"
-                >
-                  <MapPin className="w-3.5 h-3.5 text-rose-400" />
-                  <span>Detail & Geotagging Spasial (ESRI)</span>
-                  <ExternalLink className="w-3 h-3 text-slate-400 ml-0.5" />
-                </Link>
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-2">
+                <div className="flex flex-wrap gap-2">
+                  <Link
+                    href={`/dashboard/dokumen/arsip/${doc.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-blue-700 px-3 py-1.5 text-[11px] font-extrabold text-white transition hover:bg-blue-800"
+                  >
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    Kelola Arsip
+                  </Link>
+                  <Link
+                    href={`/dashboard/dokumen/${doc.id}`}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-3 py-1.5 text-[11px] font-extrabold text-white transition hover:bg-slate-800"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-rose-400" />
+                    Relasi GIS
+                    <ExternalLink className="h-3 w-3 text-slate-400" />
+                  </Link>
+                </div>
                 <Link
                   href={`/dashboard/dokumen/riwayat-unduhan?documentId=${doc.id}`}
                   className="flex items-center gap-3 text-[10px] font-bold text-slate-500 hover:text-blue-700"
@@ -187,22 +299,43 @@ export default function DocumentManagementPage() {
                   Oleh: {doc.uploadedBy}
                 </span>
 
-                <div className="flex items-center gap-2">
-                  <a
-                    href={doc.fileUrl}
-                    download
-                    className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold flex items-center gap-1.5 transition border border-blue-200 text-xs cursor-pointer"
-                  >
-                    <Download className="w-3.5 h-3.5 text-blue-600" />
-                    <span>Unduh Dokumen</span>
-                  </a>
-                  <button
-                    onClick={() => handleDeleteDocument(doc.id, doc.title)}
-                    className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 transition border border-rose-200 cursor-pointer"
-                    title="Hapus Dokumen"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="flex flex-wrap items-center justify-end gap-2">
+                  {user?.role !== "admin_bidang" &&
+                    doc.governanceStatus === "approved" &&
+                    doc.classification === "public" && (
+                      <button
+                        type="button"
+                        onClick={() => handleTogglePublication(doc)}
+                        className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
+                          doc.isPublic
+                            ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                        }`}
+                      >
+                        {doc.isPublic ? "Tarik dari Publik" : "Terbitkan"}
+                      </button>
+                    )}
+                  {doc.fileUrl && (
+                    <a
+                      href={resolveDocumentUrl(doc.fileUrl)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-3.5 py-1.5 text-xs font-bold text-blue-700 transition hover:bg-blue-100"
+                    >
+                      <Eye className="h-3.5 w-3.5" />
+                      Preview Admin
+                    </a>
+                  )}
+                  {user?.role !== "admin_bidang" && (
+                    <button
+                      type="button"
+                      onClick={() => handleArchiveDocument(doc.id, doc.title)}
+                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100"
+                      title="Arsipkan dokumen tanpa menghapus histori"
+                    >
+                      <Archive className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

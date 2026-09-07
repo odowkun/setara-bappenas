@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, use } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { authenticatedFetch } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { OptimizedMediaUploader } from "@/components/ui/OptimizedMediaUploader";
 import {
@@ -126,7 +127,7 @@ export default function EditStrukturPage({ params }: { params: Promise<{ id: str
     setSaving(true);
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
+      const res = await authenticatedFetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

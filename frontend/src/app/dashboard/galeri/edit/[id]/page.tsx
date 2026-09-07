@@ -3,37 +3,35 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft,
   FolderEdit,
   Save,
-  CheckCircle2,
   Image as ImageIcon,
   Video,
   UploadCloud,
   Trash2,
   Layers,
-  Calendar,
   CheckSquare,
   Square,
   Star,
 } from "lucide-react";
 import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
+import { galeriService } from "@/services/galeriService";
+import { toast } from "@/lib/swal";
 
 interface MediaUploadItem {
   id: string;
   type: "image" | "video";
   url: string;
+  masterUrl: string;
   title: string;
-  fileSize: string;
 }
 
 export default function EditGaleriPage() {
   const router = useRouter();
   const params = useParams();
   const itemId = params?.id as string;
-  const { user } = useAuth();
 
   // Checkbox Mode: If true -> Album with multiple upload; If false -> Single photo/video
   const [isAlbumMode, setIsAlbumMode] = useState(true);
@@ -41,77 +39,81 @@ export default function EditGaleriPage() {
   // Form Fields
   const [albumName, setAlbumName] = useState("");
   const [singleTitle, setSingleTitle] = useState("");
+  const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
-  const [eventDate, setEventDate] = useState("2026-07-24");
+  const [eventDate, setEventDate] = useState("");
 
   // Multi / Single Media Items & Cover Selection
   const [mediaItems, setMediaItems] = useState<MediaUploadItem[]>([]);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
-  const [isSaved, setIsSaved] = useState(false);
+  const [isPublished, setIsPublished] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (itemId) {
-      setIsAlbumMode(true);
-      setAlbumName("Dokumentasi Musrenbang RKPD 2026 Kabupaten Halmahera Utara");
-      setEventDate("2026-07-15");
-      setDescription("Foto dan video suasana pelaksanaan Musrenbang RKPD TA 2026 bertempat di Aula Bappeda Halut.");
-      const loaded: MediaUploadItem[] = [
-        {
-          id: "m-1",
-          type: "image",
-          url: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
-          title: "Pembukaan Musrenbang RKPD oleh Sekretaris Daerah",
-          fileSize: "2.4 MB",
-        },
-        {
-          id: "m-2",
-          type: "image",
-          url: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
-          title: "Sesi Diskusi Kelompok Bidang Fisik & Prasarana",
-          fileSize: "1.8 MB",
-        },
-        {
-          id: "m-3",
-          type: "video",
-          url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-          title: "Video Highlight Pembahasan Musrenbang 2026",
-          fileSize: "14.5 MB",
-        },
-      ];
-      setMediaItems(loaded);
-      setCoverMediaId("m-1");
-    }
-    setLoading(false);
-  }, [itemId]);
+    if (!itemId) return;
+    galeriService.getAlbum(itemId)
+      .then((album) => {
+        setIsAlbumMode(album.media.length > 1);
+        setAlbumName(album.title);
+        setSingleTitle(album.title);
+        setCategory(album.category);
+        setEventDate(album.eventDate);
+        setDescription(album.description);
+        setMediaItems(album.media.map((item) => ({
+          id: item.id,
+          type: item.type,
+          url: item.url,
+          masterUrl: item.masterUrl || item.url,
+          title: item.title,
+        })));
+        const cover = album.media.find((item) => item.url === album.coverImage);
+        setCoverMediaId(cover?.id || album.media[0]?.id || null);
+        setIsPublished(album.isPublished);
+      })
+      .catch((error) => {
+        toast.error(error instanceof Error ? error.message : "Galeri gagal dimuat.");
+        router.push("/dashboard/galeri");
+      })
+      .finally(() => setLoading(false));
+  }, [itemId, router]);
 
   // File Upload Handlers
-  const handleFileUpload = (files: FileList) => {
-    const newItems: MediaUploadItem[] = [];
-    Array.from(files).forEach((file, index) => {
-      const isVideo = file.type.startsWith("video/");
-      const blobUrl = URL.createObjectURL(file);
-      const newId = `media-${Date.now()}-${index}`;
-      newItems.push({
-        id: newId,
-        type: isVideo ? "video" : "image",
-        url: blobUrl,
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        fileSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-      });
-    });
+  const handleFileUpload = async (files: FileList) => {
+    setUploading(true);
+    try {
+      const selectedFiles = isAlbumMode
+        ? Array.from(files)
+        : Array.from(files).slice(0, 1);
+      const uploaded = await Promise.all(
+        selectedFiles.map(async (file, index): Promise<MediaUploadItem> => {
+          const stored = await galeriService.uploadMedia(file);
+          return {
+            id: `media-${Date.now()}-${index}`,
+            type: file.type.startsWith("video/") ? "video" : "image",
+            url: stored.webUrl,
+            masterUrl: stored.masterUrl,
+            title: file.name.replace(/\.[^/.]+$/, ""),
+          };
+        })
+      );
 
-    if (isAlbumMode) {
-      setMediaItems((prev) => {
-        const updated = [...prev, ...newItems];
-        if (!coverMediaId && updated.length > 0) {
-          setCoverMediaId(updated[0].id);
-        }
-        return updated;
-      });
-    } else {
-      setMediaItems(newItems.slice(0, 1));
-      if (newItems.length > 0) setCoverMediaId(newItems[0].id);
+      if (isAlbumMode) {
+        setMediaItems((current) => {
+          const rows = [...current, ...uploaded];
+          setCoverMediaId((currentCover) => currentCover || rows[0]?.id || null);
+          return rows;
+        });
+      } else {
+        setMediaItems(uploaded);
+        setCoverMediaId(uploaded[0]?.id || null);
+      }
+      toast.success(`${uploaded.length} media tersimpan di server.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Media gagal diunggah.");
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -129,15 +131,45 @@ export default function EditGaleriPage() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isAlbumMode && !albumName.trim()) return;
-    if (!isAlbumMode && !singleTitle.trim()) return;
+  const handleSave = async (publish: boolean) => {
+    const title = (isAlbumMode ? albumName : singleTitle).trim();
+    if (!title || !category.trim()) {
+      toast.error("Judul dan kategori galeri wajib diisi.");
+      return;
+    }
+    if (publish && (!eventDate || mediaItems.length === 0 || !coverMediaId)) {
+      toast.error("Tanggal, media, dan sampul wajib lengkap sebelum diterbitkan.");
+      return;
+    }
 
-    setIsSaved(true);
-    setTimeout(() => {
+    const cover = mediaItems.find((item) => item.id === coverMediaId);
+    setSaving(true);
+    try {
+      await galeriService.updateAlbum(itemId, {
+        title,
+        category: category.trim(),
+        event_date: eventDate || null,
+        description: description.trim(),
+        cover_image: cover?.url || null,
+        media: mediaItems.map((item) => ({
+          id: item.id,
+          type: item.type,
+          url: item.url,
+          master_url: item.masterUrl,
+          title: item.title,
+        })),
+        is_published: publish,
+      });
+      setIsPublished(publish);
+      toast.success(publish
+        ? "Perubahan tersimpan dan galeri diterbitkan."
+        : "Perubahan tersimpan sebagai draf.");
       router.push("/dashboard/galeri");
-    }, 1500);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Galeri gagal diperbarui.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -171,16 +203,17 @@ export default function EditGaleriPage() {
           </div>
         </div>
 
-        {isSaved && (
-          <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center gap-2 animate-in fade-in shrink-0">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Perubahan Galeri Berhasil Disimpan!</span>
-          </div>
-        )}
+        <span className={`px-3 py-1.5 rounded-xl text-xs font-black border ${
+          isPublished
+            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+            : "bg-amber-50 text-amber-700 border-amber-200"
+        }`}>
+          {isPublished ? "Sedang Tayang" : "Draf"}
+        </span>
       </div>
 
       {/* FORM UTAMA */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
         {/* CHECKBOX SELECTION FOR ALBUM MODE */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div
@@ -285,6 +318,20 @@ export default function EditGaleriPage() {
               </div>
             </div>
           )}
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Kategori Galeri *
+            </label>
+            <input
+              type="text"
+              required
+              value={category}
+              onChange={(event) => setCategory(event.target.value)}
+              placeholder="Contoh: Musrenbang, Rapat, atau Monitoring"
+              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-sm font-bold text-slate-900 placeholder-slate-400 focus:outline-none transition shadow-2xs"
+            />
+          </div>
         </div>
 
         {/* MEDIA UPLOAD SECTION */}
@@ -327,6 +374,7 @@ export default function EditGaleriPage() {
               multiple={isAlbumMode}
               accept="image/*,video/*"
               className="hidden"
+              disabled={uploading}
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {
                   handleFileUpload(e.target.files);
@@ -334,6 +382,11 @@ export default function EditGaleriPage() {
               }}
             />
           </label>
+          {uploading && (
+            <p className="text-xs font-bold text-blue-700" role="status">
+              Media sedang diunggah dan disimpan ke server...
+            </p>
+          )}
 
           {/* PREVIEW MEDIA ITEMS WITH COVER SELECTION BUTTON */}
           {mediaItems.length > 0 && (
@@ -435,11 +488,22 @@ export default function EditGaleriPage() {
           </Link>
 
           <button
-            type="submit"
-            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95"
+            type="button"
+            onClick={() => handleSave(false)}
+            disabled={saving || uploading}
+            className="px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs border border-slate-300 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Simpan Perubahan Galeri</span>
+            <span>Simpan sebagai Draf</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
+            disabled={saving || uploading}
+            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition disabled:opacity-50 cursor-pointer"
+          >
+            <CheckSquare className="w-4 h-4" />
+            <span>Simpan & Terbitkan</span>
           </button>
         </div>
       </form>

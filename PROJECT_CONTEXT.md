@@ -19,6 +19,17 @@ Proyek ini mentransformasi website lama menjadi **Portal Digital Terintegrasi Mo
 9. **Voice Reader (Text-to-Speech)**: Fitur pembaca suara otomatis untuk membacakan pengumuman & berita publik.
 10. **Kebijakan Read-Only Publik**: Halaman depan dan GIS publik 100% read-only; pengunggahan foto realisasi hanya dilakukan dari Admin Dashboard terproteksi.
 11. **Standar Keamanan SPBE & Audit Log**: Sistem pengamanan data bertingkat, inspeksi audit trail admin, serta enkripsi SSL/TLS.
+12. **Sumber Data Resmi Tunggal**: Seluruh record publik dan admin berasal dari database melalui Laravel API; frontend tidak menyertifikasi cache atau mock sebagai data resmi.
+13. **Workflow Publikasi Resmi**: Berita, Agenda, Pengumuman, Galeri, dan Dokumen melewati state draf-terbit-unpublish dengan aktor serta waktu publikasi tercatat di database.
+14. **Arsip Pengetahuan Dokumen**: Dokumen dikelola pada private storage dengan versi immutable, approval four-eyes, klasifikasi, signed preview/download, checksum SHA-256, OCR/full-text, retensi, legal hold, dan analytics yang menjaga privasi.
+
+## Document Knowledge Archive
+
+- Dokumen baru aman secara default: `internal`, `draft`, dan tidak publik.
+- Approval menetapkan versi aktif; publish adalah keputusan terpisah.
+- Admin Bidang mengunggah dan submit dokumen bidang sendiri, sedangkan Admin Umum/Super Admin menangani review, klasifikasi, publikasi, integritas, dan retensi.
+- Sepuluh dokumen legacy eksternal dikarantina sebagai `pending_migration`; tiga file privat valid tetap approved/public.
+- Detail lifecycle, endpoint, pro/kontra, deployment, remediasi legacy, rollback, command, dan troubleshooting tersedia di [docs/document-knowledge-archive.md](docs/document-knowledge-archive.md).
 
 ---
 

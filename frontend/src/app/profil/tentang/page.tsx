@@ -114,7 +114,7 @@ export default function PublicTentangPage() {
                 <div
                   className="prose prose-slate max-w-none text-xs sm:text-sm text-slate-700 font-medium leading-relaxed space-y-4"
                   dangerouslySetInnerHTML={{
-                    __html: tentangData?.content || "<p>Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara dibentuk berdasarkan Peraturan Daerah Kabupaten Halmahera Utara sebagai Lembaga Teknis Daerah yang bertanggung jawab atas penyusunan dan pengendalian perencanaan pembangunan daerah secara terpadu.</p>",
+                    __html: tentangData?.content || "<p>Data profil belum tersedia.</p>",
                   }}
                 />
               </div>
@@ -139,7 +139,7 @@ export default function PublicTentangPage() {
                   <span>Visi Utama BAPPEDA</span>
                 </div>
                 <p className="text-base sm:text-xl font-black text-slate-900 leading-snug italic">
-                  "{visiMisiData?.content || "Terwujudnya Kabupaten Halmahera Utara yang Maju, Sejahtera, Berdaya Saing, dan Berkelanjutan Berbasis Sumber Daya Lokal."}"
+                  "{visiMisiData?.content || "Data visi belum tersedia."}"
                 </p>
               </div>
 
@@ -147,16 +147,11 @@ export default function PublicTentangPage() {
               <div className="space-y-4 pt-2">
                 <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 flex items-center gap-2">
                   <BookOpen className="w-4 h-4 text-blue-600" />
-                  <span>Poin-poin Misi Strategis ({visiMisiData?.meta_json?.misi?.length || 4} Misi)</span>
+                  <span>Poin-poin Misi Strategis ({visiMisiData?.meta_json?.misi?.length || 0} Misi)</span>
                 </h3>
 
                 <div className="space-y-3">
-                  {(visiMisiData?.meta_json?.misi || [
-                    "Mewujudkan tata kelola pemerintahan yang profesional, transparan, dan berakuntabilitas tinggi berbasis SPBE.",
-                    "Meningkatkan kualitas sumber daya manusia melalui akses pendidikan dan pelayanan kesehatan yang memadai.",
-                    "Mempercepat pembangunan infrastruktur daerah yang terintegrasi dan berwawasan lingkungan.",
-                    "Mengembangkan perekonomian daerah berbasis potensi pertanian, kelautan, perikanan, dan pariwisata daerah.",
-                  ]).map((misiText, idx) => (
+                  {(visiMisiData?.meta_json?.misi ?? []).map((misiText, idx) => (
                     <div
                       key={idx}
                       className="p-4 sm:p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm hover:shadow-md transition flex items-center gap-3.5"

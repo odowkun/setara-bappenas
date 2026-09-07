@@ -43,7 +43,7 @@ export const tautanOpdService = {
 
   async saveItem(payload: TautanOpdPayload, id?: string): Promise<boolean> {
     try {
-      const res = await fetch(`${API_BASE_URL}/tautan-opd${id ? `/${id}` : ""}`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd${id ? `/${id}` : ""}`, {
         method: id ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +60,7 @@ export const tautanOpdService = {
 
   async deleteItem(id: string): Promise<boolean> {
     try {
-      const res = await fetch(`${API_BASE_URL}/tautan-opd/${id}`, { method: "DELETE" });
+      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd/${id}`, { method: "DELETE" });
       return res.ok;
     } catch (error) {
       console.error("[tautanOpdService] Gagal menghapus tautan OPD:", error);
@@ -73,7 +73,7 @@ export const tautanOpdService = {
       const formData = new FormData();
       formData.append("logo", file);
 
-      const res = await fetch(`${API_BASE_URL}/tautan-opd/upload-logo`, {
+      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd/upload-logo`, {
         method: "POST",
         body: formData,
       });
@@ -87,3 +87,4 @@ export const tautanOpdService = {
     }
   },
 };
+import { authenticatedFetch } from "@/lib/apiClient";

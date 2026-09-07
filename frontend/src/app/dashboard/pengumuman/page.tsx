@@ -19,86 +19,17 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
-
-interface AnnouncementItem {
-  id: string;
-  title: string;
-  type: string;
-  isImportant: boolean;
-  validUntil: string | null;
-  pdfUrl?: string;
-  fileType?: "pdf" | "image" | "video" | "doc";
-  content: string;
-  createdAt: string;
-  isPublished: boolean;
-}
-
-const initialAnnouncements: AnnouncementItem[] = [
-  {
-    id: "ann-1",
-    title: "Pengumuman Seleksi Penerimaan Tenaga Pendamping Perencanaan BAPPEDA Halut 2026",
-    type: "Rekrutmen / Seleksi",
-    isImportant: true,
-    validUntil: "2026-08-31",
-    pdfUrl: "/documents/pengumuman-seleksi-tenaga-pendamping-2026.pdf",
-    fileType: "pdf",
-    content: "Diberitahukan kepada seluruh calon pelamar bahwa pendaftaran seleksi administrasi dibuka mulai tanggal 1 s/d 15 Agustus 2026 secara online.",
-    createdAt: "2026-07-24",
-    isPublished: true,
-  },
-  {
-    id: "ann-2",
-    title: "Surat Edaran Penyusunan Rencana Kerja Anggaran (RKA) Perangkat Daerah TA 2027",
-    type: "Surat Edaran",
-    isImportant: true,
-    validUntil: null,
-    pdfUrl: "/documents/surat-edaran-rka-2027.pdf",
-    fileType: "pdf",
-    content: "Seluruh Kepala SKPD Kabupaten Halmahera Utara diimbau untuk segera menyampaikan rancangan awal RKA TA 2027 melalui aplikasi SIPD RI.",
-    createdAt: "2026-07-20",
-    isPublished: true,
-  },
-  {
-    id: "ann-3",
-    title: "Pengumuman Tender Pekerjaan Studi Evaluasi Dampak Lingkungan Kawasan Industri",
-    type: "Informasi Tender / Lelang",
-    isImportant: false,
-    validUntil: "2026-08-10",
-    pdfUrl: "/documents/dokumen-lelang-amdal-2026.pdf",
-    fileType: "pdf",
-    content: "Pengadaan jasa konsultansi evaluasi dampak lingkungan kawasan industri Tobelo Tengah.",
-    createdAt: "2026-07-15",
-    isPublished: true,
-  },
-  {
-    id: "ann-4",
-    title: "Himbauan Publik Sosialisasi Partisipasi Masyarakat dalam Penyusunan RKPD",
-    type: "Himbauan Publik",
-    isImportant: false,
-    validUntil: "2026-09-01",
-    pdfUrl: "/documents/himbauan-publik-rkpd.pdf",
-    fileType: "pdf",
-    content: "Mendorong peranserta aktif seluruh elemen masyarakat dalam memberikan masukan usulan pembangunan daerah.",
-    createdAt: "2026-07-01",
-    isPublished: true,
-  },
-];
-
-const DEFAULT_TYPES = [
-  "Semua",
-  "Pengumuman Resmi",
-  "Surat Edaran",
-  "Informasi Tender / Lelang",
-  "Rekrutmen / Seleksi",
-  "Himbauan Publik",
-];
+import {
+  officialContentService,
+  type AnnouncementItem,
+} from "@/services/officialContentService";
 
 export default function PengumumanManagementPage() {
   const { hasRole } = useAuth();
-  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>(initialAnnouncements);
+  const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("Semua");
-  const [typeOptions, setTypeOptions] = useState<string[]>(DEFAULT_TYPES);
+  const [typeOptions, setTypeOptions] = useState<string[]>(["Semua"]);
   const [loading, setLoading] = useState(true);
 
   // Pagination State
@@ -106,30 +37,45 @@ export default function PengumumanManagementPage() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(5);
 
   useEffect(() => {
-    // Load custom types from storage
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("bappeda_announcement_types");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTypeOptions(["Semua", ...Array.from(new Set([...DEFAULT_TYPES.slice(1), ...parsed]))]);
-          }
-        } catch (e) {
-          console.error("Gagal parse tipe pengumuman:", e);
-        }
-      }
-    }
-
-    // Simulate API Load with Skeleton Loader
-    setTimeout(() => setLoading(false), 500);
+    Promise.all([
+      officialContentService.getAnnouncements(true),
+      officialContentService.getAnnouncementTypes(),
+    ])
+      .then(([rows, types]) => {
+        setAnnouncements(rows);
+        setTypeOptions(["Semua", ...types.map((item) => item.name)]);
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Pengumuman gagal dimuat."))
+      .finally(() => setLoading(false));
   }, []);
 
   const handleDelete = async (id: string, title: string) => {
     const res = await showDeleteConfirm(title);
     if (res.isConfirmed) {
-      setAnnouncements(announcements.filter((a) => a.id !== id));
-      toast.success(`Pengumuman "${title}" berhasil dihapus!`);
+      try {
+        await officialContentService.deleteAnnouncement(id);
+        setAnnouncements((current) => current.filter((item) => item.id !== id));
+        toast.success(`Pengumuman "${title}" berhasil dihapus dari database!`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Pengumuman gagal dihapus.");
+      }
+    }
+  };
+
+  const handleTogglePublication = async (item: AnnouncementItem) => {
+    try {
+      const updated = await officialContentService.updateAnnouncementPublication(
+        item.id,
+        !item.isPublished
+      );
+      setAnnouncements((current) =>
+        current.map((row) => row.id === item.id ? updated : row)
+      );
+      toast.success(updated.isPublished
+        ? "Pengumuman berhasil diterbitkan."
+        : "Pengumuman ditarik menjadi draf.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Status publikasi gagal diperbarui.");
     }
   };
 
@@ -252,6 +198,13 @@ export default function PengumumanManagementPage() {
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap shrink-0">
                     {item.type}
                   </span>
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black border whitespace-nowrap shrink-0 ${
+                    item.isPublished
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-amber-50 text-amber-700 border-amber-200"
+                  }`}>
+                    {item.isPublished ? "Tayang" : "Draf"}
+                  </span>
                   <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap shrink-0">
                     <Calendar className="w-3 h-3" />
                     {item.validUntil ? `Berlaku s/d ${item.validUntil} (WIT)` : "Permanen (Tanpa Batas Waktu)"}
@@ -259,6 +212,17 @@ export default function PengumumanManagementPage() {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePublication(item)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs transition border cursor-pointer ${
+                      item.isPublished
+                        ? "bg-amber-50 text-amber-700 hover:bg-amber-100 border-amber-200"
+                        : "bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200"
+                    }`}
+                  >
+                    {item.isPublished ? "Jadikan Draf" : "Terbitkan"}
+                  </button>
                   <Link
                     href={`/dashboard/pengumuman/edit/${item.id}`}
                     className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-bold text-xs flex items-center gap-1 transition border border-slate-200"

@@ -63,14 +63,18 @@ export default function UpdateProgresPage() {
   }, []);
 
   const loadDocuments = async () => {
-    const docs = await adminService.getDocuments();
+    const docs = await adminService.fetchDocuments(user?.bidang, user?.role);
     setDocuments(docs);
   };
 
   const loadProjects = async (docId?: string) => {
     setLoading(true);
     const targetId = docId !== undefined ? docId : selectedDocId;
-    const data = await proyekService.getProjects(targetId === "semua" ? undefined : targetId);
+    const data = await proyekService.getProjects(
+      targetId === "semua" ? undefined : targetId,
+      undefined,
+      true
+    );
     setProjects(data);
     setLoading(false);
   };
@@ -114,9 +118,22 @@ export default function UpdateProgresPage() {
       }
     } catch (err) {
       toast.error("Gagal memperbarui data progres proyek.");
-      showErrorSwal("Gagal Memperbarui", "Terjadi kesalahan saat memperbarui data progres proyek.");
+      showErrorSwal("Gagal Memperbarui", "Terjadi kesalahan saat memperbarui progres ke server.");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleResyncEsri = async (projectId: string | number) => {
+    try {
+      toast.loading("Mengantrikan re-sync ESRI...", { id: "resync" });
+      const res = await proyekService.resyncEsri(projectId);
+      toast.dismiss("resync");
+      toast.success(res.message || "Berhasil mengantrikan re-sync ESRI!");
+      loadProjects();
+    } catch (err: any) {
+      toast.dismiss("resync");
+      toast.error(err.message || "Gagal mengantrikan re-sync ESRI.");
     }
   };
 
@@ -311,6 +328,7 @@ export default function UpdateProgresPage() {
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-extrabold tracking-wider">
                 <th className="p-3">Ref OBJECTID</th>
+                <th className="p-3">Status Sync ESRI</th>
                 <th className="p-3">Nama Proyek</th>
                 <th className="p-3">Bidang</th>
                 <th className="p-3">Pagu Anggaran</th>
@@ -324,7 +342,27 @@ export default function UpdateProgresPage() {
               {filteredProjects.map((prj) => (
                 <tr key={prj.id} className="hover:bg-slate-50/80 transition">
                   <td className="p-3 font-mono font-bold text-blue-700">
-                    #{prj.esri_objectid || "Pending"}
+                    #{prj.esri_objectid || "None"}
+                  </td>
+                  <td className="p-3">
+                    {prj.esri_sync_status === "synced" && (
+                      <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span>Synced</span>
+                      </span>
+                    )}
+                    {(!prj.esri_sync_status || prj.esri_sync_status === "pending") && (
+                      <span className="text-[9.5px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                        <span>Pending</span>
+                      </span>
+                    )}
+                    {prj.esri_sync_status === "failed" && (
+                      <span className="text-[9.5px] font-extrabold text-rose-800 bg-rose-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1" title={prj.esri_last_error || "Sync ESRI Gagal"}>
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                        <span>Failed</span>
+                      </span>
+                    )}
                   </td>
                   <td className="p-3">
                     <div className="font-extrabold text-slate-900">{prj.nama_proyek}</div>
@@ -372,13 +410,26 @@ export default function UpdateProgresPage() {
                     </span>
                   </td>
                   <td className="p-3 text-right">
-                    <button
-                      onClick={() => handleOpenEdit(prj)}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
-                    >
-                      <Edit2 className="w-3.5 h-3.5" />
-                      <span>Edit Progres</span>
-                    </button>
+                    <div className="flex items-center justify-end gap-1.5">
+                      {(prj.esri_sync_status === "failed" || !prj.esri_objectid) && (
+                        <button
+                          type="button"
+                          onClick={() => handleResyncEsri(prj.id)}
+                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition border border-amber-200 flex items-center gap-1 cursor-pointer"
+                          title="Coba Lagi Sinkronisasi ESRI"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Re-sync</span>
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleOpenEdit(prj)}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                        <span>Edit Progres</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

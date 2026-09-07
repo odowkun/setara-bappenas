@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: "BAPPEDA Halmahera Utara — Smart Digital Portal & Executive Dashboard",
   description:
     "Portal resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara. Informasi RKPD, RPJMD, Popeda, Esri GIS Map, & Executive Dashboard.",
+  icons: {
+    icon: "/images/bappeda/logo-halut.png",
+    apple: "/images/bappeda/logo-halut.png",
+  },
 };
 
 export default function RootLayout({

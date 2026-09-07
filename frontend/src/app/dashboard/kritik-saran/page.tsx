@@ -26,6 +26,7 @@ import {
   KritikSaranItem,
   SurveyServiceItem,
 } from "@/services/surveyService";
+import { authenticatedFetch } from "@/lib/apiClient";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
 
@@ -72,7 +73,7 @@ export default function DashboardKritikSaranPage() {
 
     setAddingService(true);
     try {
-      const res = await fetch(`${API_BASE}/surveys/services`, {
+      const res = await authenticatedFetch(`${API_BASE}/surveys/services`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: newSName.trim() }),
@@ -97,7 +98,7 @@ export default function DashboardKritikSaranPage() {
     if (!resConfirm.isConfirmed) return;
 
     try {
-      const res = await fetch(`${API_BASE}/surveys/services/${id}`, {
+      const res = await authenticatedFetch(`${API_BASE}/surveys/services/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -115,7 +116,7 @@ export default function DashboardKritikSaranPage() {
     if (!activeKritikModal) return;
 
     try {
-      await fetch(`${API_BASE}/kritik/${activeKritikModal.id}/tanggapan`, {
+      const response = await authenticatedFetch(`${API_BASE}/kritik/${activeKritikModal.id}/tanggapan`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -123,19 +124,13 @@ export default function DashboardKritikSaranPage() {
           catatan_balasan: catatanBalasan,
         }),
       });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
     } catch (e) {
-      console.warn("Backend API update tanggapan fallback to local:", e);
-    }
-
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("bappeda_kritiks");
-      const list: KritikSaranItem[] = stored ? JSON.parse(stored) : kritikList;
-      const updated = list.map((item) =>
-        item.id === activeKritikModal.id
-          ? { ...item, status: statusBalasan, catatan_balasan: catatanBalasan }
-          : item
-      );
-      localStorage.setItem("bappeda_kritiks", JSON.stringify(updated));
+      console.warn("Backend API update tanggapan gagal:", e);
+      toast.error("Tanggapan gagal disimpan ke database.");
+      return;
     }
 
     toast.success("Tanggapan kritik & saran publik berhasil disimpan!");

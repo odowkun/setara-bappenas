@@ -1,11 +1,19 @@
 export interface DocumentPreviewResult {
   documentId: string;
+  versionId: string;
+  version: string;
+  previewUrl: string;
+  expiresAt: string;
   views: number;
+  uniqueViews: number;
 }
 
 export interface DocumentDownloadResult {
   documentId: string;
+  versionId: string;
+  version: string;
   downloadUrl: string;
+  expiresAt: string;
   downloads: number;
   views: number;
 }

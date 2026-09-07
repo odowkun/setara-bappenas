@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import halutOfficialBpsBoundary from "@/data/halut-boundary.json";
+import { proyekService } from "@/services/proyekService";
 
 // Fix Leaflet Default Icon asset paths in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -48,6 +49,8 @@ interface EsriLeafletMapProps {
   selectedId: number | null;
   onSelectLocation: (id: number | null) => void;
   onOpenAlbum?: (loc: ProjectLocation, index?: number) => void;
+  customGeoJsonLayer?: any;
+  customLayerColor?: string;
 }
 
 export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
@@ -55,16 +58,24 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
   selectedId,
   onSelectLocation,
   onOpenAlbum,
+  customGeoJsonLayer,
+  customLayerColor = "#7c3aed",
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: number]: L.Marker }>({});
   const tileLayerRef = useRef<L.TileLayer | null>(null);
   const boundaryLayerRef = useRef<L.GeoJSON | null>(null);
+  const customKmzLayerRef = useRef<L.GeoJSON | null>(null);
 
   const [mapType, setMapType] = useState<"esriSatellite" | "esriTopo" | "googleHybrid" | "googleStreet">("esriSatellite");
   const [showBoundary, setShowBoundary] = useState<boolean>(true);
   const [showLayerMenu, setShowLayerMenu] = useState<boolean>(false);
+  const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
+
+  useEffect(() => {
+    proyekService.getBufferAnalyses().then(setSavedAnalyses);
+  }, []);
 
   // Tile Layer Providers (Esri ArcGIS Engine & Google Maps Endpoints)
   const tileProviders = {
@@ -239,6 +250,49 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
 
   const bufferLayerRef = useRef<L.LayerGroup | null>(null);
 
+  // Render custom KMZ/GeoJSON Layer when provided
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    if (customKmzLayerRef.current) {
+      customKmzLayerRef.current.remove();
+      customKmzLayerRef.current = null;
+    }
+
+    if (customGeoJsonLayer) {
+      try {
+        const geoJsonLayer = L.geoJSON(customGeoJsonLayer, {
+          style: (feature) => ({
+            color: customLayerColor,
+            fillColor: customLayerColor,
+            fillOpacity: 0.35,
+            weight: 3,
+          }),
+          onEachFeature: (feature, layer) => {
+            if (feature.properties && (feature.properties.name || feature.properties.description)) {
+              layer.bindPopup(`
+                <div style="font-family: sans-serif; font-size: 12px; padding: 4px;">
+                  <strong style="color: ${customLayerColor};">${feature.properties.name || "Objek Spasial"}</strong>
+                  ${feature.properties.description ? `<p style="margin-top: 4px; color: #475569;">${feature.properties.description}</p>` : ""}
+                </div>
+              `);
+            }
+          },
+        }).addTo(map);
+
+        customKmzLayerRef.current = geoJsonLayer;
+
+        const bounds = geoJsonLayer.getBounds();
+        if (bounds.isValid()) {
+          map.fitBounds(bounds, { padding: [40, 40] });
+        }
+      } catch (err) {
+        console.error("Error rendering custom GeoJSON layer:", err);
+      }
+    }
+  }, [customGeoJsonLayer, customLayerColor]);
+
   // Render & Update Markers + Geoprocessing Buffer Circle Overlays
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -253,15 +307,6 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       bufferLayerRef.current.clearLayers();
     } else {
       bufferLayerRef.current = L.layerGroup().addTo(map);
-    }
-
-    // Load saved Geoprocessing Spatial Analyses from localStorage
-    let savedAnalyses: any[] = [];
-    try {
-      const local = localStorage.getItem("halut_geoprocessing_history");
-      if (local) savedAnalyses = JSON.parse(local);
-    } catch (e) {
-      console.error("Failed to parse geoprocessing history for map overlay", e);
     }
 
     const DEFAULT_BAPPEDA_PROYEK_SVG = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(
@@ -294,24 +339,13 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       // Check if there is a Geoprocessing Buffer Analysis saved for this project
       const geoAnalysis = savedAnalyses.find((g: any) => {
         if (!g) return false;
-        const idMatch = String(g.proyek_id) === String((loc as any).realId || loc.id);
-        const nameMatch =
-          g.proyek_nama &&
-          loc.name &&
-          (g.proyek_nama.toLowerCase().includes(loc.name.toLowerCase()) ||
-            loc.name.toLowerCase().includes(g.proyek_nama.toLowerCase()));
-        const kecMatch =
-          g.kecamatan &&
-          loc.kecamatan &&
-          g.kecamatan.toLowerCase().replace("kecamatan ", "").trim() ===
-            loc.kecamatan.toLowerCase().replace("kecamatan ", "").trim();
-        return idMatch || nameMatch || (kecMatch && loc.category === "Infrastruktur");
+        return String(g.proyek_detail_id) === String((loc as any).realId || loc.id);
       });
 
       // Draw Buffer Circle Overlay on Map if available
       if (geoAnalysis && bufferLayerRef.current) {
         const radMeters = Number(geoAnalysis.radius_meters) || 1500;
-        const strokeColor = geoAnalysis.warna_layer || "#7c3aed";
+        const strokeColor = geoAnalysis.color || "#7c3aed";
 
         // Always render a crisp Leaflet Circle Overlay on the map
         L.circle([loc.lat, loc.lng], {
@@ -414,7 +448,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     return () => {
       map.off("zoomend", handleZoomEnd);
     };
-  }, [locations, selectedId]);
+  }, [locations, selectedId, savedAnalyses]);
 
   // Update Basemap Tile Layer
   useEffect(() => {

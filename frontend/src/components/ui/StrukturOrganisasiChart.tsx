@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
+import { authenticatedFetch } from "@/lib/apiClient";
 import { createPortal } from "react-dom";
 import {
   LayoutGrid,
@@ -174,8 +175,8 @@ export const StrukturOrganisasiChart: React.FC<{
   data?: OrgNode | null;
   title?: string;
   showSaveButton?: boolean;
-}> = ({ data: rawData = defaultBappedaTree, title = "Struktur Organisasi BAPPEDA Halmahera Utara", showSaveButton = true }) => {
-  const data = rawData || defaultBappedaTree;
+}> = ({ data: rawData, title = "Struktur Organisasi BAPPEDA Halmahera Utara", showSaveButton = true }) => {
+  const data = rawData;
   // Default by demand: Vertical (Bagan Memanjang)
   const [viewMode, setViewMode] = useState<"vertical" | "horizontal">("vertical");
   const [zoomLevel, setZoomLevel] = useState(85);
@@ -214,6 +215,14 @@ export const StrukturOrganisasiChart: React.FC<{
       document.body.style.overflow = "";
     };
   }, [isFullscreen]);
+
+  if (!data) {
+    return (
+      <div className="p-10 text-center text-xs font-bold text-slate-500">
+        Data struktur organisasi belum tersedia di database.
+      </div>
+    );
+  }
 
   const canvasComponent = (
     <InteractiveCanvasOrgChart
@@ -439,7 +448,7 @@ const InteractiveCanvasOrgChart: React.FC<{
         y: Math.round(n.y),
       }));
 
-      const res = await fetch("http://localhost:8000/api/v1/pejabat/save-positions", {
+      const res = await authenticatedFetch("http://localhost:8000/api/v1/pejabat/save-positions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

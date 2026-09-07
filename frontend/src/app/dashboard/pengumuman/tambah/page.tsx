@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import {
   ArrowLeft,
   Megaphone,
@@ -23,24 +22,19 @@ import {
 } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
-
-const DEFAULT_ANNOUNCEMENT_TYPES = [
-  "Pengumuman Resmi",
-  "Surat Edaran",
-  "Informasi Tender / Lelang",
-  "Rekrutmen / Seleksi",
-  "Himbauan Publik",
-];
-
-const TYPES_KEY = "bappeda_announcement_types";
+import {
+  officialContentService,
+  type TaxonomyItem,
+} from "@/services/officialContentService";
+import { toast } from "@/lib/swal";
 
 export default function TambahPengumumanPage() {
   const router = useRouter();
-  const { user } = useAuth();
 
   const [title, setTitle] = useState("");
-  const [typeList, setTypeList] = useState<string[]>(DEFAULT_ANNOUNCEMENT_TYPES);
-  const [selectedType, setSelectedType] = useState("Pengumuman Resmi");
+  const [typeItems, setTypeItems] = useState<TaxonomyItem[]>([]);
+  const [typeList, setTypeList] = useState<string[]>([]);
+  const [selectedType, setSelectedType] = useState("");
 
   // Inline Type Creator State
   const [showAddType, setShowAddType] = useState(false);
@@ -48,42 +42,40 @@ export default function TambahPengumumanPage() {
 
   // Validity Date Toggle
   const [hasExpiryDate, setHasExpiryDate] = useState(true);
-  const [validUntil, setValidUntil] = useState("2026-12-31");
+  const [validUntil, setValidUntil] = useState(new Date().toISOString().slice(0, 10));
 
   const [content, setContent] = useState("");
   const [isImportant, setIsImportant] = useState(false);
   const [fileUrl, setFileUrl] = useState("");
+  const [attachment, setAttachment] = useState<File | null>(null);
   const [fileType, setFileType] = useState<"pdf" | "image" | "video" | "doc" | "none">("none");
   const [isSaved, setIsSaved] = useState(false);
 
   // Load stored announcement types
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(TYPES_KEY);
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setTypeList(Array.from(new Set([...DEFAULT_ANNOUNCEMENT_TYPES, ...parsed])));
-          }
-        } catch (e) {
-          console.error("Gagal parse tipe pengumuman:", e);
-        }
-      }
-    }
+    officialContentService.getAnnouncementTypes()
+      .then((rows) => {
+        setTypeItems(rows);
+        setTypeList(rows.map((item) => item.name));
+        setSelectedType((current) => current || rows[0]?.name || "");
+      })
+      .catch((error) => toast.error(error instanceof Error ? error.message : "Tipe pengumuman gagal dimuat."));
   }, []);
 
-  const handleAddNewType = (e: React.FormEvent) => {
+  const handleAddNewType = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newTypeName.trim();
     if (!trimmed) return;
 
     if (!typeList.includes(trimmed)) {
-      const updated = [...typeList, trimmed];
-      setTypeList(updated);
-      setSelectedType(trimmed);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(TYPES_KEY, JSON.stringify(updated));
+      try {
+        const created = await officialContentService.createAnnouncementType(trimmed);
+        setTypeItems((current) => [...current, created]);
+        setTypeList((current) => [...current, created.name]);
+        setSelectedType(created.name);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Tipe gagal disimpan.");
+        return;
       }
     } else {
       setSelectedType(trimmed);
@@ -103,8 +95,8 @@ export default function TambahPengumumanPage() {
   };
 
   const handleFileUpload = (file: File) => {
-    const fakeUrl = `/documents/${file.name}`;
-    setFileUrl(fakeUrl);
+    setAttachment(file);
+    setFileUrl(file.name);
 
     if (file.type.includes("pdf")) {
       setFileType("pdf");
@@ -117,14 +109,37 @@ export default function TambahPengumumanPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !content.trim()) return;
+  const handleSave = async (publish: boolean) => {
+    if (!title.trim() || !content.trim()) {
+      toast.error("Judul dan isi pengumuman wajib diisi.");
+      return;
+    }
 
-    setIsSaved(true);
-    setTimeout(() => {
+    const type = typeItems.find((item) => item.name === selectedType);
+    if (!type) {
+      toast.error("Pilih tipe pengumuman resmi.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("announcement_type_id", String(type.id));
+    formData.append("title", title.trim());
+    formData.append("content", content.trim());
+    formData.append("is_important", isImportant ? "1" : "0");
+    formData.append("is_published", publish ? "1" : "0");
+    if (hasExpiryDate) formData.append("valid_until", validUntil);
+    if (attachment) formData.append("attachment", attachment);
+
+    try {
+      await officialContentService.saveAnnouncement(formData);
+      setIsSaved(true);
+      toast.success(publish
+        ? "Pengumuman tersimpan dan diterbitkan."
+        : "Pengumuman tersimpan sebagai draf.");
       router.push("/dashboard/pengumuman");
-    }, 1500);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Pengumuman gagal disimpan.");
+    }
   };
 
   return (
@@ -159,7 +174,7 @@ export default function TambahPengumumanPage() {
       </div>
 
       {/* FORM UTAMA */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={(event) => event.preventDefault()} className="space-y-4">
         <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">
@@ -367,11 +382,20 @@ export default function TambahPengumumanPage() {
           </Link>
 
           <button
-            type="submit"
-            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95"
+            type="button"
+            onClick={() => handleSave(false)}
+            className="px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs border border-slate-300 flex items-center gap-2 transition cursor-pointer"
           >
             <Save className="w-4 h-4" />
-            <span>Simpan & Terbitkan Pengumuman</span>
+            <span>Simpan Draf</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
+            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Terbitkan Pengumuman</span>
           </button>
         </div>
       </form>

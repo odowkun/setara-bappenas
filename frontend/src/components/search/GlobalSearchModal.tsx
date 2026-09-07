@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import { Search, X, FileText, Newspaper, MapPin, Bell, Camera, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 interface SearchResultItem {
   type: string;
@@ -13,41 +14,10 @@ interface SearchResultItem {
   link: string;
 }
 
-const DEFAULT_RECOMMENDATIONS: SearchResultItem[] = [
-  {
-    type: "dokumen",
-    category_label: "Dokumen Perencanaan",
-    title: "Rencana Kerja Pemerintah Daerah (RKPD) Halut 2026",
-    desc: "Dokumen resmi perencanaan pembangunan tahunan",
-    link: "/dokumen",
-  },
-  {
-    type: "berita",
-    category_label: "Berita Utama",
-    title: "Bupati Halut Buka FGD Percepatan Akses Keuangan Daerah",
-    desc: "Implementasi IKAD dan SASKAD bersama Bappeda Halut",
-    link: "/berita",
-  },
-  {
-    type: "gis",
-    category_label: "Peta GIS Infrastruktur",
-    title: "Pemetaan Jembatan Garuda & Infrastruktur Kao Barat (SIG)",
-    desc: "Koordinat dan progres fisik lokasi infrastruktur daerah",
-    link: "/gis-peta",
-  },
-  {
-    type: "pengumuman",
-    category_label: "Pengumuman Resmi",
-    title: "Penyusunan Renstra Perangkat Daerah 2025-2029",
-    desc: "Pedoman Permendagri 86/2017 & Inmendagri 2/2025",
-    link: "/pengumuman",
-  },
-];
-
 export const GlobalSearchModal: React.FC = () => {
   const { isSearchOpen, setIsSearchOpen } = useAccessibility();
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResultItem[]>(DEFAULT_RECOMMENDATIONS);
+  const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Close on ESC key press
@@ -66,7 +36,7 @@ export const GlobalSearchModal: React.FC = () => {
     if (!isSearchOpen) return;
 
     if (!query.trim()) {
-      setResults(DEFAULT_RECOMMENDATIONS);
+      setResults([]);
       setLoading(false);
       return;
     }
@@ -75,24 +45,15 @@ export const GlobalSearchModal: React.FC = () => {
     const timer = setTimeout(async () => {
       try {
         const res = await fetch(
-          `http://localhost:8000/api/v1/search?q=${encodeURIComponent(query.trim())}`
+          `${API_BASE_URL}/search?q=${encodeURIComponent(query.trim())}`
         );
         if (res.ok) {
           const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            setResults(json.data);
-          } else {
-            // Client-side fallback filter if API returns empty
-            const filteredFallback = DEFAULT_RECOMMENDATIONS.filter(
-              (it) =>
-                it.title.toLowerCase().includes(query.toLowerCase()) ||
-                it.desc.toLowerCase().includes(query.toLowerCase())
-            );
-            setResults(filteredFallback);
-          }
+          setResults(Array.isArray(json.data) ? json.data : []);
         }
       } catch (err) {
-        console.warn("[GlobalSearchModal] API Search Error:", err);
+        console.error("[GlobalSearchModal] Pencarian database gagal:", err);
+        setResults([]);
       } finally {
         setLoading(false);
       }

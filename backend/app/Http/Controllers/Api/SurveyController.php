@@ -3,68 +3,45 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Survey;
 use DB;
+use Illuminate\Http\Request;
 
 class SurveyController extends Controller
 {
     public function index()
     {
-        $surveys = DB::table('surveys')->orderBy('created_at', 'desc')->get();
-        
-        $totalResponden = count($surveys);
-        
-        if ($totalResponden > 0) {
-            $avgScore = $surveys->avg('ikm_score');
-            
-            // Mutu Pelayanan PermenPAN-RB
-            if ($avgScore >= 88.31) {
-                $mutu = 'A';
-                $kategori = 'Sangat Baik';
-            } elseif ($avgScore >= 76.61) {
-                $mutu = 'B';
-                $kategori = 'Baik';
-            } elseif ($avgScore >= 65.00) {
-                $mutu = 'C';
-                $kategori = 'Kurang Baik';
-            } else {
-                $mutu = 'D';
-                $kategori = 'Tidak Baik';
-            }
-
-            $u1Avg = round($surveys->avg('u1_persyaratan') ?? 0, 2);
-            $u2Avg = round($surveys->avg('u2_prosedur') ?? 0, 2);
-            $u3Avg = round($surveys->avg('u3_kecepatan') ?? 0, 2);
-            $u4Avg = round($surveys->avg('u4_produk') ?? 0, 2);
-            $u5Avg = round($surveys->avg('u5_sikap') ?? 0, 2);
-        } else {
-            $avgScore = 0;
-            $mutu = '-';
-            $kategori = 'Belum Ada Data';
-            $u1Avg = 0;
-            $u2Avg = 0;
-            $u3Avg = 0;
-            $u4Avg = 0;
-            $u5Avg = 0;
-        }
+        $surveys = Survey::query()->latest()->get();
 
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'data' => [
                 'surveys' => $surveys,
-                'summary' => [
-                    'total_responden' => $totalResponden,
-                    'ikm_score' => round($avgScore, 2),
-                    'mutu_pelayanan' => $mutu,
-                    'kategori' => $kategori,
-                    'u1_avg' => $u1Avg,
-                    'u2_avg' => $u2Avg,
-                    'u3_avg' => $u3Avg,
-                    'u4_avg' => $u4Avg,
-                    'u5_avg' => $u5Avg,
-                ]
-            ]
+                'summary' => $this->buildSummary($surveys),
+            ],
+        ]);
+    }
+
+    public function publicSummary()
+    {
+        $surveys = Survey::query()
+            ->select([
+                'ikm_score',
+                'u1_persyaratan',
+                'u2_prosedur',
+                'u3_kecepatan',
+                'u4_produk',
+                'u5_sikap',
+            ])
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'data' => [
+                'summary' => $this->buildSummary($surveys),
+            ],
         ]);
     }
 
@@ -85,18 +62,18 @@ class SurveyController extends Controller
             'data' => [
                 'questions' => $questions,
                 'services' => $services,
-            ]
+            ],
         ]);
     }
 
     public function storeQuestion(Request $request)
     {
         $request->validate([
-            'title' => 'required|string',
-            'description' => 'nullable|string',
-            'service_id' => 'nullable|integer',
-            'question_type' => 'nullable|string',
-            'options' => 'nullable|string',
+            'title' => 'required|string|max:500',
+            'description' => 'nullable|string|max:2000',
+            'service_id' => 'nullable|integer|exists:survey_services,id',
+            'question_type' => 'nullable|string|in:rating,text,textarea,select',
+            'options' => 'nullable|string|max:20000',
             'is_required' => 'nullable|boolean',
         ]);
 
@@ -108,7 +85,7 @@ class SurveyController extends Controller
             'description' => $request->description,
             'question_type' => $request->question_type ?? 'rating',
             'options' => $request->options,
-            'is_required' => $request->has('is_required') ? (bool)$request->is_required : false,
+            'is_required' => $request->has('is_required') ? (bool) $request->is_required : false,
             'order_index' => $maxOrder + 1,
             'is_active' => true,
             'created_at' => now(),
@@ -118,18 +95,18 @@ class SurveyController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Pertanyaan baru berhasil ditambahkan.',
-            'data' => DB::table('survey_questions')->find($id)
+            'data' => DB::table('survey_questions')->find($id),
         ]);
     }
 
     public function updateQuestion(Request $request, $id)
     {
         $request->validate([
-            'title' => 'required|string',
-            'description' => 'nullable|string',
-            'service_id' => 'nullable|integer',
-            'question_type' => 'nullable|string',
-            'options' => 'nullable|string',
+            'title' => 'required|string|max:500',
+            'description' => 'nullable|string|max:2000',
+            'service_id' => 'nullable|integer|exists:survey_services,id',
+            'question_type' => 'nullable|string|in:rating,text,textarea,select',
+            'options' => 'nullable|string|max:20000',
             'is_required' => 'nullable|boolean',
         ]);
 
@@ -139,14 +116,14 @@ class SurveyController extends Controller
             'description' => $request->description,
             'question_type' => $request->question_type ?? 'rating',
             'options' => $request->options,
-            'is_required' => $request->has('is_required') ? (bool)$request->is_required : false,
+            'is_required' => $request->has('is_required') ? (bool) $request->is_required : false,
             'updated_at' => now(),
         ]);
 
         return response()->json([
             'status' => 'success',
             'message' => 'Pertanyaan berhasil diperbarui.',
-            'data' => DB::table('survey_questions')->find($id)
+            'data' => DB::table('survey_questions')->find($id),
         ]);
     }
 
@@ -156,7 +133,7 @@ class SurveyController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Pertanyaan berhasil dihapus.'
+            'message' => 'Pertanyaan berhasil dihapus.',
         ]);
     }
 
@@ -164,6 +141,7 @@ class SurveyController extends Controller
     {
         $request->validate([
             'ordered_ids' => 'required|array',
+            'ordered_ids.*' => 'required|integer|distinct|exists:survey_questions,id',
         ]);
 
         foreach ($request->ordered_ids as $index => $id) {
@@ -175,14 +153,14 @@ class SurveyController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Urutan pertanyaan berhasil disimpan.'
+            'message' => 'Urutan pertanyaan berhasil disimpan.',
         ]);
     }
 
     public function storeService(Request $request)
     {
         $request->validate([
-            'name' => 'required|string',
+            'name' => 'required|string|max:255',
         ]);
 
         $id = DB::table('survey_services')->insertGetId([
@@ -195,7 +173,7 @@ class SurveyController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Opsi jenis layanan baru berhasil ditambahkan.',
-            'data' => DB::table('survey_services')->find($id)
+            'data' => DB::table('survey_services')->find($id),
         ]);
     }
 
@@ -205,23 +183,23 @@ class SurveyController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'message' => 'Opsi jenis layanan berhasil dihapus.'
+            'message' => 'Opsi jenis layanan berhasil dihapus.',
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_responden' => 'nullable|string',
-            'email' => 'nullable|email',
-            'pekerjaan' => 'nullable|string',
-            'jenis_layanan' => 'required|string',
+            'nama_responden' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:254',
+            'pekerjaan' => 'nullable|string|max:100',
+            'jenis_layanan' => 'required|string|max:255',
             'u1_persyaratan' => 'required|integer|min:1|max:5',
             'u2_prosedur' => 'required|integer|min:1|max:5',
             'u3_kecepatan' => 'required|integer|min:1|max:5',
             'u4_produk' => 'required|integer|min:1|max:5',
             'u5_sikap' => 'required|integer|min:1|max:5',
-            'saran_masukan' => 'nullable|string',
+            'saran_masukan' => 'nullable|string|max:5000',
         ]);
 
         $u1 = (int) $request->u1_persyaratan;
@@ -234,7 +212,7 @@ class SurveyController extends Controller
         $rawAvg = ($u1 + $u2 + $u3 + $u4 + $u5) / 5;
         $ikmScore = ($rawAvg / 5) * 100;
 
-        $id = DB::table('surveys')->insertGetId([
+        $survey = Survey::query()->create([
             'nama_responden' => $request->nama_responden ?? 'Masyarakat umum',
             'email' => $request->email,
             'pekerjaan' => $request->pekerjaan ?? 'Wiraswasta / Publik',
@@ -255,9 +233,39 @@ class SurveyController extends Controller
             'code' => 201,
             'message' => 'Terima kasih! Survey Kepuasan Anda berhasil dikirim.',
             'data' => [
-                'id' => $id,
+                'id' => $survey->id,
                 'ikm_score' => round($ikmScore, 2),
-            ]
-        ]);
+            ],
+        ], 201);
+    }
+
+    private function buildSummary($surveys): array
+    {
+        $totalResponden = $surveys->count();
+        $avgScore = $totalResponden > 0 ? (float) $surveys->avg('ikm_score') : 0;
+
+        if ($avgScore >= 88.31) {
+            [$mutu, $kategori] = ['A', 'Sangat Baik'];
+        } elseif ($avgScore >= 76.61) {
+            [$mutu, $kategori] = ['B', 'Baik'];
+        } elseif ($avgScore >= 65.00) {
+            [$mutu, $kategori] = ['C', 'Kurang Baik'];
+        } elseif ($totalResponden > 0) {
+            [$mutu, $kategori] = ['D', 'Tidak Baik'];
+        } else {
+            [$mutu, $kategori] = ['-', 'Belum Ada Data'];
+        }
+
+        return [
+            'total_responden' => $totalResponden,
+            'ikm_score' => round($avgScore, 2),
+            'mutu_pelayanan' => $mutu,
+            'kategori' => $kategori,
+            'u1_avg' => round($surveys->avg('u1_persyaratan') ?? 0, 2),
+            'u2_avg' => round($surveys->avg('u2_prosedur') ?? 0, 2),
+            'u3_avg' => round($surveys->avg('u3_kecepatan') ?? 0, 2),
+            'u4_avg' => round($surveys->avg('u4_produk') ?? 0, 2),
+            'u5_avg' => round($surveys->avg('u5_sikap') ?? 0, 2),
+        ];
     }
 }

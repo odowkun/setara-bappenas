@@ -13,7 +13,7 @@ class DocumentWatermarkServiceTest extends TestCase
 {
     public function test_it_adds_repeated_transparent_watermarks_to_every_pdf_page(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $sourcePath = $this->createTwoPagePdf();
         $uploadedFile = new UploadedFile(
             $sourcePath,
@@ -28,10 +28,10 @@ class DocumentWatermarkServiceTest extends TestCase
             'documents/testing'
         );
 
-        Storage::disk('public')->assertExists($result['relative_path']);
+        Storage::disk('local')->assertExists($result['relative_path']);
         $this->assertStringEndsWith('_watermarked.pdf', $result['file_name']);
 
-        $outputPath = Storage::disk('public')->path($result['relative_path']);
+        $outputPath = Storage::disk('local')->path($result['relative_path']);
         $outputContents = file_get_contents($outputPath);
         $this->assertIsString($outputContents);
         $this->assertStringContainsString('/ExtGState', $outputContents);
@@ -44,7 +44,7 @@ class DocumentWatermarkServiceTest extends TestCase
 
     public function test_it_rejects_an_unsupported_document_format(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
         $sourcePath = tempnam(sys_get_temp_dir(), 'watermark-test-');
         file_put_contents($sourcePath, 'plain text');
         $uploadedFile = new UploadedFile(

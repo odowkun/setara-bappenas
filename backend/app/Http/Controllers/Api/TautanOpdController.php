@@ -66,15 +66,15 @@ class TautanOpdController extends Controller
     public function uploadLogo(Request $request)
     {
         $request->validate([
-            'logo' => 'required|file|mimes:jpg,jpeg,png,webp,svg|max:10240',
+            'logo' => 'required|file|mimes:jpg,jpeg,png,webp|max:10240',
         ]);
 
         $file = $request->file('logo');
         $extension = strtolower($file->getClientOriginalExtension() ?: 'png');
-        $filename = now()->format('YmdHis') . '_' . Str::random(12) . '.' . $extension;
+        $filename = now()->format('YmdHis').'_'.Str::random(12).'.'.$extension;
         $targetDir = public_path('uploads/tautan-opd');
 
-        if (!is_dir($targetDir)) {
+        if (! is_dir($targetDir)) {
             mkdir($targetDir, 0755, true);
         }
 
@@ -84,7 +84,7 @@ class TautanOpdController extends Controller
             'status' => 'success',
             'message' => 'Logo OPD berhasil diunggah.',
             'data' => [
-                'logo_url' => asset('uploads/tautan-opd/' . $filename),
+                'logo_url' => asset('uploads/tautan-opd/'.$filename),
             ],
         ]);
     }

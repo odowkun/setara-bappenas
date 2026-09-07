@@ -14,7 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import {
-  fetchSurveysSummary,
+  fetchPublicSurveySummary,
   fetchSurveyConfig,
   submitSurvey,
   SurveySummaryData,
@@ -108,10 +108,8 @@ export default function SurveyKepuasanPublicPage() {
     setScores(initialScores);
 
     // 2. Fetch IKM Summary from Database API
-    const res = await fetchSurveysSummary();
-    if (res.summary) {
-      setSummary(res.summary);
-    }
+    const publicSummary = await fetchPublicSurveySummary();
+    setSummary(publicSummary);
   };
 
   const handleScoreChange = (key: string, val: any) => {
@@ -169,8 +167,8 @@ export default function SurveyKepuasanPublicPage() {
     if (success) {
       toast.success("Survei kepuasan berhasil dikirimkan!");
       setSubmitted(true);
-      const res = await fetchSurveysSummary();
-      if (res.summary) setSummary(res.summary);
+      const publicSummary = await fetchPublicSurveySummary();
+      setSummary(publicSummary);
     } else {
       toast.error("Gagal mengirimkan survey. Silakan coba lagi.");
     }

@@ -62,8 +62,8 @@ export default function LampiranTeknisPage() {
     try {
       setLoading(true);
       const [docsData, projData] = await Promise.all([
-        adminService.getDocuments(),
-        proyekService.getProjects(),
+        adminService.fetchDocuments(user?.bidang, user?.role),
+        proyekService.getProjects(undefined, undefined, true),
       ]);
       setDocuments(docsData || []);
       setProjects(projData || []);
@@ -247,7 +247,7 @@ export default function LampiranTeknisPage() {
         setFiles([]);
         setPreviews({});
         // Refresh project list
-        const updated = await proyekService.getProjects();
+        const updated = await proyekService.getProjects(undefined, undefined, true);
         setProjects(updated);
       }
     } catch (err) {

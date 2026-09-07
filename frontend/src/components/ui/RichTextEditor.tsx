@@ -12,6 +12,8 @@ import TextAlign from "@tiptap/extension-text-align";
 import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Image from "@tiptap/extension-image";
+import { authenticatedFetch } from "@/lib/apiClient";
+import { toast } from "@/lib/swal";
 
 import {
   RotateCcw,
@@ -191,10 +193,16 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   // Submit image insertion into Tiptap editor
   const handleInsertImage = async () => {
     if (imageTab === "url") {
-      if (imageUrlInput) {
+      const isStoredUrl =
+        imageUrlInput.startsWith("https://") ||
+        imageUrlInput.startsWith("http://") ||
+        imageUrlInput.startsWith("/storage/");
+      if (imageUrlInput && isStoredUrl) {
         editor.chain().focus().setImage({ src: imageUrlInput }).run();
         setShowImageModal(false);
         setImageUrlInput("");
+      } else if (imageUrlInput) {
+        toast.error("Gunakan URL media permanen dari server, bukan blob/data URL.");
       }
       return;
     }
@@ -206,7 +214,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
       formData.append("media", selectedFile);
 
       try {
-        const res = await fetch("http://localhost:8000/api/v1/media/upload-optimized", {
+        const res = await authenticatedFetch("/media/upload-optimized", {
           method: "POST",
           body: formData,
         });
@@ -216,16 +224,13 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
           const webUrl = json.data.web_url || json.data.master_url;
           editor.chain().focus().setImage({ src: webUrl }).run();
         } else {
-          // Fallback to local preview URL
-          if (imagePreview) {
-            editor.chain().focus().setImage({ src: imagePreview }).run();
-          }
+          const body = await res.json().catch(() => null);
+          throw new Error(body?.message || "Media gagal disimpan ke server.");
         }
       } catch (err) {
-        if (imagePreview) {
-          editor.chain().focus().setImage({ src: imagePreview }).run();
-        }
+        toast.error(err instanceof Error ? err.message : "Media gagal disimpan ke server.");
       } finally {
+        if (imagePreview) URL.revokeObjectURL(imagePreview);
         setUploadingImage(false);
         setShowImageModal(false);
         setSelectedFile(null);

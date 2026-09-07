@@ -14,7 +14,7 @@ export default function AuditLogsPage() {
   const isSuperAdmin = hasRole(["superadmin"]);
 
   useEffect(() => {
-    setLogs(adminService.getLogs());
+    adminService.fetchLogs().then(setLogs);
   }, []);
 
   const filteredLogs = logs.filter(

@@ -1,11 +1,11 @@
 # ARCHITECTURE SPECIFICATION — SMART BAPPEDA HALUT
 
 ## 🛠️ Stack Overview
-- **Framework**: Next.js 15.1.6 (App Router) + React 19
-- **Authentication & RBAC**: Custom React Auth Context + Sanctum-ready RBAC Token System
+- **Framework**: Next.js 15.5.22 (App Router) + React 19
+- **Authentication & RBAC**: Laravel Sanctum Bearer token + Spatie Permission + server-authoritative React Auth Context
 - **Styling**: Tailwind CSS v3 + Custom Spring Physics Animations
 - **Map Engine**: Leaflet 1.9 + Esri Leaflet + ArcGIS REST API Client
-- **State & Storage**: `adminService` & `proyekService` layer with LocalStorage fallback & Laravel REST API integration
+- **State & Storage**: Laravel REST API + MySQL sebagai sumber data resmi tunggal; browser storage hanya untuk sesi, aksesibilitas, dan checkpoint unggah non-domain
 
 ---
 
@@ -13,9 +13,9 @@
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │                      1. Administrator (Super Admin)                         │
-│  - /admin/users        (User Management: CRUD, Assign Role, Reset Pass)    │
-│  - /admin/profil       (Profil Editor: Sejarah, Visi, Misi, Struktur Org)   │
-│  - /admin/audit-logs   (Audit Logs SPBE: Action, Timestamp, IP Trail)       │
+│  - /dashboard/users        (CRUD user, role, permission, reset password)    │
+│  - /dashboard/profil       (Profil Editor: Sejarah, Visi, Misi, Struktur)   │
+│  - /dashboard/audit-logs   (Audit mutasi dari identitas sesi server)        │
 └──────────────────────────────────────┬──────────────────────────────────────┘
                                        │
       ┌────────────────────────────────┴────────────────────────────────┐
@@ -63,5 +63,32 @@
 
 ## 🌐 Dynamic Backend Integration Blueprint
 - **Base Endpoint**: `https://api.bappeda.halmaherautarakab.go.id/api/v1`
-- **Envelope Protocol**: Standard `{ status, code, message, data, meta }` response object.
 - **Client Service Layer**: `src/services/adminService.ts` & `src/services/proyekService.ts`.
+- **Authenticated Request Layer**: `src/lib/apiClient.ts` menambahkan Bearer token ke endpoint terlindungi.
+- **Authorization Source**: role dan permission selalu dimuat melalui `GET /auth/me`; nilai user lama di browser tidak dipercaya.
+- **Official Data Source**: tidak ada fallback record admin maupun publik ke Local Storage atau konstanta demo.
+- **Public Isolation**: dokumen, proyek, dan berita nonpublik difilter pada backend, termasuk pencarian global.
+- **ESRI Boundary**: database tetap otoritatif; kegagalan ESRI tidak menghasilkan ID palsu, sedangkan buffer lokal disimpan dengan label sumber `local_calculation`.
+- **Publication Boundary**: berita, agenda, pengumuman, galeri, dan dokumen memakai transisi draf/publikasi server-side; endpoint publik hanya membaca record terbit.
+- **Document Knowledge Archive**: dokumen tersimpan sebagai versi immutable pada private storage. Versi terbaru melewati submit/review sebelum menjadi `current_version`; publikasi hanya menerima klasifikasi `public`, governance `approved`, dan checksum `valid`.
+- **Measured File Access**: preview/download memakai grant bertanda tangan yang terikat dokumen+versi. Download log/counter dibuat saat one-time stream dikonsumsi, bukan saat email baru disubmit.
+- **Knowledge Discovery**: `pdftotext` dan OCR Tesseract opsional mengisi `document_versions.full_text`; global search hanya mengindeks current version yang approved/public.
+- **Records Governance**: retention scan hanya menandai `due`; legal hold mencegah archive. Operasi delete dokumen adalah lifecycle archive dan tidak menghapus versi.
+
+## 🔐 Security, Privacy, and Audit Boundary
+
+- Semua mutasi admin memerlukan autentikasi dan permission.
+- Role `superadmin` tidak dapat digantikan hanya dengan menyisipkan permission langsung.
+- Admin Bidang dibatasi ke dokumen dan proyek bidang sendiri.
+- PII survei, kritik/saran, dan email unduhan terenkripsi di database.
+- Audit aktor diturunkan dari token server; nama aktor dari payload diabaikan.
+- Rich text berita/profil disanitasi sebelum disimpan.
+- Respons PII tidak boleh dicache oleh browser atau proxy.
+
+Matriks permission, alur deployment, rollback, pro/kontra, dan risiko tersisa dijelaskan di [docs/security-rbac-privacy.md](docs/security-rbac-privacy.md).
+
+Kebijakan sumber data, tabel resmi, dampak, deployment, dan rollback dijelaskan di [docs/database-single-source.md](docs/database-single-source.md).
+
+Workflow draf-terbit-unpublish, matriks route, validasi, dampak, dan rollback dijelaskan di [docs/official-publication-workflow.md](docs/official-publication-workflow.md).
+
+Arsitektur tabel versi, lifecycle, signed stream, OCR, checksum, retensi, dampak migrasi, operasi, dan rollback arsip dijelaskan di [docs/document-knowledge-archive.md](docs/document-knowledge-archive.md).

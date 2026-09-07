@@ -13,6 +13,7 @@ import {
   Newspaper,
   CheckCircle2,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 export default function PublicNewsDetailPage() {
   const params = useParams();
@@ -26,7 +27,7 @@ export default function PublicNewsDetailPage() {
     const fetchArticle = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/news/${slug}`);
+        const res = await fetch(`${API_BASE_URL}/news/${slug}`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
@@ -34,9 +35,9 @@ export default function PublicNewsDetailPage() {
           }
         }
       } catch (err) {
-        console.warn("Using local article fallback:", err);
+        console.error("Artikel resmi gagal dimuat:", err);
       } finally {
-        setTimeout(() => setLoading(false), 400);
+        setLoading(false);
       }
     };
 
@@ -53,35 +54,6 @@ export default function PublicNewsDetailPage() {
     }
   };
 
-  const mockArticle = {
-    title: "BAPPEDA Halmahera Utara Gelar Forum Musrenbang RKPD Tahun 2026",
-    category: "Pembangunan",
-    author: "Redaksi Humas BAPPEDA",
-    date: "2026-07-24",
-    views: 1241,
-    featuredImage: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=1200&q=80",
-    content: `
-      <p className="lead text-base font-semibold text-slate-700 leading-relaxed mb-4">
-        <strong>TOBELO, BAPPEDA HALUT</strong> — Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara menyelenggarakan Musyawarah Perencanaan Pembangunan (Musrenbang) Rencana Kerja Pemerintah Daerah (RKPD) Tahun 2026 bertempat di Aula Utama Kantor Bupati Halmahera Utara.
-      </p>
-      <p className="text-sm font-medium text-slate-600 leading-relaxed mb-4">
-        Kegiatan strategis tahunan ini dihadiri oleh Bupati Halmahera Utara, jajaran pimpinan DPRD, Kepala SKPD se-Kabupaten, para Camat, tokoh masyarakat, akademisi, serta organisasi kemasyarakatan. Forum Musrenbang bertujuan untuk menyelaraskan prioritas pembangunan daerah dengan sasaran pembangunan nasional dan provinsi.
-      </p>
-      <h3 className="text-lg font-black text-slate-900 mt-6 mb-3">Arah Kebijakan Prioritas Pembangunan TA 2026:</h3>
-      <ol className="list-decimal pl-5 space-y-2 text-sm font-medium text-slate-700 mb-6">
-        <li><strong>Penguatan Infrastruktur Wilayah & Konektivitas Antar Pulau</strong>: Peningkatan aksesibilitas jalan dan pelabuhan antar kecamatan.</li>
-        <li><strong>Transformasi Digital & Tata Kelola SPBE</strong>: Integrasi seluruh layanan publik berbasis sistem elektronik terpadu.</li>
-        <li><strong>Penurunan Kemiskinan Ekstrem & Stunting</strong>: Program integratif perlindungan sosial dan perbaikan gizi masyarakat secara komprehensif.</li>
-        <li><strong>Peningkatan Kualitas Sumber Daya Manusia & Ekonomi Kreatif</strong>: Pelatihan vokasi UMKM lokal berbasis potensi sumber daya alam daerah.</li>
-      </ol>
-      <p className="text-sm font-medium text-slate-600 leading-relaxed mb-4">
-        Kepala BAPPEDA menegaskan pentingnya kolaborasi aktif dari seluruh elemen untuk memastikan program perencanaan daerah dapat terlaksana dengan tepat sasaran, efisien, dan transparan bagi kesejahteraan warga Halmahera Utara.
-      </p>
-    `,
-  };
-
-  const displayData = article || mockArticle;
-
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-50 font-sans pt-32 pb-20 flex justify-center">
@@ -93,6 +65,19 @@ export default function PublicNewsDetailPage() {
       </div>
     );
   }
+
+  if (!article) {
+    return (
+      <div className="min-h-screen bg-slate-50 pt-32 px-4 text-center">
+        <p className="font-bold text-slate-600">Artikel tidak ditemukan atau belum dipublikasikan.</p>
+        <Link href="/berita" className="mt-4 inline-block text-blue-700 font-bold">
+          Kembali ke daftar berita
+        </Link>
+      </div>
+    );
+  }
+
+  const displayData = article;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pt-28 pb-20">
@@ -110,7 +95,7 @@ export default function PublicNewsDetailPage() {
         <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between gap-2 flex-wrap">
             <span className="px-3.5 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wider">
-              {displayData.category || displayData.category}
+              {displayData.category || "Belum dikategorikan"}
             </span>
 
             <div className="flex items-center gap-3 text-xs font-bold text-slate-400">
@@ -121,7 +106,7 @@ export default function PublicNewsDetailPage() {
               <span>•</span>
               <span className="flex items-center gap-1 text-slate-600 font-extrabold">
                 <Eye className="w-3.5 h-3.5 text-blue-600" />
-                {displayData.views?.toLocaleString() || "1,241"} Hits Pembaca
+                {displayData.views?.toLocaleString() || "0"} Hits Pembaca
               </span>
             </div>
           </div>
@@ -133,10 +118,10 @@ export default function PublicNewsDetailPage() {
           <div className="flex items-center justify-between pt-4 border-t border-slate-100">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-2xl bg-blue-600 text-white font-black text-xs flex items-center justify-center shadow-xs">
-                {displayData.author ? displayData.author.substring(0, 2).toUpperCase() : "HUMAS"}
+                {displayData.author ? displayData.author.substring(0, 2).toUpperCase() : "--"}
               </div>
               <div>
-                <p className="text-xs font-black text-slate-900">{displayData.author || "Redaksi Humas BAPPEDA"}</p>
+                <p className="text-xs font-black text-slate-900">{displayData.author || "Belum tersedia"}</p>
                 <p className="text-[10px] text-slate-500 font-medium">BAPPEDA Kab. Halmahera Utara</p>
               </div>
             </div>
@@ -153,20 +138,20 @@ export default function PublicNewsDetailPage() {
         </div>
 
         {/* FEATURED COVER IMAGE */}
-        <div className="relative aspect-[16/9] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-lg">
+        {displayData.image && <div className="relative aspect-[16/9] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-lg">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={displayData.image || displayData.featuredImage}
+            src={displayData.image}
             alt={displayData.title}
             className="w-full h-full object-cover"
           />
-        </div>
+        </div>}
 
         {/* ARTICLE BODY READER */}
         <div className="p-6 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xs prose max-w-none text-slate-800">
           <div
             dangerouslySetInnerHTML={{
-              __html: displayData.content || mockArticle.content,
+              __html: displayData.content || "",
             }}
           />
         </div>

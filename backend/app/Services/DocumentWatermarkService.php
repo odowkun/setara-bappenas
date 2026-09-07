@@ -37,18 +37,18 @@ class DocumentWatermarkService
                 .'_'.$baseName.'_watermarked.pdf';
             $relativePath = trim($destinationDirectory, '/').'/'.$outputFileName;
 
-            Storage::disk('public')->makeDirectory($destinationDirectory);
-            $outputPath = Storage::disk('public')->path($relativePath);
+            Storage::disk('local')->makeDirectory($destinationDirectory);
+            $outputPath = Storage::disk('local')->path($relativePath);
             $this->applyWatermark($sourcePdfPath, $outputPath);
 
             return [
                 'relative_path' => $relativePath,
                 'file_name' => $outputFileName,
-                'file_size_bytes' => Storage::disk('public')->size($relativePath),
+                'file_size_bytes' => Storage::disk('local')->size($relativePath),
             ];
         } catch (Throwable $exception) {
             if (is_string($relativePath)) {
-                Storage::disk('public')->delete($relativePath);
+                Storage::disk('local')->delete($relativePath);
             }
 
             throw $exception;

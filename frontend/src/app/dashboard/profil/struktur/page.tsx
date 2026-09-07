@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { authenticatedFetch } from "@/lib/apiClient";
 import { StrukturOrganisasiChart, OrgNode } from "@/components/ui/StrukturOrganisasiChart";
 import {
   Plus,
@@ -95,7 +96,7 @@ export default function StrukturEditorPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8000/api/v1/pejabat", {
+      const res = await authenticatedFetch("http://localhost:8000/api/v1/pejabat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -175,7 +176,7 @@ export default function StrukturEditorPage() {
 
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
+      const res = await authenticatedFetch(`http://localhost:8000/api/v1/pejabat/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: token ? `Bearer ${token}` : "",

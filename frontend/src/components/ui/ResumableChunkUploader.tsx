@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { authenticatedFetch } from "@/lib/apiClient";
 import {
   UploadCloud,
   CheckCircle2,
@@ -67,7 +68,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
         try {
           setStatusText(`Mengunggah berkas (${(end / 1024 / 1024).toFixed(1)}MB / ${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
 
-          const res = await fetch(`${API_BASE_URL}/documents/upload-chunk`, {
+          const res = await authenticatedFetch(`${API_BASE_URL}/documents/upload-chunk`, {
             method: "POST",
             body: formData,
           });

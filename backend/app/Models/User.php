@@ -10,7 +10,7 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens, HasRoles;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
@@ -18,6 +18,7 @@ class User extends Authenticatable
         'password',
         'role',
         'bidang',
+        'allowed_document_permissions',
         'nip',
         'jabatan',
     ];
@@ -32,6 +33,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'allowed_document_permissions' => 'array',
         ];
     }
 }

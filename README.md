@@ -60,10 +60,24 @@ php artisan serve --port=8000
 
 ---
 
-## 🔑 Akun Demo Quick Login SPBE (3 Role):
-- **👑 Administrator (SuperAdmin)**: `admin@halmaherautarakab.go.id` (Pass: `password123`)
-- **📰 Admin Umum**: `umum@halmaherautarakab.go.id` (Pass: `password123`)
-- **🏗️ Admin Bidang**: `infrastruktur@halmaherautarakab.go.id` (Pass: `password123`)
+## 🔑 Bootstrap Akun Administrator
+
+Proyek tidak menyediakan akun atau password demo. Untuk membuat Super Admin pertama, isi `BAPPEDA_SEED_SUPERADMIN_NAME`, `BAPPEDA_SEED_SUPERADMIN_EMAIL`, dan `BAPPEDA_SEED_SUPERADMIN_PASSWORD` pada `backend/.env`, lalu jalankan:
+
+```bash
+cd backend
+php artisan db:seed --class=UserSeeder
+```
+
+Password minimal 12 karakter dan wajib mengandung huruf besar, huruf kecil, dan angka. Jangan menyimpan password aktual di repository atau dokumentasi.
+
+Panduan kontrol akses, enkripsi data pribadi, deployment, rollback, pro/kontra, dan risiko tersisa tersedia di [docs/security-rbac-privacy.md](docs/security-rbac-privacy.md).
+
+Aturan database sebagai sumber data resmi tunggal, termasuk Agenda, Pengumuman, kategori, Geoprocessing, ESRI, deployment, dan rollback tersedia di [docs/database-single-source.md](docs/database-single-source.md).
+
+Alur draf, terbit, batalkan publikasi, route resmi, validasi konten, pro/kontra, dampak, deployment, dan rollback tersedia di [docs/official-publication-workflow.md](docs/official-publication-workflow.md).
+
+Arsitektur arsip pengetahuan dokumen—private storage, signed grant, versioning, review four-eyes, klasifikasi, OCR/full-text, checksum, retensi/legal hold, remediasi legacy, deployment, dan troubleshooting—tersedia di [docs/document-knowledge-archive.md](docs/document-knowledge-archive.md).
 
 ## Watermark Dokumen Otomatis
 

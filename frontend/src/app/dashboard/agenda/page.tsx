@@ -21,13 +21,12 @@ import {
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import {
   AgendaEvent,
-  defaultAgendas,
-  DEFAULT_AGENDA_CATEGORIES,
   getCategoryStyle,
   formatAgendaDateRange,
   assignEventTracks,
   computeAgendaStatus,
 } from "@/types/agenda";
+import { officialContentService } from "@/services/officialContentService";
 
 const DAYS_NAME = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
 const MONTHS_NAME = [
@@ -46,9 +45,9 @@ const MONTHS_NAME = [
 ];
 
 export default function AdminAgendaPage() {
-  const [agendas, setAgendas] = useState<AgendaEvent[]>(defaultAgendas);
-  const [categories, setCategories] = useState<string[]>(DEFAULT_AGENDA_CATEGORIES);
-  const [currentDate, setCurrentDate] = useState(new Date(2026, 6, 24));
+  const [agendas, setAgendas] = useState<AgendaEvent[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState<"calendar" | "table">("calendar");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [searchTerm, setSearchTerm] = useState("");
@@ -59,46 +58,50 @@ export default function AdminAgendaPage() {
   const [activeModalEvent, setActiveModalEvent] = useState<AgendaEvent | null>(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedEvents = localStorage.getItem("bappeda_agendas");
-      if (storedEvents) {
-        try {
-          const parsed = JSON.parse(storedEvents);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setAgendas(parsed);
-          }
-        } catch (e) {
-          console.error("Error load local agenda:", e);
-        }
-      }
-
-      const storedCats = localStorage.getItem("bappeda_agenda_categories");
-      if (storedCats) {
-        try {
-          const parsed = JSON.parse(storedCats);
-          if (Array.isArray(parsed)) {
-            setCategories(Array.from(new Set([...DEFAULT_AGENDA_CATEGORIES, ...parsed])));
-          }
-        } catch (e) {
-          console.error("Error load local cats:", e);
-        }
-      }
-    }
+    Promise.all([
+      officialContentService.getAgendas(true),
+      officialContentService.getAgendaCategories(),
+    ])
+      .then(([agendaRows, categoryRows]) => {
+        setAgendas(agendaRows);
+        setCategories(categoryRows.map((item) => item.name));
+      })
+      .catch((error) => {
+        console.error("Data agenda resmi tidak dapat dimuat:", error);
+        setAgendas([]);
+        setCategories([]);
+      });
   }, []);
 
   const handleDelete = async (id: string) => {
     const target = agendas.find((item) => item.id === id);
     const res = await showDeleteConfirm(target ? target.title : "agenda kegiatan");
     if (res.isConfirmed) {
-      const updated = agendas.filter((item) => item.id !== id);
-      setAgendas(updated);
-      if (typeof window !== "undefined") {
-        localStorage.setItem("bappeda_agendas", JSON.stringify(updated));
+      try {
+        await officialContentService.deleteAgenda(id);
+        setAgendas((current) => current.filter((item) => item.id !== id));
+        if (activeModalEvent?.id === id) {
+          setActiveModalEvent(null);
+        }
+        toast.success("Agenda kegiatan berhasil dihapus dari database!");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Agenda gagal dihapus.");
       }
-      if (activeModalEvent?.id === id) {
-        setActiveModalEvent(null);
-      }
-      toast.success("Agenda kegiatan berhasil dihapus!");
+    }
+  };
+
+  const handleTogglePublication = async (item: AgendaEvent) => {
+    try {
+      const updated = await officialContentService.updateAgendaPublication(
+        item.id,
+        !item.isPublished
+      );
+      setAgendas((current) => current.map((row) => row.id === item.id ? updated : row));
+      toast.success(updated.isPublished
+        ? "Agenda berhasil diterbitkan."
+        : "Agenda ditarik menjadi draf.");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Status publikasi gagal diperbarui.");
     }
   };
 
@@ -144,10 +147,11 @@ export default function AdminAgendaPage() {
 
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
-  const today = () => setCurrentDate(new Date(2026, 6, 24));
+  const today = () => setCurrentDate(new Date());
 
   const isToday = (dayNum: number) => {
-    return dayNum === 24 && month === 6 && year === 2026;
+    const now = new Date();
+    return dayNum === now.getDate() && month === now.getMonth() && year === now.getFullYear();
   };
 
   const getEventsForDate = (dayNum: number) => {
@@ -568,21 +572,41 @@ export default function AdminAgendaPage() {
                         </td>
 
                         <td className="py-4 px-6 whitespace-nowrap">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                          <div className="flex flex-col items-start gap-1">
+                            <span
+                              className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
                               currentStatus === "Berlangsung"
                                 ? "bg-emerald-100 text-emerald-800"
                                 : currentStatus === "Mendatang"
                                 ? "bg-blue-100 text-blue-800"
                                 : "bg-slate-100 text-slate-600"
                             }`}
-                          >
-                            {currentStatus}
-                          </span>
+                            >
+                              {currentStatus}
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-black ${
+                              item.isPublished
+                                ? "bg-emerald-50 text-emerald-700"
+                                : "bg-amber-50 text-amber-700"
+                            }`}>
+                              {item.isPublished ? "Tayang" : "Draf"}
+                            </span>
+                          </div>
                         </td>
 
                         <td className="py-4 px-6 text-right whitespace-nowrap">
                           <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePublication(item)}
+                              className={`px-3 py-2 rounded-xl text-[10px] font-black transition cursor-pointer ${
+                                item.isPublished
+                                  ? "bg-amber-50 hover:bg-amber-100 text-amber-700"
+                                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700"
+                              }`}
+                            >
+                              {item.isPublished ? "Jadikan Draf" : "Terbitkan"}
+                            </button>
                             <Link
                               href={`/dashboard/agenda/edit/${item.id}`}
                               className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-600 hover:text-blue-700 transition"

@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'esri' => [
+        'feature_service_url' => env('ESRI_FEATURE_SERVICE_URL'),
+        'geoprocessing_url' => env('ESRI_GEOPROCESSING_URL'),
+    ],
+
 ];

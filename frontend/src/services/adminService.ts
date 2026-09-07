@@ -1,29 +1,73 @@
-import { User, AdminNews, AdminDocument, AuditLog } from "@/types/auth";
+import { User, AdminNews, AdminDocument, AuditLog, JenisDokumenItem } from "@/types/auth";
+import { API_BASE_URL, withAuthHeaders } from "@/lib/apiClient";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+interface UserMutationInput extends Partial<User> {
+  name: string;
+  email: string;
+  role: User["role"];
+  password?: string;
+  passwordConfirmation?: string;
+}
 
-const USERS_KEY = "bappeda_users";
-const DOCS_KEY = "bappeda_admin_docs";
-const AUDIT_KEY = "bappeda_audit_logs";
-const TOKEN_KEY = "bappeda_sanctum_token";
+function mapDocument(d: any): AdminDocument {
+  const mapVersion = (version: any) =>
+    version
+      ? {
+          id: String(version.id),
+          versionLabel: version.version_label,
+          status: version.status,
+          integrityStatus: version.integrity_status,
+          extractionStatus: version.extraction_status,
+        }
+      : null;
+
+  return {
+    id: String(d.id),
+    archiveCode: d.archive_code ?? "",
+    documentNumber: d.document_number ?? "",
+    title: d.title,
+    summary: d.summary ?? "",
+    jenis: d.jenis,
+    bidang: d.bidang ?? "",
+    tahun: String(d.tahun),
+    tanggalMulai: d.tanggal_mulai ?? undefined,
+    tanggalSelesai: d.tanggal_selesai ?? undefined,
+    ukuran: d.ukuran ?? "",
+    downloads: d.downloads ?? 0,
+    views: d.views ?? 0,
+    uniqueViews: d.unique_views ?? 0,
+    fileUrl: d.preview_url ?? "",
+    isPublic: Boolean(d.is_public),
+    ownerOpd: d.owner_opd ?? "",
+    keywords: Array.isArray(d.keywords) ? d.keywords : [],
+    classification: d.classification,
+    governanceStatus: d.governance_status,
+    storageStatus: d.storage_status,
+    retentionPolicy: d.retention_policy,
+    retentionUntil: d.retention_until ?? undefined,
+    retentionStatus: d.retention_status,
+    legalHold: Boolean(d.legal_hold),
+    currentVersion: mapVersion(d.current_version),
+    latestVersion: mapVersion(d.latest_version),
+    uploadedBy: d.uploaded_by ?? "",
+    createdAt: d.created_at ?? "",
+  };
+}
 
 export const adminService = {
   // Helper to fetch API with Bearer token
   async apiFetch(endpoint: string, options: RequestInit = {}) {
-    const token = typeof window !== "undefined" ? localStorage.getItem(TOKEN_KEY) : null;
-    const headers = {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    };
+    const headers = withAuthHeaders(options.headers);
+    if (!(options.body instanceof FormData)) {
+      headers.set("Content-Type", "application/json");
+    }
 
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
       if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
       return await res.json();
     } catch (err) {
-      console.warn(`[adminService] Backend API offline/unreachable at ${endpoint}. Using LocalStorage fallback.`, err);
+      console.warn(`[adminService] Backend API tidak dapat dijangkau pada ${endpoint}.`, err);
       return null;
     }
   },
@@ -47,84 +91,89 @@ export const adminService = {
     return [{ code: "ALL", label: "Semua Jenis Dokumen" }];
   },
 
+  fetchJenisDokumenItems: async (role?: string): Promise<JenisDokumenItem[]> => {
+    const query = role ? `?role=${encodeURIComponent(role)}` : "";
+    const res = await adminService.apiFetch(`/jenis-dokumen${query}`);
+    if (!res?.data || !Array.isArray(res.data)) {
+      throw new Error("Jenis dokumen gagal dimuat dari database.");
+    }
+    return res.data;
+  },
+
+  createJenisDokumen: async (data: {
+    name: string;
+    code: string;
+    scope_role: "admin_umum" | "admin_bidang" | "semua";
+  }): Promise<JenisDokumenItem> => {
+    const res = await adminService.apiFetch("/jenis-dokumen", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (!res?.data) throw new Error("Jenis dokumen gagal disimpan ke database.");
+    return res.data;
+  },
+
   // USERS
   fetchUsers: async (): Promise<User[]> => {
     try {
       const res = await adminService.apiFetch("/users");
       if (res && res.data && Array.isArray(res.data)) {
-        if (typeof window !== "undefined") {
-          localStorage.setItem(USERS_KEY, JSON.stringify(res.data));
-        }
         return res.data;
       }
     } catch (e) {
       console.warn("[adminService] Failed to fetch users from API:", e);
     }
-    return adminService.getUsers();
+    return [];
   },
 
-  getUsers: (): User[] => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  },
+  getUsers: (): User[] => [],
 
-  addUser: (user: Omit<User, "id" | "createdAt">): User => {
-    const users = adminService.getUsers();
-    const newUser: User = {
-      ...user,
-      id: `usr-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    const updated = [newUser, ...users];
-    if (typeof window !== "undefined") {
-      localStorage.setItem(USERS_KEY, JSON.stringify(updated));
-    }
-
-    adminService.apiFetch("/users", {
+  addUser: async (user: UserMutationInput): Promise<User> => {
+    const res = await adminService.apiFetch("/users", {
       method: "POST",
-      body: JSON.stringify(user),
+      body: JSON.stringify({
+        ...user,
+        password_confirmation: user.passwordConfirmation,
+        allowed_document_permissions: user.allowedDocumentPermissions,
+      }),
     });
 
-    adminService.addLog(user.name || "System", user.role, "ADD_USER", `Menambah user baru: ${user.name} (${user.role})`);
-    return newUser;
-  },
-
-  updateUser: (id: string, updatedData: Partial<User>): User | null => {
-    const users = adminService.getUsers();
-    const index = users.findIndex((u) => String(u.id) === String(id));
-    if (index === -1) return null;
-    const updatedUser = { ...users[index], ...updatedData };
-    users[index] = updatedUser;
-    if (typeof window !== "undefined") {
-      localStorage.setItem(USERS_KEY, JSON.stringify(users));
+    if (!res?.data) {
+      throw new Error("Server menolak atau gagal menyimpan pengguna.");
     }
 
-    adminService.apiFetch(`/users/${id}`, {
+    return res.data as User;
+  },
+
+  updateUser: async (
+    id: string,
+    updatedData: Partial<UserMutationInput>
+  ): Promise<User> => {
+    const res = await adminService.apiFetch(`/users/${id}`, {
       method: "PUT",
-      body: JSON.stringify(updatedData),
+      body: JSON.stringify({
+        ...updatedData,
+        password_confirmation: updatedData.passwordConfirmation,
+        allowed_document_permissions: updatedData.allowedDocumentPermissions,
+      }),
     });
 
-    adminService.addLog(updatedUser.name || "System", updatedUser.role, "UPDATE_USER", `Memperbarui user: ${updatedUser.name}`);
-    return updatedUser;
-  },
-
-  deleteUser: (id: string): boolean => {
-    const users = adminService.getUsers();
-    const filtered = users.filter((u) => String(u.id) !== String(id));
-    if (typeof window !== "undefined") {
-      localStorage.setItem(USERS_KEY, JSON.stringify(filtered));
+    if (!res?.data) {
+      throw new Error("Server menolak atau gagal memperbarui pengguna.");
     }
 
-    adminService.apiFetch(`/users/${id}`, { method: "DELETE" });
-    adminService.addLog("Admin", "superadmin", "DELETE_USER", `Menghapus user ID: ${id}`);
-    return true;
+    return res.data as User;
+  },
+
+  deleteUser: async (id: string): Promise<boolean> => {
+    const res = await adminService.apiFetch(`/users/${id}`, { method: "DELETE" });
+    return Boolean(res);
   },
 
   // DOCUMENTS
   fetchDocuments: async (bidangFilter?: string, userRole?: string): Promise<AdminDocument[]> => {
     try {
-      let endpoint = "/documents";
+      let endpoint = userRole ? "/admin/documents" : "/documents";
       if (userRole === "admin_bidang" && bidangFilter) {
         endpoint += `?bidang=${bidangFilter}`;
       } else if (bidangFilter && bidangFilter !== "semua") {
@@ -132,24 +181,7 @@ export const adminService = {
       }
       const res = await adminService.apiFetch(endpoint);
       if (res && res.data && Array.isArray(res.data)) {
-        const mapped: AdminDocument[] = res.data.map((d: any) => ({
-          id: String(d.id),
-          title: d.title,
-          jenis: d.jenis,
-          bidang: d.bidang || "semua",
-          tahun: String(d.tahun),
-          ukuran: d.ukuran || "2.5 MB",
-          downloads: d.downloads || 0,
-          views: d.views || 0,
-          fileUrl: d.file_path || "/documents/dokumen-bappeda-halut.pdf",
-          isPublic: Boolean(d.is_public),
-          uploadedBy: d.uploaded_by || "Admin Bappeda",
-          createdAt: d.created_at || new Date().toISOString(),
-        }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem(DOCS_KEY, JSON.stringify(mapped));
-        }
-
+        const mapped: AdminDocument[] = res.data.map(mapDocument);
         // Apply strict role-based filter (Case-Insensitive for SuperAdmin / Admin Bidang)
         const normalizedRole = (userRole || "").toLowerCase();
         if (normalizedRole === "superadmin") {
@@ -163,53 +195,29 @@ export const adminService = {
     } catch (e) {
       console.warn("[adminService] Failed to fetch documents from API:", e);
     }
-    return adminService.getDocuments(bidangFilter, userRole);
-  },
-
-  getDocuments: (bidangFilter?: string, userRole?: string): AdminDocument[] => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(DOCS_KEY);
-    const docs: AdminDocument[] = stored ? JSON.parse(stored) : [];
-
-    const normalizedRole = (userRole || "").toLowerCase();
-
-    // SuperAdmin accesses ALL documents!
-    if (normalizedRole === "superadmin") {
-      return docs;
-    }
-
-    // Admin Bidang accesses ONLY documents belonging to their exact bidang!
-    if (normalizedRole === "admin_bidang" && bidangFilter) {
-      return docs.filter((d) => (d.bidang || "").toLowerCase() === bidangFilter.toLowerCase());
-    }
-
-    if (bidangFilter && bidangFilter !== "semua") {
-      return docs.filter((d) => (d.bidang || "").toLowerCase() === bidangFilter.toLowerCase());
-    }
-    return docs;
+    return [];
   },
 
   addDocument: async (doc: Omit<AdminDocument, "id" | "downloads" | "views" | "createdAt">): Promise<AdminDocument> => {
-    const docs = adminService.getDocuments();
-    let newDoc: AdminDocument = {
-      ...doc,
-      id: `doc-${Date.now()}`,
-      downloads: 0,
-      views: 0,
-      createdAt: new Date().toISOString(),
-    };
-
     try {
       const res = await adminService.apiFetch("/documents", {
         method: "POST",
         body: JSON.stringify({
           title: doc.title,
+          summary: doc.summary,
           jenis: doc.jenis,
           bidang: doc.bidang,
           tahun: doc.tahun,
           ukuran: doc.ukuran,
           file_path: doc.fileUrl,
-          uploaded_by: doc.uploadedBy,
+          document_number: doc.documentNumber || null,
+          owner_opd: doc.ownerOpd || null,
+          keywords: doc.keywords || [],
+          classification: doc.classification || "internal",
+          retention_policy: doc.retentionPolicy || "permanent",
+          tanggal_mulai: doc.tanggalMulai || null,
+          tanggal_selesai: doc.tanggalSelesai || null,
+          submit_for_review: doc.isPublic,
         }),
       });
 
@@ -217,81 +225,57 @@ export const adminService = {
         throw new Error("Server tidak memverifikasi dokumen ber-watermark.");
       }
 
-      if (res && res.data) {
-        newDoc = {
-          id: String(res.data.id),
-          title: res.data.title,
-          jenis: res.data.jenis,
-          bidang: res.data.bidang || "semua",
-          tahun: String(res.data.tahun),
-          ukuran: res.data.ukuran || "2.5 MB",
-          downloads: res.data.downloads || 0,
-          views: res.data.views || 0,
-          fileUrl: res.data.file_path || "/documents/dokumen-bappeda-halut.pdf",
-          isPublic: Boolean(res.data.is_public),
-          uploadedBy: res.data.uploaded_by || doc.uploadedBy,
-          createdAt: res.data.created_at || new Date().toISOString(),
-        };
-      }
+      return mapDocument(res.data);
     } catch (err) {
       console.warn("[adminService] Failed to post watermarked document to API:", err);
       throw err;
     }
 
-    const updated = [newDoc, ...docs.filter((d) => String(d.id) !== String(newDoc.id))];
-    if (typeof window !== "undefined") {
-      localStorage.setItem(DOCS_KEY, JSON.stringify(updated));
-    }
+  },
 
-    adminService.addLog(doc.uploadedBy, "admin", "UPLOAD_DOCUMENT", `Unggah dokumen: ${doc.title}`);
-    return newDoc;
+  updateDocumentPublication: async (
+    id: string,
+    isPublished: boolean
+  ): Promise<AdminDocument> => {
+    const res = await adminService.apiFetch(`/documents/${id}/publication`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_published: isPublished }),
+    });
+    if (!res?.data) throw new Error("Status publikasi dokumen gagal diperbarui.");
+
+    return mapDocument(res.data);
   },
 
   incrementDownload: (id: string): number => {
-    const docs = adminService.getDocuments();
-    const idx = docs.findIndex((d) => String(d.id) === String(id));
-    if (idx !== -1) {
-      docs[idx].downloads = (docs[idx].downloads || 0) + 1;
-      if (typeof window !== "undefined") {
-        localStorage.setItem(DOCS_KEY, JSON.stringify(docs));
-      }
-      adminService.apiFetch(`/documents/${id}/download`, { method: "POST" });
-      return docs[idx].downloads;
-    }
+    console.warn(
+      `[adminService] incrementDownload(${id}) dinonaktifkan: unduhan publik wajib melalui verifikasi email.`
+    );
     return 0;
   },
 
-  deleteDocument: async (id: string, userName: string): Promise<boolean> => {
-    const docs = adminService.getDocuments();
-    const filtered = docs.filter((d) => String(d.id) !== String(id));
-    if (typeof window !== "undefined") {
-      localStorage.setItem(DOCS_KEY, JSON.stringify(filtered));
-    }
+  deleteDocument: async (id: string): Promise<boolean> => {
+    const response = await adminService.apiFetch(`/documents/${id}`, { method: "DELETE" });
+    if (!response) return false;
 
-    try {
-      await adminService.apiFetch(`/documents/${id}`, { method: "DELETE" });
-    } catch (err) {
-      console.warn("[adminService] Failed to delete document from API:", err);
-    }
-    adminService.addLog(userName, "admin", "DELETE_DOCUMENT", `Hapus dokumen ID: ${id}`);
     return true;
   },
 
   // NEWS (LANGSUNG DARI DATABASE REST API)
   fetchNews: async (): Promise<any[]> => {
     try {
-      const res = await adminService.apiFetch("/news");
+      const res = await adminService.apiFetch("/admin/news");
       if (res && res.data && Array.isArray(res.data)) {
         return res.data.map((item: any) => ({
           id: String(item.id),
           slug: item.slug,
           title: item.title,
-          category: item.category || "Berita Utama",
-          author: item.author || "bappeda",
-          date: item.date || item.created_at?.split("T")[0] || "2026-07-21",
+          category: item.category || "",
+          author: item.author || "",
+          date: item.date || item.created_at?.split("T")[0] || "",
           views: item.views || 0,
-          featuredImage: item.image || item.image_url || "https://bappeda.halmaherautarakab.go.id/template/assets/img/halut.png",
-          summary: item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 160) + "..." : "",
+          isPublished: Boolean(item.is_published),
+          featuredImage: item.image || item.image_url || "",
+          summary: item.summary || (item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 160) + "..." : ""),
           readTime: "3 mnt baca",
           content: item.content,
         }));
@@ -302,6 +286,51 @@ export const adminService = {
     return [];
   },
 
+  fetchNewsById: async (id: string): Promise<any> => {
+    const res = await adminService.apiFetch(`/admin/news/${id}`);
+    if (!res?.data) throw new Error("Berita tidak ditemukan di database.");
+    return res.data;
+  },
+
+  addNews: async (data: {
+    title: string;
+    category: string;
+    content: string;
+    summary?: string;
+    image?: string;
+    is_published?: boolean;
+  }) => {
+    const res = await adminService.apiFetch("/news", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+    if (!res?.data) throw new Error("Berita gagal disimpan ke database.");
+    return res.data;
+  },
+
+  updateNews: async (id: string, data: Record<string, unknown>) => {
+    const res = await adminService.apiFetch(`/news/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+    if (!res?.data) throw new Error("Berita gagal diperbarui di database.");
+    return res.data;
+  },
+
+  updateNewsPublication: async (id: string, isPublished: boolean) => {
+    const res = await adminService.apiFetch(`/news/${id}/publication`, {
+      method: "PATCH",
+      body: JSON.stringify({ is_published: isPublished }),
+    });
+    if (!res?.data) throw new Error("Status publikasi berita gagal diperbarui.");
+    return res.data;
+  },
+
+  deleteNews: async (id: string): Promise<void> => {
+    const res = await adminService.apiFetch(`/news/${id}`, { method: "DELETE" });
+    if (!res) throw new Error("Berita gagal dihapus dari database.");
+  },
+
   // AUDIT LOGS
   fetchLogs: async (): Promise<AuditLog[]> => {
     try {
@@ -309,44 +338,22 @@ export const adminService = {
       if (res && res.data && Array.isArray(res.data)) {
         const mapped: AuditLog[] = res.data.map((l: any) => ({
           id: String(l.id),
-          userName: l.user_name || "System",
-          userRole: l.user_role || "admin",
+          userName: l.user_name || "Tidak tersedia",
+          userRole: l.user_role || "Tidak tersedia",
           action: l.action,
           details: l.details,
-          ipAddress: l.ip_address || "127.0.0.1",
-          timestamp: l.created_at || new Date().toISOString(),
+          ipAddress: l.ip_address || "Tidak tersedia",
+          timestamp: l.created_at || "",
         }));
-        if (typeof window !== "undefined") {
-          localStorage.setItem(AUDIT_KEY, JSON.stringify(mapped));
-        }
         return mapped;
       }
     } catch (e) {
       console.warn("[adminService] Failed to fetch audit logs from API:", e);
     }
-    return adminService.getLogs();
+    return [];
   },
 
-  getLogs: (): AuditLog[] => {
-    if (typeof window === "undefined") return [];
-    const stored = localStorage.getItem(AUDIT_KEY);
-    return stored ? JSON.parse(stored) : [];
-  },
+  getLogs: (): AuditLog[] => [],
 
-  addLog: (userName: string, userRole: string, action: string, details: string) => {
-    const logs = adminService.getLogs();
-    const newLog: AuditLog = {
-      id: `log-${Date.now()}`,
-      userName,
-      userRole,
-      action,
-      details,
-      ipAddress: "127.0.0.1",
-      timestamp: new Date().toISOString(),
-    };
-    const updated = [newLog, ...logs.slice(0, 49)];
-    if (typeof window !== "undefined") {
-      localStorage.setItem(AUDIT_KEY, JSON.stringify(updated));
-    }
-  },
+  addLog: () => undefined,
 };

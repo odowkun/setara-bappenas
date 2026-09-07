@@ -12,6 +12,7 @@ import { documentAnalyticsService } from "@/services/documentAnalyticsService";
 import { adminService } from "@/services/adminService";
 import { AdminDocument } from "@/types/auth";
 import { DocumentDownloadResult } from "@/types/documentAnalytics";
+import { toast } from "@/lib/swal";
 import {
   DOCUMENT_QUICK_CATEGORIES,
   DocumentCategoryCode,
@@ -22,6 +23,8 @@ function DokumenContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const jenisParam = searchParams.get("jenis");
+  const downloadParam = searchParams.get("unduh");
+  const previewParam = searchParams.get("preview");
 
   const [category, setCategory] = useState("ALL");
   const [docsList, setDocsList] = useState<AdminDocument[]>([]);
@@ -46,6 +49,69 @@ function DokumenContent() {
     setCategory(isQuickCategory ? formatted : "ALL");
   }, [jenisParam]);
 
+  useEffect(() => {
+    if (!downloadParam || docsList.length === 0) return;
+
+    const requestedDocument = docsList.find(
+      (document) => document.id === downloadParam
+    );
+    if (requestedDocument) {
+      setDownloadDoc(requestedDocument);
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("unduh");
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `/dokumen?${nextQuery}` : "/dokumen", {
+      scroll: false,
+    });
+  }, [docsList, downloadParam, router, searchParams]);
+
+  useEffect(() => {
+    if (!previewParam || docsList.length === 0) return;
+
+    const requestedDocument = docsList.find(
+      (document) => document.id === previewParam
+    );
+    if (requestedDocument) {
+      documentAnalyticsService
+        .recordPreview(requestedDocument.id)
+        .then((result) => {
+          setDocsList((currentDocs) =>
+            currentDocs.map((document) =>
+              document.id === result.documentId
+                ? {
+                    ...document,
+                    views: result.views,
+                    uniqueViews: result.uniqueViews,
+                  }
+                : document
+            )
+          );
+          setPreviewDoc({
+            ...requestedDocument,
+            fileUrl: result.previewUrl,
+            views: result.views,
+            uniqueViews: result.uniqueViews,
+          });
+        })
+        .catch((error) =>
+          toast.error(
+            error instanceof Error
+              ? error.message
+              : "Preview dokumen tidak dapat dibuka."
+          )
+        );
+    }
+
+    const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete("preview");
+    const nextQuery = nextParams.toString();
+    router.replace(nextQuery ? `/dokumen?${nextQuery}` : "/dokumen", {
+      scroll: false,
+    });
+  }, [docsList, previewParam, router, searchParams]);
+
   // Lock body scroll when preview is open
   useEffect(() => {
     if (previewDoc) {
@@ -60,7 +126,7 @@ function DokumenContent() {
 
   const updateDocumentMetrics = (
     documentId: string,
-    metrics: { views?: number; downloads?: number }
+    metrics: { views?: number; uniqueViews?: number; downloads?: number }
   ) => {
     setDocsList((currentDocs) =>
       currentDocs.map((document) =>
@@ -74,14 +140,26 @@ function DokumenContent() {
     );
   };
 
-  const handlePreview = (document: AdminDocument) => {
-    setPreviewDoc(document);
-    documentAnalyticsService
-      .recordPreview(document.id)
-      .then((result) => {
-        updateDocumentMetrics(result.documentId, { views: result.views });
-      })
-      .catch(() => undefined);
+  const handlePreview = async (document: AdminDocument) => {
+    try {
+      const result = await documentAnalyticsService.recordPreview(document.id);
+      updateDocumentMetrics(result.documentId, {
+        views: result.views,
+        uniqueViews: result.uniqueViews,
+      });
+      setPreviewDoc({
+        ...document,
+        fileUrl: result.previewUrl,
+        views: result.views,
+        uniqueViews: result.uniqueViews,
+      });
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Preview dokumen tidak dapat dibuka."
+      );
+    }
   };
 
   const handleDownloaded = (result: DocumentDownloadResult) => {

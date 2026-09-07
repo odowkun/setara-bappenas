@@ -10,7 +10,7 @@ import { AdminDocument, BidangType, JenisDokumenItem } from "@/types/auth";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { ResumableChunkUploader } from "@/components/ui/ResumableChunkUploader";
 import { DateRangePlanner } from "@/components/ui/DateRangePlanner";
-import { ArrowLeft, Save, CheckCircle2, Lock, Plus, Calendar } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle2, Lock, Plus, X } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
 
@@ -26,7 +26,7 @@ export default function TambahDokumenPage() {
   const [title, setTitle] = useState("");
   const [jenis, setJenis] = useState<string>("renja");
   const [bidang, setBidang] = useState<BidangType>(
-    user?.role === "admin_bidang" ? user.bidang || "infrastruktur" : "semua"
+    user?.role === "admin_bidang" && user.bidang ? user.bidang : "semua"
   );
 
   useEffect(() => {
@@ -42,9 +42,18 @@ export default function TambahDokumenPage() {
 
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileSizeStr, setFileSizeStr] = useState("");
-  const [description, setDescription] = useState(
-    "**Ringkasan Dokumen Perencanaan:**\n\nDokumen ini memuat arah kebijakan strategis pembangunan daerah Kabupaten Halmahera Utara.\n\n- Poin 1: Penurunan angka kemiskinan ekstrem\n- Poin 2: Penguatan infrastruktur konektivitas pulau\n- Poin 3: Digitalisasi tata kelola SPBE"
+  const [description, setDescription] = useState("");
+  const [documentNumber, setDocumentNumber] = useState("");
+  const [ownerOpd, setOwnerOpd] = useState(
+    "BAPPEDA Kabupaten Halmahera Utara"
   );
+  const [classification, setClassification] = useState<
+    "public" | "internal" | "confidential" | "restricted"
+  >("internal");
+  const [retentionPolicy, setRetentionPolicy] = useState<
+    "permanent" | "active_5_years" | "active_10_years" | "custom"
+  >("permanent");
+  const [keywords, setKeywords] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
   // Dynamic Custom Jenis Dokumen Modal (Superadmin Only)
@@ -52,6 +61,22 @@ export default function TambahDokumenPage() {
   const [newJenisName, setNewJenisName] = useState("");
   const [newJenisScope, setNewJenisScope] = useState<'admin_umum' | 'admin_bidang' | 'semua'>("semua");
   const [customJenisList, setCustomJenisList] = useState<JenisDokumenItem[]>([]);
+
+  useEffect(() => {
+    if (!user?.role) return;
+    adminService.fetchJenisDokumenItems(user.role)
+      .then((rows) => {
+        setCustomJenisList(rows);
+        setJenis((current) =>
+          rows.some((item) => item.code === current)
+            ? current
+            : rows[0]?.code || ""
+        );
+      })
+      .catch((error) => toast.error(
+        error instanceof Error ? error.message : "Jenis dokumen gagal dimuat."
+      ));
+  }, [user?.role]);
 
   // Update Year range display when dates change
   useEffect(() => {
@@ -66,65 +91,32 @@ export default function TambahDokumenPage() {
     }
   }, [tanggalMulai, tanggalSelesai]);
 
-  // Initial list of Jenis Dokumen berdasarkan Role & Pembagian Bidang User (Bersih Tanpa Parentesis ())
   const getAvailableJenisOptions = () => {
-    const isSuperAdmin = user?.role === "superadmin";
-    const isAdminUmum = user?.role === "admin_umum";
-    const isAdminBidang = user?.role === "admin_bidang";
-
-    const defaultAdminUmumOptions = [
-      { value: "rpjpd", label: "RPJPD - Rencana Pembangunan Jangka Panjang Daerah" },
-      { value: "rpjmd", label: "RPJMD - Rencana Pembangunan Jangka Menengah Daerah" },
-      { value: "rkpd", label: "RKPD - Rencana Kerja Pemerintah Daerah" },
-      { value: "lkpj", label: "LKPJ - Laporan Keterangan Pertanggungjawaban" },
-    ];
-
-    const defaultAdminBidangOptions = [
-      { value: "renstra", label: "Renstra - Rencana Strategis" },
-      { value: "renja", label: "Renja - Rencana Kerja" },
-      { value: "dik_sektoral", label: "Dik Sektoral" },
-      { value: "data_sektoral", label: "Data Sektoral" },
-    ];
-
-    const customOptions = customJenisList.map((c) => ({
+    return customJenisList.map((c) => ({
       value: c.code,
       label: `${c.name} - ${c.scope_role.toUpperCase()}`,
     }));
-
-    if (isSuperAdmin) {
-      return [...defaultAdminUmumOptions, ...defaultAdminBidangOptions, ...customOptions];
-    }
-
-    if (isAdminUmum) {
-      return defaultAdminUmumOptions;
-    }
-
-    if (isAdminBidang) {
-      return defaultAdminBidangOptions;
-    }
-
-    return [...defaultAdminUmumOptions, ...defaultAdminBidangOptions];
   };
 
-  const handleAddCustomJenis = (e: React.FormEvent) => {
+  const handleAddCustomJenis = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newJenisName) return;
 
     const newCode = newJenisName.toLowerCase().replace(/[^a-z0-9]/g, "_");
-    const newItem: JenisDokumenItem = {
-      id: Date.now(),
-      name: newJenisName,
-      code: newCode,
-      scope_role: newJenisScope,
-      is_default: false,
-      created_by: user?.name || "SuperAdmin",
-    };
-
-    setCustomJenisList([...customJenisList, newItem]);
-    setJenis(newCode);
-    setNewJenisName("");
-    setIsAddJenisModalOpen(false);
-    toast.success(`Jenis dokumen baru "${newJenisName}" berhasil disimpan!`);
+    try {
+      const created = await adminService.createJenisDokumen({
+        name: newJenisName.trim(),
+        code: newCode,
+        scope_role: newJenisScope,
+      });
+      setCustomJenisList((current) => [...current, created]);
+      setJenis(created.code);
+      setNewJenisName("");
+      setIsAddJenisModalOpen(false);
+      toast.success(`Jenis dokumen "${created.name}" tersimpan di database.`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Jenis dokumen gagal disimpan.");
+    }
   };
 
   const handleUploadSuccess = (uploadedUrl: string, uploadedSize: string) => {
@@ -132,8 +124,7 @@ export default function TambahDokumenPage() {
     setFileSizeStr(uploadedSize);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (submitForReview: boolean) => {
     if (!title || !fileUrl) {
       showErrorSwal(
         "Dokumen Belum Siap",
@@ -142,28 +133,54 @@ export default function TambahDokumenPage() {
       return;
     }
 
-    const lockedBidang = user?.role === "admin_bidang" ? user.bidang || "infrastruktur" : bidang;
+    if (!user) {
+      showErrorSwal("Sesi Belum Siap", "Identitas pengelola belum dimuat dari server.");
+      return;
+    }
+    let lockedBidang: BidangType = bidang;
+    if (user.role === "admin_bidang") {
+      const actorBidang = user.bidang;
+      if (!actorBidang) {
+        showErrorSwal("Bidang Belum Diatur", "Akun ini belum memiliki bidang resmi.");
+        return;
+      }
+      lockedBidang = actorBidang;
+    }
 
     try {
       await adminService.addDocument({
         title,
+        summary: description,
         jenis,
         bidang: lockedBidang,
-        tahun: `${tahun} (${tanggalMulai} s/d ${tanggalSelesai})`,
+        tahun,
+        tanggalMulai,
+        tanggalSelesai,
         ukuran: fileSizeStr,
         fileUrl,
-        isPublic: true,
-        uploadedBy: user?.name ? `${user.name} (${user.role})` : "Admin Bappeda",
+        isPublic: submitForReview,
+        documentNumber,
+        ownerOpd,
+        keywords: keywords
+          .split(",")
+          .map((keyword) => keyword.trim())
+          .filter(Boolean),
+        classification:
+          user.role === "admin_bidang" ? "internal" : classification,
+        retentionPolicy,
+        uploadedBy: `${user.name} (${user.role})`,
       });
 
       setIsSaved(true);
       showSuccessSwal(
-        "Dokumen Berhasil Diunggah!",
-        "Dokumen telah tersimpan dengan watermark BAPPEDA HALUT pada setiap halaman."
+        submitForReview
+          ? "Dokumen Diajukan untuk Review"
+          : "Draf Arsip Privat Tersimpan",
+        submitForReview
+          ? "Reviewer resmi akan memeriksa checksum, klasifikasi, dan metadata sebelum publikasi."
+          : "Versi pertama dan checksum tersimpan di storage privat; dokumen belum tampil ke publik."
       );
-      setTimeout(() => {
-        router.push("/dashboard/dokumen");
-      }, 1500);
+      router.push("/dashboard/dokumen");
     } catch {
       showErrorSwal(
         "Dokumen Gagal Disimpan",
@@ -217,7 +234,7 @@ export default function TambahDokumenPage() {
       </div>
 
       {/* Main Single Page Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={(event) => event.preventDefault()} className="space-y-6">
         <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
           <div>
             <label className="block text-xs font-extrabold text-slate-700 mb-2">
@@ -303,6 +320,104 @@ export default function TambahDokumenPage() {
             }}
           />
 
+          <div className="space-y-4 rounded-3xl border border-blue-100 bg-blue-50/50 p-5">
+            <div>
+              <h2 className="text-sm font-black text-slate-900">
+                Tata Kelola Arsip
+              </h2>
+              <p className="mt-1 text-[11px] font-medium text-slate-600">
+                Tentukan kepemilikan, klasifikasi akses, dan masa retensi sejak versi pertama.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  Nomor Dokumen Resmi
+                </label>
+                <input
+                  type="text"
+                  value={documentNumber}
+                  onChange={(event) => setDocumentNumber(event.target.value)}
+                  placeholder="Contoh: 000.7/123/BAPPEDA/2026"
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  OPD Pemilik Arsip *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={ownerOpd}
+                  onChange={(event) => setOwnerOpd(event.target.value)}
+                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  Klasifikasi Akses
+                </label>
+                {user?.role === "admin_bidang" ? (
+                  <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 text-xs font-bold text-amber-900">
+                    <Lock className="h-4 w-4" />
+                    Internal — reviewer menentukan akses publik
+                  </div>
+                ) : (
+                  <SearchableSelect
+                    options={[
+                      { value: "internal", label: "Internal" },
+                      { value: "public", label: "Publik" },
+                      { value: "confidential", label: "Rahasia" },
+                      { value: "restricted", label: "Terbatas" },
+                    ]}
+                    value={classification}
+                    onChange={(value) =>
+                      setClassification(value as typeof classification)
+                    }
+                    placeholder="Pilih klasifikasi"
+                    searchPlaceholder="Cari klasifikasi..."
+                  />
+                )}
+              </div>
+
+              <div>
+                <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                  Kebijakan Retensi
+                </label>
+                <SearchableSelect
+                  options={[
+                    { value: "permanent", label: "Permanen" },
+                    { value: "active_5_years", label: "Aktif 5 tahun" },
+                    { value: "active_10_years", label: "Aktif 10 tahun" },
+                    { value: "custom", label: "Tanggal khusus (atur setelah simpan)" },
+                  ]}
+                  value={retentionPolicy}
+                  onChange={(value) =>
+                    setRetentionPolicy(value as typeof retentionPolicy)
+                  }
+                  placeholder="Pilih kebijakan retensi"
+                  searchPlaceholder="Cari kebijakan..."
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-2 block text-xs font-extrabold text-slate-700">
+                Kata Kunci Pencarian
+              </label>
+              <input
+                type="text"
+                value={keywords}
+                onChange={(event) => setKeywords(event.target.value)}
+                placeholder="Pisahkan dengan koma, contoh: RKPD, infrastruktur, Galela"
+                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
+              />
+            </div>
+          </div>
+
           {/* Resumable Chunked File Uploader Component */}
           <div>
             <label className="block text-xs font-extrabold text-slate-700 mb-2">
@@ -341,12 +456,22 @@ export default function TambahDokumenPage() {
           </Link>
 
           <button
-            type="submit"
+            type="button"
+            onClick={() => handleSave(false)}
+            disabled={!fileUrl}
+            className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-extrabold text-xs border border-slate-300 flex items-center gap-2 transition cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            <span>Simpan Draf</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleSave(true)}
             disabled={!fileUrl}
             className="px-6 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-md shadow-blue-700/20 flex items-center gap-2 transition"
           >
-            <Save className="w-4 h-4" />
-            <span>Simpan & Unggah Dokumen Resmi</span>
+            <CheckCircle2 className="w-4 h-4" />
+            <span>Simpan & Ajukan Review</span>
           </button>
         </div>
       </form>
@@ -366,7 +491,7 @@ export default function TambahDokumenPage() {
                 onClick={() => setIsAddJenisModalOpen(false)}
                 className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition flex items-center justify-center"
               >
-                ✕
+                <X className="h-4 w-4" />
               </button>
             </div>
 

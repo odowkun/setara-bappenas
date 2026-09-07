@@ -29,6 +29,7 @@ import {
   Download,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 // Dynamic import for Leaflet map component (SSR safe)
 const GeotaggingMapPicker = dynamic(
@@ -50,15 +51,16 @@ export default function DocumentDetailPage() {
   const [isGeotagModalOpen, setIsGeotagModalOpen] = useState(false);
   const [newProjectForm, setNewProjectForm] = useState({
     nama_proyek: "",
-    bidang: "infrastruktur",
-    kecamatan: "Tobelo",
+    bidang: "",
+    kecamatan: "",
     desa_kelurahan: "",
     lokasi_deskripsi: "",
     latitude: 1.7289,
     longitude: 128.0054,
-    pagu_anggaran: 500000000,
-    opd_penanggung_jawab: "Dinas PUPR / Bappeda Halut",
+    pagu_anggaran: 0,
+    opd_penanggung_jawab: "",
   });
+  const [hasSelectedGeotagLocation, setHasSelectedGeotagLocation] = useState(false);
   const [submittingGeotag, setSubmittingGeotag] = useState(false);
 
   // Modal State (Tabular Progress Update)
@@ -86,34 +88,36 @@ export default function DocumentDetailPage() {
   useEffect(() => {
     if (!docId) return;
 
-    const allDocs = adminService.getDocuments();
-    const foundDoc = allDocs.find((d) => String(d.id) === String(docId)) || {
-      id: docId,
-      title: "Dokumen Renja Bidang Infrastruktur 2026",
-      jenis: "renja",
-      bidang: "infrastruktur",
-      tahun: "2026",
-      ukuran: "5.4 MB",
-      downloads: 120,
-      views: 340,
-      fileUrl: "/documents/renja-infrastruktur-2026.pdf",
-      isPublic: true,
-      uploadedBy: "Admin Bidang",
-      createdAt: new Date().toISOString(),
-    };
-
-    setDocumentData(foundDoc);
-
-    proyekService.getProjects(docId).then((data) => {
-      setProjects(data);
+    Promise.all([
+      adminService.fetchDocuments(user?.bidang, user?.role),
+      proyekService.getProjects(docId, undefined, true),
+    ]).then(([allDocs, projectData]) => {
+      const foundDoc = allDocs.find((d) => String(d.id) === String(docId));
+      setDocumentData(foundDoc || null);
+      if (foundDoc) {
+        setNewProjectForm((current) => ({
+          ...current,
+          bidang:
+            user?.role === "admin_bidang"
+              ? user.bidang || ""
+              : foundDoc.bidang !== "semua"
+                ? foundDoc.bidang
+                : current.bidang,
+        }));
+      }
+      setProjects(projectData);
       setLoading(false);
     });
-  }, [docId]);
+  }, [docId, user]);
 
   // Handle Geotagging Submission
   const handleSaveGeotag = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjectForm.nama_proyek) return toast.error("Nama proyek wajib diisi!");
+    if (!newProjectForm.nama_proyek.trim()) return toast.error("Nama proyek wajib diisi!");
+    if (!newProjectForm.bidang) return toast.error("Bidang penanggung jawab wajib dipilih!");
+    if (!newProjectForm.kecamatan.trim()) return toast.error("Kecamatan wajib diisi!");
+    if (!newProjectForm.opd_penanggung_jawab.trim()) return toast.error("OPD penanggung jawab wajib diisi!");
+    if (!hasSelectedGeotagLocation) return toast.error("Pilih titik proyek pada peta!");
     setSubmittingGeotag(true);
 
     try {
@@ -122,17 +126,24 @@ export default function DocumentDetailPage() {
         realisasi_anggaran: 0,
         persentase_progres: 0,
         status_progres: "belum_mulai",
-        created_by: user?.name || "Admin Bidang",
       });
 
       if (res.success) {
-        toast.success("Geotagging lokasi proyek berhasil!");
+        const esriSynced = Boolean(res.esri_status?.success);
+        toast.success(
+          esriSynced
+            ? "Proyek tersimpan di database dan tersinkronisasi ke ESRI."
+            : "Proyek tersimpan di database; sinkronisasi ESRI belum berhasil."
+        );
         showSuccessSwal(
           "Lokasi Proyek Berhasil Ditambahkan!",
-          `Disimpan ke database & tersinkronisasi ke ESRI ArcGIS.`
+          esriSynced
+            ? "Data resmi tersimpan di database dan tersinkronisasi ke ESRI ArcGIS."
+            : `Data resmi tersimpan di database. ${res.esri_status?.message || "Sinkronisasi ESRI belum tersedia."}`
         );
         setIsGeotagModalOpen(false);
-        const updatedList = await proyekService.getProjects(docId);
+        setHasSelectedGeotagLocation(false);
+        const updatedList = await proyekService.getProjects(docId, undefined, true);
         setProjects(updatedList);
       }
     } catch (err) {
@@ -159,7 +170,7 @@ export default function DocumentDetailPage() {
       if (res.success) {
         toast.success("Progres fisik & realisasi keuangan berhasil diperbarui!");
         setSelectedProjectForUpdate(null);
-        const updatedList = await proyekService.getProjects(docId);
+        const updatedList = await proyekService.getProjects(docId, undefined, true);
         setProjects(updatedList);
       }
     } catch (err) {
@@ -186,7 +197,7 @@ export default function DocumentDetailPage() {
         toast.success(`File lampiran teknis (${attachmentFile.name}) berhasil terunggah!`);
         setSelectedProjectForAttachment(null);
         setAttachmentFile(null);
-        const updatedList = await proyekService.getProjects(docId);
+        const updatedList = await proyekService.getProjects(docId, undefined, true);
         setProjects(updatedList);
       }
     } catch (err) {
@@ -205,11 +216,18 @@ export default function DocumentDetailPage() {
     const res = await proyekService.runBufferAnalysis(
       firstProject.latitude,
       firstProject.longitude,
-      bufferRadius
+      bufferRadius,
+      {
+        name: `Buffer ${firstProject.nama_proyek}`,
+        projectId: firstProject.id,
+        category: "infrastruktur",
+        color: "#2563eb",
+        notes: `Analisis dari detail dokumen ${document?.title || ""}`,
+      }
     );
 
-    if (res.success && res.data.buffer_geojson) {
-      setBufferGeoJson(res.data.buffer_geojson);
+    if (res.success && res.data.geojson) {
+      setBufferGeoJson(res.data.geojson);
       toast.success(`Analisis Geoprocessing Buffer radius ${bufferRadius}m selesai!`);
     }
     setRunningGP(false);
@@ -417,7 +435,7 @@ export default function DocumentDetailPage() {
                       </div>
                       <div>
                         <span className="text-[10px] text-slate-400 block">Kecamatan/Desa</span>
-                        <strong className="text-slate-800 font-bold">{prj.kecamatan || "Tobelo"}</strong>
+                        <strong className="text-slate-800 font-bold">{prj.kecamatan || "Belum tersedia"}</strong>
                       </div>
                     </div>
 
@@ -507,11 +525,34 @@ export default function DocumentDetailPage() {
                     />
                   </div>
 
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Bidang Penanggung Jawab *</label>
+                    <SearchableSelect
+                      options={[
+                        { value: "infrastruktur", label: "Infrastruktur & Pengembangan Wilayah" },
+                        { value: "perekonomian", label: "Perekonomian & SDA" },
+                        { value: "sosbud", label: "Pemerintahan & Pembangunan Manusia" },
+                        { value: "renval", label: "Perencanaan, Pengendalian & Evaluasi" },
+                      ]}
+                      value={newProjectForm.bidang}
+                      onChange={(value) =>
+                        setNewProjectForm({ ...newProjectForm, bidang: String(value) })
+                      }
+                      disabled={
+                        user?.role === "admin_bidang" ||
+                        Boolean(documentData?.bidang && documentData.bidang !== "semua")
+                      }
+                      placeholder="-- Pilih Bidang --"
+                      searchPlaceholder="Cari bidang..."
+                    />
+                  </div>
+
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="text-xs font-bold text-slate-700 block mb-1">Kecamatan</label>
+                      <label className="text-xs font-bold text-slate-700 block mb-1">Kecamatan *</label>
                       <input
                         type="text"
+                        required
                         value={newProjectForm.kecamatan}
                         onChange={(e) => setNewProjectForm({ ...newProjectForm, kecamatan: e.target.value })}
                         className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
@@ -530,12 +571,31 @@ export default function DocumentDetailPage() {
                   </div>
 
                   <div>
-                    <label className="text-xs font-bold text-slate-700 block mb-1">Pagu Anggaran (Rp)</label>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Pagu Anggaran (Rp) *</label>
                     <input
                       type="number"
+                      required
+                      min={0}
                       value={newProjectForm.pagu_anggaran}
                       onChange={(e) => setNewProjectForm({ ...newProjectForm, pagu_anggaran: Number(e.target.value) })}
                       className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">OPD Penanggung Jawab *</label>
+                    <input
+                      type="text"
+                      required
+                      value={newProjectForm.opd_penanggung_jawab}
+                      onChange={(e) =>
+                        setNewProjectForm({
+                          ...newProjectForm,
+                          opd_penanggung_jawab: e.target.value,
+                        })
+                      }
+                      placeholder="Masukkan nama OPD sesuai dokumen resmi"
+                      className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600"
                     />
                   </div>
 
@@ -553,7 +613,10 @@ export default function DocumentDetailPage() {
                     <GeotaggingMapPicker
                       selectedLat={newProjectForm.latitude}
                       selectedLng={newProjectForm.longitude}
-                      onLocationSelect={(lat, lng) => setNewProjectForm({ ...newProjectForm, latitude: lat, longitude: lng })}
+                      onLocationSelect={(lat, lng) => {
+                        setHasSelectedGeotagLocation(true);
+                        setNewProjectForm({ ...newProjectForm, latitude: lat, longitude: lng });
+                      }}
                     />
                   </div>
                 </div>

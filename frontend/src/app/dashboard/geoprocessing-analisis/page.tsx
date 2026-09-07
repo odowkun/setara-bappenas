@@ -41,6 +41,10 @@ const GeotaggingMapPicker = dynamic(
   }
 );
 
+import KmzUploader from "@/components/gis/KmzUploader";
+import DelineationMapDrawer, { DelineationData } from "@/components/gis/DelineationMapDrawer";
+import { ParsedKmzResult } from "@/lib/gis/kmzParser";
+
 export interface SavedSpatialAnalysis {
   id: string;
   nama_analisis: string;
@@ -110,62 +114,38 @@ function createGeoJsonCircle(lat: number, lng: number, radiusMeters: number, poi
   };
 }
 
-const INITIAL_MOCK_GEOPROCESSING_ANALYSES: SavedSpatialAnalysis[] = [
-  {
-    id: "GEO-2026-001",
-    nama_analisis: "Analisis Radius Layanan Puskesmas Pembantu Desa Tou",
-    dokumen_id: "doc-1",
-    dokumen_judul: "RPJMD Kabupaten Halmahera Utara Tahun 2026–2031",
-    kategori: "kesehatan",
-    proyek_id: "prj-1",
-    proyek_nama: "Pembangunan Puskesmas Pembantu Desa Tou",
-    kecamatan: "Kao Barat",
-    latitude: 1.2584,
-    longitude: 127.8923,
-    radius_meters: 1500,
-    warna_layer: "#2563eb",
-    catatan: "Radius layanan 1.5 KM menjangkau 4 desa pesisir Kao Barat dengan perkiraan 3.400 jiwa penerima manfaat.",
-    buffer_geojson: createGeoJsonCircle(1.2584, 127.8923, 1500),
-    created_at: "24 Jul 2026, 14:30",
-    created_by: "Dr. Jan W. N. Papilaya, M.Si",
-  },
-  {
-    id: "GEO-2026-002",
-    nama_analisis: "Zonasi Mitigasi Bahaya Erupsi Gunung Dukono & Pemukiman",
-    dokumen_id: "doc-1",
-    dokumen_judul: "RPJMD Kabupaten Halmahera Utara Tahun 2026–2031",
-    kategori: "mitigasi_bencana",
-    proyek_id: "prj-3",
-    proyek_nama: "Pembangunan Pos Pengamatan & Evakuasi Bencana Galela",
-    kecamatan: "Galela",
-    latitude: 1.8378,
-    longitude: 127.8189,
-    radius_meters: 3000,
-    warna_layer: "#e11d48",
-    catatan: "Zona merah radius 3 KM dari kawah aktif Dukono. Semua fasilitas publik baru wajib di luar zona lingkaran merah ini.",
-    buffer_geojson: createGeoJsonCircle(1.8378, 127.8189, 3000),
-    created_at: "22 Jul 2026, 09:15",
-    created_by: "Ir. Hendra Kusuma",
-  },
-  {
-    id: "GEO-2026-003",
-    nama_analisis: "Jangkauan Pipa Distribusi Air Bersih Tobelo Central",
-    dokumen_id: "doc-2",
-    dokumen_judul: "RKPD Kabupaten Halmahera Utara Tahun 2026",
-    kategori: "air_irigasi",
-    proyek_id: "prj-2",
-    proyek_nama: "Rehabilitasi Drainase & Jaringan Air Perkotaan Tobelo",
-    kecamatan: "Tobelo",
-    latitude: 1.7289,
-    longitude: 128.0054,
-    radius_meters: 2500,
-    warna_layer: "#059669",
-    catatan: "Cakupan jaringan pipa utama PDAM Tobelo radius 2.5 KM untuk menjangkau Kelurahan Gamsungi dan Wosia.",
-    buffer_geojson: createGeoJsonCircle(1.7289, 128.0054, 2500),
-    created_at: "20 Jul 2026, 16:45",
-    created_by: "Siti Rahmawati, S.STP",
-  },
-];
+function mapStoredAnalysis(
+  row: any,
+  projects: ProyekDetail[],
+  documents: AdminDocument[]
+): SavedSpatialAnalysis {
+  const project = projects.find((item) => String(item.id) === String(row.proyek_detail_id));
+  const document = documents.find((item) => String(item.id) === String(project?.document_id));
+  const storedCategory = row.category || "";
+  const isKnownCategory = CATEGORY_OPTIONS.some(
+    (option) => option.value === storedCategory && option.value !== "kustom"
+  );
+
+  return {
+    id: String(row.id),
+    nama_analisis: row.name,
+    dokumen_id: document ? String(document.id) : undefined,
+    dokumen_judul: document?.title,
+    kategori: isKnownCategory ? storedCategory : "kustom",
+    kategori_custom: isKnownCategory ? "" : storedCategory,
+    proyek_id: project ? String(project.id) : "",
+    proyek_nama: project?.nama_proyek || "Proyek tidak lagi tersedia",
+    kecamatan: project?.kecamatan || "",
+    latitude: Number(row.center_latitude),
+    longitude: Number(row.center_longitude),
+    radius_meters: Number(row.radius_meters),
+    warna_layer: row.color || "#2563eb",
+    catatan: row.notes || "",
+    buffer_geojson: row.geojson,
+    created_at: row.created_at || "",
+    created_by: "Database BAPPEDA",
+  };
+}
 
 export default function GeoprocessingAnalisisPage() {
   const { user } = useAuth();
@@ -183,6 +163,10 @@ export default function GeoprocessingAnalisisPage() {
   const [radiusMeters, setRadiusMeters] = useState<number>(1000);
   const [warnaLayer, setWarnaLayer] = useState<string>("#7c3aed");
   const [catatan, setCatatan] = useState<string>("");
+  const [kmzResult, setKmzResult] = useState<ParsedKmzResult | null>(null);
+  const [kmzColor, setKmzColor] = useState<string>("#7c3aed");
+  const [delineationTool, setDelineationTool] = useState<"polygon" | "polyline" | "point" | null>("point");
+  const [delineation, setDelineation] = useState<DelineationData | null>(null);
 
   // Map Active View State
   const [activeBufferGeoJson, setActiveBufferGeoJson] = useState<any>(null);
@@ -193,43 +177,31 @@ export default function GeoprocessingAnalisisPage() {
 
   // Load initial data (Documents + Projects + History)
   useEffect(() => {
-    Promise.all([adminService.getDocuments(), proyekService.getProjects()]).then(
-      ([docsData, projectsData]) => {
+    Promise.all([
+      adminService.fetchDocuments(user?.bidang, user?.role),
+      proyekService.getProjects(undefined, undefined, true),
+      proyekService.getBufferAnalyses(),
+    ]).then(
+      ([docsData, projectsData, analysisRows]) => {
         setDocuments(docsData);
         setProjects(projectsData);
+        const officialAnalyses = analysisRows.map((row) =>
+          mapStoredAnalysis(row, projectsData, docsData)
+        );
+        setSavedAnalyses(officialAnalyses);
         if (projectsData.length > 0) {
           setSelectedProjectId(String(projectsData[0].id));
           setActiveProjectLat(projectsData[0].latitude);
           setActiveProjectLng(projectsData[0].longitude);
         }
+        if (officialAnalyses.length > 0) {
+          setActiveProjectLat(officialAnalyses[0].latitude);
+          setActiveProjectLng(officialAnalyses[0].longitude);
+          setActiveBufferGeoJson(officialAnalyses[0].buffer_geojson);
+          setActiveBufferColor(officialAnalyses[0].warna_layer);
+        }
       }
     );
-
-    // Load saved analyses from localStorage with fallback to INITIAL_MOCK_GEOPROCESSING_ANALYSES
-    const localSaved = localStorage.getItem("halut_geoprocessing_history");
-    if (localSaved) {
-      try {
-        const parsed = JSON.parse(localSaved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setSavedAnalyses(parsed);
-          setActiveProjectLat(parsed[0].latitude);
-          setActiveProjectLng(parsed[0].longitude);
-          setActiveBufferGeoJson(parsed[0].buffer_geojson);
-          setActiveBufferColor(parsed[0].warna_layer);
-          return;
-        }
-      } catch (e) {
-        console.error("Failed to parse saved spatial analyses", e);
-      }
-    }
-
-    // Seed default mock analyses if none exist
-    setSavedAnalyses(INITIAL_MOCK_GEOPROCESSING_ANALYSES);
-    localStorage.setItem("halut_geoprocessing_history", JSON.stringify(INITIAL_MOCK_GEOPROCESSING_ANALYSES));
-    setActiveProjectLat(INITIAL_MOCK_GEOPROCESSING_ANALYSES[0].latitude);
-    setActiveProjectLng(INITIAL_MOCK_GEOPROCESSING_ANALYSES[0].longitude);
-    setActiveBufferGeoJson(INITIAL_MOCK_GEOPROCESSING_ANALYSES[0].buffer_geojson);
-    setActiveBufferColor(INITIAL_MOCK_GEOPROCESSING_ANALYSES[0].warna_layer);
   }, []);
 
   // Filter projects by selected document
@@ -265,7 +237,7 @@ export default function GeoprocessingAnalisisPage() {
   const projectOptions: SearchableOption[] = filteredProjects.map((p) => ({
     value: String(p.id),
     label: `${p.nama_proyek}`,
-    sublabel: `Kec. ${p.kecamatan || "Tobelo"} • Pagu: Rp ${(p.pagu_anggaran || 0).toLocaleString("id-ID")}`,
+    sublabel: `${p.kecamatan ? `Kec. ${p.kecamatan}` : "Lokasi belum tersedia"} • Pagu: Rp ${Number(p.pagu_anggaran).toLocaleString("id-ID")}`,
   }));
 
   // Selected project object
@@ -288,12 +260,6 @@ export default function GeoprocessingAnalisisPage() {
     }
   }, [selectedProjectId, selectedProject, radiusMeters, warnaLayer]);
 
-  // Save to localStorage helper
-  const updateSavedAnalyses = (newList: SavedSpatialAnalysis[]) => {
-    setSavedAnalyses(newList);
-    localStorage.setItem("halut_geoprocessing_history", JSON.stringify(newList));
-  };
-
   // Handle Form Submission (Create or Update)
   const handleSaveAnalysis = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -310,78 +276,34 @@ export default function GeoprocessingAnalisisPage() {
       const res = await proyekService.runBufferAnalysis(
         selectedProject.latitude,
         selectedProject.longitude,
-        radiusMeters
+        radiusMeters,
+        {
+          id: editingId || undefined,
+          name: namaAnalisis.trim(),
+          projectId: selectedProject.id,
+          category: kategori === "kustom" ? kategoriCustom.trim() : kategori,
+          color: warnaLayer,
+          notes: catatan.trim(),
+        }
       );
 
-      const bufferGeoJson =
-        res.success && res.data.buffer_geojson
-          ? res.data.buffer_geojson
-          : createGeoJsonCircle(selectedProject.latitude, selectedProject.longitude, radiusMeters);
-
-      const selectedDocObj = documents.find((d) => String(d.id) === String(selectedDocId));
+      const storedRecord = mapStoredAnalysis(res.data, projects, documents);
       const displayKategoriLabel =
         kategori === "kustom"
           ? kategoriCustom.trim()
           : CATEGORY_OPTIONS.find((c) => c.value === kategori)?.label || kategori;
 
       if (editingId) {
-        // Update Existing Analysis
-        const updatedList = savedAnalyses.map((item) =>
-          item.id === editingId
-            ? {
-                ...item,
-                nama_analisis: namaAnalisis.trim(),
-                dokumen_id: selectedDocId,
-                dokumen_judul: selectedDocObj ? selectedDocObj.title : "Dokumen Umum Bappeda",
-                kategori,
-                kategori_custom: kategoriCustom.trim(),
-                proyek_id: String(selectedProject.id),
-                proyek_nama: selectedProject.nama_proyek,
-                kecamatan: selectedProject.kecamatan || "Tobelo",
-                latitude: selectedProject.latitude,
-                longitude: selectedProject.longitude,
-                radius_meters: radiusMeters,
-                warna_layer: warnaLayer,
-                catatan: catatan.trim(),
-                buffer_geojson: bufferGeoJson,
-              }
-            : item
+        setSavedAnalyses((current) =>
+          current.map((item) => item.id === editingId ? storedRecord : item)
         );
-        updateSavedAnalyses(updatedList);
         toast.success("Analisis Spasial berhasil diperbarui!");
         showSuccessSwal(
           "Perubahan Disimpan!",
           `Parameter analisis "${namaAnalisis}" berhasil diperbarui dengan radius ${radiusMeters}m.`
         );
       } else {
-        // Create New Analysis Record
-        const newRecord: SavedSpatialAnalysis = {
-          id: `GEO-${Date.now()}`,
-          nama_analisis: namaAnalisis.trim(),
-          dokumen_id: selectedDocId,
-          dokumen_judul: selectedDocObj ? selectedDocObj.title : "Dokumen Perencanaan Bappeda",
-          kategori,
-          kategori_custom: kategoriCustom.trim(),
-          proyek_id: String(selectedProject.id),
-          proyek_nama: selectedProject.nama_proyek,
-          kecamatan: selectedProject.kecamatan || "Tobelo",
-          latitude: selectedProject.latitude,
-          longitude: selectedProject.longitude,
-          radius_meters: radiusMeters,
-          warna_layer: warnaLayer,
-          catatan: catatan.trim(),
-          buffer_geojson: bufferGeoJson,
-          created_at: new Date().toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-          created_by: user?.name || "Perencana Bappeda",
-        };
-
-        updateSavedAnalyses([newRecord, ...savedAnalyses]);
+        setSavedAnalyses((current) => [storedRecord, ...current]);
         toast.success("Analisis Spasial Baru Berhasil Disimpan!");
         showSuccessSwal(
           "Analisis Geoprocessing Berhasil!",
@@ -448,10 +370,14 @@ export default function GeoprocessingAnalisisPage() {
     const isConfirmed = await showDeleteConfirm(name);
 
     if (isConfirmed) {
-      const newList = savedAnalyses.filter((item) => item.id !== id);
-      updateSavedAnalyses(newList);
-      if (editingId === id) resetForm();
-      toast.success("Analisis Spasial berhasil dihapus.");
+      try {
+        await proyekService.deleteBufferAnalysis(id);
+        setSavedAnalyses((current) => current.filter((item) => item.id !== id));
+        if (editingId === id) resetForm();
+        toast.success("Analisis Spasial berhasil dihapus dari database.");
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Analisis gagal dihapus.");
+      }
     }
   };
 
@@ -495,9 +421,9 @@ export default function GeoprocessingAnalisisPage() {
       </div>
 
       {/* Main Grid: Left Control Form (5 Cols) + Right Interactive Map (7 Cols) */}
-      <div ref={mapSectionRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch scroll-mt-6">
+      <div ref={mapSectionRef} className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start scroll-mt-6">
         {/* Form Parameter Analisis (5 Cols) */}
-        <div className="lg:col-span-5 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 flex flex-col justify-between">
+        <div className="lg:col-span-5 h-fit p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
           <div className="space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
@@ -683,13 +609,7 @@ export default function GeoprocessingAnalisisPage() {
                   className="w-full py-3 rounded-2xl bg-purple-700 hover:bg-purple-600 text-white font-black text-xs shadow-md shadow-purple-700/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
                 >
                   <Play className="w-4 h-4 text-amber-300" />
-                  <span>
-                    {running
-                      ? "Mengolah Poligon ESRI..."
-                      : editingId
-                      ? "Simpan Perubahan Analisis Spasial"
-                      : "Jalankan & Simpan Analisis Spasial Baru"}
-                  </span>
+                  <span>{editingId ? "Simpan Perubahan Analisis" : "Jalankan & Simpan Analisis Spasial"}</span>
                 </button>
               </div>
             </form>
@@ -737,7 +657,32 @@ export default function GeoprocessingAnalisisPage() {
                 existingProjects={projects}
                 bufferGeoJson={activeBufferGeoJson}
                 bufferColor={activeBufferColor}
-                readOnly={true}
+                customKmzGeoJson={kmzResult?.geojson}
+                kmzColor={kmzColor}
+                delineationGeoJson={delineation?.geojson}
+                readOnly={!delineationTool}
+                activeDelineationTool={delineationTool}
+                onToolChange={(tool) => {
+                  setDelineationTool(tool);
+                  if (tool === "polygon" || tool === "polyline") {
+                    setDelineation(null);
+                  }
+                }}
+                onDelineationCreated={(data) => {
+                  setDelineation(data);
+                }}
+              />
+            </div>
+
+            {/* Spatial Widget: KMZ / KML Uploader Strip Below Map */}
+            <div className="mt-3">
+              <KmzUploader
+                hideHeader={true}
+                onKmzParsed={(result, color) => {
+                  setKmzResult(result);
+                  setKmzColor(color);
+                }}
+                onClear={() => setKmzResult(null)}
               />
             </div>
           </div>

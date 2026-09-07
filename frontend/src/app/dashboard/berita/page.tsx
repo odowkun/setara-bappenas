@@ -20,6 +20,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
+import { adminService } from "@/services/adminService";
+import { officialContentService } from "@/services/officialContentService";
 
 interface NewsItem {
   id: string;
@@ -33,78 +35,9 @@ interface NewsItem {
   summary: string;
 }
 
-const initialNews: NewsItem[] = [
-  {
-    id: "news-1",
-    title: "BAPPEDA Halmahera Utara Gelar Forum Musrenbang RKPD Tahun 2026",
-    category: "Pembangunan",
-    author: "Redaksi Humas BAPPEDA",
-    date: "2026-07-24",
-    views: 1240,
-    isPublished: true,
-    featuredImage: "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
-    summary: "Musrenbang RKPD 2026 resmi dibuka untuk menyerap aspirasi pembangunan daerah secara inklusif dan berkelanjutan.",
-  },
-  {
-    id: "news-2",
-    title: "Percepatan Akses Keuangan Daerah & Program TPAKD Halmahera Utara",
-    category: "Ekonomi & Keuangan",
-    author: "Tim Komunikasi Publik",
-    date: "2026-07-18",
-    views: 890,
-    isPublished: true,
-    featuredImage: "https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80",
-    summary: "Rapat koordinasi bersama OJK dan lembaga perbankan untuk penyaluran kredit usaha rakyat bagi UMKM Halut.",
-  },
-  {
-    id: "news-3",
-    title: "Implementasi Sistem Informasi Pembangunan Daerah (SIPD RI) Terintegrasi",
-    category: "SPBE & Digital",
-    author: "Tim Portal SPBE",
-    date: "2026-07-12",
-    views: 650,
-    isPublished: true,
-    featuredImage: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=800&q=80",
-    summary: "Bintek penerapan SIPD RI untuk seluruh Kasubag Perencanaan SKPD se-Kabupaten Halmahera Utara.",
-  },
-  {
-    id: "news-4",
-    title: "Survei Lapangan Proyek Strategis Peningkatan Jalan & Jembatan KSPN",
-    category: "Infrastruktur",
-    author: "Bidang Fisik & Prasarana",
-    date: "2026-07-05",
-    views: 430,
-    isPublished: false,
-    featuredImage: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?auto=format&fit=crop&w=800&q=80",
-    summary: "Monitoring dan evaluasi kemajuan konstruksi fisik kawasan strategis pariwisata nasional di Halut.",
-  },
-  {
-    id: "news-5",
-    title: "Rapat Koordinasi Penurunan Stunting & Penanggulangan Kemiskinan Ekstrem",
-    category: "Sosial Budaya",
-    author: "Bidang Perekonomian & Sosbud",
-    date: "2026-06-28",
-    views: 920,
-    isPublished: true,
-    featuredImage: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&w=800&q=80",
-    summary: "Langkah integratif lintas sektor guna mempercepat penanganan kawasan kantong kemiskinan dan gizi anak.",
-  },
-  {
-    id: "news-6",
-    title: "Sosialisasi Inovasi Daerah & Penghargaan Innovation Government Award",
-    category: "Inovasi Daerah",
-    author: "Subbid Inovasi & Riset",
-    date: "2026-06-20",
-    views: 510,
-    isPublished: true,
-    featuredImage: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
-    summary: "Dorongan terciptanya ekosistem inovasi pelayanan publik digital bagi seluruh perangkat daerah.",
-  },
-];
-
 export default function BeritaManagementPage() {
   const { hasRole } = useAuth();
-  const [newsList, setNewsList] = useState<NewsItem[]>(initialNews);
+  const [newsList, setNewsList] = useState<NewsItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [statusFilter, setStatusFilter] = useState("Semua");
@@ -114,58 +47,23 @@ export default function BeritaManagementPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(5);
 
-  const [categories, setCategories] = useState<string[]>([
-    "Semua",
-    "Pembangunan",
-    "Infrastruktur",
-    "Ekonomi & Keuangan",
-    "Sosial Budaya",
-    "SPBE & Digital",
-    "Inovasi Daerah",
-  ]);
+  const [categories, setCategories] = useState<string[]>(["Semua"]);
 
   useEffect(() => {
-    // Load categories
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("bappeda_news_categories");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategories(["Semua", ...Array.from(new Set([...categories.slice(1), ...parsed]))]);
-          }
-        } catch (e) {
-          console.error("Gagal parse kategori:", e);
-        }
-      }
-    }
-
-    // Simulate API Load with Skeleton Loader
     const fetchNewsFromApi = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/news");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.success && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped: NewsItem[] = json.data.map((item: any) => ({
-              id: String(item.id),
-              title: item.title,
-              category: item.category || "Pembangunan",
-              author: item.author || "Redaksi Humas",
-              date: item.date || new Date().toISOString().split("T")[0],
-              views: Number(item.views) || 0,
-              isPublished: Boolean(item.is_published),
-              featuredImage: item.image || "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
-              summary: item.summary || item.title,
-            }));
-            setNewsList(mapped);
-          }
-        }
+        const [mapped, categoryRows] = await Promise.all([
+          adminService.fetchNews(),
+          officialContentService.getNewsCategories(),
+        ]);
+        setNewsList(mapped);
+        setCategories(["Semua", ...categoryRows.map((item) => item.name)]);
       } catch (err) {
-        console.warn("Menggunakan data berita lokal:", err);
+        console.error("Data berita resmi gagal dimuat:", err);
+        setNewsList([]);
       } finally {
-        setTimeout(() => setLoading(false), 600);
+        setLoading(false);
       }
     };
 
@@ -175,15 +73,29 @@ export default function BeritaManagementPage() {
   const handleDeleteNews = async (id: string, newsTitle: string) => {
     const res = await showDeleteConfirm(newsTitle);
     if (res.isConfirmed) {
-      setNewsList(newsList.filter((n) => n.id !== id));
-      toast.success(`Berita "${newsTitle}" berhasil dihapus!`);
+      try {
+        await adminService.deleteNews(id);
+        setNewsList((current) => current.filter((item) => item.id !== id));
+        toast.success(`Berita "${newsTitle}" berhasil dihapus dari database!`);
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : "Berita gagal dihapus.");
+      }
     }
   };
 
-  const handleTogglePublish = (id: string) => {
-    setNewsList(
-      newsList.map((n) => (n.id === id ? { ...n, isPublished: !n.isPublished } : n))
-    );
+  const handleTogglePublish = async (id: string) => {
+    const target = newsList.find((item) => item.id === id);
+    if (!target) return;
+    try {
+      await adminService.updateNewsPublication(id, !target.isPublished);
+      setNewsList((current) =>
+        current.map((item) =>
+          item.id === id ? { ...item, isPublished: !item.isPublished } : item
+        )
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Status publikasi gagal diperbarui.");
+    }
   };
 
   const filteredNews = newsList.filter((n) => {

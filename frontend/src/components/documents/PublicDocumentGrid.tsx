@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Download, Eye, FileText } from "lucide-react";
+import { Archive, Building2, Download, Eye, FileText } from "lucide-react";
 import { AdminDocument } from "@/types/auth";
 
 interface PublicDocumentGridProps {
@@ -88,6 +88,15 @@ export function PublicDocumentGrid({
             <h2 className="text-base font-extrabold leading-snug text-slate-900">
               {document.title}
             </h2>
+            {(document.archiveCode || document.currentVersion?.versionLabel) && (
+              <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold text-blue-700">
+                <Archive className="h-3.5 w-3.5" />
+                {document.archiveCode && <span>{document.archiveCode}</span>}
+                {document.currentVersion?.versionLabel && (
+                  <span>Versi {document.currentVersion.versionLabel}</span>
+                )}
+              </div>
+            )}
             <div className="flex items-center gap-4 pt-1 text-xs font-medium text-slate-500">
               <span className="flex items-center gap-1">
                 <Building2 className="h-3.5 w-3.5 text-slate-400" />

@@ -26,18 +26,13 @@ import {
   Printer,
   Share2,
 } from "lucide-react";
+import {
+  officialContentService,
+  type AnnouncementItem as OfficialAnnouncement,
+} from "@/services/officialContentService";
 
-interface AnnouncementItem {
-  id: string;
-  title: string;
-  type: string;
-  isImportant: boolean;
-  validUntil: string | null;
-  pdfUrl?: string;
-  fileType?: "pdf" | "image" | "video" | "doc";
+interface AnnouncementItem extends OfficialAnnouncement {
   fileSize?: string;
-  content: string;
-  createdAt: string;
   nomorSurat?: string;
 }
 
@@ -59,30 +54,15 @@ export default function PublicPengumumanPage() {
     const fetchAnnouncementsFromApi = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/pengumuman");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped: AnnouncementItem[] = json.data.map((item: any) => ({
-              id: String(item.id),
-              nomorSurat: item.nomor_surat || item.nomorSurat || `050 / ${item.id} / BAPPEDA / 2026`,
-              title: item.title,
-              type: item.type || item.kategori || "Surat Edaran",
-              isImportant: Boolean(item.is_important || item.isImportant),
-              validUntil: item.valid_until || item.validUntil || null,
-              pdfUrl: item.pdf_url || item.file_path || "/documents/pengumuman.pdf",
-              fileType: "pdf",
-              fileSize: item.file_size || "2.4 MB",
-              content: item.content || item.deskripsi || item.title,
-              createdAt: item.created_at ? item.created_at.split("T")[0] : "2026-07-24",
-            }));
-            setAnnouncements(mapped);
-            const types = Array.from(new Set(mapped.map((m) => m.type)));
-            setTypeOptions(["Semua Dokumen", ...types]);
-          }
-        }
+        const [rows, types] = await Promise.all([
+          officialContentService.getAnnouncements(),
+          officialContentService.getAnnouncementTypes(),
+        ]);
+        setAnnouncements(rows);
+        setTypeOptions(["Semua Dokumen", ...types.map((item) => item.name)]);
       } catch (e) {
-        console.warn("[PengumumanPage] Offline fallback:", e);
+        console.error("[PengumumanPage] Data resmi tidak dapat dimuat:", e);
+        setAnnouncements([]);
       } finally {
         setLoading(false);
       }

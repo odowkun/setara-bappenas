@@ -33,6 +33,12 @@ const ALL_SPATIE_PERMISSIONS = [
   { id: "manage_dokumen", label: "Kelola Repository Dokumen Perencanaan" },
   { id: "manage_gis", label: "Kelola Editor Peta Spasial GIS" },
   { id: "manage_users", label: "Kelola Pengguna & Hak Akses (SuperAdmin)" },
+  { id: "manage_dashboard", label: "Kelola Statistik Dashboard" },
+  { id: "manage_survey", label: "Kelola Survei Kepuasan" },
+  { id: "manage_kritik", label: "Kelola Kritik & Saran" },
+  { id: "view_download_logs", label: "Lihat Riwayat Pengunduh" },
+  { id: "view_audit_logs", label: "Lihat Audit Log SPBE" },
+  { id: "manage_document_types", label: "Kelola Jenis Dokumen" },
 ];
 
 export default function UserManagementPage() {
@@ -60,9 +66,13 @@ export default function UserManagementPage() {
     }
     const res = await showDeleteConfirm(userName);
     if (res.isConfirmed) {
-      adminService.deleteUser(id);
-      refreshUsers();
-      toast.success(`Akun pengelola ${userName} berhasil dihapus!`);
+      const deleted = await adminService.deleteUser(id);
+      if (deleted) {
+        refreshUsers();
+        toast.success(`Akun pengelola ${userName} berhasil dihapus!`);
+      } else {
+        toast.error("Akun gagal dihapus. Akun aktif atau Super Admin terakhir dilindungi.");
+      }
     }
   };
 

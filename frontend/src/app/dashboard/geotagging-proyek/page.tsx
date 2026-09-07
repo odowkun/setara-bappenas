@@ -24,6 +24,7 @@ import {
   Square,
   AlertTriangle,
   Trash2,
+  RefreshCw,
 } from "lucide-react";
 
 // Dynamic import for Leaflet map component (SSR safe)
@@ -31,6 +32,10 @@ const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
   { ssr: false, loading: () => <div className="h-[400px] rounded-2xl bg-slate-100 animate-pulse flex items-center justify-center text-xs font-bold text-slate-400">Memuat Peta ESRI Interactive...</div> }
 );
+
+import KmzUploader from "@/components/gis/KmzUploader";
+import DelineationMapDrawer, { DelineationData } from "@/components/gis/DelineationMapDrawer";
+import { ParsedKmzResult } from "@/lib/gis/kmzParser";
 
 export default function GeotaggingProyekPage() {
   const { user } = useAuth();
@@ -44,36 +49,69 @@ export default function GeotaggingProyekPage() {
   const [locationWarning, setLocationWarning] = useState<string | null>(null);
 
   useEffect(() => {
-    const docs = adminService.getDocuments(user?.role === "admin_bidang" ? user.bidang : undefined);
-    setDocuments(docs);
-    if (paramDocId && docs.some((d) => String(d.id) === String(paramDocId))) {
-      setSelectedDocId(paramDocId);
-    } else if (docs.length > 0 && !selectedDocId) {
-      setSelectedDocId(docs[0].id);
-    }
+    adminService
+      .fetchDocuments(
+        user?.role === "admin_bidang" ? user.bidang : undefined,
+        user?.role
+      )
+      .then((docs) => {
+        setDocuments(docs);
+        if (paramDocId && docs.some((d) => String(d.id) === String(paramDocId))) {
+          setSelectedDocId(paramDocId);
+        } else if (docs.length > 0) {
+          setSelectedDocId((current) => current || docs[0].id);
+        }
+      });
   }, [user, paramDocId]);
 
   // OPD Checkbox toggle state
-  const [isBappedaOpd, setIsBappedaOpd] = useState(true);
+  const [isBappedaOpd, setIsBappedaOpd] = useState(false);
+  const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
 
   // Form State
   const [form, setForm] = useState({
     nama_proyek: "",
-    bidang: user?.bidang || "infrastruktur",
-    kecamatan: "Tobelo",
-    desa_kelurahan: "Gamsungi",
+    bidang: user?.bidang || "",
+    kecamatan: "",
+    desa_kelurahan: "",
     lokasi_deskripsi: "",
     latitude: 1.7289,
     longitude: 128.0054,
-    pagu_anggaran: 750000000,
-    opd_penanggung_jawab: "Bappeda Kabupaten Halmahera Utara",
+    pagu_anggaran: 0,
+    opd_penanggung_jawab: "",
   });
 
-  const [displayPagu, setDisplayPagu] = useState<string>("Rp 750.000.000");
+  const [displayPagu, setDisplayPagu] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
+  const [kmzResult, setKmzResult] = useState<ParsedKmzResult | null>(null);
+  const [kmzColor, setKmzColor] = useState<string>("#7c3aed");
+  const [delineationTool, setDelineationTool] = useState<"polygon" | "polyline" | "point" | null>("point");
+  const [delineation, setDelineation] = useState<DelineationData | null>(null);
+
+  const selectedDocument = documents.find(
+    (document) => String(document.id) === String(selectedDocId)
+  );
+  const isBidangLocked =
+    user?.role === "admin_bidang" ||
+    Boolean(selectedDocument?.bidang && selectedDocument.bidang !== "semua");
+
+  useEffect(() => {
+    const officialBidang =
+      user?.role === "admin_bidang"
+        ? user.bidang
+        : selectedDocument?.bidang !== "semua"
+          ? selectedDocument?.bidang
+          : "";
+
+    setForm((current) => ({
+      ...current,
+      bidang: officialBidang || current.bidang,
+    }));
+  }, [user?.role, user?.bidang, selectedDocument?.bidang]);
 
   const handleMapLocationSelect = (lat: number, lng: number) => {
+    setHasSelectedLocation(true);
     const region = halutRegionService.findRegionByCoords(lat, lng);
 
     if (region.isWithinHalut) {
@@ -113,13 +151,8 @@ export default function GeotaggingProyekPage() {
     const numericStr = rawInput.replace(/\D/g, "");
     const numericVal = numericStr ? parseInt(numericStr, 10) : 0;
     setForm({ ...form, pagu_anggaran: numericVal });
-    setDisplayPagu(formatRupiah(numericVal));
+    setDisplayPagu(numericStr ? formatRupiah(numericVal) : "");
   };
-
-  useEffect(() => {
-    const docs = adminService.getDocuments(user?.role === "admin_bidang" ? user.bidang : undefined);
-    setDocuments(docs);
-  }, [user]);
 
   useEffect(() => {
     if (!selectedDocId) {
@@ -127,7 +160,7 @@ export default function GeotaggingProyekPage() {
       return;
     }
     setLoading(true);
-    proyekService.getProjects(selectedDocId).then((data) => {
+    proyekService.getProjects(selectedDocId, undefined, true).then((data) => {
       setProjects(data);
       setLoading(false);
     });
@@ -148,6 +181,7 @@ export default function GeotaggingProyekPage() {
         latitude: targetLat,
         longitude: targetLng,
       });
+      setHasSelectedLocation(true);
     }
   };
 
@@ -162,6 +196,7 @@ export default function GeotaggingProyekPage() {
         latitude: desaObj.lat,
         longitude: desaObj.lng,
       });
+      setHasSelectedLocation(true);
     } else {
       setForm({
         ...form,
@@ -173,24 +208,48 @@ export default function GeotaggingProyekPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedDocId) return toast.error("Pilih Dokumen Induk terlebih dahulu!");
-    if (!form.nama_proyek) return toast.error("Nama proyek wajib diisi!");
-    if (!form.opd_penanggung_jawab) return toast.error("OPD Penanggung Jawab wajib diisi!");
+    if (!form.nama_proyek.trim()) return toast.error("Nama proyek wajib diisi!");
+    if (!form.bidang) return toast.error("Bidang penanggung jawab wajib dipilih!");
+    if (!form.kecamatan) return toast.error("Kecamatan wajib dipilih!");
+    if (!hasSelectedLocation) return toast.error("Pilih titik lokasi proyek pada peta!");
+    if (!displayPagu) return toast.error("Pagu anggaran wajib diisi, gunakan Rp 0 bila belum dialokasikan.");
+    if (!form.opd_penanggung_jawab.trim()) return toast.error("OPD Penanggung Jawab wajib diisi!");
     setSubmitting(true);
 
     try {
-      const res = await proyekService.addProjectGeotag(selectedDocId, {
+      const payload: any = {
         ...form,
         realisasi_anggaran: 0,
         persentase_progres: 0,
         status_progres: "belum_mulai",
-        created_by: user?.name || "Admin Bidang",
-      });
+      };
+
+      if (delineation) {
+        payload.delineasi_geojson = delineation.geojson;
+        payload.tipe_geometri = delineation.tipeGeometri;
+        payload.luas_area_ha = delineation.luasAreaHa;
+        payload.panjang_km = delineation.panjangKm;
+      } else if (kmzResult) {
+        payload.delineasi_geojson = kmzResult.geojson;
+        payload.tipe_geometri = "polygon";
+        payload.luas_area_ha = kmzResult.summary.totalAreaHa;
+        payload.panjang_km = kmzResult.summary.totalLengthKm;
+      }
+
+      const res = await proyekService.addProjectGeotag(selectedDocId, payload);
 
       if (res.success) {
-        toast.success("Geotagging Proyek Berhasil Disimpan & Tersinkronisasi ke ESRI!");
+        const esriSynced = Boolean(res.esri_status?.success);
+        toast.success(
+          esriSynced
+            ? "Proyek tersimpan di database dan tersinkronisasi ke ESRI."
+            : "Proyek tersimpan di database; sinkronisasi ESRI belum berhasil."
+        );
         showSuccessSwal(
           "Geotagging Proyek Berhasil!",
-          `1. Disimpan ke MySQL (proyek_details)\n2. Dikirim via POST /addFeatures ke ArcGIS REST API\n3. Memperoleh ESRI OBJECTID: #${res.data.esri_objectid || 'N/A'}`
+          esriSynced
+            ? `Data resmi tersimpan di database dan memperoleh ESRI OBJECTID #${res.data.esri_objectid}.`
+            : `Data resmi tersimpan di database. ${res.esri_status?.message || "Sinkronisasi ESRI belum tersedia."}`
         );
         
         setForm({
@@ -198,8 +257,9 @@ export default function GeotaggingProyekPage() {
           nama_proyek: "",
           lokasi_deskripsi: "",
         });
+        setHasSelectedLocation(false);
         
-        const updatedList = await proyekService.getProjects(selectedDocId);
+        const updatedList = await proyekService.getProjects(selectedDocId, undefined, true);
         setProjects(updatedList);
       }
     } catch (err) {
@@ -228,7 +288,7 @@ export default function GeotaggingProyekPage() {
         if (success) {
           toast.success("Geotagging proyek berhasil dihapus!");
           if (selectedDocId) {
-            const updatedList = await proyekService.getProjects(selectedDocId);
+            const updatedList = await proyekService.getProjects(selectedDocId, undefined, true);
             setProjects(updatedList);
           }
         } else {
@@ -237,6 +297,22 @@ export default function GeotaggingProyekPage() {
       } catch (err) {
         toast.error("Terjadi kesalahan saat menghapus geotagging proyek.");
       }
+    }
+  };
+
+  const handleResyncEsri = async (projectId: string | number) => {
+    try {
+      toast.loading("Mengantrikan re-sync ESRI...", { id: "resync" });
+      const res = await proyekService.resyncEsri(projectId);
+      toast.dismiss("resync");
+      toast.success(res.message || "Berhasil mengantrikan re-sync ESRI!");
+      if (selectedDocId) {
+        const updatedList = await proyekService.getProjects(selectedDocId, undefined, true);
+        setProjects(updatedList);
+      }
+    } catch (err: any) {
+      toast.dismiss("resync");
+      toast.error(err.message || "Gagal mengantrikan re-sync ESRI.");
     }
   };
 
@@ -249,6 +325,13 @@ export default function GeotaggingProyekPage() {
     value: doc.id,
     label: `${doc.jenis.toUpperCase()} - ${doc.title} (${doc.tahun})`,
   }));
+
+  const bidangSelectOptions = [
+    { value: "infrastruktur", label: "Infrastruktur & Pengembangan Wilayah" },
+    { value: "perekonomian", label: "Perekonomian & SDA" },
+    { value: "sosbud", label: "Pemerintahan & Pembangunan Manusia" },
+    { value: "renval", label: "Perencanaan, Pengendalian & Evaluasi" },
+  ];
 
   const kecamatanSelectOptions = KECAMATAN_HALUT_DATA.map((k) => ({
     value: k.name,
@@ -323,9 +406,9 @@ export default function GeotaggingProyekPage() {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-in fade-in duration-300">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start animate-in fade-in duration-300">
           {/* Form Geotagging (5 Cols) */}
-          <div className="lg:col-span-5 p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+          <div className="lg:col-span-5 h-fit p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
                 <Plus className="w-4 h-4 text-blue-700" />
@@ -346,6 +429,18 @@ export default function GeotaggingProyekPage() {
                   onChange={(e) => setForm({ ...form, nama_proyek: e.target.value })}
                   placeholder="Contoh: Pembangunan Puskesmas Pembantu Desa Tou"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 font-bold text-slate-900 focus:outline-none focus:border-blue-600 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Bidang Penanggung Jawab *</label>
+                <SearchableSelect
+                  options={bidangSelectOptions}
+                  value={form.bidang}
+                  onChange={(val) => setForm({ ...form, bidang: String(val) })}
+                  placeholder="-- Pilih Bidang --"
+                  searchPlaceholder="Cari bidang..."
+                  disabled={isBidangLocked}
                 />
               </div>
 
@@ -425,7 +520,7 @@ export default function GeotaggingProyekPage() {
                     className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 cursor-pointer"
                   />
                   <span className="text-xs font-extrabold text-slate-900">
-                    Bappeda Kabupaten Halmahera Utara (Default)
+                    Gunakan Bappeda Kabupaten Halmahera Utara
                   </span>
                 </label>
 
@@ -465,7 +560,7 @@ export default function GeotaggingProyekPage() {
                 className="w-full py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-md shadow-blue-700/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 <MapPin className="w-4 h-4 text-rose-400" />
-                <span>{submitting ? "Mengirim Ke ESRI..." : "Simpan Geotagging & Sync ESRI"}</span>
+                <span>{submitting ? "Menyimpan ke Database..." : "Simpan Data Resmi"}</span>
               </button>
             </form>
           </div>
@@ -476,7 +571,7 @@ export default function GeotaggingProyekPage() {
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-blue-700" />
-                  <span>Peta Interaktif Penentuan Titik (Klik di Peta untuk Drop-Pin)</span>
+                  <span>Peta Interaktif Penentuan Titik & Delineasi Tapak Proyek</span>
                 </h3>
               </div>
 
@@ -486,6 +581,31 @@ export default function GeotaggingProyekPage() {
                   selectedLng={form.longitude}
                   onLocationSelect={(lat, lng) => handleMapLocationSelect(lat, lng)}
                   existingProjects={projects}
+                  customKmzGeoJson={kmzResult?.geojson}
+                  kmzColor={kmzColor}
+                  delineationGeoJson={delineation?.geojson}
+                  activeDelineationTool={delineationTool}
+                  onToolChange={(tool) => {
+                    setDelineationTool(tool);
+                    if (tool === "polygon" || tool === "polyline") {
+                      setDelineation(null);
+                    }
+                  }}
+                  onDelineationCreated={(data) => {
+                    setDelineation(data);
+                  }}
+                />
+              </div>
+
+              {/* Spatial Widget: KMZ / KML Uploader Strip Below Map */}
+              <div className="pt-1">
+                <KmzUploader
+                  hideHeader={true}
+                  onKmzParsed={(result, color) => {
+                    setKmzResult(result);
+                    setKmzColor(color);
+                  }}
+                  onClear={() => setKmzResult(null)}
                 />
               </div>
             </div>
@@ -510,20 +630,54 @@ export default function GeotaggingProyekPage() {
                 {filteredProjects.map((prj) => (
                   <div
                     key={prj.id}
-                    className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs"
+                    className="p-3 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs gap-3"
                   >
-                    <div className="space-y-0.5">
-                      <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded">
-                        OBJECTID: #{prj.esri_objectid || "Pending"}
-                      </span>
-                      <h5 className="font-extrabold text-slate-900">{prj.nama_proyek}</h5>
-                      <div className="text-[10px] text-slate-500 font-medium">
-                        Lat: {prj.latitude}, Lng: {prj.longitude} ({prj.kecamatan || "Tobelo"})
+                    <div className="space-y-0.5 min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded shrink-0">
+                          OBJECTID: #{prj.esri_objectid || "None"}
+                        </span>
+                        
+                        {/* Honest ESRI Sync Status Badge */}
+                        {prj.esri_sync_status === "synced" && (
+                          <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                            <span>ESRI Synced</span>
+                          </span>
+                        )}
+                        {(!prj.esri_sync_status || prj.esri_sync_status === "pending") && (
+                          <span className="text-[9.5px] font-extrabold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                            <span>Sync Pending</span>
+                          </span>
+                        )}
+                        {prj.esri_sync_status === "failed" && (
+                          <span className="text-[9.5px] font-extrabold text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0" title={prj.esri_last_error || "Gagal sinkron ESRI"}>
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                            <span>ESRI Off/Failed</span>
+                          </span>
+                        )}
+                      </div>
+                      <h5 className="font-extrabold text-slate-900 truncate">{prj.nama_proyek}</h5>
+                      <div className="text-[10px] text-slate-500 font-medium truncate">
+                        Lat: {prj.latitude}, Lng: {prj.longitude} ({prj.kecamatan || "Lokasi belum tersedia"})
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 uppercase">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {(prj.esri_sync_status === "failed" || !prj.esri_objectid) && (
+                        <button
+                          type="button"
+                          onClick={() => handleResyncEsri(prj.id)}
+                          className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-[10px] transition border border-amber-200 flex items-center gap-1 cursor-pointer"
+                          title="Coba Lagi Sinkronisasi ke ESRI ArcGIS"
+                        >
+                          <RefreshCw className="w-3 h-3 text-amber-700" />
+                          <span>Re-sync</span>
+                        </button>
+                      )}
+
+                      <span className="text-[10px] font-black px-2 py-1 rounded-full bg-slate-200 text-slate-700 uppercase">
                         {prj.status_progres}
                       </span>
                       {user?.role === "superadmin" && (

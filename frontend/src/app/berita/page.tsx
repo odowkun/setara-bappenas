@@ -16,6 +16,8 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { API_BASE_URL } from "@/lib/apiClient";
+import { officialContentService } from "@/services/officialContentService";
 
 interface NewsItem {
   id: string;
@@ -42,51 +44,37 @@ export default function PublicNewsPage() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(6);
 
   useEffect(() => {
-    // Load dynamic categories
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("bappeda_news_categories");
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setCategories(["Semua", ...Array.from(new Set(parsed))]);
-          }
-        } catch (e) {
-          console.error("Gagal parse kategori berita:", e);
-        }
-      }
-    }
-
-    // Fetch real news articles from API
     const fetchNewsFromApi = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/news");
+        const [res, categoryRows] = await Promise.all([
+          fetch(`${API_BASE_URL}/news`, { cache: "no-store" }),
+          officialContentService.getNewsCategories(),
+        ]);
+        setCategories(["Semua", ...categoryRows.map((item) => item.name)]);
         if (res.ok) {
           const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            const uniqueCats: string[] = Array.from(new Set(json.data.map((item: any) => String(item.category || "Berita Utama"))));
-            setCategories(["Semua", ...uniqueCats]);
-
+          if (json.data && Array.isArray(json.data)) {
             const mapped: NewsItem[] = json.data.map((item: any) => ({
               id: String(item.id),
               slug: item.slug || `news-${item.id}`,
               title: item.title,
-              category: item.category || "Pembangunan",
-              author: item.author || "Redaksi Humas",
-              date: item.date || new Date().toISOString().split("T")[0],
+              category: item.category || "Belum dikategorikan",
+              author: item.author || "Belum tersedia",
+              date: item.date || item.created_at?.split("T")[0] || "",
               views: Number(item.views) || 0,
-              featuredImage: item.image || "https://images.unsplash.com/photo-1541872703-74c5e44368f9?auto=format&fit=crop&w=800&q=80",
-              summary: item.summary || item.title,
+              featuredImage: item.image || "",
+              summary: item.summary || "",
               readTime: "3 mnt baca",
             }));
             setNewsList(mapped);
           }
         }
       } catch (err) {
-        console.warn("Menggunakan berita lokal publik:", err);
+        console.error("Data berita resmi tidak dapat dimuat:", err);
+        setNewsList([]);
       } finally {
-        setTimeout(() => setLoading(false), 500);
+        setLoading(false);
       }
     };
 

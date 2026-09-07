@@ -46,35 +46,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMobileMenuToggle }) 
   const userMenuDropdownRef = useRef<HTMLDivElement>(null);
 
   // Dynamic Notification State
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: "2",
-      title: "Tanggapan Survei IKM Diterima",
-      message: "Responden Publik memberikan Rating 5/5 untuk Layanan Informasi Dokumen",
-      time: "25 menit yang lalu",
-      type: "ikm",
-      isRead: false,
-      link: "/dashboard/survey-kepuasan",
-    },
-    {
-      id: "3",
-      title: "Kritik & Saran Warga",
-      message: "Masukan publik baru mengenai pemutakhiran Peta Spasial GIS Halut",
-      time: "1 jam yang lalu",
-      type: "kritik",
-      isRead: false,
-      link: "/dashboard/kritik-saran",
-    },
-    {
-      id: "4",
-      title: "Dokumen RKPD 2026 Diperbarui",
-      message: "Admin Bidang IPW mengunggah draf final dokumen perencanaan",
-      time: "3 jam yang lalu",
-      type: "dokumen",
-      isRead: true,
-      link: "/dashboard/dokumen",
-    },
-  ]);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 

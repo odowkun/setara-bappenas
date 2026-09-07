@@ -82,6 +82,36 @@ const ALL_SPATIE_PERMISSIONS = [
     label: "Kelola Pengguna & Hak Akses (SuperAdmin)",
     desc: "Akses penuh mengelola akun pengelola dan role permissions Spatie",
   },
+  {
+    id: "manage_dashboard",
+    label: "Kelola Statistik Dashboard",
+    desc: "Akses memperbarui realisasi APBD dan program sektoral",
+  },
+  {
+    id: "manage_survey",
+    label: "Kelola Survei Kepuasan",
+    desc: "Akses responden, pertanyaan, dan konfigurasi layanan survei",
+  },
+  {
+    id: "manage_kritik",
+    label: "Kelola Kritik & Saran",
+    desc: "Akses identitas pengirim dan pemberian tanggapan",
+  },
+  {
+    id: "view_download_logs",
+    label: "Lihat Riwayat Pengunduh",
+    desc: "Akses email dan metadata unduhan dokumen",
+  },
+  {
+    id: "view_audit_logs",
+    label: "Lihat Audit Log SPBE",
+    desc: "Akses aktivitas admin dan alamat IP",
+  },
+  {
+    id: "manage_document_types",
+    label: "Kelola Jenis Dokumen",
+    desc: "Akses master kategori dan scope dokumen",
+  },
 ];
 
 export default function TambahUserPage() {
@@ -134,10 +164,21 @@ export default function TambahUserPage() {
       setSelectedPermissions(ALL_SPATIE_PERMISSIONS.map((p) => p.id));
     } else if (role === "admin_umum") {
       setAllowedDocPermissions(["rpjpd", "rpjmd", "rkpd", "lkpj"]);
-      setSelectedPermissions(["manage_berita", "manage_pengumuman", "manage_galeri", "manage_dokumen"]);
+      setSelectedPermissions([
+        "manage_dashboard",
+        "manage_berita",
+        "manage_pengumuman",
+        "manage_galeri",
+        "manage_tautan_opd",
+        "manage_dokumen",
+        "view_download_logs",
+        "manage_survey",
+        "manage_kritik",
+        "manage_gis",
+      ]);
     } else {
       setAllowedDocPermissions(["renstra", "renja", "dik_sektoral", "data_sektoral"]);
-      setSelectedPermissions(["manage_dokumen"]);
+      setSelectedPermissions(["manage_dokumen", "manage_gis"]);
     }
   }, [role]);
 
@@ -153,7 +194,7 @@ export default function TambahUserPage() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
 
@@ -164,8 +205,13 @@ export default function TambahUserPage() {
       return;
     }
 
-    if (password && password.length < 6) {
-      const msg = "Password minimal terdiri dari 6 karakter!";
+    if (
+      password.length < 12 ||
+      !/[a-z]/.test(password) ||
+      !/[A-Z]/.test(password) ||
+      !/[0-9]/.test(password)
+    ) {
+      const msg = "Password minimal 12 karakter serta memiliki huruf besar, huruf kecil, dan angka!";
       setErrorMessage(msg);
       toast.error(msg);
       return;
@@ -178,22 +224,30 @@ export default function TambahUserPage() {
       return;
     }
 
-    adminService.addUser({
-      name,
-      email,
-      role,
-      bidang: role === "admin_bidang" ? bidang : undefined,
-      nip,
-      jabatan: jabatan || pejabatPositions[0],
-      permissions: selectedPermissions,
-      allowedDocumentPermissions: allowedDocPermissions,
-    });
+    try {
+      await adminService.addUser({
+        name,
+        email,
+        password,
+        passwordConfirmation: confirmPassword,
+        role,
+        bidang: role === "admin_bidang" ? bidang : undefined,
+        nip,
+        jabatan: jabatan || pejabatPositions[0],
+        permissions: selectedPermissions,
+        allowedDocumentPermissions: allowedDocPermissions,
+      });
 
-    toast.success(`Pengguna baru ${name} berhasil ditambahkan!`);
-    setIsSaved(true);
-    setTimeout(() => {
-      router.push("/dashboard/users");
-    }, 1500);
+      toast.success(`Pengguna baru ${name} berhasil ditambahkan!`);
+      setIsSaved(true);
+      setTimeout(() => {
+        router.push("/dashboard/users");
+      }, 1500);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : "Gagal menambahkan pengguna.";
+      setErrorMessage(msg);
+      toast.error(msg);
+    }
   };
 
   if (!isSuperAdmin) {

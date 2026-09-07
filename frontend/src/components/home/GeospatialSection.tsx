@@ -36,7 +36,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/lib/swal";
 import Swal from "sweetalert2";
 
-import { adminService } from "@/services/adminService";
 import { proyekService, ProyekDetail } from "@/services/proyekService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 
@@ -53,6 +52,7 @@ export const GeospatialSection: React.FC = () => {
   const [selectedId, setSelectedId] = useState<number | null>(null); // Null on initial load -> Full Halut Overview View
   const [mobileTab, setMobileTab] = useState<"map" | "list" | "overview">("map");
   const [rawProjects, setRawProjects] = useState<ProyekDetail[]>([]);
+  const [geoAnalyses, setGeoAnalyses] = useState<any[]>([]);
   const [albumState, setAlbumState] = useState<{
     isOpen: boolean;
     mediaList: MediaItem[];
@@ -64,8 +64,12 @@ export const GeospatialSection: React.FC = () => {
   });
 
   React.useEffect(() => {
-    proyekService.getProjects().then((data) => {
-      setRawProjects(data);
+    Promise.all([
+      proyekService.getProjects(),
+      proyekService.getBufferAnalyses(),
+    ]).then(([projects, analyses]) => {
+      setRawProjects(projects);
+      setGeoAnalyses(analyses);
     });
   }, []);
 
@@ -86,9 +90,9 @@ export const GeospatialSection: React.FC = () => {
       };
 
       const catInfo = categoryMap[p.bidang] || {
-        category: "Infrastruktur",
-        icon: HardHat,
-        badgeColor: "bg-blue-600",
+        category: "Belum Diklasifikasikan",
+        icon: MapPin,
+        badgeColor: "bg-slate-600",
       };
 
       // Extract photo attachment from Lampiran Teknis ESRI if uploaded
@@ -129,22 +133,26 @@ export const GeospatialSection: React.FC = () => {
         images: imagesList,
         documents: documentsList,
         name: p.nama_proyek,
-        kecamatan: `Kecamatan ${p.kecamatan || "Tobelo"}`,
+        kecamatan: p.kecamatan ? `Kecamatan ${p.kecamatan}` : "Lokasi belum tersedia",
         category: catInfo.category,
         icon: catInfo.icon,
         badgeColor: catInfo.badgeColor,
-        desc: p.lokasi_deskripsi || `Pembangunan proyek fisik ${p.nama_proyek} di ${p.kecamatan || "Halmahera Utara"}.`,
-        peran: `Fasilitas & Layanan ${p.bidang ? p.bidang.toUpperCase() : "PUBLIK"}`,
-        akses: `Jalan Utama ${p.kecamatan || "Tobelo"}`,
+        desc: p.lokasi_deskripsi || "Deskripsi proyek belum tersedia.",
+        peran: p.bidang ? `Bidang ${catInfo.category}` : "Bidang belum tersedia",
+        akses: "Informasi akses belum tersedia.",
         koordinat: `${p.latitude.toFixed(4)}° N, ${p.longitude.toFixed(4)}° E`,
         lat: p.latitude,
         lng: p.longitude,
-        status: p.status_progres === "selesai" ? "Selesai (100%)" : `Terverifikasi (${p.persentase_progres}%)`,
-        sumber: p.opd_penanggung_jawab || "Dinas PUPR & Bappeda Halut",
-        potensi: `Peningkatan infrastruktur & pelayanan publik ${p.kecamatan || "Kab. Halmahera Utara"}.`,
-        budget: `Rp ${(p.pagu_anggaran ? p.pagu_anggaran / 1000000000 : 1).toFixed(1)} Miliar`,
+        status: p.status_progres === "selesai" ? "Selesai (100%)" : `Progres ${p.persentase_progres}%`,
+        sumber: p.opd_penanggung_jawab || "OPD belum tersedia",
+        potensi: "Informasi manfaat proyek belum tersedia.",
+        budget: new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(Number(p.pagu_anggaran)),
         progress: p.persentase_progres || 0,
-        contractor: p.created_by || "Pemerintah Kab. Halmahera Utara",
+        contractor: p.opd_penanggung_jawab || "OPD belum tersedia",
         image: photoUrl,
       };
     });
@@ -173,17 +181,12 @@ export const GeospatialSection: React.FC = () => {
 
   const selectedGeoAnalysis = React.useMemo(() => {
     if (!selectedLoc) return null;
-    try {
-      const local = localStorage.getItem("halut_geoprocessing_history");
-      if (!local) return null;
-      const history = JSON.parse(local);
-      return history.find(
-        (g: any) => String(g.proyek_id) === String((selectedLoc as any).realId || selectedLoc.id) || g.proyek_nama === selectedLoc.name
-      );
-    } catch (e) {
-      return null;
-    }
-  }, [selectedLoc]);
+    return geoAnalyses.find(
+      (item) =>
+        String(item.proyek_detail_id) ===
+        String((selectedLoc as any).realId || selectedLoc.id)
+    ) || null;
+  }, [selectedLoc, geoAnalyses]);
 
   const filteredLocations = locations.filter((loc) => {
     const matchesCat = activeCategory === "Semua" || loc.category === activeCategory;
@@ -230,33 +233,25 @@ export const GeospatialSection: React.FC = () => {
   const handleDownloadDocument = (loc: any) => {
     if (!loc) return;
 
-    const allDocs = adminService.getDocuments();
-    const foundDoc =
-      loc.rawDoc ||
-      allDocs.find((d) => String(d.id) === String(loc.documentId || loc.dokumen_id));
+    const foundDoc = loc.rawDoc;
+    const documentId =
+      foundDoc?.id || loc.documentId || loc.dokumen_id;
 
-    if (foundDoc) {
-      const rawFileUrl = foundDoc.fileUrl || (foundDoc as any).file_path;
-      const fullUrl = rawFileUrl
-        ? rawFileUrl.startsWith("/storage/")
-          ? `http://localhost:8000${rawFileUrl}`
-          : rawFileUrl
-        : null;
-
+    if (documentId) {
       Swal.fire({
         title: `<div class="flex items-center justify-center gap-2 text-blue-900 font-black text-base"><svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Dokumen Terverifikasi Tim Bappeda</div>`,
         html: `
           <div class="text-left space-y-3 font-sans pt-2">
             <div class="p-3 bg-blue-50/80 rounded-2xl border border-blue-100">
-              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-600 text-white">${(foundDoc.jenis || "RKPD").toUpperCase()} • TAHUN ${foundDoc.tahun || 2026}</span>
-              <h4 class="text-sm font-extrabold text-slate-900 mt-1.5">${foundDoc.title}</h4>
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-600 text-white">${foundDoc?.jenis ? foundDoc.jenis.toUpperCase() : "JENIS BELUM TERSEDIA"} • TAHUN ${foundDoc?.tahun || "Belum tersedia"}</span>
+              <h4 class="text-sm font-extrabold text-slate-900 mt-1.5">${foundDoc?.title || "Judul dokumen belum tersedia"}</h4>
               <p class="text-xs text-slate-500 font-medium mt-0.5">Dokumen Resmi Perencanaan Bappeda Kab. Halmahera Utara</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-[11px] font-medium text-slate-600">
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-400 block font-bold">OPD / Pengunggah:</span>
-                <span class="font-extrabold text-slate-800">${foundDoc.uploadedBy || "Bappeda Halut"}</span>
+                <span class="font-extrabold text-slate-800">${foundDoc?.uploadedBy || "Tidak dipublikasikan"}</span>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-400 block font-bold">Target Proyek:</span>
@@ -279,11 +274,7 @@ export const GeospatialSection: React.FC = () => {
         buttonsStyling: false,
       }).then((result) => {
         if (result.isConfirmed) {
-          if (fullUrl) {
-            window.open(fullUrl, "_blank");
-          } else {
-            window.open(`/dashboard/dokumen/${foundDoc.id}`, "_blank");
-          }
+          window.open(`/dokumen?unduh=${encodeURIComponent(String(documentId))}`, "_blank");
         }
       });
     } else {
@@ -508,9 +499,9 @@ export const GeospatialSection: React.FC = () => {
                         Radius {selectedGeoAnalysis.radius_meters >= 1000 ? `${(selectedGeoAnalysis.radius_meters / 1000).toFixed(1)} km` : `${selectedGeoAnalysis.radius_meters} m`}
                       </span>
                     </div>
-                    {selectedGeoAnalysis.catatan && (
+                    {selectedGeoAnalysis.notes && (
                       <p className="text-[10px] text-purple-800 italic font-medium leading-relaxed bg-white/70 p-2 rounded-xl border border-purple-100/80">
-                        "{selectedGeoAnalysis.catatan}"
+                        "{selectedGeoAnalysis.notes}"
                       </p>
                     )}
                   </div>

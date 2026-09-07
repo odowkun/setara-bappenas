@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
+import { authenticatedFetch } from "@/lib/apiClient";
 import {
   Image as ImageIcon,
   Zap,
@@ -30,6 +31,7 @@ export const OptimizedMediaUploader: React.FC<OptimizedMediaUploaderProps> = ({
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const [optimizedData, setOptimizedData] = useState<{
     masterUrl: string;
     webUrl: string;
@@ -60,12 +62,13 @@ export const OptimizedMediaUploader: React.FC<OptimizedMediaUploaderProps> = ({
   const handleStartUpload = async () => {
     if (!file) return;
     setUploading(true);
+    setUploadError("");
 
     const formData = new FormData();
     formData.append("media", file);
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/media/upload-optimized", {
+      const res = await authenticatedFetch("/media/upload-optimized", {
         method: "POST",
         body: formData,
       });
@@ -91,22 +94,8 @@ export const OptimizedMediaUploader: React.FC<OptimizedMediaUploaderProps> = ({
         throw new Error("Gagal mengunggah media");
       }
     } catch (err) {
-      // Demo fallback mock for offline local state
-      const masterMock = URL.createObjectURL(file);
-      const mockData = {
-        masterUrl: masterMock,
-        webUrl: masterMock,
-        thumbUrl: masterMock,
-        originalSize: `${(file.size / 1024 / 1024).toFixed(1)} MB`,
-        webSize: `${(file.size / 1024 / 1024 / 12).toFixed(1)} MB`,
-        savings: "Kompresi Otomatis Terpasang",
-      };
-      setOptimizedData(mockData);
-      onUploadSuccess({
-        masterUrl: masterMock,
-        webUrl: masterMock,
-        thumbUrl: masterMock,
-      });
+      console.error("Unggah media resmi gagal:", err);
+      setUploadError("Media belum tersimpan. Periksa koneksi lalu coba unggah kembali.");
     } finally {
       setUploading(false);
     }
@@ -114,6 +103,11 @@ export const OptimizedMediaUploader: React.FC<OptimizedMediaUploaderProps> = ({
 
   return (
     <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-3.5 font-sans text-xs">
+      {uploadError && (
+        <p className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 font-bold">
+          {uploadError}
+        </p>
+      )}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-amber-500" />

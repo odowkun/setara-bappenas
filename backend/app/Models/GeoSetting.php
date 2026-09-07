@@ -1,0 +1,65 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class GeoSetting extends Model
+{
+    use HasFactory;
+
+    protected $table = 'geo_settings';
+
+    protected $fillable = [
+        'default_latitude',
+        'default_longitude',
+        'default_zoom_level',
+        'default_basemap',
+        'esri_feature_service_url',
+        'esri_geoprocessing_url',
+        'auto_sync_esri',
+        'default_layer_color',
+        'default_fill_opacity',
+        'max_kmz_file_mb',
+        'spatial_reference_srid',
+        'unit_luas',
+        'unit_panjang',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'default_latitude' => 'float',
+        'default_longitude' => 'float',
+        'default_zoom_level' => 'integer',
+        'auto_sync_esri' => 'boolean',
+        'default_fill_opacity' => 'float',
+        'max_kmz_file_mb' => 'integer',
+    ];
+
+    /**
+     * Singleton accessor for active GeoSetting
+     */
+    public static function getActive(): self
+    {
+        return self::firstOrCreate(
+            ['id' => 1],
+            [
+                'default_latitude' => 1.7289,
+                'default_longitude' => 128.0054,
+                'default_zoom_level' => 12,
+                'default_basemap' => 'esriSatellite',
+                'esri_feature_service_url' => (string) config('services.esri.feature_service_url'),
+                'esri_geoprocessing_url' => (string) config('services.esri.geoprocessing_url'),
+                'auto_sync_esri' => true,
+                'default_layer_color' => '#7c3aed',
+                'default_fill_opacity' => 0.35,
+                'max_kmz_file_mb' => 15,
+                'spatial_reference_srid' => 'EPSG:4326',
+                'unit_luas' => 'ha',
+                'unit_panjang' => 'km',
+                'updated_by' => 'System',
+            ]
+        );
+    }
+}

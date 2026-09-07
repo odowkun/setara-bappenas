@@ -3,10 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rules\Password;
 
 class AuthController extends Controller
 {
@@ -17,9 +20,20 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', strtolower($request->email))->first();
+        $email = Str::lower(trim($request->string('email')->toString()));
+        $user = User::where('email', $email)->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            DB::table('audit_logs')->insert([
+                'user_name' => Str::mask($email, '*', 2, max(strlen($email) - 6, 1)),
+                'user_role' => 'unknown',
+                'action' => 'LOGIN_FAILED',
+                'details' => 'Percobaan login ditolak.',
+                'ip_address' => $request->ip() ?? 'unknown',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'code' => 401,
@@ -47,15 +61,7 @@ class AuthController extends Controller
             'message' => 'Login berhasil',
             'data' => [
                 'token' => $token,
-                'user' => [
-                    'id' => (string) $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'role' => $user->role,
-                    'bidang' => $user->bidang,
-                    'nip' => $user->nip,
-                    'jabatan' => $user->jabatan,
-                ],
+                'user' => (new UserResource($user))->resolve(),
             ],
         ]);
     }
@@ -63,7 +69,7 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         if ($request->user()) {
-            $request->user()->currentAccessToken()->delete();
+            $request->user()->currentAccessToken()?->delete();
         }
 
         return response()->json([
@@ -78,7 +84,71 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'code' => 200,
-            'data' => $request->user(),
+            'data' => (new UserResource($request->user()))->resolve(),
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        $request->merge([
+            'email' => Str::lower(trim($request->string('email')->toString())),
+        ]);
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email,'.$user->id],
+            'nip' => ['nullable', 'string', 'max:50'],
+            'jabatan' => ['nullable', 'string', 'max:255'],
+        ]);
+
+        $user->update([
+            ...$validated,
+            'email' => Str::lower(trim($validated['email'])),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Profil berhasil diperbarui.',
+            'data' => (new UserResource($user->fresh()))->resolve(),
+        ]);
+    }
+
+    public function updatePassword(Request $request)
+    {
+        $validated = $request->validate([
+            'current_password' => ['required', 'string'],
+            'password' => [
+                'required',
+                'confirmed',
+                Password::min(12)->mixedCase()->numbers(),
+            ],
+        ]);
+
+        $user = $request->user();
+        if (! Hash::check($validated['current_password'], $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 422,
+                'message' => 'Kata sandi lama tidak sesuai.',
+                'errors' => [
+                    'current_password' => ['Kata sandi lama tidak sesuai.'],
+                ],
+            ], 422);
+        }
+
+        $user->update(['password' => $validated['password']]);
+
+        $currentTokenId = $user->currentAccessToken()?->id;
+        $user->tokens()
+            ->when($currentTokenId, fn ($query) => $query->whereKeyNot($currentTokenId))
+            ->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Kata sandi berhasil diperbarui. Sesi lain telah dicabut.',
         ]);
     }
 }

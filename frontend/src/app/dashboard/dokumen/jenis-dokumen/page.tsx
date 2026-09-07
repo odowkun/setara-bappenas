@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { JenisDokumenItem } from "@/types/auth";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import {
@@ -28,16 +29,7 @@ export default function ManajemenJenisDokumenPage() {
     setMounted(true);
   }, []);
 
-  const [jenisList, setJenisList] = useState<JenisDokumenItem[]>([
-    { id: 1, name: "Rencana Pembangunan Jangka Panjang Daerah - RPJPD", code: "rpjpd", scope_role: "admin_umum", is_default: false, created_by: "SuperAdmin" },
-    { id: 2, name: "Rencana Pembangunan Jangka Menengah Daerah - RPJMD", code: "rpjmd", scope_role: "admin_umum", is_default: false, created_by: "SuperAdmin" },
-    { id: 3, name: "Rencana Kerja Pemerintah Daerah - RKPD", code: "rkpd", scope_role: "admin_umum", is_default: false, created_by: "SuperAdmin" },
-    { id: 4, name: "Laporan Keterangan Pertanggungjawaban - LKPJ", code: "lkpj", scope_role: "admin_umum", is_default: false, created_by: "SuperAdmin" },
-    { id: 5, name: "Rencana Strategis - Renstra", code: "renstra", scope_role: "admin_bidang", is_default: false, created_by: "SuperAdmin" },
-    { id: 6, name: "Rencana Kerja - Renja", code: "renja", scope_role: "admin_bidang", is_default: false, created_by: "SuperAdmin" },
-    { id: 7, name: "Dik Sektoral", code: "dik_sektoral", scope_role: "admin_bidang", is_default: false, created_by: "SuperAdmin" },
-    { id: 8, name: "Data Sektoral", code: "data_sektoral", scope_role: "admin_bidang", is_default: false, created_by: "SuperAdmin" },
-  ]);
+  const [jenisList, setJenisList] = useState<JenisDokumenItem[]>([]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<string>("semua");
@@ -53,15 +45,14 @@ export default function ManajemenJenisDokumenPage() {
   useEffect(() => {
     const fetchJenisList = async () => {
       try {
-        const res = await fetch("http://localhost:8000/api/v1/jenis-dokumen");
+        const res = await fetch(`${API_BASE_URL}/jenis-dokumen`, { cache: "no-store" });
         if (res.ok) {
           const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            setJenisList(json.data);
-          }
+          setJenisList(Array.isArray(json.data) ? json.data : []);
         }
       } catch (err) {
-        console.warn("Menggunakan fallback Jenis Dokumen:", err);
+        console.error("Jenis dokumen resmi gagal dimuat:", err);
+        setJenisList([]);
       }
     };
 
@@ -76,32 +67,24 @@ export default function ManajemenJenisDokumenPage() {
       ? code.toLowerCase().replace(/[^a-z0-9]/g, "_")
       : name.toLowerCase().replace(/[^a-z0-9]/g, "_");
 
-    const newItem: JenisDokumenItem = {
-      id: Date.now(),
-      name: name.trim(),
-      code: generatedCode,
-      scope_role: scopeRole,
-      is_default: false,
-      created_by: user?.name || "SuperAdmin",
-    };
-
-    // Try saving to backend API
     try {
-      await fetch("http://localhost:8000/api/v1/jenis-dokumen", {
+      const response = await authenticatedFetch("/jenis-dokumen", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: name.trim(),
           code: generatedCode,
           scope_role: scopeRole,
-          created_by: user?.name || "SuperAdmin",
         }),
       });
+      if (!response.ok) throw new Error(`Server menolak jenis dokumen (${response.status}).`);
+      const json = await response.json();
+      setJenisList((prev) => [...prev, json.data]);
     } catch (err) {
-      console.warn("Simpan API gagal, menyimpan di local state:", err);
+      toast.error(err instanceof Error ? err.message : "Jenis dokumen gagal disimpan.");
+      return;
     }
 
-    setJenisList((prev) => [...prev, newItem]);
     setName("");
     setCode("");
     setIsModalOpen(false);
@@ -115,15 +98,15 @@ export default function ManajemenJenisDokumenPage() {
     if (!res.isConfirmed) return;
 
     try {
-      await fetch(`http://localhost:8000/api/v1/jenis-dokumen/${id}`, {
+      const response = await authenticatedFetch(`/jenis-dokumen/${id}`, {
         method: "DELETE",
       });
+      if (!response.ok) throw new Error(`Server menolak penghapusan (${response.status}).`);
+      setJenisList((prev) => prev.filter((item) => item.id !== id));
+      toast.success(`Jenis dokumen "${itemName}" berhasil dihapus dari database!`);
     } catch (err) {
-      console.warn("Hapus API error:", err);
+      toast.error(err instanceof Error ? err.message : "Jenis dokumen gagal dihapus.");
     }
-
-    setJenisList((prev) => prev.filter((item) => item.id !== id));
-    toast.success(`Jenis dokumen "${itemName}" berhasil dihapus!`);
   };
 
   const filteredItems = jenisList.filter((item) => {

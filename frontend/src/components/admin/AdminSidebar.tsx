@@ -31,15 +31,31 @@ import {
   UserCheck,
   Link2,
   History,
+  Globe,
+  Layers,
+  Server,
+  Palette,
+  Shield,
+  Target,
+  Printer,
 } from "lucide-react";
+
+interface SubMenuItem {
+  title: string;
+  href: string;
+  icon: React.ElementType;
+  roles?: ("superadmin" | "admin_umum" | "admin_bidang")[];
+  permissions?: string[];
+  subItems?: SubMenuItem[];
+}
 
 interface MenuItem {
   title: string;
   href: string;
   icon: React.ElementType;
   roles: ("superadmin" | "admin_umum" | "admin_bidang")[];
-  permission?: string;
-  subItems?: { title: string; href: string; icon: React.ElementType; roles?: ("superadmin" | "admin_umum" | "admin_bidang")[] }[];
+  permissions?: string[];
+  subItems?: SubMenuItem[];
 }
 
 const menuItems: MenuItem[] = [
@@ -54,12 +70,14 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/users",
     icon: Users,
     roles: ["superadmin"],
+    permissions: ["manage_users"],
   },
   {
     title: "Profil & Kelembagaan",
     href: "/dashboard/profil",
     icon: Building2,
     roles: ["superadmin"],
+    permissions: ["manage_profil"],
     subItems: [
       { title: "Tentang Bappeda", href: "/dashboard/profil/tentang", icon: Building2 },
       { title: "Tugas & Fungsi", href: "/dashboard/profil/tugas-fungsi", icon: FileText },
@@ -72,11 +90,12 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/berita",
     icon: Newspaper,
     roles: ["superadmin", "admin_umum"],
+    permissions: ["manage_berita", "manage_pengumuman", "manage_galeri"],
     subItems: [
-      { title: "Berita & Artikel", href: "/dashboard/berita", icon: Newspaper },
-      { title: "Pengumuman Resmi", href: "/dashboard/pengumuman", icon: Megaphone },
-      { title: "Galeri Foto & Video", href: "/dashboard/galeri", icon: Image },
-      { title: "Agenda Kerja & Kalender", href: "/dashboard/agenda", icon: Calendar },
+      { title: "Berita & Artikel", href: "/dashboard/berita", icon: Newspaper, permissions: ["manage_berita"] },
+      { title: "Pengumuman Resmi", href: "/dashboard/pengumuman", icon: Megaphone, permissions: ["manage_pengumuman"] },
+      { title: "Galeri Foto & Video", href: "/dashboard/galeri", icon: Image, permissions: ["manage_galeri"] },
+      { title: "Agenda Kerja & Kalender", href: "/dashboard/agenda", icon: Calendar, permissions: ["manage_pengumuman"] },
     ],
   },
   {
@@ -84,14 +103,39 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/dokumen",
     icon: FileText,
     roles: ["superadmin", "admin_umum", "admin_bidang"],
+    permissions: ["manage_dokumen", "manage_gis"],
     subItems: [
-      { title: "Manajemen Jenis Dokumen", href: "/dashboard/dokumen/jenis-dokumen", icon: FolderPlus, roles: ["superadmin"] },
-      { title: "Upload Dokumen Induk", href: "/dashboard/dokumen", icon: FileText },
-      { title: "Riwayat Pengunduh", href: "/dashboard/dokumen/riwayat-unduhan", icon: History },
-      { title: "Geotagging Proyek", href: "/dashboard/geotagging-proyek", icon: MapPin },
-      { title: "Update Progres Sektoral", href: "/dashboard/update-progres", icon: Activity },
-      { title: "Lampiran Teknis ESRI", href: "/dashboard/lampiran-teknis", icon: Paperclip },
-      { title: "Analisis Geoprocessing", href: "/dashboard/geoprocessing-analisis", icon: Compass },
+      { title: "Manajemen Jenis Dokumen", href: "/dashboard/dokumen/jenis-dokumen", icon: FolderPlus, roles: ["superadmin"], permissions: ["manage_document_types"] },
+      { title: "Upload Dokumen Induk", href: "/dashboard/dokumen", icon: FileText, permissions: ["manage_dokumen"] },
+      {
+        title: "Geotagging Proyek",
+        href: "/dashboard/geotagging-proyek",
+        icon: MapPin,
+        permissions: ["manage_gis"],
+        subItems: [
+          { title: "Update Progres Sektoral", href: "/dashboard/update-progres", icon: Activity, permissions: ["manage_gis"] },
+          { title: "Lampiran Teknis ESRI", href: "/dashboard/lampiran-teknis", icon: Paperclip, permissions: ["manage_gis"] },
+          { title: "Analisis Geoprocessing", href: "/dashboard/geoprocessing-analisis", icon: Compass, permissions: ["manage_gis"] },
+        ],
+      },
+      { title: "Riwayat Pengunduh", href: "/dashboard/dokumen/riwayat-unduhan", icon: History, roles: ["superadmin", "admin_umum"], permissions: ["view_download_logs"] },
+    ],
+  },
+  {
+    title: "Pengaturan Spasial & WebGIS",
+    href: "/dashboard/pengaturan-spasial",
+    icon: Compass,
+    roles: ["superadmin", "admin_umum", "admin_bidang"],
+    permissions: ["manage_gis", "manage_dashboard"],
+    subItems: [
+      { title: "Viewport & Peta Awal", href: "/dashboard/pengaturan-spasial/viewport", icon: Globe, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Pilihan Basemap Utama", href: "/dashboard/pengaturan-spasial/basemap", icon: Layers, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Integrasi ESRI ArcGIS", href: "/dashboard/pengaturan-spasial/esri", icon: Server, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Visual Layer & Satuan", href: "/dashboard/pengaturan-spasial/visual", icon: Palette, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Batas Administrasi & RTRW", href: "/dashboard/pengaturan-spasial/rtrw-batas", icon: Shield, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Kategori Pin & Ikon OPD", href: "/dashboard/pengaturan-spasial/pin-kategori", icon: MapPin, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Radius Penyangga (Buffer)", href: "/dashboard/pengaturan-spasial/buffer-radius", icon: Target, permissions: ["manage_gis", "manage_dashboard"] },
+      { title: "Cetak & Layout Executive", href: "/dashboard/pengaturan-spasial/cetak-layout", icon: Printer, permissions: ["manage_gis", "manage_dashboard"] },
     ],
   },
   {
@@ -99,9 +143,10 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/survey-kepuasan",
     icon: HeartHandshake,
     roles: ["superadmin", "admin_umum"],
+    permissions: ["manage_survey", "manage_kritik"],
     subItems: [
-      { title: "Survei Kepuasan (IKM)", href: "/dashboard/survey-kepuasan", icon: HeartHandshake },
-      { title: "Kritik & Saran Warga", href: "/dashboard/kritik-saran", icon: HelpCircle },
+      { title: "Survei Kepuasan (IKM)", href: "/dashboard/survey-kepuasan", icon: HeartHandshake, permissions: ["manage_survey"] },
+      { title: "Kritik & Saran Warga", href: "/dashboard/kritik-saran", icon: HelpCircle, permissions: ["manage_kritik"] },
     ],
   },
   {
@@ -109,13 +154,14 @@ const menuItems: MenuItem[] = [
     href: "/dashboard/tautan-opd",
     icon: Link2,
     roles: ["superadmin", "admin_umum", "admin_bidang"],
-    permission: "manage_tautan_opd",
+    permissions: ["manage_tautan_opd"],
   },
   {
     title: "Audit Logs SPBE",
     href: "/dashboard/audit-logs",
     icon: ShieldCheck,
     roles: ["superadmin"],
+    permissions: ["view_audit_logs"],
   },
   {
     title: "Pengaturan Profil",
@@ -125,8 +171,14 @@ const menuItems: MenuItem[] = [
   },
 ];
 
-export const AdminSidebar: React.FC = () => {
+export interface AdminSidebarProps {
+  pendingPath?: string | null;
+  onNavigate?: (href: string) => void;
+}
+
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({ pendingPath, onNavigate }) => {
   const pathname = usePathname();
+  const currentPath = pendingPath || pathname;
   const { user, logout, hasRole, hasPermission } = useAuth();
   const [mounted, setMounted] = useState(false);
 
@@ -202,14 +254,16 @@ export const AdminSidebar: React.FC = () => {
               Menu Utama SPBE
             </p>
             {menuItems.map((item) => {
-              const isAllowed = hasRole(item.roles) && (!item.permission || hasPermission(item.permission));
+              const isAllowed =
+                hasRole(item.roles) &&
+                (!item.permissions || item.permissions.some(hasPermission));
               if (!isAllowed) return null;
 
               const isSubItemActive = item.subItems?.some(
-                (sub) => pathname === sub.href
+                (sub) => currentPath === sub.href || sub.subItems?.some((child) => currentPath === child.href)
               );
-              const isActive = pathname === item.href || isSubItemActive;
-              const isOpen = openSubMenus[item.href] ?? isActive;
+              const isActive = currentPath === item.href || isSubItemActive;
+              const isOpen = isSubItemActive || !!openSubMenus[item.href];
               const Icon = item.icon;
 
               if (item.subItems) {
@@ -238,13 +292,81 @@ export const AdminSidebar: React.FC = () => {
                       <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-4 py-1">
                         {item.subItems.map((sub) => {
                           if (sub.roles && !hasRole(sub.roles)) return null;
+                          if (sub.permissions && !sub.permissions.some(hasPermission)) return null;
 
-                          const isSubActive = pathname === sub.href;
                           const SubIcon = sub.icon;
+                          const isSubChildActive = sub.subItems?.some((child) => currentPath === child.href);
+                          const isSubActive = currentPath === sub.href;
+                          const isParentOrSubActive = isSubActive || isSubChildActive;
+                          const isSubOpen = isParentOrSubActive || !!openSubMenus[sub.href];
+
+                          if (sub.subItems) {
+                            return (
+                              <div key={`${sub.href}-${sub.title}`} className="space-y-1">
+                                <div className="flex items-center justify-between group">
+                                  <Link
+                                    href={sub.href}
+                                    onClick={() => onNavigate?.(sub.href)}
+                                    className={`flex-1 flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
+                                      isSubActive
+                                        ? "bg-blue-700 text-white shadow-sm"
+                                        : isSubChildActive
+                                        ? "bg-blue-50 text-blue-700 font-extrabold"
+                                        : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
+                                    }`}
+                                  >
+                                    <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : isSubChildActive ? "text-blue-700" : "text-slate-400"}`} />
+                                    <span>{sub.title}</span>
+                                  </Link>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleSubMenu(sub.href)}
+                                    className="px-2 py-2 text-slate-400 hover:text-blue-700 transition cursor-pointer"
+                                    title={`Toggle ${sub.title}`}
+                                  >
+                                    <ChevronDown
+                                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                        isSubOpen ? "rotate-180 text-blue-600" : ""
+                                      }`}
+                                    />
+                                  </button>
+                                </div>
+
+                                {isSubOpen && (
+                                  <div className="pl-3 space-y-1 border-l-2 border-blue-200 ml-4 py-0.5">
+                                    {sub.subItems.map((child) => {
+                                      if (child.roles && !hasRole(child.roles)) return null;
+                                      if (child.permissions && !child.permissions.some(hasPermission)) return null;
+
+                                      const isChildActive = currentPath === child.href;
+                                      const ChildIcon = child.icon;
+                                      return (
+                                        <Link
+                                          key={`${child.href}-${child.title}`}
+                                          href={child.href}
+                                          onClick={() => onNavigate?.(child.href)}
+                                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold transition ${
+                                            isChildActive
+                                              ? "bg-blue-700 text-white shadow-2xs"
+                                              : "text-slate-600 hover:text-blue-700 hover:bg-blue-50"
+                                          }`}
+                                        >
+                                          <ChildIcon className={`w-3 h-3 ${isChildActive ? "text-white" : "text-slate-400"}`} />
+                                          <span>{child.title}</span>
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+
                           return (
                             <Link
                               key={`${sub.href}-${sub.title}`}
                               href={sub.href}
+                              onClick={() => onNavigate?.(sub.href)}
                               className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
                                 isSubActive
                                   ? "bg-blue-700 text-white shadow-sm"
@@ -266,6 +388,7 @@ export const AdminSidebar: React.FC = () => {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => onNavigate?.(item.href)}
                   className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
                     isActive
                       ? "bg-blue-700 text-white shadow-md shadow-blue-700/25"

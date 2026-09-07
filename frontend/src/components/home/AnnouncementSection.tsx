@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Megaphone, Pin, ArrowRight, FileText, Download } from "lucide-react";
 import { motion } from "framer-motion";
+import { officialContentService } from "@/services/officialContentService";
 
 interface AnnouncementHomeItem {
   id: string;
@@ -25,26 +26,20 @@ export const AnnouncementSection: React.FC = () => {
     const fetchAnnouncements = async () => {
       setLoading(true);
       try {
-        const res = await fetch("http://localhost:8000/api/v1/pengumuman");
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-            const mapped: AnnouncementHomeItem[] = json.data.map((item: any) => ({
-              id: String(item.id),
-              nomorSurat: item.nomor_surat || item.nomorSurat || `050 / ${item.id} / BAPPEDA / 2026`,
-              title: item.title,
-              type: item.type || item.kategori || "Surat Edaran",
-              isImportant: Boolean(item.is_important || item.isImportant),
-              fileSize: item.file_size || "2.4 MB",
-              createdAt: item.created_at ? item.created_at.split("T")[0] : "2026-07-24",
-              content: item.content || item.deskripsi || item.title,
-              pdfUrl: item.pdf_url || item.file_path || "/documents/pengumuman.pdf",
-            }));
-            setAnnouncements(mapped.slice(0, 3));
-          }
-        }
+        const rows = await officialContentService.getAnnouncements();
+        setAnnouncements(rows.slice(0, 3).map((item) => ({
+          id: item.id,
+          title: item.title,
+          type: item.type,
+          isImportant: item.isImportant,
+          fileSize: "",
+          createdAt: item.createdAt,
+          content: item.content,
+          pdfUrl: item.pdfUrl,
+        })));
       } catch (e) {
-        console.warn("[AnnouncementSection] API offline:", e);
+        console.error("[AnnouncementSection] Data resmi gagal dimuat:", e);
+        setAnnouncements([]);
       } finally {
         setLoading(false);
       }

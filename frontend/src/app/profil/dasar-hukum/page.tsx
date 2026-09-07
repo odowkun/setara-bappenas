@@ -92,26 +92,7 @@ export default function PublicDasarHukumPage() {
               </div>
 
               <div className="space-y-3">
-                {(data?.meta_json?.regulasi || [
-                  {
-                    nama: "Peraturan Daerah Kabupaten Halmahera Utara Nomor 5 Tahun 2016",
-                    tentang: "Pembentukan dan Susunan Perangkat Daerah Kabupaten Halmahera Utara",
-                    kategori: "PERDA HALUT",
-                    file_url: "/documents/dokumen-bappeda-halut.pdf",
-                  },
-                  {
-                    nama: "Peraturan Bupati Halmahera Utara Nomor 28 Tahun 2021",
-                    tentang: "Kedudukan, Susunan Organisasi, Tugas dan Fungsi serta Tata Kerja BAPPEDA",
-                    kategori: "PERBUP HALUT",
-                    file_url: "/documents/dokumen-bappeda-halut.pdf",
-                  },
-                  {
-                    nama: "Undang-Undang Republik Indonesia Nomor 25 Tahun 2004",
-                    tentang: "Sistem Perencanaan Pembangunan Nasional (SPPN)",
-                    kategori: "UNDANG-UNDANG",
-                    file_url: "/documents/dokumen-bappeda-halut.pdf",
-                  },
-                ]).map((item, idx) => (
+                {(data?.meta_json?.regulasi ?? []).map((item, idx) => (
                   <div
                     key={idx}
                     className="p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm hover:shadow-md transition flex flex-col sm:flex-row sm:items-center justify-between gap-4"
@@ -133,15 +114,19 @@ export default function PublicDasarHukumPage() {
                       </div>
                     </div>
 
-                    <a
-                      href={item.file_url || "/documents/dokumen-bappeda-halut.pdf"}
+                    {item.file_url ? <a
+                      href={item.file_url}
                       target="_blank"
                       rel="noreferrer"
                       className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 font-extrabold text-xs flex items-center gap-2 transition shrink-0 self-end sm:self-auto"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>Unduh Dokumen</span>
-                    </a>
+                    </a> : (
+                      <span className="px-4 py-2 rounded-xl bg-slate-100 text-slate-400 font-bold text-xs">
+                        Lampiran belum tersedia
+                      </span>
+                    )}
                   </div>
                 ))}
               </div>

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Survey;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
@@ -12,7 +13,7 @@ class SurveySeeder extends Seeder
     {
         // 1. Clear existing survey responses & questions
         Schema::disableForeignKeyConstraints();
-        DB::table('surveys')->truncate();
+        Survey::query()->truncate();
         DB::table('survey_questions')->truncate();
         DB::table('survey_services')->truncate();
         Schema::enableForeignKeyConstraints();
@@ -353,6 +354,8 @@ class SurveySeeder extends Seeder
                 'updated_at' => now()->subDays(4),
             ],
         ];
-        DB::table('surveys')->insert($responses);
+        foreach ($responses as $response) {
+            Survey::query()->create($response);
+        }
     }
 }

@@ -6,7 +6,6 @@ import { MapPin, Layers, Download, Navigation, Info, CheckCircle2, Camera, Paper
 import { toast } from "@/lib/swal";
 import Swal from "sweetalert2";
 
-import { adminService } from "@/services/adminService";
 import { proyekService, ProyekDetail } from "@/services/proyekService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 
@@ -75,19 +74,27 @@ export const EsriMapView: React.FC = () => {
         images: imagesList,
         documents: documentsList,
         name: p.nama_proyek,
-        location: p.desa_kelurahan ? `Desa ${p.desa_kelurahan}` : `Kecamatan ${p.kecamatan || "Tobelo"}`,
-        kecamatan: p.kecamatan || "Tobelo",
-        category: p.bidang ? p.bidang.toUpperCase() : "INFRASTRUKTUR",
-        desc: p.lokasi_deskripsi || `Pembangunan fasilitas ${p.nama_proyek} di ${p.kecamatan || "Halmahera Utara"}.`,
-        peran: `Pelayanan Publik & Pembangunan ${p.bidang ? p.bidang.toUpperCase() : ""}`,
-        budget: `Rp ${(p.pagu_anggaran ? p.pagu_anggaran / 1000000000 : 1).toFixed(1)} Miliar`,
+        location: p.desa_kelurahan
+          ? `Desa ${p.desa_kelurahan}`
+          : p.kecamatan
+            ? `Kecamatan ${p.kecamatan}`
+            : "Lokasi belum tersedia",
+        kecamatan: p.kecamatan || "Belum tersedia",
+        category: p.bidang ? p.bidang.toUpperCase() : "BELUM DIKLASIFIKASIKAN",
+        desc: p.lokasi_deskripsi || "Deskripsi proyek belum tersedia.",
+        peran: p.bidang ? `Bidang ${p.bidang.toUpperCase()}` : "Bidang belum tersedia",
+        budget: new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          maximumFractionDigits: 0,
+        }).format(Number(p.pagu_anggaran)),
         progress: p.persentase_progres || 0,
-        year: 2026,
+        year: p.document?.tahun || (p.created_at ? new Date(p.created_at).getFullYear() : ""),
         status: p.status_progres === "selesai" ? "Selesai (100%)" : `Tahap Pengerjaan (${p.persentase_progres}%)`,
         koordinat: `${p.latitude.toFixed(4)}° N, ${p.longitude.toFixed(4)}° E`,
         lat: p.latitude,
         lng: p.longitude,
-        contractor: p.created_by || "Pemerintah Kab. Halmahera Utara",
+        contractor: p.opd_penanggung_jawab || "OPD belum tersedia",
         image: photoUrl,
       };
     });
@@ -117,33 +124,25 @@ export const EsriMapView: React.FC = () => {
   const handleDownloadDocument = (loc: any) => {
     if (!loc) return;
 
-    const allDocs = adminService.getDocuments();
-    const foundDoc =
-      loc.rawDoc ||
-      allDocs.find((d) => String(d.id) === String(loc.documentId || loc.dokumen_id));
+    const foundDoc = loc.rawDoc;
+    const documentId =
+      foundDoc?.id || loc.documentId || loc.dokumen_id;
 
-    if (foundDoc) {
-      const rawFileUrl = foundDoc.fileUrl || (foundDoc as any).file_path;
-      const fullUrl = rawFileUrl
-        ? rawFileUrl.startsWith("/storage/")
-          ? `http://localhost:8000${rawFileUrl}`
-          : rawFileUrl
-        : null;
-
+    if (documentId) {
       Swal.fire({
         title: `<div class="flex items-center justify-center gap-2 text-blue-900 font-black text-base"><svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Dokumen Terverifikasi Tim Bappeda</div>`,
         html: `
           <div class="text-left space-y-3 font-sans pt-2">
             <div class="p-3 bg-blue-50/80 rounded-2xl border border-blue-100">
-              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-600 text-white">${(foundDoc.jenis || "RKPD").toUpperCase()} • TAHUN ${foundDoc.tahun || 2026}</span>
-              <h4 class="text-sm font-extrabold text-slate-900 mt-1.5">${foundDoc.title}</h4>
+              <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-blue-600 text-white">${foundDoc?.jenis ? foundDoc.jenis.toUpperCase() : "JENIS BELUM TERSEDIA"} • TAHUN ${foundDoc?.tahun || "Belum tersedia"}</span>
+              <h4 class="text-sm font-extrabold text-slate-900 mt-1.5">${foundDoc?.title || "Judul dokumen belum tersedia"}</h4>
               <p class="text-xs text-slate-500 font-medium mt-0.5">Dokumen Resmi Perencanaan Bappeda Kab. Halmahera Utara</p>
             </div>
 
             <div class="grid grid-cols-2 gap-2 text-[11px] font-medium text-slate-600">
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-400 block font-bold">OPD / Pengunggah:</span>
-                <span class="font-extrabold text-slate-800">${foundDoc.uploadedBy || "Bappeda Halut"}</span>
+                <span class="font-extrabold text-slate-800">${foundDoc?.uploadedBy || "Tidak dipublikasikan"}</span>
               </div>
               <div class="p-2 bg-slate-50 rounded-xl border border-slate-200">
                 <span class="text-[10px] text-slate-400 block font-bold">Target Proyek:</span>
@@ -166,11 +165,7 @@ export const EsriMapView: React.FC = () => {
         buttonsStyling: false,
       }).then((result) => {
         if (result.isConfirmed) {
-          if (fullUrl) {
-            window.open(fullUrl, "_blank");
-          } else {
-            window.open(`/dashboard/dokumen/${foundDoc.id}`, "_blank");
-          }
+          window.open(`/dokumen?unduh=${encodeURIComponent(String(documentId))}`, "_blank");
         }
       });
     } else {

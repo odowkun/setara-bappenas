@@ -22,13 +22,32 @@ class ProyekDetail extends Model
         'latitude',
         'longitude',
         'esri_objectid',
+        'esri_sync_status',
+        'esri_synced_at',
+        'esri_last_error',
         'pagu_anggaran',
         'realisasi_anggaran',
         'persentase_progres',
         'status_progres',
+        'delineasi_geojson',
+        'tipe_geometri',
+        'luas_area_ha',
+        'panjang_km',
         'opd_penanggung_jawab',
         'created_by',
         'updated_by',
+    ];
+
+    protected $casts = [
+        'delineasi_geojson' => 'array',
+        'luas_area_ha' => 'float',
+        'panjang_km' => 'float',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'pagu_anggaran' => 'float',
+        'realisasi_anggaran' => 'float',
+        'persentase_progres' => 'float',
+        'esri_synced_at' => 'datetime',
     ];
 
     public function document()

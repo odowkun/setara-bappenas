@@ -20,22 +20,12 @@ import {
 import { submitKritik, fetchSurveyConfig } from "@/services/surveyService";
 import { toast } from "@/lib/swal";
 
-const DEFAULT_SKPD_LIST = [
-  "BAPPEDA Halmahera Utara (Kantor Utama)",
-  "Bidang Perencanaan Pembangunan & Evaluasi",
-  "Bidang Pembangunan Manusia & Masyarakat (PMM)",
-  "Bidang Ekonomi & Sumber Daya Alam (SDA)",
-  "Bidang Infrastruktur & Pengembangan Wilayah (IPW)",
-  "Bidang Pengendalian, Evaluasi & Pelaporan (PEP)",
-  "Sekretariat BAPPEDA",
-];
-
 export default function KritikSaranPublicPage() {
-  const [skpdList, setSkpdList] = useState<string[]>(DEFAULT_SKPD_LIST);
+  const [skpdList, setSkpdList] = useState<string[]>([]);
   const [nama, setNama] = useState("");
   const [email, setEmail] = useState("");
   const [telepon, setTelepon] = useState("");
-  const [skpdTujuan, setSkpdTujuan] = useState(DEFAULT_SKPD_LIST[0]);
+  const [skpdTujuan, setSkpdTujuan] = useState("");
   const [subjek, setSubjek] = useState("");
   const [pesan, setPesan] = useState("");
 
