@@ -2,18 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useAccessibility } from "@/context/AccessibilityContext";
-import {
-  Eye,
-  ZoomIn,
-  ZoomOut,
-  RotateCcw,
-  Type,
-  Volume2,
-  VolumeX,
-  Sparkles,
-  Search,
-  Accessibility,
-} from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw, VolumeX } from "lucide-react";
 import { toast } from "@/lib/swal";
 
 export const A11yToolbar: React.FC = () => {
@@ -72,8 +61,13 @@ export const A11yToolbar: React.FC = () => {
       {isOpen && (
         <div className="mb-3 flex min-w-[280px] max-w-[calc(100vw-2rem)] animate-in flex-col gap-3 rounded-3xl border border-slate-200/90 bg-white/95 p-4 text-slate-800 shadow-2xl shadow-blue-950/20 backdrop-blur-2xl fade-in slide-in-from-bottom-5 motion-reduce:animate-none">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-            <span className="text-xs font-black uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Pengaturan Aksesibilitas
+            <span className="text-xs font-black uppercase tracking-wider text-blue-900 flex items-center gap-2">
+              <img
+                src="/images/3dicons/setting-dynamic-color.png"
+                alt=""
+                className="w-5 h-5 object-contain shrink-0"
+              />
+              Pengaturan Aksesibilitas
             </span>
             <button
               type="button"
@@ -91,7 +85,12 @@ export const A11yToolbar: React.FC = () => {
             className="flex items-center justify-between w-full px-3 py-2 text-xs bg-slate-100 hover:bg-blue-50 text-slate-700 rounded-xl transition cursor-pointer font-bold"
           >
             <span className="flex items-center gap-2">
-              <Search className="w-3.5 h-3.5 text-blue-600" /> Cari Cepat Dokumen
+              <img
+                src="/images/3dicons/zoom-dynamic-color.png"
+                alt=""
+                className="w-4 h-4 object-contain"
+              />
+              Cari Cepat Dokumen
             </span>
             <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-slate-200 rounded text-slate-500 font-mono font-bold">
               ⌘K
@@ -139,7 +138,12 @@ export const A11yToolbar: React.FC = () => {
             }`}
           >
             <span className="flex items-center gap-2">
-              <Eye className="w-3.5 h-3.5 text-amber-600" /> Kontras Tinggi
+              <img
+                src="/images/3dicons/sun-dynamic-color.png"
+                alt=""
+                className="w-4 h-4 object-contain"
+              />
+              Kontras Tinggi
             </span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-white/60">
               {highContrast ? "AKTIF" : "NONAKTIF"}
@@ -156,7 +160,12 @@ export const A11yToolbar: React.FC = () => {
             }`}
           >
             <span className="flex items-center gap-2">
-              <Type className="w-3.5 h-3.5 text-blue-600" /> Font Ramah Disleksia
+              <img
+                src="/images/3dicons/notebook-dynamic-color.png"
+                alt=""
+                className="w-4 h-4 object-contain"
+              />
+              Font Ramah Disleksia
             </span>
             <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-white/30">
               {dyslexiaFont ? "AKTIF" : "NONAKTIF"}
@@ -174,9 +183,13 @@ export const A11yToolbar: React.FC = () => {
           >
             <span className="flex items-center gap-2">
               {isPlayingAudio ? (
-                <VolumeX className="w-3.5 h-3.5 text-white" />
+                <VolumeX className="w-4 h-4 text-white" />
               ) : (
-                <Volume2 className="w-3.5 h-3.5 text-blue-600" />
+                <img
+                  src="/images/3dicons/headphone-dynamic-color.png"
+                  alt=""
+                  className="w-4 h-4 object-contain"
+                />
               )}
               Pembaca Suara (Voice Reader)
             </span>
@@ -206,8 +219,12 @@ export const A11yToolbar: React.FC = () => {
         }
         aria-expanded={isOpen}
       >
-        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-600 border border-blue-200/70 transition-all duration-200 group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white">
-          <Accessibility className="h-4 w-4" aria-hidden="true" />
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-blue-50 border border-blue-200/70 transition-all duration-200 group-hover:scale-110">
+          <img
+            src="/images/3dicons/setting-dynamic-color.png"
+            alt="Menu Aksesibilitas"
+            className="h-5 w-5 object-contain"
+          />
         </span>
         <span className="hidden text-xs font-black tracking-tight text-slate-700 transition-colors group-hover:text-blue-950 sm:inline">
           Menu Aksesibilitas

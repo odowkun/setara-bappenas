@@ -4,18 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import {
-  CalendarRange,
-  Map,
-  Award,
-  Briefcase,
-  CheckCircle2,
-  FolderArchive,
-  BookOpenText,
-  ChevronUp,
-  X,
-  FileText,
-} from "lucide-react";
+import { ChevronUp, X } from "lucide-react";
 import {
   DOCUMENT_QUICK_CATEGORIES,
   DocumentCategoryCode,
@@ -31,38 +20,38 @@ interface DocumentQuickMenuProps {
 const CATEGORY_META: Record<
   DocumentCategoryCode,
   {
-    icon: React.ComponentType<{ className?: string }>;
+    icon3d: string;
     shortLabel: string;
     description: string;
   }
 > = {
   RKPD: {
-    icon: CalendarRange,
+    icon3d: "/images/3dicons/calender-dynamic-color.png",
     shortLabel: "RKPD",
     description: "Rencana Kerja Pemerintah Daerah",
   },
   RTRW: {
-    icon: Map,
+    icon3d: "/images/3dicons/travel-dynamic-color.png",
     shortLabel: "RTRW",
     description: "Rencana Tata Ruang Wilayah",
   },
   RPJPD: {
-    icon: Award,
+    icon3d: "/images/3dicons/target-dynamic-color.png",
     shortLabel: "RPJPD",
     description: "Rencana Pembangunan 20 Tahun",
   },
   RPJMD: {
-    icon: Briefcase,
+    icon3d: "/images/3dicons/chart-dynamic-color.png",
     shortLabel: "RPJMD",
     description: "Rencana Pembangunan 5 Tahun",
   },
   LKPJ: {
-    icon: CheckCircle2,
+    icon3d: "/images/3dicons/sheild-dynamic-color.png",
     shortLabel: "LKPJ",
     description: "Laporan Pertanggungjawaban",
   },
   LAINNYA: {
-    icon: FolderArchive,
+    icon3d: "/images/3dicons/folder-dynamic-color.png",
     shortLabel: "Lainnya",
     description: "Dokumen Publik Lainnya",
   },
@@ -125,24 +114,28 @@ export function DocumentQuickMenu({
   ) => {
     const isActive = activeCode === code;
     const meta = CATEGORY_META[code] || {
-      icon: BookOpenText,
+      icon3d: "/images/3dicons/file-text-dynamic-color.png",
       shortLabel: label,
       description: label,
     };
-    const IconComponent = meta.icon;
     const displayLabel = compact ? label : meta.shortLabel;
 
     if (compact) {
       const compactContent = (
         <>
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl transition-colors ${
+            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all duration-200 ${
               isActive
-                ? "bg-white/20 text-white"
-                : "bg-blue-100 text-blue-700 group-hover:bg-blue-200"
+                ? "bg-white/20 shadow-xs"
+                : "bg-blue-50/80 group-hover:bg-blue-100"
             }`}
           >
-            <IconComponent className="h-4.5 w-4.5" />
+            <img
+              src={meta.icon3d}
+              alt={label}
+              className="h-6 w-6 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
+              loading="lazy"
+            />
           </span>
           <div className="flex flex-col min-w-0">
             <span className="text-xs font-black leading-snug">{label}</span>
@@ -198,11 +191,16 @@ export function DocumentQuickMenu({
         <span
           className={`flex shrink-0 items-center justify-center transition-all duration-200 ${
             isActive
-              ? "h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-white/20 text-white shadow-2xs"
-              : "h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-blue-50 text-blue-700 group-hover:bg-blue-100 group-hover:text-blue-800"
+              ? "h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-white/20 shadow-2xs"
+              : "h-8 w-8 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl bg-blue-50/70 group-hover:bg-blue-100/80"
           }`}
         >
-          <IconComponent className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
+          <img
+            src={meta.icon3d}
+            alt={label}
+            className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
+            loading="lazy"
+          />
         </span>
         <span
           className={`whitespace-nowrap font-black tracking-tight transition-colors duration-200 ${
@@ -282,8 +280,13 @@ export function DocumentQuickMenu({
                   className="w-[calc(100vw-2.5rem)] max-w-sm rounded-[28px] border border-slate-200/90 bg-white/95 p-3.5 text-slate-900 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl"
                 >
                   <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 px-1">
-                    <span className="text-xs font-black uppercase tracking-wider text-blue-950 flex items-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5 text-amber-500" /> Kategori Dokumen
+                    <span className="text-xs font-black uppercase tracking-wider text-blue-950 flex items-center gap-2">
+                      <img
+                        src="/images/3dicons/folder-dynamic-color.png"
+                        alt=""
+                        className="w-5 h-5 object-contain shrink-0"
+                      />
+                      Kategori Dokumen
                     </span>
                     <button
                       type="button"
@@ -321,8 +324,12 @@ export function DocumentQuickMenu({
               aria-label="Buka filter cepat dokumen"
               className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/95 px-3.5 sm:px-4.5 text-slate-800 shadow-xl shadow-blue-950/10 backdrop-blur-2xl transition-all duration-200 hover:bg-white hover:border-amber-400 hover:shadow-2xl hover:shadow-amber-900/15 active:scale-95"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 text-amber-700 border border-amber-200/70 transition-all duration-200 group-hover:scale-105 group-hover:bg-amber-500 group-hover:text-white">
-                <FileText className="h-4 w-4" aria-hidden="true" />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 border border-amber-200/70 transition-all duration-200 group-hover:scale-110">
+                <img
+                  src="/images/3dicons/file-text-dynamic-color.png"
+                  alt="Kategori Dokumen"
+                  className="h-5 w-5 object-contain"
+                />
               </span>
               <span className="hidden text-xs font-black tracking-tight text-slate-700 transition-colors group-hover:text-amber-950 sm:inline">
                 Kategori Dokumen

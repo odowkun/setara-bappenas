@@ -13,7 +13,7 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
 | Aspek | Sebelum | Sesudah |
 |---|---|---|
 | **Visual Style** | Plain blue solid badge (`bg-blue-700`) | Luminous White Frosted Glass (`bg-white/95 backdrop-blur-2xl border-slate-200/90 shadow-xl`) |
-| **Aksen Ikon** | Ikon putih standar tanpa badge container | Glowing circular badge (`bg-blue-50 text-blue-600` & `bg-amber-50 text-amber-700`) |
+| **Aksen Ikon** | Ikon putih standar / Lucide vector | **3dicons.co Open-Source 3D Icons** (PNG assets: Calendar, Travel, Target, Chart, Shield, Folder, Setting, Zoom, Sun, Notebook, Headphone) |
 | **Dimensi & Tinggi** | Tidak seragam (`h-13` / `h-14`) | Seragam vertikal `h-12` (`48px`) dengan `rounded-full` |
 | **Posisi Floating** | Offset tidak simetris | Simetris pada `bottom-6 left-6 sm:bottom-8 sm:left-8` dan `bottom-6 right-6 sm:bottom-8 sm:right-8` |
 | **Interaksi Drawer** | Panel floating terpisah tanpa koordinasi | Terkoordinasi via Custom Event `bappeda:floating-panel-open` (saling menutup otomatis) |
