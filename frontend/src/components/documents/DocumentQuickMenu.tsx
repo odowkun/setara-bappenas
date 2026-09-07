@@ -31,7 +31,7 @@ const CATEGORY_META: Record<
     description: "Rencana Kerja Pemerintah Daerah",
   },
   RTRW: {
-    icon3d: "/images/3dicons/travel-dynamic-color.png",
+    icon3d: "/images/3dicons/explorer-dynamic-color.png",
     shortLabel: "RTRW",
     description: "Rencana Tata Ruang Wilayah",
   },
@@ -133,6 +133,9 @@ export function DocumentQuickMenu({
             <img
               src={meta.icon3d}
               alt={label}
+              width={24}
+              height={24}
+              style={{ width: 24, height: 24, maxWidth: 24, maxHeight: 24 }}
               className="h-6 w-6 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
               loading="lazy"
             />
@@ -198,6 +201,9 @@ export function DocumentQuickMenu({
           <img
             src={meta.icon3d}
             alt={label}
+            width={24}
+            height={24}
+            style={{ width: 24, height: 24, maxWidth: 24, maxHeight: 24 }}
             className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
             loading="lazy"
           />
@@ -279,19 +285,31 @@ export function DocumentQuickMenu({
                   transition={{ duration: reduceMotion ? 0 : 0.2 }}
                   className="w-[calc(100vw-2.5rem)] max-w-sm rounded-[28px] border border-slate-200/90 bg-white/95 p-3.5 text-slate-900 shadow-2xl shadow-slate-950/20 backdrop-blur-2xl"
                 >
-                  <div className="mb-2.5 flex items-center justify-between border-b border-slate-100 pb-2 px-1">
-                    <span className="text-xs font-black uppercase tracking-wider text-blue-950 flex items-center gap-2">
-                      <img
-                        src="/images/3dicons/folder-dynamic-color.png"
-                        alt=""
-                        className="w-5 h-5 object-contain shrink-0"
-                      />
-                      Kategori Dokumen
-                    </span>
+                  <div className="mb-3 flex items-center justify-between border-b border-slate-100 pb-3 px-1">
+                    <div className="flex items-center gap-2.5">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 border border-amber-500/20 shadow-2xs">
+                        <img
+                          src="/images/3dicons/folder-dynamic-color.png"
+                          alt=""
+                          width={20}
+                          height={20}
+                          style={{ width: 20, height: 20, maxWidth: 20, maxHeight: 20 }}
+                          className="object-contain drop-shadow-xs"
+                        />
+                      </span>
+                      <div>
+                        <span className="text-xs font-black uppercase tracking-wider text-slate-800 block">
+                          Kategori Dokumen
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          Pilih arsip &amp; perencanaan
+                        </span>
+                      </div>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsFloatingOpen(false)}
-                      className="rounded-full p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
+                      className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
                       aria-label="Tutup panel"
                     >
                       <X className="h-4 w-4" />
@@ -324,11 +342,14 @@ export function DocumentQuickMenu({
               aria-label="Buka filter cepat dokumen"
               className="group flex h-12 cursor-pointer items-center gap-2.5 rounded-full border border-slate-200/90 bg-white/95 px-3.5 sm:px-4.5 text-slate-800 shadow-xl shadow-blue-950/10 backdrop-blur-2xl transition-all duration-200 hover:bg-white hover:border-amber-400 hover:shadow-2xl hover:shadow-amber-900/15 active:scale-95"
             >
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 border border-amber-200/70 transition-all duration-200 group-hover:scale-110">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-50 border border-amber-200/70 transition-all duration-200 group-hover:scale-110 shadow-2xs">
                 <img
                   src="/images/3dicons/file-text-dynamic-color.png"
                   alt="Kategori Dokumen"
-                  className="h-5 w-5 object-contain"
+                  width={20}
+                  height={20}
+                  style={{ width: 20, height: 20, maxWidth: 20, maxHeight: 20 }}
+                  className="h-5 w-5 object-contain drop-shadow-xs"
                 />
               </span>
               <span className="hidden text-xs font-black tracking-tight text-slate-700 transition-colors group-hover:text-amber-950 sm:inline">

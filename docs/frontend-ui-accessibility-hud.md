@@ -67,3 +67,26 @@ Semua tampilan modal media dokumentasi, foto lapangan, dan album galeri (`Galler
 3. **Scroll Lock**: Otomatis mengunci scroll body (`document.body.style.overflow = "hidden"`) saat modal terbuka dan melepaskannya saat tertutup.
 4. **Keyboard & Touch**: Mendukung navigasi panah keyboard (`Escape`, `ArrowLeft`, `ArrowRight`) dan filmstrip thumbnails.
 
+---
+
+## 5. Standar Dimensi & Pemilihan Aset 3D Icons (`3dicons.co`)
+
+### Penyesuaian Ikon Spasial & Aksesibilitas
+- **RTRW (Rencana Tata Ruang Wilayah)**: Diganti dari koper travel (`travel-dynamic-color.png`) menjadi **3D Compass Explorer** (`explorer-dynamic-color.png`) yang sesuai konteks tata ruang, navigasi batas wilayah, dan geospasial.
+- **Ukuran Teks**: Dilengkapi ikon 3D **Text Typography** (`text-dynamic-color.png`) dengan tombol segmented control `A-`, `100%`, dan `A+`.
+- **Kategori Dokumen**: Menggunakan representasi visual 3D yang kohesif:
+  - RKPD: `calender-dynamic-color.png` (Kalender Kerja)
+  - RTRW: `explorer-dynamic-color.png` (Kompas Wilayah)
+  - RPJPD: `target-dynamic-color.png` (Target 20 Tahun)
+  - RPJMD: `chart-dynamic-color.png` (Grafik Pertumbuhan 5 Tahun)
+  - LKPJ: `sheild-dynamic-color.png` (Perisai Akuntabilitas)
+  - Lainnya: `folder-dynamic-color.png` (Folder Arsip)
+
+### Pencegahan Layout Shift & Ledakan Resolusi (Strict Sizing Standard)
+Semua aset PNG resolusi tinggi dari `3dicons.co` (400x400) **wajib**:
+1. Menyertakan atribut HTML eksplisit `width={...}` dan `height={...}`.
+2. Menyertakan inline CSS constraint `style={{ width: N, height: N, maxWidth: N, maxHeight: N }}`.
+3. Ditempatkan di dalam container kartu/badge (`rounded-xl` atau `rounded-lg`) bershadow lembut untuk mencegah gambar meledak melebihi container jika terjadi keterlambatan evaluasi flexbox browser.
+4. Header drawer menggunakan badge bertingkat (ikon 3D + judul tebal + subjudul deskriptif) serta tombol tutup `X` standar.
+
+
