@@ -99,4 +99,41 @@ All dashboard pages under `/dashboard` MUST adhere to a uniform full-width layou
 - **No Narrow Centering**: NEVER use `max-w-4xl mx-auto` or `max-w-3xl mx-auto` on dashboard page root containers as it causes excessive empty spaces between the left sidebar and the page content body.
 - Content must expand naturally to fill the available width of the main content panel next to the sidebar.
 
+# Supercharged Discussion Mode Rule ("Diskusi")
 
+If the user uses the keyword **"diskusi"** or asks for conceptual discussion, you MUST immediately enter Discussion Mode:
+
+1. **Strict Non-Destructive Boundary**:
+   - **DO NOT** write, modify, or delete any code/files.
+   - **DO NOT** execute any modifying/build/deploy commands.
+   - **ALLOWED & ENCOURAGED**: Use read-only inspection tools (`view_file`, `grep_search`) to ground the discussion in actual code facts.
+
+2. **Discussion Output Framework**:
+   - **Problem Synthesis**: Ringkasan inti persoalan & batasan teknis.
+   - **Architecture / Solution Options**: Minimal 2 pendekatan (Opsi A vs Opsi B) lengkap dengan Trade-off (Pros/Cons, dampak database/API).
+   - **Risk & Edge Cases**: Potensi kegagalan atau efek samping.
+   - **Recommendation**: Rekomendasi terkuat beserta alasan logis.
+
+3. **No Premature Action**:
+   - Purely conversational & exploratory.
+   - Wait for explicit user confirmation (misal: *"Setuju Opsi A, eksekusi"*) before switching back to execution/coding mode.
+
+# Git Workflow & Auto-Push Standard
+
+1. **Auto-Commit & Auto-Push to `develop`**:
+   - Every time a task, feature, or bugfix is completed, AI MUST automatically stage, commit, and push the changes to `origin develop`.
+   - Use concise conventional commit messages (e.g., `feat: ...`, `fix: ...`, `chore: ...`).
+   - Do NOT wait for the user to request a commit or push.
+
+2. **Branching Model (`develop` as Primary)**:
+   - All active development and modifications MUST happen on the `develop` branch.
+   - NEVER write, modify, or commit code directly on `staging` or `main`.
+   - Verify current branch with `git branch --show-current` before making commits. If on `main` or `staging`, switch back to `develop`.
+
+3. **Mandatory Post-Merge Return to `develop`**:
+   - Whenever merging `develop` into `staging` or `main`:
+     1. Switch to target branch (`git checkout staging` or `git checkout main`).
+     2. Merge from source (`git merge develop` or `git merge staging`).
+     3. Push target branch to remote (`git push origin <branch>`).
+     4. **IMMEDIATELY switch back to `develop` (`git checkout develop`)**.
+   - NEVER leave the repository sitting on `staging` or `main` after a merge to avoid update conflicts and branch drift.
