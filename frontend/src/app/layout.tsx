@@ -9,8 +9,11 @@ export const metadata: Metadata = {
   description:
     "Portal resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara. Informasi RKPD, RPJMD, Popeda, Esri GIS Map, & Executive Dashboard.",
   icons: {
-    icon: "/images/bappeda/logo-halut.png",
-    apple: "/images/bappeda/logo-halut.png",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/images/bappeda/favicon-bappeda.png", type: "image/png" },
+    ],
+    apple: "/apple-icon.png",
   },
 };
 
