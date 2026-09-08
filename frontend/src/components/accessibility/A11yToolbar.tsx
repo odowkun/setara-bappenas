@@ -51,7 +51,6 @@ export const A11yToolbar: React.FC = () => {
     pauseMotion,
     togglePauseMotion,
     resetAll,
-    setIsSearchOpen,
   } = useAccessibility();
 
   const [isOpen, setIsOpen] = useState(false);
@@ -222,30 +221,6 @@ export const A11yToolbar: React.FC = () => {
                 </button>
               </div>
             </div>
-
-            {/* Quick Search Shortcut */}
-            <button
-              type="button"
-              onClick={() => setIsSearchOpen(true)}
-              className="flex items-center justify-between w-full px-3 py-2 text-xs bg-slate-100/90 hover:bg-blue-50 hover:text-blue-900 text-slate-700 rounded-xl transition cursor-pointer font-bold border border-slate-200/60"
-            >
-              <span className="flex items-center gap-2.5">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-white shadow-2xs border border-slate-200/60">
-                  <img
-                    src="/images/3dicons/zoom-dynamic-color.png"
-                    alt=""
-                    width={16}
-                    height={16}
-                    style={{ width: 16, height: 16 }}
-                    className="object-contain"
-                  />
-                </span>
-                Cari Cepat Dokumen
-              </span>
-              <kbd className="px-2 py-0.5 text-[10px] bg-white border border-slate-200/90 rounded-md text-slate-500 font-mono font-bold shadow-2xs">
-                ⌘K
-              </kbd>
-            </button>
 
             {/* Section: Ukuran & Jarak Teks */}
             <div className="space-y-2 p-2.5 rounded-2xl bg-slate-50/80 border border-slate-100">

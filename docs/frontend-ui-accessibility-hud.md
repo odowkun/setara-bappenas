@@ -27,11 +27,15 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
 - **Lokasi**: Sisi kiri bawah (`bottom-6 left-6 sm:bottom-8 sm:left-8`).
 - **Aksen Warna**: Cyan/Blue (`text-blue-600`, `bg-blue-50`, border `border-blue-200/70`).
 - **Fitur Interaktif**:
-  - Penyesuaian ukuran teks (A- / Reset / A+).
-  - Mode Kontras Tinggi (High Contrast).
-  - Tipografi Ramah Disleksia (OpenDyslexic style).
-  - Pembaca Suara (Voice Reader) memanfaatkan Web Speech API.
-  - Shortcut pencarian instan dokumen (`⌘K`).
+  - Penyesuaian ukuran teks (A- / Reset / A+) dan spasi/jarak baris teks.
+  - Palet multi-mode warna & kontras (Kontras Tinggi, Monokrom, Invert, Sepia).
+  - Garis bantu baca kursor (Reading Guide Ruler).
+  - Kursor ekstra besar (Big Cursor).
+  - Sorot semua tautan (Highlight Links).
+  - Tipografi Ramah Disleksia (Lexend font).
+  - Jeda animasi gerak (Pause Motion).
+  - Pembaca Suara (Smart Voice Reader) dengan Web Speech API.
+  - *(Catatan: Tombol "Cari Cepat Dokumen" ditiadakan dari toolbar ini agar fokus murni pada aksesibilitas dan tidak duplikasi dengan filter kategori dokumen di sebelah kanan)*.
 
 ### B. `DocumentQuickMenu.tsx` (Filter Cepat Dokumen)
 - **Lokasi**: Sisi kanan bawah (`bottom-6 right-6 sm:bottom-8 sm:right-8`).
