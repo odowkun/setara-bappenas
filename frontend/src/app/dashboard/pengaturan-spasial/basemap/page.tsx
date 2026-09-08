@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
-import L from "leaflet";
+import L from "@/lib/gis/leafletPatch";
 import "leaflet/dist/leaflet.css";
 import { useAuth } from "@/context/AuthContext";
 import { geoSettingService, GeoSettingData } from "@/services/geoSettingService";

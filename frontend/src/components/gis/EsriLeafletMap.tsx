@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import L from "leaflet";
+import L from "@/lib/gis/leafletPatch";
 import "leaflet/dist/leaflet.css";
 import {
   CheckCircle,
@@ -15,14 +15,6 @@ import {
 import halutOfficialBpsBoundary from "@/data/halut-boundary.json";
 import { proyekService } from "@/services/proyekService";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
-
-// Fix Leaflet Default Icon asset paths in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
 
 export interface ProjectLocation {
   id: number;
@@ -155,30 +147,37 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     });
   };
 
+  const fitBoundsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   // Function to Zoom Out & Fit Full Official Halmahera Utara Boundary Region
   const fitHalutBounds = () => {
-    if (!mapInstanceRef.current || !boundaryLayerRef.current) return;
+    const map = mapInstanceRef.current;
+    if (!map || !(map as any)._mapPane || !boundaryLayerRef.current) return;
     try {
       const bounds = boundaryLayerRef.current.getBounds();
       if (bounds.isValid()) {
-        const targetMinZoom = mapInstanceRef.current.getBoundsZoom(bounds, false, L.point(35, 35));
-        mapInstanceRef.current.setMinZoom(targetMinZoom);
+        const targetMinZoom = map.getBoundsZoom(bounds, false, L.point(35, 35));
+        map.setMinZoom(targetMinZoom);
         setMinZoomLevel(targetMinZoom);
-        mapInstanceRef.current.fitBounds(bounds, { padding: [35, 35] });
+        map.fitBounds(bounds, { padding: [35, 35] });
       } else {
-        mapInstanceRef.current.setMinZoom(8);
+        map.setMinZoom(8);
         setMinZoomLevel(8);
-        mapInstanceRef.current.setView([1.6178, 127.8584], 8);
+        map.setView([1.6178, 127.8584], 8);
       }
     } catch {
-      mapInstanceRef.current.setMinZoom(8);
-      setMinZoomLevel(8);
-      mapInstanceRef.current.setView([1.6178, 127.8584], 8);
+      if (map && (map as any)._mapPane) {
+        map.setMinZoom(8);
+        setMinZoomLevel(8);
+        map.setView([1.6178, 127.8584], 8);
+      }
     }
   };
 
   // Helper to render GeoJSON Layer with Red Dashed Official Style
   const renderBoundaryLayer = (map: L.Map, geojsonData: any) => {
+    if (!map || !(map as any)._mapPane) return;
+
     if (boundaryLayerRef.current) {
       map.removeLayer(boundaryLayerRef.current);
     }
@@ -216,7 +215,10 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       }
     } catch {}
 
-    setTimeout(() => {
+    if (fitBoundsTimeoutRef.current) {
+      clearTimeout(fitBoundsTimeoutRef.current);
+    }
+    fitBoundsTimeoutRef.current = setTimeout(() => {
       fitHalutBounds();
     }, 200);
   };
@@ -250,7 +252,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     renderBoundaryLayer(map, customBoundaryGeoJson || halutOfficialBpsBoundary);
 
     const invalidate = () => {
-      if (mapInstanceRef.current) {
+      if (mapInstanceRef.current && (mapInstanceRef.current as any)._mapPane) {
         mapInstanceRef.current.invalidateSize();
         if (boundaryLayerRef.current) {
           try {
@@ -276,17 +278,25 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     }
 
     return () => {
+      if (fitBoundsTimeoutRef.current) {
+        clearTimeout(fitBoundsTimeoutRef.current);
+      }
       clearTimeout(t1);
       clearTimeout(t2);
       if (resizeObserver) resizeObserver.disconnect();
-      map.remove();
+      try {
+        map.stop();
+        map.remove();
+      } catch (err) {
+        console.warn("Error cleaning up map:", err);
+      }
       mapInstanceRef.current = null;
     };
   }, []);
 
   // Re-render boundary if custom boundary changes
   useEffect(() => {
-    if (!mapInstanceRef.current) return;
+    if (!mapInstanceRef.current || !(mapInstanceRef.current as any)._mapPane) return;
     renderBoundaryLayer(mapInstanceRef.current, customBoundaryGeoJson || halutOfficialBpsBoundary);
   }, [customBoundaryGeoJson]);
 

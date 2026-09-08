@@ -106,6 +106,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // 3. Apply DOM Effects
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.documentElement) return;
     document.documentElement.style.setProperty(
       "--font-scale",
       fontSizeScale.toString()
@@ -113,6 +114,7 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fontSizeScale]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     // Only high-contrast modifies body classes (color palette only, no CSS filter).
     // Grayscale, Invert, and Sepia are rendered via clean fixed overlay portals in A11yToolbar
     // to prevent any CSS filter from breaking position:fixed containing blocks!
@@ -121,22 +123,27 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [colorMode]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     document.body.classList.toggle("dyslexia-font", dyslexiaFont);
   }, [dyslexiaFont]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     document.body.classList.toggle("a11y-text-spacing", textSpacing);
   }, [textSpacing]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     document.body.classList.toggle("a11y-big-cursor", bigCursor);
   }, [bigCursor]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     document.body.classList.toggle("a11y-highlight-links", highlightLinks);
   }, [highlightLinks]);
 
   useEffect(() => {
+    if (typeof document === "undefined" || !document?.body) return;
     document.body.classList.toggle("a11y-pause-motion", pauseMotion);
   }, [pauseMotion]);
 

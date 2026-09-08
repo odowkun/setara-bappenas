@@ -132,8 +132,34 @@ Menu Aksesibilitas (`A11yToolbar.tsx`) ditingkatkan menjadi suite aksesibilitas 
 - **Masalah**: Sesuai spesifikasi CSS W3C, jika properti `filter` diterapkan pada elemen `<body>`, elemen tersebut otomatis menjadi *containing block* baru bagi seluruh elemen turunan berposisi `position: fixed`. Akibatnya, tombol `A11yToolbar` yang berposisi `fixed bottom-6` tergeser ke ujung paling bawah halaman (di atas footer ~5.500px ke bawah) sehingga tampak menghilang dari layar pengguna di bagian atas.
 - **Solusi Arsitektur**:
   1. `document.body` dibebaskan dari segala properti `filter` CSS.
-  2. Mode filter visual (*Invert*, *Grayscale*, *Sepia*) dirender melalui **Fullscreen Portal Overlay** (`createPortal(..., document.body)`) dengan `fixed inset-0 pointer-events-none z-[55]` dan `backdrop-filter`.
-  3. `A11yToolbar` berada pada layer `z-[60]` di atas overlay filter.
-  4. Hasilnya: Efek filter tetap menyelimuti 100% halaman situs tanpa merusak koordinat `position: fixed`, dan tombol aksesibilitas tetap selalu tampak di pojok kiri bawah layar dalam kondisi apapun.
 
+---
 
+## 7. Standar Keamanan Akses DOM & Leaflet Lifecycle (`classList` Undefined Guard)
+
+Status pembaruan: 8 September 2026.
+
+### A. Latar Belakang Masalah (`Cannot read properties of undefined (reading 'classList')`)
+Pesan error runtime Next.js:
+```
+Runtime TypeError: Cannot read properties of undefined (reading 'classList')
+at removeClass (node_modules/leaflet/dist/leaflet-src.js:2447:1)
+at NewClass._onPanTransitionEnd (node_modules/leaflet/dist/leaflet-src.js:4712:1)
+```
+Dua titik kerentanan yang teridentifikasi:
+1. **Hydration & Re-render Pass di React**: Pada `AccessibilityContext.tsx`, hook `useEffect` memanggil `document.body.classList.toggle(...)` tanpa pengecekan ketersediaan elemen DOM `document?.body`.
+2. **Leaflet Animation Transition saat Unmount**: Pada komponen peta spasial (`EsriLeafletMap.tsx`), saat animasi pan (`fitHalutBounds`, `panTo`, atau `flyTo`) sedang berjalan dan komponen di-unmount, Leaflet memanggil `_onPanTransitionEnd` yang mengeksekusi `removeClass(this._mapPane, 'leaflet-pan-anim')`. Karena `map.remove()` telah menghapus `this._mapPane`, Leaflet internal memanggil `el.classList` pada elemen `undefined`.
+
+### B. Solusi & Standar Implementasi:
+1. **DOM Access Guard (`AccessibilityContext.tsx`)**:
+   Seluruh efek DOM wajib diawali dengan:
+   ```typescript
+   if (typeof document === "undefined" || !document?.body) return;
+   ```
+2. **Global Leaflet Defensive Monkey-Patch (`lib/gis/leafletPatch.ts`)**:
+   - `L.DomUtil.addClass`, `L.DomUtil.removeClass`, `L.DomUtil.hasClass`, dan `L.DomUtil.setClass` diproteksi terhadap argumen `!el` atau `!el.classList`.
+   - `L.Map.prototype._onPanTransitionEnd` diproteksi untuk memeriksa `this._mapPane` sebelum memanggil `removeClass`.
+   - `L.Control.Zoom.prototype._updateDisabled` diproteksi jika tombol zoom unmounted.
+3. **Pembersihan Timer Peta (`EsriLeafletMap.tsx`)**:
+   - Timer `setTimeout` untuk auto-fit wilayah Halut dilacak menggunakan `fitBoundsTimeoutRef` dan dibatalkan (`clearTimeout`) saat unmount.
+   - Pemanggilan `map.stop()` dieksekusi sebelum `map.remove()` untuk menghentikan seluruh `requestAnimationFrame` dan transisi inersia secara bersih.

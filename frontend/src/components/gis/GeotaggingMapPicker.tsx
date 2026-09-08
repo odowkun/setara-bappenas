@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import L from "leaflet";
+import L from "@/lib/gis/leafletPatch";
 import "leaflet/dist/leaflet.css";
 import { toast } from "@/lib/swal";
 import { KECAMATAN_HALUT_DATA } from "@/services/halutRegionService";
@@ -10,14 +10,6 @@ import { calculatePolygonAreaHa, calculateLineLengthKm } from "@/lib/gis/kmzPars
 import { ChevronDown } from "lucide-react";
 import halutOfficialBpsBoundary from "@/data/halut-boundary.json";
 import { geoSettingService, GeoSettingData } from "@/services/geoSettingService";
-
-// Fix Leaflet Default Icon asset paths in Next.js bundle
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png",
-  iconUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png",
-  shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
-});
 
 export interface DelineationData {
   geojson: any;
