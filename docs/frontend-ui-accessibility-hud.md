@@ -37,10 +37,14 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
   - Pembaca Suara (Smart Voice Reader) dengan Web Speech API.
   - *(Catatan: Tombol "Cari Cepat Dokumen" ditiadakan dari toolbar ini agar fokus murni pada aksesibilitas dan tidak duplikasi dengan filter kategori dokumen di sebelah kanan)*.
 
-### B. `DocumentQuickMenu.tsx` (Filter Cepat Dokumen)
+### B. `DocumentQuickMenu.tsx` (Filter & Pencarian Cepat Dokumen)
 - **Lokasi**: Sisi kanan bawah (`bottom-6 right-6 sm:bottom-8 sm:right-8`).
 - **Aksen Warna**: Amber/Emas (`text-amber-700`, `bg-amber-50`, border `border-amber-200/70`).
 - **Fitur Interaktif**:
+  - **Embedded Real-time Document Search Box**: Dilengkapi ikon 3D Zoom (`zoom-dynamic-color.png`), input pencarian real-time untuk memfilter daftar kategori dokumen langsung saat mengetik.
+  - **Direct Submit & Navigation**: Menekan Enter atau mengirim query langsung mengarahkan user ke `/dokumen?q=<query>`.
+  - **Shortcut ⌘K Badge**: Tombol cepat untuk memicu dialog pencarian global modal (`setIsSearchOpen(true)`).
+  - **Fallback State**: Saat tidak ada kategori yang cocok dengan kata kunci pencarian, menampilkan pesan ramah dan tombol "Cari di semua dokumen &rarr;".
   - Drawer vertikal muncul dengan animasi smooth saat ditekan.
   - Rotasi `ChevronUp` 180° saat drawer terbuka.
   - Daftar filter cepat: RKPD, RTRW, RPJPD, RPJMD, LKPJ, dan Lainnya.

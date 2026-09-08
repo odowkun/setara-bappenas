@@ -3,8 +3,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronUp, X } from "lucide-react";
+import { useAccessibility } from "@/context/AccessibilityContext";
 import {
   DOCUMENT_QUICK_CATEGORIES,
   DocumentCategoryCode,
@@ -68,6 +70,19 @@ export function DocumentQuickMenu({
   const [mounted, setMounted] = useState(false);
   const [isPastMenu, setIsPastMenu] = useState(false);
   const [isFloatingOpen, setIsFloatingOpen] = useState(false);
+  const router = useRouter();
+  const { setIsSearchOpen } = useAccessibility();
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCategories = searchQuery.trim()
+    ? DOCUMENT_QUICK_CATEGORIES.filter(
+        (c) =>
+          c.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          CATEGORY_META[c.code]?.description
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
+      )
+    : DOCUMENT_QUICK_CATEGORIES;
 
   useEffect(() => {
     setMounted(true);
@@ -315,9 +330,72 @@ export function DocumentQuickMenu({
                       <X className="h-4 w-4" />
                     </button>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
-                      renderCategory(code, label, true)
+
+                  {/* Interactive Document Search Box */}
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (searchQuery.trim()) {
+                        setIsFloatingOpen(false);
+                        router.push(`/dokumen?q=${encodeURIComponent(searchQuery.trim())}`);
+                      }
+                    }}
+                    className="mb-2.5"
+                  >
+                    <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-500/20 transition">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white shadow-2xs border border-slate-200/60 ml-0.5">
+                        <img
+                          src="/images/3dicons/zoom-dynamic-color.png"
+                          alt=""
+                          width={16}
+                          height={16}
+                          style={{ width: 16, height: 16 }}
+                          className="object-contain"
+                        />
+                      </span>
+                      <input
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Cari arsip & dokumen..."
+                        className="flex-1 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsFloatingOpen(false);
+                          setIsSearchOpen(true);
+                        }}
+                        className="px-2 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-[10px] font-mono font-bold text-slate-500 shadow-2xs transition shrink-0 cursor-pointer"
+                        title="Buka Dialog Pencarian Lengkap (⌘K)"
+                      >
+                        ⌘K
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* Filtered Category List */}
+                  <div className="flex flex-col gap-1.5 max-h-[50vh] overflow-y-auto pr-0.5">
+                    {filteredCategories.length > 0 ? (
+                      filteredCategories.map(({ code, label }) =>
+                        renderCategory(code, label, true)
+                      )
+                    ) : (
+                      <div className="p-4 text-center rounded-2xl bg-slate-50 border border-slate-100 space-y-1.5">
+                        <p className="text-xs text-slate-500 font-medium">
+                          Tidak ada kategori cocok &quot;{searchQuery}&quot;
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsFloatingOpen(false);
+                            router.push(`/dokumen?q=${encodeURIComponent(searchQuery.trim())}`);
+                          }}
+                          className="text-xs font-bold text-blue-700 hover:underline inline-block cursor-pointer"
+                        >
+                          Cari di semua dokumen &rarr;
+                        </button>
+                      </div>
                     )}
                   </div>
                 </motion.nav>
