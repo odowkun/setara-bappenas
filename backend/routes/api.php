@@ -57,6 +57,9 @@ Route::prefix('v1')->group(function () {
 
     // Dashboard Charts Endpoints
     Route::get('/dashboard/charts', [DashboardChartController::class, 'index']);
+    Route::post('/dashboard/charts/batch-update', [DashboardChartController::class, 'batchUpdate'])
+        ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
+        ->name('dashboard.charts.batch-update');
     Route::put('/dashboard/charts/realisasi-apbd/{id}', [DashboardChartController::class, 'updateMonthly'])
         ->middleware(['auth:sanctum', 'permission:manage_dashboard', AuditAdminMutation::class])
         ->name('dashboard.realisasi.update');
