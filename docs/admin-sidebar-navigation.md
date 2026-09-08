@@ -31,3 +31,12 @@ Sidebar admin sekarang mendukung mode drawer responsif pada layar sempit (`< md`
 - Terhubung langsung ke `DashboardLayout` melalui state `mobileSidebarOpen` yang dipicu oleh tombol hamburger di `AdminHeader`.
 - Dilengkapi dengan *backdrop blur* gelap (`bg-slate-900/60 backdrop-blur-xs`) dan animasi geser halus (`animate-in slide-in-from-left duration-250`).
 - Saat pengguna memilih salah satu menu di mobile, drawer otomatis menutup secara mulus.
+
+---
+
+## 3. Indikator Transisi & Pemuatan Halaman (Page Loading State)
+
+Untuk menjaga kebersihan tampilan antarmuka dan menghindari tumpuk-tindih visual di area header:
+- **Progress Bar Atas**: Tetap menampilkan garis indikator transisi tipis pada tepi paling atas (`h-1 bg-gradient-to-r`).
+- **Body Information Card**: Layar pemuatan berpusat pada container utama dengan indikator persentase dinamis (`0-100%`) dan teks informatif (*"Sedang Memuat Data... Menyinkronkan halaman & dataset terbaru"*).
+- **Penghapusan Floating Badge Pill**: Floating pill gelap di pojok kanan atas (*"Memuat data sistem..."*) telah ditiadakan sepenuhnya karena redundan dengan body information card dan sebelumnya menutupi identitas pengguna pada header.

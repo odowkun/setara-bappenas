@@ -19,17 +19,13 @@ function PageTransitionContainer({
 
   return (
     <div className="relative min-h-full flex-1 flex flex-col">
-      {/* Top Animated Progress Bar & Instant Loading Feedback Pill */}
+      {/* Top Animated Progress Bar */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[99999] pointer-events-none">
           <div
             className="h-1 bg-gradient-to-r from-blue-600 via-indigo-500 to-amber-500 shadow-md shadow-blue-500/50 transition-all duration-300 ease-out"
             style={{ width: `${progress}%` }}
           />
-          <div className="absolute top-3 right-4 bg-slate-900/90 text-white text-[11px] font-extrabold px-3.5 py-1.5 rounded-full backdrop-blur-md shadow-xl flex items-center gap-2 border border-slate-700/80 animate-in fade-in slide-in-from-top-2 duration-200">
-            <span className="w-2 h-2 rounded-full bg-blue-400 animate-ping" />
-            <span>Memuat data sistem...</span>
-          </div>
         </div>
       )}
 
