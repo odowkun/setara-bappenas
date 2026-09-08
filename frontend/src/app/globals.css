@@ -70,12 +70,92 @@ body.high-contrast {
   color: #ffff00 !important;
 }
 
-body.high-contrast * {
+body.high-contrast *:not(.a11y-toolbar-root, .a11y-toolbar-root *) {
   background-color: #000000 !important;
   color: #ffff00 !important;
   border-color: #ffffff !important;
   box-shadow: none !important;
   text-shadow: none !important;
+}
+
+/* Grayscale / Monochrome Mode */
+body.a11y-grayscale {
+  filter: grayscale(100%) !important;
+}
+
+/* Invert Color Mode */
+body.a11y-invert {
+  filter: invert(100%) hue-rotate(180deg) !important;
+  background-color: #121212 !important;
+}
+
+/* Sepia / Eye Comfort Warm Mode */
+body.a11y-sepia {
+  filter: sepia(70%) contrast(92%) brightness(96%) !important;
+  background-color: #fbf0d9 !important;
+}
+
+/* Exemptions: Do not distort the A11y Toolbar itself and interactive WebGIS maps */
+body.a11y-grayscale .a11y-toolbar-root,
+body.a11y-sepia .a11y-toolbar-root,
+body.a11y-grayscale .leaflet-container,
+body.a11y-invert .leaflet-container,
+body.a11y-sepia .leaflet-container {
+  filter: none !important;
+}
+
+/* If body is inverted, re-invert the toolbar so it looks clean and natural */
+body.a11y-invert .a11y-toolbar-root {
+  filter: invert(100%) hue-rotate(180deg) !important;
+}
+
+/* Big Cursor Mode */
+body.a11y-big-cursor,
+body.a11y-big-cursor *:not(input, textarea, select) {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='%231e293b' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 3 7 18 3-7 7-3L3 3z'/%3E%3C/svg%3E"), auto !important;
+}
+
+body.a11y-big-cursor button,
+body.a11y-big-cursor a,
+body.a11y-big-cursor [role="button"],
+body.a11y-big-cursor .cursor-pointer {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 24 24' fill='%232563eb' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 3 7 18 3-7 7-3L3 3z'/%3E%3C/svg%3E"), pointer !important;
+}
+
+/* Expanded Text Spacing */
+body.a11y-text-spacing p,
+body.a11y-text-spacing span:not(.a11y-toolbar-root *),
+body.a11y-text-spacing h1,
+body.a11y-text-spacing h2,
+body.a11y-text-spacing h3,
+body.a11y-text-spacing h4,
+body.a11y-text-spacing h5,
+body.a11y-text-spacing h6,
+body.a11y-text-spacing li,
+body.a11y-text-spacing a:not(.a11y-toolbar-root *) {
+  letter-spacing: 0.12em !important;
+  word-spacing: 0.16em !important;
+  line-height: 1.95 !important;
+}
+
+/* Highlight Links */
+body.a11y-highlight-links a:not(.a11y-toolbar-root *),
+body.a11y-highlight-links button:not(.a11y-toolbar-root *, .a11y-toolbar-root) {
+  outline: 2.5px solid #2563eb !important;
+  outline-offset: 3px !important;
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-decoration-color: #2563eb !important;
+}
+
+/* Pause Motion */
+body.a11y-pause-motion *,
+body.a11y-pause-motion *::before,
+body.a11y-pause-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
 }
 
 /* Dyslexia Font Override */

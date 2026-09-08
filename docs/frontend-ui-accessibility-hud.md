@@ -89,4 +89,35 @@ Semua aset PNG resolusi tinggi dari `3dicons.co` (400x400) **wajib**:
 3. Ditempatkan di dalam container kartu/badge (`rounded-xl` atau `rounded-lg`) bershadow lembut untuk mencegah gambar meledak melebihi container jika terjadi keterlambatan evaluasi flexbox browser.
 4. Header drawer menggunakan badge bertingkat (ikon 3D + judul tebal + subjudul deskriptif) serta tombol tutup `X` standar.
 
+---
+
+## 6. Arsitektur Super-A11y Pro Suite (Native Multi-Sensory Accessibility)
+
+Status pembaruan: 8 September 2026.
+
+Menu Aksesibilitas (`A11yToolbar.tsx`) ditingkatkan menjadi suite aksesibilitas terpadu berstandar WCAG tanpa memerlukan library/widget eksternal pihak ketiga:
+
+### A. Fitur Interaktif Terpadu
+1. **Penyesuaian Teks**:
+   - Skala Ukuran Huruf: `A-` (85%), `100%`, `A+` (s.d. 145%) via CSS Variable `--font-scale`.
+   - Spasi & Jarak Baris: Mengaktifkan `body.a11y-text-spacing` (`letter-spacing: 0.12em`, `line-height: 1.95`).
+2. **Palet Warna & Kontras Multi-Mode**:
+   - `Normal`: Skema warna asli aplikasi.
+   - `Kontras Tinggi`: Latar belakang hitam pekat dengan teks kuning terang (`body.high-contrast`).
+   - `Monokrom / Grayscale`: Menghilangkan saturasi warna bagi pengguna dengan sensitivitas warna (`body.a11y-grayscale`).
+   - `Invert Color`: Membalikkan luminance warna untuk visibilitas malam hari (`body.a11y-invert`).
+   - `Sepia Warm`: Mode hangat redup untuk kenyamanan membaca di ruang gelap (`body.a11y-sepia`).
+3. **Alat Bantu Fokus & Navigasi**:
+   - **Garis Pandu Baca (Reading Guide Ruler)**: Garis horizontal semi-transparan yang bergerak mengikuti kursor mouse via React Portal (`ReadingGuideRuler`) untuk membantu fokus baris teks.
+   - **Kursor Ekstra Besar (Big Cursor)**: Mengganti kursor mouse sistem menjadi kursor SVG kontras tinggi berukuran 36px (`body.a11y-big-cursor`).
+   - **Sorot Semua Tautan (Highlight Links)**: Menyorot semua tautan dan tombol yang dapat diklik dengan outline tebal 2.5px (`body.a11y-highlight-links`).
+   - **Font Ramah Disleksia**: Mengaktifkan font *Lexend* (`body.dyslexia-font`).
+   - **Hentikan Animasi (Pause Motion)**: Mematikan seluruh CSS keyframes dan transisi (`body.a11y-pause-motion`).
+4. **Bantuan Audio Narasi (Smart Voice Reader)**:
+   - Terintegrasi dengan Web Speech API (`SpeechSynthesisUtterance`).
+   - Mendukung pembacaan teks yang diblok/diseleksi langsung oleh pengguna, atau ringkasan paragraf pembuka.
+5. **Persistensi & Reset**:
+   - Seluruh preferensi disimpan ke `localStorage` (`bappeda_a11y_settings`) sehingga tetap aktif saat warga berpindah halaman.
+   - Tombol **"Kembalikan ke Setelan Normal"** menghapus pengaturan tersimpan dan mengembalikan tampilan ke default dalam 1 klik dengan feedback toast.
+
 
