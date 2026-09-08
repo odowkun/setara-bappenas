@@ -134,6 +134,44 @@ export const A11yToolbar: React.FC = () => {
       {/* Portal Reading Guide Ruler */}
       {mounted && readingGuide && createPortal(<ReadingGuideRuler />, document.body)}
 
+      {/* Portal Color Filter Overlays (Zero impact on fixed containing blocks) */}
+      {mounted && colorMode === "invert" && createPortal(
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none z-[55]"
+          style={{
+            backdropFilter: "invert(100%) hue-rotate(180deg)",
+            WebkitBackdropFilter: "invert(100%) hue-rotate(180deg)",
+          }}
+        />,
+        document.body
+      )}
+
+      {mounted && colorMode === "grayscale" && createPortal(
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none z-[55]"
+          style={{
+            backdropFilter: "grayscale(100%)",
+            WebkitBackdropFilter: "grayscale(100%)",
+          }}
+        />,
+        document.body
+      )}
+
+      {mounted && colorMode === "sepia" && createPortal(
+        <div
+          aria-hidden="true"
+          className="fixed inset-0 pointer-events-none z-[55]"
+          style={{
+            backdropFilter: "sepia(70%) contrast(92%)",
+            WebkitBackdropFilter: "sepia(70%) contrast(92%)",
+            backgroundColor: "rgba(251, 240, 217, 0.15)",
+          }}
+        />,
+        document.body
+      )}
+
       <div className="a11y-toolbar-root fixed bottom-6 left-6 z-[60] flex flex-col items-start sm:bottom-8 sm:left-8">
         {isOpen && (
           <div className="mb-3 flex w-[330px] sm:w-[370px] max-w-[calc(100vw-2rem)] max-h-[82vh] overflow-y-auto animate-in flex-col gap-3 rounded-3xl border border-slate-200/90 bg-white/95 p-4 text-slate-800 shadow-2xl shadow-blue-950/20 backdrop-blur-2xl fade-in slide-in-from-bottom-5 motion-reduce:animate-none font-sans">

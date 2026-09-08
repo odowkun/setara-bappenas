@@ -120,4 +120,12 @@ Menu Aksesibilitas (`A11yToolbar.tsx`) ditingkatkan menjadi suite aksesibilitas 
    - Seluruh preferensi disimpan ke `localStorage` (`bappeda_a11y_settings`) sehingga tetap aktif saat warga berpindah halaman.
    - Tombol **"Kembalikan ke Setelan Normal"** menghapus pengaturan tersimpan dan mengembalikan tampilan ke default dalam 1 klik dengan feedback toast.
 
+### B. Pencegahan Hilangnya Tombol Fixed Saat Mode Filter Aktif (Portal Backdrop Architecture)
+- **Masalah**: Sesuai spesifikasi CSS W3C, jika properti `filter` diterapkan pada elemen `<body>`, elemen tersebut otomatis menjadi *containing block* baru bagi seluruh elemen turunan berposisi `position: fixed`. Akibatnya, tombol `A11yToolbar` yang berposisi `fixed bottom-6` tergeser ke ujung paling bawah halaman (di atas footer ~5.500px ke bawah) sehingga tampak menghilang dari layar pengguna di bagian atas.
+- **Solusi Arsitektur**:
+  1. `document.body` dibebaskan dari segala properti `filter` CSS.
+  2. Mode filter visual (*Invert*, *Grayscale*, *Sepia*) dirender melalui **Fullscreen Portal Overlay** (`createPortal(..., document.body)`) dengan `fixed inset-0 pointer-events-none z-[55]` dan `backdrop-filter`.
+  3. `A11yToolbar` berada pada layer `z-[60]` di atas overlay filter.
+  4. Hasilnya: Efek filter tetap menyelimuti 100% halaman situs tanpa merusak koordinat `position: fixed`, dan tombol aksesibilitas tetap selalu tampak di pojok kiri bawah layar dalam kondisi apapun.
+
 

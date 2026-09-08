@@ -113,18 +113,11 @@ export const AccessibilityProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [fontSizeScale]);
 
   useEffect(() => {
-    const classList = document.body.classList;
-    classList.remove("high-contrast", "a11y-grayscale", "a11y-invert", "a11y-sepia");
-
-    if (colorMode === "high-contrast") {
-      classList.add("high-contrast");
-    } else if (colorMode === "grayscale") {
-      classList.add("a11y-grayscale");
-    } else if (colorMode === "invert") {
-      classList.add("a11y-invert");
-    } else if (colorMode === "sepia") {
-      classList.add("a11y-sepia");
-    }
+    // Only high-contrast modifies body classes (color palette only, no CSS filter).
+    // Grayscale, Invert, and Sepia are rendered via clean fixed overlay portals in A11yToolbar
+    // to prevent any CSS filter from breaking position:fixed containing blocks!
+    document.body.classList.toggle("high-contrast", colorMode === "high-contrast");
+    document.body.classList.remove("a11y-grayscale", "a11y-invert", "a11y-sepia");
   }, [colorMode]);
 
   useEffect(() => {

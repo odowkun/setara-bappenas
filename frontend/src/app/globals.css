@@ -64,7 +64,7 @@ body {
   content: '';
 }
 
-/* High Contrast Mode Overrides */
+/* High Contrast Mode Overrides (Color-only, zero filter to keep fixed positioning intact) */
 body.high-contrast {
   background-color: #000000 !important;
   color: #ffff00 !important;
@@ -78,35 +78,10 @@ body.high-contrast *:not(.a11y-toolbar-root, .a11y-toolbar-root *) {
   text-shadow: none !important;
 }
 
-/* Grayscale / Monochrome Mode */
-body.a11y-grayscale {
-  filter: grayscale(100%) !important;
-}
-
-/* Invert Color Mode */
-body.a11y-invert {
-  filter: invert(100%) hue-rotate(180deg) !important;
-  background-color: #121212 !important;
-}
-
-/* Sepia / Eye Comfort Warm Mode */
-body.a11y-sepia {
-  filter: sepia(70%) contrast(92%) brightness(96%) !important;
-  background-color: #fbf0d9 !important;
-}
-
-/* Exemptions: Do not distort the A11y Toolbar itself and interactive WebGIS maps */
-body.a11y-grayscale .a11y-toolbar-root,
-body.a11y-sepia .a11y-toolbar-root,
-body.a11y-grayscale .leaflet-container,
-body.a11y-invert .leaflet-container,
-body.a11y-sepia .leaflet-container {
-  filter: none !important;
-}
-
-/* If body is inverted, re-invert the toolbar so it looks clean and natural */
-body.a11y-invert .a11y-toolbar-root {
-  filter: invert(100%) hue-rotate(180deg) !important;
+/* Ensure A11y Toolbar stays pristine and visible in High Contrast */
+body.high-contrast .a11y-toolbar-root,
+body.high-contrast .a11y-toolbar-root * {
+  box-shadow: inherit;
 }
 
 /* Big Cursor Mode */
