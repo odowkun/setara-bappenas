@@ -25,7 +25,7 @@ return new class extends Migration
 
         Schema::table('geoprocessing_analyses', function (Blueprint $table) {
             if (! Schema::hasColumn('geoprocessing_analyses', 'source_kmz_path')) {
-                $table->string('source_kmz_path')->nullable()->after('catatan');
+                $table->string('source_kmz_path')->nullable();
             }
             if (! Schema::hasColumn('geoprocessing_analyses', 'layer_geojson')) {
                 $table->json('layer_geojson')->nullable()->after('source_kmz_path');

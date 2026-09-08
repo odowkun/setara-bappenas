@@ -9,9 +9,28 @@ class ProyekDetailSeeder extends Seeder
 {
     public function run(): void
     {
+        $document = DB::table('documents')->first();
+        if (! $document) {
+            $docId = DB::table('documents')->insertGetId([
+                'title' => 'Dokumen Rencana Kerja Pemerintah Daerah (RKPD) 2026',
+                'jenis' => 'rkpd',
+                'bidang' => 'semua',
+                'tahun' => '2026',
+                'ukuran' => '3.5 MB',
+                'downloads' => 0,
+                'file_path' => null,
+                'is_public' => true,
+                'uploaded_by' => 'Administrator',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        } else {
+            $docId = $document->id;
+        }
+
         $projects = [
             [
-                'document_id' => 1,
+                'document_id' => $docId,
                 'kode_proyek' => 'PRJ-RENJA-2026-001',
                 'nama_proyek' => 'Pembangunan Puskesmas Pembantu Desa Tou',
                 'bidang' => 'infrastruktur',
@@ -31,7 +50,7 @@ class ProyekDetailSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'document_id' => 1,
+                'document_id' => $docId,
                 'kode_proyek' => 'PRJ-RENJA-2026-002',
                 'nama_proyek' => 'Rehabilitasi Drainase Perkotaan Tobelo Central',
                 'bidang' => 'infrastruktur',
@@ -51,7 +70,7 @@ class ProyekDetailSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'document_id' => 2,
+                'document_id' => $docId,
                 'kode_proyek' => 'PRJ-RENJA-2026-003',
                 'nama_proyek' => 'Pengembangan Pasar Tradisional Galela',
                 'bidang' => 'perekonomian',
@@ -71,7 +90,7 @@ class ProyekDetailSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'document_id' => 2,
+                'document_id' => $docId,
                 'kode_proyek' => 'PRJ-RENJA-2026-004',
                 'nama_proyek' => 'Peningkatan Sarana Air Bersih Tobelo Selatan',
                 'bidang' => 'infrastruktur',
