@@ -145,7 +145,12 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="h-screen bg-slate-50 text-slate-900 flex flex-col md:flex-row font-sans overflow-hidden">
-      <AdminSidebar pendingPath={pendingPath} onNavigate={handleSidebarNavigate} />
+      <AdminSidebar
+        pendingPath={pendingPath}
+        onNavigate={handleSidebarNavigate}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+      />
 
       {/* Main Content Area — Strict Inner Scroll on Center Body */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">

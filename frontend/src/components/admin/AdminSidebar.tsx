@@ -174,9 +174,16 @@ const menuItems: MenuItem[] = [
 export interface AdminSidebarProps {
   pendingPath?: string | null;
   onNavigate?: (href: string) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
-export const AdminSidebar: React.FC<AdminSidebarProps> = ({ pendingPath, onNavigate }) => {
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  pendingPath,
+  onNavigate,
+  mobileOpen,
+  onMobileClose,
+}) => {
   const pathname = usePathname();
   const currentPath = pendingPath || pathname;
   const { user, logout, hasRole, hasPermission } = useAuth();
@@ -210,202 +217,244 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({ pendingPath, onNavig
     }
   };
 
-  return (
-    <>
-      <aside className="w-64 bg-white border-r border-slate-200 text-slate-700 flex flex-col justify-between shrink-0 hidden md:flex h-screen sticky top-0 overflow-y-auto shadow-xs font-sans">
-        <div>
-          {/* PREMIUM EXECUTIVE USER PROFILE CARD */}
-          <div className="p-3">
-            <Link
-              href="/dashboard/pengaturan-profil"
-              className="p-4 rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white shadow-md border border-slate-800/80 space-y-3 relative overflow-hidden group hover:ring-2 hover:ring-blue-500/40 transition block cursor-pointer"
-            >
-              {/* Background Glow Overlay */}
-              <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+  const renderContent = (isMobile = false) => {
+    const handleLinkClick = (href: string) => {
+      onNavigate?.(href);
+      if (isMobile) {
+        onMobileClose?.();
+      }
+    };
 
-              <div className="flex items-center gap-3 relative z-10">
-                {/* Avatar with Glow Ring */}
-                <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-md ring-2 ring-blue-400/40 shrink-0">
-                  {user?.name.charAt(0) || "A"}
-                </div>
-                <div className="overflow-hidden space-y-0.5">
-                  <h2 className="text-xs font-extrabold text-white truncate leading-snug tracking-tight group-hover:text-blue-300 transition">
-                    {user?.name}
-                  </h2>
-                  <p className="text-[10px] text-blue-200/80 font-medium truncate">
-                    {user?.email}
-                  </p>
-                </div>
+    return (
+      <div>
+        {/* PREMIUM EXECUTIVE USER PROFILE CARD */}
+        <div className="p-3">
+          <Link
+            href="/dashboard/pengaturan-profil"
+            onClick={() => handleLinkClick("/dashboard/pengaturan-profil")}
+            className="p-4 rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white shadow-md border border-slate-800/80 space-y-3 relative overflow-hidden group hover:ring-2 hover:ring-blue-500/40 transition block cursor-pointer"
+          >
+            {/* Background Glow Overlay */}
+            <div className="absolute -top-10 -right-10 w-24 h-24 bg-blue-600/20 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex items-center gap-3 relative z-10">
+              {/* Avatar with Glow Ring */}
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-md ring-2 ring-blue-400/40 shrink-0">
+                {user?.name?.charAt(0) || "A"}
               </div>
-
-              {/* Polished Role Badge Pill */}
-              <div className="pt-1 border-t border-slate-800/80 flex items-center justify-between relative z-10">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 whitespace-nowrap shadow-2xs">
-                  <ShieldCheck className="w-3 h-3 text-blue-400 shrink-0" />
-                  <span>{getRoleLabel()}</span>
-                </span>
+              <div className="overflow-hidden space-y-0.5">
+                <h2 className="text-xs font-extrabold text-white truncate leading-snug tracking-tight group-hover:text-blue-300 transition">
+                  {user?.name}
+                </h2>
+                <p className="text-[10px] text-blue-200/80 font-medium truncate">
+                  {user?.email}
+                </p>
               </div>
-            </Link>
-          </div>
+            </div>
 
-          {/* Dynamic Navigation Menu */}
-          <nav className="px-3 pb-6 space-y-1">
-            <p className="px-3 py-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">
-              Menu Utama SPBE
-            </p>
-            {menuItems.map((item) => {
-              const isAllowed =
-                hasRole(item.roles) &&
-                (!item.permissions || item.permissions.some(hasPermission));
-              if (!isAllowed) return null;
+            {/* Polished Role Badge Pill */}
+            <div className="pt-1 border-t border-slate-800/80 flex items-center justify-between relative z-10">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-500/20 text-blue-300 border border-blue-400/30 whitespace-nowrap shadow-2xs">
+                <ShieldCheck className="w-3 h-3 text-blue-400 shrink-0" />
+                <span>{getRoleLabel()}</span>
+              </span>
+            </div>
+          </Link>
+        </div>
 
-              const isSubItemActive = item.subItems?.some(
-                (sub) => currentPath === sub.href || sub.subItems?.some((child) => currentPath === child.href)
-              );
-              const isActive = currentPath === item.href || isSubItemActive;
-              const isOpen = isSubItemActive || !!openSubMenus[item.href];
-              const Icon = item.icon;
+        {/* Dynamic Navigation Menu */}
+        <nav className="px-3 pb-6 space-y-1">
+          <p className="px-3 py-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">
+            Menu Utama SPBE
+          </p>
+          {menuItems.map((item) => {
+            const isAllowed =
+              hasRole(item.roles) &&
+              (!item.permissions || item.permissions.some(hasPermission));
+            if (!isAllowed) return null;
 
-              if (item.subItems) {
-                return (
-                  <div key={item.href} className="space-y-1">
-                    <div
-                      onClick={() => toggleSubMenu(item.href)}
-                      className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
-                        isActive
-                          ? "bg-blue-50 text-blue-700"
-                          : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Icon className="w-4 h-4 text-blue-700" />
-                        <span>{item.title}</span>
-                      </div>
-                      <ChevronDown
-                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                          isOpen ? "rotate-180" : ""
+            const isSubItemActive = item.subItems?.some(
+              (sub) => currentPath === sub.href || sub.subItems?.some((child) => currentPath === child.href)
+            );
+            const isActive = currentPath === item.href || isSubItemActive;
+            const isOpen = isSubItemActive || !!openSubMenus[item.href];
+            const Icon = item.icon;
+
+            if (item.subItems) {
+              return (
+                <div key={item.href} className="space-y-1">
+                  <div
+                    onClick={() => toggleSubMenu(item.href)}
+                    className={`group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition cursor-pointer ${
+                      isActive
+                        ? "bg-blue-50 text-blue-700"
+                        : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon
+                        className={`w-4 h-4 transition-colors ${
+                          isActive
+                            ? "text-blue-700"
+                            : "text-slate-500 group-hover:text-blue-700"
                         }`}
                       />
+                      <span>{item.title}</span>
                     </div>
+                    <ChevronDown
+                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                        isActive
+                          ? "text-blue-600"
+                          : "text-slate-400 group-hover:text-blue-600"
+                      } ${isOpen ? "rotate-180" : ""}`}
+                    />
+                  </div>
 
-                    {isOpen && (
-                      <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-4 py-1">
-                        {item.subItems.map((sub) => {
-                          if (sub.roles && !hasRole(sub.roles)) return null;
-                          if (sub.permissions && !sub.permissions.some(hasPermission)) return null;
+                  {isOpen && (
+                    <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-4 py-1">
+                      {item.subItems.map((sub) => {
+                        if (sub.roles && !hasRole(sub.roles)) return null;
+                        if (sub.permissions && !sub.permissions.some(hasPermission)) return null;
 
-                          const SubIcon = sub.icon;
-                          const isSubChildActive = sub.subItems?.some((child) => currentPath === child.href);
-                          const isSubActive = currentPath === sub.href;
-                          const isParentOrSubActive = isSubActive || isSubChildActive;
-                          const isSubOpen = isParentOrSubActive || !!openSubMenus[sub.href];
+                        const SubIcon = sub.icon;
+                        const isSubChildActive = sub.subItems?.some((child) => currentPath === child.href);
+                        const isSubActive = currentPath === sub.href;
+                        const isParentOrSubActive = isSubActive || isSubChildActive;
+                        const isSubOpen = isParentOrSubActive || !!openSubMenus[sub.href];
 
-                          if (sub.subItems) {
-                            return (
-                              <div key={`${sub.href}-${sub.title}`} className="space-y-1">
-                                <div className="flex items-center justify-between group">
-                                  <Link
-                                    href={sub.href}
-                                    onClick={() => onNavigate?.(sub.href)}
-                                    className={`flex-1 flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
-                                      isSubActive
-                                        ? "bg-blue-700 text-white shadow-sm"
-                                        : isSubChildActive
-                                        ? "bg-blue-50 text-blue-700 font-extrabold"
-                                        : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
-                                    }`}
-                                  >
-                                    <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : isSubChildActive ? "text-blue-700" : "text-slate-400"}`} />
-                                    <span>{sub.title}</span>
-                                  </Link>
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleSubMenu(sub.href)}
-                                    className="px-2 py-2 text-slate-400 hover:text-blue-700 transition cursor-pointer"
-                                    title={`Toggle ${sub.title}`}
-                                  >
-                                    <ChevronDown
-                                      className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                                        isSubOpen ? "rotate-180 text-blue-600" : ""
-                                      }`}
-                                    />
-                                  </button>
-                                </div>
-
-                                {isSubOpen && (
-                                  <div className="pl-3 space-y-1 border-l-2 border-blue-200 ml-4 py-0.5">
-                                    {sub.subItems.map((child) => {
-                                      if (child.roles && !hasRole(child.roles)) return null;
-                                      if (child.permissions && !child.permissions.some(hasPermission)) return null;
-
-                                      const isChildActive = currentPath === child.href;
-                                      const ChildIcon = child.icon;
-                                      return (
-                                        <Link
-                                          key={`${child.href}-${child.title}`}
-                                          href={child.href}
-                                          onClick={() => onNavigate?.(child.href)}
-                                          className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold transition ${
-                                            isChildActive
-                                              ? "bg-blue-700 text-white shadow-2xs"
-                                              : "text-slate-600 hover:text-blue-700 hover:bg-blue-50"
-                                          }`}
-                                        >
-                                          <ChildIcon className={`w-3 h-3 ${isChildActive ? "text-white" : "text-slate-400"}`} />
-                                          <span>{child.title}</span>
-                                        </Link>
-                                      );
-                                    })}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          }
-
+                        if (sub.subItems) {
                           return (
-                            <Link
-                              key={`${sub.href}-${sub.title}`}
-                              href={sub.href}
-                              onClick={() => onNavigate?.(sub.href)}
-                              className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
-                                isSubActive
-                                  ? "bg-blue-700 text-white shadow-sm"
-                                  : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
-                              }`}
-                            >
-                              <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : "text-slate-400"}`} />
-                              <span>{sub.title}</span>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                );
-              }
+                            <div key={`${sub.href}-${sub.title}`} className="space-y-1">
+                              <div className="flex items-center justify-between group">
+                                <Link
+                                  href={sub.href}
+                                  onClick={() => handleLinkClick(sub.href)}
+                                  className={`flex-1 flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
+                                    isSubActive
+                                      ? "bg-blue-700 text-white shadow-sm"
+                                      : isSubChildActive
+                                      ? "bg-blue-50 text-blue-700 font-extrabold"
+                                      : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
+                                  }`}
+                                >
+                                  <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : isSubChildActive ? "text-blue-700" : "text-slate-400"}`} />
+                                  <span>{sub.title}</span>
+                                </Link>
+                                <button
+                                  type="button"
+                                  onClick={() => toggleSubMenu(sub.href)}
+                                  className="px-2 py-2 text-slate-400 hover:text-blue-700 transition cursor-pointer"
+                                  title={`Toggle ${sub.title}`}
+                                >
+                                  <ChevronDown
+                                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                                      isSubOpen ? "rotate-180 text-blue-600" : ""
+                                    }`}
+                                  />
+                                </button>
+                              </div>
 
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => onNavigate?.(item.href)}
-                  className={`flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
-                    isActive
-                      ? "bg-blue-700 text-white shadow-md shadow-blue-700/25"
-                      : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <Icon className={`w-4 h-4 ${isActive ? "text-white" : "text-slate-500"}`} />
-                    <span>{item.title}</span>
-                  </div>
-                  {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/70" />}
-                </Link>
+                              {isSubOpen && (
+                                <div className="pl-3 space-y-1 border-l-2 border-blue-200 ml-4 py-0.5">
+                                  {sub.subItems.map((child) => {
+                                    if (child.roles && !hasRole(child.roles)) return null;
+                                    if (child.permissions && !child.permissions.some(hasPermission)) return null;
+
+                                    const isChildActive = currentPath === child.href;
+                                    const ChildIcon = child.icon;
+                                    return (
+                                      <Link
+                                        key={`${child.href}-${child.title}`}
+                                        href={child.href}
+                                        onClick={() => handleLinkClick(child.href)}
+                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold transition ${
+                                          isChildActive
+                                            ? "bg-blue-700 text-white shadow-2xs"
+                                            : "text-slate-600 hover:text-blue-700 hover:bg-blue-50"
+                                        }`}
+                                      >
+                                        <ChildIcon className={`w-3 h-3 ${isChildActive ? "text-white" : "text-slate-400"}`} />
+                                        <span>{child.title}</span>
+                                      </Link>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }
+
+                        return (
+                          <Link
+                            key={`${sub.href}-${sub.title}`}
+                            href={sub.href}
+                            onClick={() => handleLinkClick(sub.href)}
+                            className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-[11px] font-bold transition ${
+                              isSubActive
+                                ? "bg-blue-700 text-white shadow-sm"
+                                : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
+                            }`}
+                          >
+                            <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : "text-slate-400"}`} />
+                            <span>{sub.title}</span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               );
-            })}
-          </nav>
-        </div>
+            }
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => handleLinkClick(item.href)}
+                className={`group flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
+                  isActive
+                    ? "bg-blue-700 text-white shadow-md shadow-blue-700/25"
+                    : "text-slate-600 hover:text-blue-700 hover:bg-blue-50/80"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon
+                    className={`w-4 h-4 transition-colors ${
+                      isActive
+                        ? "text-white"
+                        : "text-slate-500 group-hover:text-blue-700"
+                    }`}
+                  />
+                  <span>{item.title}</span>
+                </div>
+                {isActive && <ChevronRight className="w-3.5 h-3.5 text-white/70" />}
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* DESKTOP SIDEBAR */}
+      <aside className="w-64 bg-white border-r border-slate-200 text-slate-700 flex flex-col justify-between shrink-0 hidden md:flex h-screen sticky top-0 overflow-y-auto shadow-xs font-sans">
+        {renderContent(false)}
       </aside>
+
+      {/* MOBILE DRAWER */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-[9999] md:hidden">
+          <div
+            className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            onClick={onMobileClose}
+          />
+          <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white text-slate-700 flex flex-col justify-between h-full overflow-y-auto shadow-2xl font-sans z-10 animate-in slide-in-from-left duration-250">
+            {renderContent(true)}
+          </aside>
+        </div>
+      )}
     </>
   );
 };
