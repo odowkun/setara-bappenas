@@ -46,6 +46,7 @@ export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const isSuperAdmin = hasRole(["superadmin"]);
+  const [expandedUserIds, setExpandedUserIds] = useState<Record<string, boolean>>({});
 
   const [successMsg, setSuccessMsg] = useState("");
 
@@ -58,6 +59,94 @@ export default function UserManagementPage() {
   useEffect(() => {
     refreshUsers();
   }, []);
+
+  const toggleExpandUser = (userId: string) => {
+    setExpandedUserIds((prev) => ({
+      ...prev,
+      [userId]: !prev[userId],
+    }));
+  };
+
+  const renderPermissionsSummary = (u: User, isMobile = false) => {
+    const isSuper = u.role === "superadmin";
+    const isExpanded = Boolean(expandedUserIds[u.id]);
+
+    if (isSuper) {
+      return (
+        <div className={`flex flex-col gap-1 ${isMobile ? "items-end" : "items-start"}`}>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs whitespace-nowrap">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              Akses Penuh Seluruh Modul
+            </span>
+            {u.permissions && u.permissions.length > 0 && (
+              <button
+                type="button"
+                onClick={() => toggleExpandUser(u.id)}
+                className="text-[10px] font-extrabold text-blue-600 hover:text-blue-800 hover:underline cursor-pointer transition"
+              >
+                {isExpanded ? "Tutup Detail" : `Detail (${u.permissions.length})`}
+              </button>
+            )}
+          </div>
+          {isExpanded && u.permissions && (
+            <div
+              className={`flex flex-wrap gap-1 mt-1 p-2 rounded-xl bg-slate-50 border border-slate-200/80 animate-in fade-in max-w-sm ${
+                isMobile ? "justify-end" : "justify-start"
+              }`}
+            >
+              {u.permissions.map((pId) => (
+                <span
+                  key={pId}
+                  className="px-2 py-0.5 rounded-md text-[9px] font-extrabold bg-white text-slate-700 border border-slate-200 shadow-2xs whitespace-nowrap"
+                >
+                  {pId.replace("manage_", "")}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (!u.permissions || u.permissions.length === 0) {
+      return (
+        <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">
+          Standard Role Access
+        </span>
+      );
+    }
+
+    const limit = 3;
+    const displayed = isExpanded ? u.permissions : u.permissions.slice(0, limit);
+    const remaining = u.permissions.length - limit;
+
+    return (
+      <div
+        className={`flex flex-wrap items-center gap-1 max-w-md ${
+          isMobile ? "justify-end" : "justify-start"
+        }`}
+      >
+        {displayed.map((pId) => (
+          <span
+            key={pId}
+            className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap shadow-2xs"
+          >
+            {pId.replace("manage_", "")}
+          </span>
+        ))}
+        {u.permissions.length > limit && (
+          <button
+            type="button"
+            onClick={() => toggleExpandUser(u.id)}
+            className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200/80 transition cursor-pointer whitespace-nowrap"
+          >
+            {isExpanded ? "Tutup" : `+${remaining} lainnya`}
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const handleDeleteUser = async (id: string, userName: string) => {
     if (id === currentUser?.id) {
@@ -99,16 +188,16 @@ export default function UserManagementPage() {
   }
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-0.5">
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
             <Users className="w-6 h-6 text-blue-600 shrink-0" />
-            <span>Manajemen Pengguna SPBE & Spatie Hak Akses</span>
+            <span>Manajemen Pengguna SPBE &amp; Spatie Hak Akses</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium leading-relaxed">
-            Daftar pengelola portal resmi BAPPEDA Halmahera Utara beserta atribusi role & matriks permissions.
+            Daftar pengelola portal resmi BAPPEDA Halmahera Utara beserta atribusi role &amp; matriks permissions.
           </p>
         </div>
 
@@ -199,21 +288,8 @@ export default function UserManagementPage() {
                     )}
                   </td>
 
-                  <td className="px-6 py-4 max-w-xs">
-                    {u.permissions && u.permissions.length > 0 ? (
-                      <div className="flex flex-wrap gap-1">
-                        {u.permissions.map((pId) => (
-                          <span
-                            key={pId}
-                            className="px-2 py-1 rounded-lg text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200 whitespace-nowrap"
-                          >
-                            {pId.replace("manage_", "")}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-slate-400 font-semibold whitespace-nowrap">Standard Role Access</span>
-                    )}
+                  <td className="px-6 py-4 max-w-md">
+                    {renderPermissionsSummary(u)}
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap text-right">
@@ -308,6 +384,12 @@ export default function UserManagementPage() {
                       🏗️ {u.bidang?.toUpperCase() || "IPW"}
                     </span>
                   )}
+                </div>
+                <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-100">
+                  <span className="text-slate-400 font-bold shrink-0">Hak Akses:</span>
+                  <div className="flex-1">
+                    {renderPermissionsSummary(u, true)}
+                  </div>
                 </div>
               </div>
             </div>

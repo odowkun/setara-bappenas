@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   CheckCircle2,
   ExternalLink,
@@ -35,6 +35,7 @@ const emptyForm = {
 
 export default function TautanOpdDashboardPage() {
   const { hasPermission } = useAuth();
+  const formRef = useRef<HTMLDivElement>(null);
   const [items, setItems] = useState<TautanOpdItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
@@ -68,6 +69,13 @@ export default function TautanOpdDashboardPage() {
     setForm(emptyForm);
   };
 
+  const handleCreateNew = () => {
+    resetForm();
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const startEdit = (item: TautanOpdItem) => {
     setEditingItem(item);
     setForm({
@@ -77,6 +85,9 @@ export default function TautanOpdDashboardPage() {
       orderIndex: item.orderIndex,
       isActive: item.isActive,
     });
+    if (typeof window !== "undefined" && window.innerWidth < 1280) {
+      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
   const uploadLogoFile = async (file?: File) => {
@@ -195,135 +206,178 @@ export default function TautanOpdDashboardPage() {
 
         <button
           type="button"
-          onClick={resetForm}
-          className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2"
+          onClick={handleCreateNew}
+          className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2 shrink-0"
         >
           <Plus className="w-4 h-4" />
           <span>Input Tautan Baru</span>
         </button>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-[420px_1fr] gap-6 items-start">
-        <form onSubmit={handleSubmit} className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <h2 className="text-base font-black text-slate-900">
-                {editingItem ? "Edit Tautan OPD" : "Tambah Tautan OPD"}
-              </h2>
-              <p className="text-xs text-slate-500 font-medium mt-1">
-                URL boleh dikosongkan agar kartu hanya tampil tanpa aksi redirect.
-              </p>
-            </div>
-            {editingItem && (
-              <button
-                type="button"
-                onClick={resetForm}
-                className="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition"
-                aria-label="Reset form"
-                title="Reset form"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700">Nama OPD / Aplikasi *</label>
-            <input
-              type="text"
-              value={form.name}
-              onChange={(event) => setForm({ ...form, name: event.target.value })}
-              placeholder="Contoh: SIPD"
-              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700">Logo OPD *</label>
-            <label
-              onDragEnter={(event) => {
-                event.preventDefault();
-                setDragActive(true);
-              }}
-              onDragOver={(event) => event.preventDefault()}
-              onDragLeave={(event) => {
-                event.preventDefault();
-                setDragActive(false);
-              }}
-              onDrop={handleLogoDrop}
-              className={`min-h-44 px-5 py-6 rounded-3xl border-2 border-dashed text-xs font-extrabold transition active:scale-[0.99] flex flex-col items-center justify-center gap-4 cursor-pointer ${
-                dragActive
-                  ? "bg-blue-50 border-blue-500 text-blue-700"
-                  : "bg-slate-50 hover:bg-blue-50 border-slate-300 hover:border-blue-400 text-slate-600 hover:text-blue-700"
-              }`}
-            >
-              <span className="h-24 w-24 rounded-2xl border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden">
-                {form.logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={form.logoUrl} alt="Preview logo OPD" className="w-full h-full object-contain p-2" />
-                ) : uploading ? (
-                  <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                ) : (
-                  <ImagePlus className="w-8 h-8 text-slate-300" />
-                )}
-              </span>
-              <span className="inline-flex items-center justify-center gap-2 text-center">
-                {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
-                <span>{uploading ? "Mengunggah logo..." : "Pilih atau tarik berkas logo ke sini"}</span>
-              </span>
-              <span className="text-[10px] font-bold text-slate-400 text-center">JPG, PNG, WEBP, atau SVG maksimal 10MB</span>
-              <input type="file" accept="image/*,.svg" onChange={handleLogoUpload} className="hidden" />
-            </label>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-700">URL OPD</label>
-            <input
-              type="url"
-              value={form.url}
-              onChange={(event) => setForm({ ...form, url: event.target.value })}
-              placeholder="https://contoh-opd.go.id"
-              className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <label className="text-xs font-black text-slate-700">Urutan</label>
-              <input
-                type="number"
-                min={0}
-                value={form.orderIndex}
-                onChange={(event) => setForm({ ...form, orderIndex: Number(event.target.value) })}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-xs font-black text-slate-700">Status</label>
-              <button
-                type="button"
-                onClick={() => setForm({ ...form, isActive: !form.isActive })}
-                className={`w-full px-4 py-3 rounded-2xl border text-xs font-black flex items-center justify-center gap-2 transition ${
-                  form.isActive
-                    ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                    : "bg-slate-50 border-slate-200 text-slate-500"
-                }`}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                <span>{form.isActive ? "Aktif" : "Nonaktif"}</span>
-              </button>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving || uploading}
-            className="w-full px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2"
+      <div className="grid grid-cols-1 xl:grid-cols-[400px_1fr] 2xl:grid-cols-[420px_1fr] gap-6 items-start">
+        {/* Sticky Form Column on Desktop with dvh-aware container, natural flow on mobile */}
+        <div ref={formRef} className="relative xl:sticky xl:top-4 self-start w-full">
+          <form
+            onSubmit={handleSubmit}
+            className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col xl:max-h-[calc(100dvh-6.5rem)] max-h-none"
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? "Menyimpan..." : "Simpan Tautan OPD"}</span>
-          </button>
-        </form>
+            {/* Form Header - Fixed at top of card */}
+            <div className="flex items-start justify-between gap-3 pb-3.5 border-b border-slate-100 shrink-0">
+              <div>
+                <h2 className="text-base font-black text-slate-900">
+                  {editingItem ? "Edit Tautan OPD" : "Tambah Tautan OPD"}
+                </h2>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-relaxed">
+                  URL boleh dikosongkan agar kartu hanya tampil tanpa aksi redirect.
+                </p>
+              </div>
+              {editingItem && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition shrink-0"
+                  aria-label="Batal edit"
+                  title="Batal edit"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+
+            {/* Scrollable Form Body - Smooth scrolling if desktop height is small */}
+            <div className="flex-1 overflow-y-auto py-3.5 space-y-3.5 pr-1 focus:outline-none">
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-slate-700">Nama OPD / Aplikasi *</label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(event) => setForm({ ...form, name: event.target.value })}
+                  placeholder="Contoh: SIPD"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-700">Logo OPD *</label>
+                  {form.logoUrl && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setForm((prev) => ({ ...prev, logoUrl: "" }));
+                      }}
+                      className="text-[10px] font-bold text-rose-600 hover:underline"
+                    >
+                      Hapus Logo
+                    </button>
+                  )}
+                </div>
+                <label
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    setDragActive(true);
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragLeave={(event) => {
+                    event.preventDefault();
+                    setDragActive(false);
+                  }}
+                  onDrop={handleLogoDrop}
+                  className={`p-3 rounded-2xl border-2 border-dashed text-xs font-bold transition active:scale-[0.99] flex items-center gap-3 cursor-pointer ${
+                    dragActive
+                      ? "bg-blue-50 border-blue-500 text-blue-700"
+                      : "bg-slate-50 hover:bg-blue-50 border-slate-300 hover:border-blue-400 text-slate-600 hover:text-blue-700"
+                  }`}
+                >
+                  <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden shrink-0">
+                    {form.logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={form.logoUrl} alt="Preview logo OPD" className="w-full h-full object-contain p-1.5" />
+                    ) : uploading ? (
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    ) : (
+                      <ImagePlus className="w-6 h-6 text-slate-300" />
+                    )}
+                  </span>
+                  <div className="flex-1 min-w-0 space-y-0.5">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-extrabold text-slate-800 truncate">
+                      {uploading ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                      ) : (
+                        <Upload className="w-3.5 h-3.5 text-blue-600" />
+                      )}
+                      <span>{uploading ? "Mengunggah..." : form.logoUrl ? "Ganti Berkas Logo" : "Pilih / Tarik Logo"}</span>
+                    </span>
+                    <p className="text-[10px] font-medium text-slate-400 truncate">JPG, PNG, WEBP, SVG maks 10MB</p>
+                  </div>
+                  <input type="file" accept="image/*,.svg" onChange={handleLogoUpload} className="hidden" />
+                </label>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-black text-slate-700">URL OPD</label>
+                <input
+                  type="url"
+                  value={form.url}
+                  onChange={(event) => setForm({ ...form, url: event.target.value })}
+                  placeholder="https://contoh-opd.go.id"
+                  className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white transition"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-700">Urutan</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={form.orderIndex}
+                    onChange={(event) => setForm({ ...form, orderIndex: Number(event.target.value) })}
+                    className="w-full px-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-black text-slate-700">Status</label>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, isActive: !form.isActive })}
+                    className={`w-full px-3 py-2.5 rounded-2xl border text-xs font-black flex items-center justify-center gap-1.5 transition ${
+                      form.isActive
+                        ? "bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100"
+                        : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                    }`}
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{form.isActive ? "Aktif" : "Nonaktif"}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Pinned Form Footer - Always visible on desktop and mobile */}
+            <div className="pt-3.5 border-t border-slate-100 shrink-0 bg-white mt-auto space-y-2">
+              <button
+                type="submit"
+                disabled={saving || uploading}
+                className="w-full px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2"
+              >
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                <span>{saving ? "Menyimpan..." : editingItem ? "Perbarui Tautan OPD" : "Simpan Tautan OPD"}</span>
+              </button>
+              {editingItem && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="w-full px-4 py-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  <span>Batal Edit</span>
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
 
         <div className="space-y-4">
           <div className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">

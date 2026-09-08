@@ -13,7 +13,7 @@ export const ClientLayoutWrapper: React.FC<{ children: React.ReactNode }> = ({ c
   const isDashboardRoute = pathname?.startsWith("/dashboard");
 
   if (isDashboardRoute) {
-    return <main className="flex-1 min-h-screen bg-slate-50">{children}</main>;
+    return <div className="flex-1 min-h-screen bg-slate-50">{children}</div>;
   }
 
   return (

@@ -18,7 +18,7 @@ function PageTransitionContainer({
   const pathname = usePathname();
 
   return (
-    <div className="relative min-h-[500px] h-full flex flex-col">
+    <div className="relative min-h-full flex-1 flex flex-col">
       {/* Top Animated Progress Bar & Instant Loading Feedback Pill */}
       {isNavigating && (
         <div className="fixed top-0 left-0 right-0 z-[99999] pointer-events-none">
