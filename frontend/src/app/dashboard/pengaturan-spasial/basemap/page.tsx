@@ -36,6 +36,8 @@ const MiniBasemapMap = dynamic(
           const map = L.map(containerRef.current, {
             center: [centerLat, centerLng],
             zoom: zoomLevel,
+            minZoom: 8,
+            maxZoom: 19,
             zoomControl: false,
             attributionControl: false,
             dragging: false,

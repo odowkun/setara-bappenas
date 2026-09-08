@@ -142,6 +142,9 @@ export default function GeotaggingMapPicker({
       const map = L.map(mapContainerRef.current, {
         center: [centerLat, centerLng],
         zoom: initialZoom,
+        minZoom: 8,
+        maxZoom: 19,
+        maxBoundsViscosity: 0.8,
         zoomControl: true,
       });
 
@@ -209,6 +212,7 @@ export default function GeotaggingMapPicker({
     const newTileLayer = L.tileLayer(url, {
       attribution: attr,
       subdomains,
+      minZoom: 8,
       maxZoom: 19,
     });
 
@@ -488,6 +492,15 @@ export default function GeotaggingMapPicker({
       }).addTo(map);
 
       officialBoundaryLayerRef.current = layer;
+
+      try {
+        const bounds = layer.getBounds();
+        if (bounds.isValid()) {
+          const targetMinZoom = map.getBoundsZoom(bounds, false, L.point(30, 30));
+          map.setMinZoom(targetMinZoom);
+          map.setMaxBounds(bounds.pad(0.6));
+        }
+      } catch {}
     }
   }, [showBoundary, boundaryColor, boundaryDashStyle, customBoundaryGeoJson]);
 

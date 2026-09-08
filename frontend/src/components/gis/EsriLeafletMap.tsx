@@ -75,6 +75,8 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
   const [showBoundary, setShowBoundary] = useState<boolean>(true);
   const [showLayerMenu, setShowLayerMenu] = useState<boolean>(false);
   const [savedAnalyses, setSavedAnalyses] = useState<any[]>([]);
+  const [currentZoom, setCurrentZoom] = useState<number>(8);
+  const [minZoomLevel, setMinZoomLevel] = useState<number>(8);
 
   useEffect(() => {
     proyekService.getBufferAnalyses().then(setSavedAnalyses);
@@ -159,12 +161,19 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     try {
       const bounds = boundaryLayerRef.current.getBounds();
       if (bounds.isValid()) {
+        const targetMinZoom = mapInstanceRef.current.getBoundsZoom(bounds, false, L.point(35, 35));
+        mapInstanceRef.current.setMinZoom(targetMinZoom);
+        setMinZoomLevel(targetMinZoom);
         mapInstanceRef.current.fitBounds(bounds, { padding: [35, 35] });
       } else {
-        mapInstanceRef.current.setView([1.6178, 127.8584], 8.5);
+        mapInstanceRef.current.setMinZoom(8);
+        setMinZoomLevel(8);
+        mapInstanceRef.current.setView([1.6178, 127.8584], 8);
       }
     } catch {
-      mapInstanceRef.current.setView([1.6178, 127.8584], 8.5);
+      mapInstanceRef.current.setMinZoom(8);
+      setMinZoomLevel(8);
+      mapInstanceRef.current.setView([1.6178, 127.8584], 8);
     }
   };
 
@@ -197,6 +206,16 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     layer.bringToFront();
     boundaryLayerRef.current = layer;
 
+    try {
+      const bounds = layer.getBounds();
+      if (bounds.isValid()) {
+        const targetMinZoom = map.getBoundsZoom(bounds, false, L.point(35, 35));
+        map.setMinZoom(targetMinZoom);
+        setMinZoomLevel(targetMinZoom);
+        map.setMaxBounds(bounds.pad(0.6));
+      }
+    } catch {}
+
     setTimeout(() => {
       fitHalutBounds();
     }, 200);
@@ -209,13 +228,17 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
 
     const map = L.map(mapContainerRef.current, {
       center: [1.6178, 127.8584],
-      zoom: 8.5,
+      zoom: 8,
+      minZoom: 8,
+      maxZoom: 19,
+      maxBoundsViscosity: 0.8,
       zoomControl: false,
       scrollWheelZoom: true,
     });
 
     const currentProvider = tileProviders[mapType];
     const initialTileLayer = L.tileLayer(currentProvider.url, {
+      minZoom: 8,
       maxZoom: 19,
       attribution: currentProvider.attribution,
     }).addTo(map);
@@ -229,6 +252,16 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     const invalidate = () => {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.invalidateSize();
+        if (boundaryLayerRef.current) {
+          try {
+            const bounds = boundaryLayerRef.current.getBounds();
+            if (bounds.isValid()) {
+              const targetMinZoom = mapInstanceRef.current.getBoundsZoom(bounds, false, L.point(35, 35));
+              mapInstanceRef.current.setMinZoom(targetMinZoom);
+              setMinZoomLevel(targetMinZoom);
+            }
+          } catch {}
+        }
       }
     };
 
@@ -440,9 +473,10 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       markersRef.current[loc.id] = marker;
     });
 
-    // Handle Zoom End to Dynamically Update Marker Scale
+    // Handle Zoom End to Dynamically Update Marker Scale & Zoom Tracker
     const handleZoomEnd = () => {
       const zoom = map.getZoom();
+      setCurrentZoom(zoom);
       locations.forEach((loc, index) => {
         const marker = markersRef.current[loc.id];
         if (marker) {
@@ -467,6 +501,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
     }
     const currentProvider = tileProviders[mapType];
     const newLayer = L.tileLayer(currentProvider.url, {
+      minZoom: minZoomLevel,
       maxZoom: 19,
       attribution: currentProvider.attribution,
     }).addTo(mapInstanceRef.current);
@@ -534,10 +569,12 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
 
   // Manual Zoom Controls
   const handleZoomIn = () => {
-    if (mapInstanceRef.current) mapInstanceRef.current.zoomIn();
+    if (mapInstanceRef.current && currentZoom < 19) mapInstanceRef.current.zoomIn();
   };
   const handleZoomOut = () => {
-    if (mapInstanceRef.current) mapInstanceRef.current.zoomOut();
+    if (mapInstanceRef.current && currentZoom > minZoomLevel) {
+      mapInstanceRef.current.zoomOut();
+    }
   };
 
   return (
@@ -552,7 +589,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
             onSelectLocation(null);
             fitHalutBounds();
           }}
-          className="px-3.5 py-2 rounded-full bg-blue-950/90 hover:bg-blue-900 text-white font-extrabold text-xs shadow-xl backdrop-blur-md transition flex items-center gap-1.5 border border-amber-400/40"
+          className="px-3.5 py-2 rounded-full bg-blue-950/90 hover:bg-blue-900 text-white font-extrabold text-xs shadow-xl backdrop-blur-md transition flex items-center gap-1.5 border border-amber-400/40 cursor-pointer"
           title="Zoom Out ke Seluruh Wilayah Halmahera Utara"
         >
           <Globe className="w-3.5 h-3.5 text-amber-400" /> Lihat Seluruh Halut
@@ -566,7 +603,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
         <div className="relative">
           <button
             onClick={() => setShowLayerMenu(!showLayerMenu)}
-            className="p-2.5 rounded-full bg-white/95 backdrop-blur-md text-slate-800 hover:text-blue-700 border border-slate-200 shadow-lg transition flex items-center gap-1.5"
+            className="p-2.5 rounded-full bg-white/95 backdrop-blur-md text-slate-800 hover:text-blue-700 border border-slate-200 shadow-lg transition flex items-center gap-1.5 cursor-pointer"
             title="Pilih Jenis Peta / Basemap"
           >
             <Layers className="w-4 h-4 text-blue-700" />
@@ -590,7 +627,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
                       setMapType(key);
                       setShowLayerMenu(false);
                     }}
-                    className={`w-full text-left p-2 rounded-xl transition flex items-center justify-between ${
+                    className={`w-full text-left p-2 rounded-xl transition flex items-center justify-between cursor-pointer ${
                       isSelected
                         ? "bg-blue-50 border border-blue-200 text-blue-900 font-extrabold"
                         : "hover:bg-slate-50 text-slate-700 font-medium"
@@ -611,7 +648,7 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
         {/* Boundary Icon Button Only */}
         <button
           onClick={() => setShowBoundary(!showBoundary)}
-          className={`p-2.5 rounded-full shadow-lg transition border flex items-center justify-center ${
+          className={`p-2.5 rounded-full shadow-lg transition border flex items-center justify-center cursor-pointer ${
             showBoundary
               ? "bg-amber-400 text-blue-950 border-amber-300 ring-2 ring-amber-300/50 shadow-amber-200"
               : "bg-white/95 backdrop-blur-md text-slate-600 border-slate-200 hover:text-slate-900"
@@ -626,16 +663,30 @@ export const EsriLeafletMap: React.FC<EsriLeafletMapProps> = ({
       <div className="absolute top-20 right-4 z-[400] flex flex-col items-center gap-1 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl p-1 shadow-lg">
         <button
           onClick={handleZoomIn}
-          className="p-2 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl transition"
-          title="Perbesar Peta (+)"
+          disabled={currentZoom >= 19}
+          className={`p-2 rounded-xl transition ${
+            currentZoom >= 19
+              ? "opacity-30 cursor-not-allowed text-slate-400"
+              : "hover:bg-blue-50 text-slate-700 hover:text-blue-700 cursor-pointer"
+          }`}
+          title={currentZoom >= 19 ? "Batas pembesaran maksimal" : "Perbesar Peta (+)"}
         >
           <Plus className="w-4 h-4" />
         </button>
         <div className="w-4 h-px bg-slate-200" />
         <button
           onClick={handleZoomOut}
-          className="p-2 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-xl transition"
-          title="Perkecil Peta (-)"
+          disabled={currentZoom <= minZoomLevel}
+          className={`p-2 rounded-xl transition ${
+            currentZoom <= minZoomLevel
+              ? "opacity-30 cursor-not-allowed text-slate-400"
+              : "hover:bg-blue-50 text-slate-700 hover:text-blue-700 cursor-pointer"
+          }`}
+          title={
+            currentZoom <= minZoomLevel
+              ? "Tampilan terjauh (Terkunci pada batas seluruh Halut)"
+              : "Perkecil Peta (-)"
+          }
         >
           <Minus className="w-4 h-4" />
         </button>

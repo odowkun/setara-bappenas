@@ -81,3 +81,25 @@ Perbaikan menyeluruh pada bilah navigasi cepat kategori dokumen (`DocumentQuickM
 - **Active Pill State Elegan**: Mengganti background kotak kaku dengan pill royal blue ber-rounded proporsional (`rounded-xl sm:rounded-full bg-blue-600 text-white shadow-md shadow-blue-600/30`), serasi dengan kurva container luar.
 - **Layout Responsif Seimbang**: Desktop menampilkan 1 baris 6 kolom seimbang (`lg:grid-cols-6`), sedangkan mobile menampilkan grid 2 baris x 3 kolom yang simetris (`grid-cols-3`).
 
+---
+
+## 6. Standar Zoom Terjauh Peta (MinZoom & MaxBounds Locking)
+
+Status implementasi: 8 September 2026.
+
+Untuk menjamin peta selalu berfokus pada wilayah yurisdiksi Kabupaten Halmahera Utara dan mencegah pengguna melakukan zoom out berlebihan (yang dapat memperlihatkan seluruh peta dunia/pulau lain di luar konteks):
+
+1. **Penguncian Zoom Terjauh (`minZoom: 8`)**:
+   - Seluruh peta Leaflet di aplikasi (`EsriLeafletMap.tsx`, `GeotaggingMapPicker.tsx`, `basemap/page.tsx`) dikunci zoom minimumnya ke level zoom `fitBounds` resmi Halmahera Utara (`minZoom: 8`).
+   - Pada `EsriLeafletMap.tsx`, fungsi `fitHalutBounds()` menghitung target zoom terluar berdasarkan batas resmi BPS/Kemendagri (`map.getBoundsZoom(bounds, false, L.point(35, 35))`) dan menguncinya via `map.setMinZoom(targetMinZoom)`.
+   - Tile layer pada provider Esri, Google Maps, dan OpenStreetMap juga diberikan parameter `minZoom: 8` sehingga browser tidak melakukan request HTTP untuk tile zoom di bawah 8.
+
+2. **Pembatasan Area Geser (`maxBounds`)**:
+   - Batas geografis Halut diberikan padding aman `0.6` (`bounds.pad(0.6)`) dengan elastisitas `maxBoundsViscosity: 0.8`.
+   - Peta dapat digeser secara leluasa di seluruh perairan dan daratan Halmahera Utara, namun akan kembali membal secara alami jika pengguna mencoba menggeser ke luar wilayah Maluku Utara.
+
+3. **Indikator Tombol Zoom Out (`Minus`)**:
+   - Tombol manual `-` (zoom out) mendeteksi level zoom aktif via event `zoomend`.
+   - Ketika berada di level zoom terjauh (`currentZoom <= minZoomLevel`), tombol `-` otomatis dinonaktifkan (`disabled`), diberikan styling `opacity-30 cursor-not-allowed`, dan menampilkan tooltip informatif: *"Tampilan terjauh (Terkunci pada batas seluruh Halut)"*.
+
+
