@@ -10,27 +10,36 @@ jobs:
     name: Deploy to Windows Server (HP ProLiant)
     runs-on: self-hosted
     steps:
-      - name: Sync Code & Deploy
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Production
         shell: powershell
         run: |
           Write-Output "=================================================="
           Write-Output "🚀 Memulai Otomasi Deployment BAPPEDA HALUT..."
           Write-Output "=================================================="
 
-          if (!(Test-Path "C:\bappeda-halut")) {
-            Write-Error "Direktori C:\bappeda-halut tidak ditemukan!"
-            exit 1
+          $prodRoot = "C:\bappeda-halut"
+          if (!(Test-Path $prodRoot)) {
+            New-Item -ItemType Directory -Path $prodRoot -Force | Out-Null
           }
-          cd C:\bappeda-halut
 
-          # 1. Sinkronisasi Git terbaru dari branch develop
-          Write-Output "📥 Mengunduh kode terbaru dari branch develop..."
-          git fetch origin develop
-          git reset --hard origin/develop
+          # 1. Salin file terbaru dari repo (aman: menjaga .env & storage)
+          Write-Output "📂 Menyinkronkan file repository ke direktori produksi..."
+          if (Test-Path "backend") {
+            Get-ChildItem -Path "backend" -Exclude ".env", "storage" | Copy-Item -Destination "$prodRoot\backend" -Recurse -Force
+          }
+          if (Test-Path "frontend") {
+            Get-ChildItem -Path "frontend" -Exclude "node_modules", ".next", ".env*" | Copy-Item -Destination "$prodRoot\frontend" -Recurse -Force
+          }
+          if (Test-Path "scripts") {
+            Copy-Item -Path "scripts" -Destination "$prodRoot\scripts" -Recurse -Force
+          }
 
-          # 2. Update & Migrasi Backend Laravel
+          # 2. Update Backend Laravel
           Write-Output "🐘 Memperbarui Backend Laravel..."
-          cd C:\bappeda-halut\backend
+          cd "$prodRoot\backend"
           C:\php83\php.exe artisan migrate --force
           C:\php83\php.exe artisan config:cache
           C:\php83\php.exe artisan route:cache
@@ -38,7 +47,7 @@ jobs:
 
           # 3. Update & Build Frontend Next.js
           Write-Output "⚛️ Memperbarui Frontend Next.js..."
-          cd C:\bappeda-halut\frontend
+          cd "$prodRoot\frontend"
           npm install --prefer-offline --no-audit
           npm run build
 
