@@ -68,3 +68,26 @@ pm2 restart bappeda-api
 pm2 logs bappeda-fe
 pm2 logs bappeda-api
 ```
+
+---
+
+## 5. Pemeliharaan & Ketahanan Otomatis (Maintenance)
+
+### A. Rotasi Log PM2 (Cegah Disk C: Penuh)
+Agar log PM2 tidak membengkak tanpa batas:
+```powershell
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate:max_size 10M
+pm2 set pm2-logrotate:retain 7
+pm2 set pm2-logrotate:compress true
+pm2 save
+```
+
+### B. Auto-Backup Database MariaDB (Harian 02:00 Pagi)
+Script backup diletakkan di `C:\bappeda-halut\scripts\auto-backup-db.ps1`.
+Jalankan perintah ini di PowerShell (Run as Administrator) untuk mendaftarkan Task Scheduler:
+```powershell
+schtasks /Create /TN "Bappeda_Daily_DB_Backup" /TR "powershell.exe -ExecutionPolicy Bypass -File C:\bappeda-halut\scripts\auto-backup-db.ps1" /SC DAILY /ST 02:00 /RU "SYSTEM" /RL HIGHEST /F
+```
+
+Backup akan tersimpan di `C:\bappeda-halut\backups\database` dalam format `.zip` terkompresi dengan retensi otomatis 14 hari.
