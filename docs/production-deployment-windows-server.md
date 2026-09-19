@@ -91,3 +91,12 @@ schtasks /Create /TN "Bappeda_Daily_DB_Backup" /TR "powershell.exe -ExecutionPol
 ```
 
 Backup akan tersimpan di `C:\bappeda-halut\backups\database` dalam format `.zip` terkompresi dengan retensi otomatis 14 hari.
+
+### C. Otomasi CI/CD (GitHub Actions Self-Hosted Runner)
+Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
+- **Workflow**: `.github/workflows/deploy.yml`
+- **Lokasi Agen**: `C:\actions-runner`
+- **Tipe Layanan**: Windows Service (Auto-Start saat server boot)
+- **Koneksi Jaringan**: Outbound HTTPS (100% tembus Starlink CGNAT tanpa buka port router)
+- **Alur Kerja**: Sinkronisasi kode ➡️ Migrasi database Laravel ➡️ Cache config ➡️ Build frontend ➡️ PM2 Zero-Downtime Reload.
+
