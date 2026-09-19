@@ -1,9 +1,12 @@
 export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ||
   process.env.NEXT_PUBLIC_API_URL ||
-  "http://localhost:8000/api/v1";
+  (typeof window !== "undefined" ? "/api/v1" : "http://localhost:8000/api/v1");
 
-export const STORAGE_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+export const STORAGE_BASE_URL =
+  typeof window !== "undefined" && API_BASE_URL.startsWith("/")
+    ? ""
+    : API_BASE_URL.replace(/\/api\/v1\/?$/, "");
 
 export const AUTH_TOKEN_KEY = "bappeda_sanctum_token";
 export const AUTH_USER_KEY = "bappeda_auth_user";

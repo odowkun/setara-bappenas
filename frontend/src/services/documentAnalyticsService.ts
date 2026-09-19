@@ -3,10 +3,9 @@ import {
   DocumentDownloadResult,
   DocumentPreviewResult,
 } from "@/types/documentAnalytics";
+import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-const BACKEND_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+const BACKEND_BASE_URL = STORAGE_BASE_URL;
 
 interface ApiErrorBody {
   message?: string;

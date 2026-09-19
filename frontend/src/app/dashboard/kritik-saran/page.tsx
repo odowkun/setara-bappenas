@@ -26,9 +26,9 @@ import {
   KritikSaranItem,
   SurveyServiceItem,
 } from "@/services/surveyService";
-import { authenticatedFetch } from "@/lib/apiClient";
+import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000/api/v1";
+const API_BASE = API_BASE_URL;
 
 export default function DashboardKritikSaranPage() {
   const [activeTab, setActiveTab] = useState<"pesan" | "unit_tujuan">("pesan");

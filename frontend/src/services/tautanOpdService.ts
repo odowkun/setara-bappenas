@@ -1,3 +1,5 @@
+import { API_BASE_URL } from "@/lib/apiClient";
+
 export interface TautanOpdItem {
   id: string;
   name: string;
@@ -14,8 +16,6 @@ export interface TautanOpdPayload {
   order_index?: number;
   is_active?: boolean;
 }
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 export const tautanOpdService = {
   async getItems(publicOnly = false): Promise<TautanOpdItem[]> {

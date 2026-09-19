@@ -16,10 +16,10 @@ interface ResumableChunkUploaderProps {
   chunkSizeMB?: number; // default 5MB
 }
 
+import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
+
 const STORAGE_KEY_PREFIX = "bappeda_chunk_upload_";
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
-const BACKEND_BASE_URL = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+const BACKEND_BASE_URL = STORAGE_BASE_URL;
 
 export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   onUploadSuccess,
