@@ -96,7 +96,19 @@ Backup akan tersimpan di `C:\bappeda-halut\backups\database` dalam format `.zip`
 Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
 - **Workflow**: `.github/workflows/deploy.yml`
 - **Lokasi Agen**: `C:\actions-runner`
-- **Tipe Layanan**: Windows Service (Auto-Start saat server boot)
+- **Tipe Layanan**: Windows Background Scheduled Task (Auto-Start saat server boot)
 - **Koneksi Jaringan**: Outbound HTTPS (100% tembus Starlink CGNAT tanpa buka port router)
 - **Alur Kerja**: Sinkronisasi kode ➡️ Migrasi database Laravel ➡️ Cache config ➡️ Build frontend ➡️ PM2 Zero-Downtime Reload.
+
+#### Perintah Auto-Start Runner (Background 24/7):
+```powershell
+Register-ScheduledTask -TaskName "GitHub_Actions_Runner" -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c C:\actions-runner\run.cmd") -User "SYSTEM" -RunLevel Highest -Force
+Start-ScheduledTask -TaskName "GitHub_Actions_Runner"
+```
+
+#### Troubleshooting Handshake / Clock Skew:
+Jika runner gagal konek (`Failed to create a session`), sinkronkan jam Windows Server:
+```powershell
+w32tm /unregister; w32tm /register; net start w32time; w32tm /resync /force; Get-Date
+```
 
