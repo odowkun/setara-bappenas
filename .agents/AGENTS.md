@@ -137,3 +137,22 @@ If the user uses the keyword **"diskusi"** or asks for conceptual discussion, yo
      3. Push target branch to remote (`git push origin <branch>`).
      4. **IMMEDIATELY switch back to `develop` (`git checkout develop`)**.
    - NEVER leave the repository sitting on `staging` or `main` after a merge to avoid update conflicts and branch drift.
+
+# CI/CD Automated Deployment Standard (GitHub Actions Self-Hosted Runner)
+
+All deployments and production updates MUST be executed automatically through the GitHub Actions CI/CD pipeline:
+
+1. **Zero Manual Server Access**:
+   - NEVER instruct or ask the user to open AnyDesk, RDP, or remote shell to manually deploy code, run migrations, or rebuild apps.
+   - The physical HP ProLiant server runs an active Self-Hosted Runner (`bappeda-runner-01`) via Windows Scheduled Task (`GitHub_Actions_Runner`).
+
+2. **Automated Pipeline Trigger**:
+   - Every `git push origin develop` automatically triggers `.github/workflows/deploy.yml`.
+   - The runner automatically performs:
+     1. Repository sync (safely excluding production `.env` and `storage/`).
+     2. Laravel database migration (`php artisan migrate --force`) & configuration caching.
+     3. Next.js production build (`npm run build`).
+     4. Zero-Downtime process reload (`pm2 reload bappeda-api` and `pm2 reload bappeda-fe`).
+
+3. **Status Confirmation**:
+   - Always inform the user that changes are deployed automatically to production via CI/CD, and link to GitHub Actions status if needed.
