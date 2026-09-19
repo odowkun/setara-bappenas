@@ -102,8 +102,12 @@ Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
 
 #### Perintah Auto-Start Runner (Background 24/7):
 ```powershell
-Register-ScheduledTask -TaskName "GitHub_Actions_Runner" -Trigger (New-ScheduledTaskTrigger -AtStartup) -Action (New-ScheduledTaskAction -Execute "cmd.exe" -Argument "/c C:\actions-runner\run.cmd") -User "SYSTEM" -RunLevel Highest -Force
-Start-ScheduledTask -TaskName "GitHub_Actions_Runner"
+schtasks /Create /TN "GitHub_Actions_Runner" /TR "cmd.exe /c cd /d C:\actions-runner && run.cmd" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F
+schtasks /Run /TN "GitHub_Actions_Runner"
+```
+Cek status berjalan:
+```powershell
+schtasks /Query /TN "GitHub_Actions_Runner"
 ```
 
 #### Troubleshooting Handshake / Clock Skew:
