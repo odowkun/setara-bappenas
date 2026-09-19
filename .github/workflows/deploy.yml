@@ -1,0 +1,59 @@
+name: Auto Deploy to Bappeda Halut On-Premise Server
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    name: Deploy to Windows Server (HP ProLiant)
+    runs-on: self-hosted
+    steps:
+      - name: Sync Code & Deploy
+        shell: powershell
+        run: |
+          Write-Output "=================================================="
+          Write-Output "🚀 Memulai Otomasi Deployment BAPPEDA HALUT..."
+          Write-Output "=================================================="
+
+          if (!(Test-Path "C:\bappeda-halut")) {
+            Write-Error "Direktori C:\bappeda-halut tidak ditemukan!"
+            exit 1
+          }
+          cd C:\bappeda-halut
+
+          # 1. Sinkronisasi Git terbaru dari branch develop
+          Write-Output "📥 Mengunduh kode terbaru dari branch develop..."
+          git fetch origin develop
+          git reset --hard origin/develop
+
+          # 2. Update & Migrasi Backend Laravel
+          Write-Output "🐘 Memperbarui Backend Laravel..."
+          cd C:\bappeda-halut\backend
+          C:\php83\php.exe artisan migrate --force
+          C:\php83\php.exe artisan config:cache
+          C:\php83\php.exe artisan route:cache
+          C:\php83\php.exe artisan view:cache
+
+          # 3. Update & Build Frontend Next.js
+          Write-Output "⚛️ Memperbarui Frontend Next.js..."
+          cd C:\bappeda-halut\frontend
+          npm install --prefer-offline --no-audit
+          npm run build
+
+          if (Test-Path "public") {
+            Copy-Item -Path "public" -Destination ".next\standalone\public" -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          if (Test-Path ".next\static") {
+            Copy-Item -Path ".next\static" -Destination ".next\standalone\.next\static" -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+          # 4. Reload PM2 Zero-Downtime
+          Write-Output "🔄 Mereload layanan PM2 (Zero-Downtime)..."
+          pm2 reload bappeda-api
+          pm2 reload bappeda-fe
+
+          Write-Output "=================================================="
+          Write-Output "🎉 DEPLOYMENT BERHASIL! Web Bappeda Halut Terupdate!"
+          Write-Output "=================================================="
