@@ -49,7 +49,7 @@ export default function TambahDokumenPage() {
   );
   const [classification, setClassification] = useState<
     "public" | "internal" | "confidential" | "restricted"
-  >("internal");
+  >("public");
   const [retentionPolicy, setRetentionPolicy] = useState<
     "permanent" | "active_5_years" | "active_10_years" | "custom"
   >("permanent");
@@ -189,11 +189,16 @@ export default function TambahDokumenPage() {
       });
 
       setIsSaved(true);
+      const isDirectPublish = submitForReview && (user.role === "superadmin" || user.role === "admin_umum");
       showSuccessSwal(
-        submitForReview
+        isDirectPublish
+          ? "Dokumen Berhasil Diterbitkan ke Publik"
+          : submitForReview
           ? "Dokumen Diajukan untuk Review"
           : "Draf Arsip Privat Tersimpan",
-        submitForReview
+        isDirectPublish
+          ? "Dokumen telah tersimpan dan langsung tayang pada repository publik Dokumen BAPPEDA."
+          : submitForReview
           ? "Reviewer resmi akan memeriksa checksum, klasifikasi, dan metadata sebelum publikasi."
           : "Versi pertama dan checksum tersimpan di storage privat; dokumen belum tampil ke publik."
       );
@@ -486,10 +491,14 @@ export default function TambahDokumenPage() {
             type="button"
             onClick={() => handleSave(true)}
             disabled={!fileUrl}
-            className="px-6 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-md shadow-blue-700/20 flex items-center gap-2 transition"
+            className="px-6 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-md shadow-blue-700/20 flex items-center gap-2 transition cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
-            <span>Simpan & Ajukan Review</span>
+            <span>
+              {user?.role === "superadmin" || user?.role === "admin_umum"
+                ? "Simpan & Terbitkan ke Publik (Tayang)"
+                : "Simpan & Ajukan Review"}
+            </span>
           </button>
         </div>
       </form>

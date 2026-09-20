@@ -154,7 +154,7 @@ class DocumentController extends Controller
             : $validated['bidang'];
         $classification = $actor->hasRole('admin_bidang')
             ? 'internal'
-            : ($validated['classification'] ?? 'internal');
+            : ($validated['classification'] ?? 'public');
         $privateFilePath = $this->validateWatermarkedFilePath($validated['file_path']);
         $retentionPolicy = $validated['retention_policy'] ?? 'permanent';
         $retentionUntil = $this->retentionUntil(
@@ -214,7 +214,26 @@ class DocumentController extends Controller
                 $validated['change_summary'] ?? 'Unggahan awal'
             );
 
-            if (
+            if ($actor->hasRole('superadmin') && (bool) ($validated['is_public'] ?? false)) {
+                $version = $document->latestVersion;
+                if ($version) {
+                    $version->forceFill([
+                        'status' => 'approved',
+                        'approved_at' => now(),
+                        'approved_by_user_id' => $actor->id,
+                    ])->save();
+                    $document->forceFill([
+                        'current_version_id' => $version->id,
+                        'classification' => 'public',
+                        'governance_status' => 'approved',
+                        'approved_at' => now(),
+                        'approved_by_user_id' => $actor->id,
+                        'is_public' => true,
+                        'published_at' => now(),
+                        'published_by_user_id' => $actor->id,
+                    ])->save();
+                }
+            } elseif (
                 (bool) ($validated['submit_for_review'] ?? false)
                 || (bool) ($validated['is_public'] ?? false)
             ) {
@@ -227,9 +246,11 @@ class DocumentController extends Controller
         return response()->json([
             'status' => 'success',
             'code' => 201,
-            'message' => $document->governance_status === 'pending_review'
-                ? 'Dokumen tersimpan dan diajukan untuk review.'
-                : 'Dokumen tersimpan sebagai draf arsip privat.',
+            'message' => $document->is_public
+                ? 'Dokumen berhasil tersimpan dan langsung diterbitkan ke publik.'
+                : ($document->governance_status === 'pending_review'
+                    ? 'Dokumen tersimpan dan diajukan untuk review.'
+                    : 'Dokumen tersimpan sebagai draf arsip privat.'),
             'data' => $this->presentDocument($document, true),
         ], 201);
     }

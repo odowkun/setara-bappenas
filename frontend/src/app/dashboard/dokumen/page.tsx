@@ -326,21 +326,19 @@ export default function DocumentManagementPage() {
                 </span>
 
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  {user?.role !== "admin_bidang" &&
-                    doc.governanceStatus === "approved" &&
-                    doc.classification === "public" && (
-                      <button
-                        type="button"
-                        onClick={() => handleTogglePublication(doc)}
-                        className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition ${
-                          doc.isPublic
-                            ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                            : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                        }`}
-                      >
-                        {doc.isPublic ? "Tarik dari Publik" : "Terbitkan"}
-                      </button>
-                    )}
+                  {user?.role !== "admin_bidang" && (
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePublication(doc)}
+                      className={`rounded-xl border px-3.5 py-1.5 text-xs font-bold transition cursor-pointer ${
+                        doc.isPublic
+                          ? "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                          : "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      }`}
+                    >
+                      {doc.isPublic ? "Tarik dari Publik" : "Terbitkan ke Publik"}
+                    </button>
+                  )}
                   {doc.fileUrl && (
                     <a
                       href={resolveDocumentUrl(doc.fileUrl)}

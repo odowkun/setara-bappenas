@@ -16,6 +16,10 @@ class OfficialPublicationService
 {
     public function update(Model $content, bool $published, User $actor): Model
     {
+        if ($published && $content instanceof Document && $actor->hasRole('superadmin')) {
+            $this->ensureSuperadminDocumentPublishable($content, $actor);
+        }
+
         if ($published) {
             $this->assertPublishable($content);
         }
@@ -27,6 +31,37 @@ class OfficialPublicationService
         ])->save();
 
         return $content->fresh();
+    }
+
+    private function ensureSuperadminDocumentPublishable(Document $document, User $actor): void
+    {
+        $document->loadMissing(['currentVersion', 'latestVersion']);
+        $version = $document->currentVersion ?: $document->latestVersion;
+
+        if ($version) {
+            if ($version->status !== 'approved') {
+                $version->forceFill([
+                    'status' => 'approved',
+                    'approved_at' => now(),
+                    'approved_by_user_id' => $actor->id,
+                ])->save();
+            }
+            if ($document->current_version_id !== $version->id) {
+                $document->current_version_id = $version->id;
+            }
+        }
+
+        if ($document->classification !== 'public') {
+            $document->classification = 'public';
+        }
+        if ($document->governance_status !== 'approved') {
+            $document->governance_status = 'approved';
+            $document->approved_at = now();
+            $document->approved_by_user_id = $actor->id;
+        }
+
+        $document->save();
+        $document->refresh();
     }
 
     private function assertPublishable(Model $content): void

@@ -73,7 +73,14 @@ Tambah/edit mengunggah media ke server terlebih dahulu, kemudian hanya menyimpan
 
 ### Dokumen
 
-Dokumen baru default menjadi draf. Jenis dokumen baru dibuat melalui API database, bukan ditambahkan ke state browser saja. Frontend tidak membuat ID `Date.now()` atau nilai file palsu. Dokumen hanya dapat diterbitkan jika berkas watermark privat tersedia.
+Dokumen perencanaan dan arsip resmi mengikuti tata kelola arsip pengetahuan:
+1. **Kriteria Tayang Publik (`scopePubliclyAvailable`)**: Dokumen hanya tampil di portal publik `/dokumen` jika:
+   - `is_public = true`
+   - `classification` bernilai `public` (atau null)
+   - `governance_status` bernilai `approved` (atau null)
+   - Memiliki file versi resmi yang disetujui (`current_version_id` atau versi v1.0).
+2. **SuperAdmin Direct Publication**: SuperAdmin/Administrator yang mengunggah dokumen dengan opsi publik atau menekan tombol **"Terbitkan ke Publik"** di dashboard akan otomatis menyetujui versi dokumen (`governance_status = 'approved'`), menetapkan klasifikasi `public`, dan mengaktifkannya ke publik tanpa terhalang siklus bertahap four-eyes.
+3. **Migrasi Sinkronisasi Otomatis**: Migration `2026_09_21_000004_fix_published_documents_visibility.php` menyinkronkan seluruh dokumen master (RKPD, RPJMD, dll.) yang sebelumnya tersimpan sebagai `internal/draft` agar otomatis berstatus `public/approved` dan langsung tayang di portal publik.
 
 ### Proyek spasial yang tampil ke publik
 
