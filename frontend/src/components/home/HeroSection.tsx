@@ -84,7 +84,7 @@ export const HeroSection: React.FC = () => {
           </div>
         </div>
 
-        <DocumentQuickMenu floatingOnScroll />
+        <DocumentQuickMenu floatingOnScroll showTicker />
 
         {/* SINGLE FULL-WIDTH HERO OPENING VIDEO PRESENTATION CARD */}
         <div className="max-w-5xl mx-auto pt-4">

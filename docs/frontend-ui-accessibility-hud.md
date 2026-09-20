@@ -197,3 +197,22 @@ Ketika pengguna membuka modal dialog (misal: pratinjau dokumen resmi pada `/peng
    Wadah scrollable internal diberikan atribut `tabIndex={0}` dan difokuskan secara otomatis setelah modal dibuka, memastikan event keyboard (`PageDown`, panah) dan mousewheel langsung mengontrol scrollbar modal.
 5. **Aksesibilitas & Keyboard Escape**:
    Modal wajib menyertakan atribut ARIA `role="dialog"` dan `aria-modal="true"`, serta event listener tombol `Escape` untuk menutup modal.
+
+---
+
+## 8. Evolusi Hero: Penggantian Menu Aksesibilitas Menjadi Running Text Full-Width & Transisi Kategori Dokumen
+
+Status pembaruan: 21 September 2026.
+
+### A. Latar Belakang & Persyaratan Desain
+1. **Penghapusan Tombol Menu Aksesibilitas**:
+   Tombol floating "Menu Aksesibilitas" pada sisi kiri bawah dinonaktifkan dari tampilan UI publik agar tampilan bersih dan tidak menghalangi viewport pengguna.
+2. **Penyelarasan Lebar Penuh Setara Navbar**:
+   Area kontrol cepat dokumen diperluas dari `max-w-4xl` menjadi `max-w-7xl mx-auto w-full` agar selaras secara visual dengan lebar Navbar utama.
+3. **Running Text (Marquee Ticker) Terintegrasi**:
+   Sisi kiri menampung teks berjalan kontinu (marquee) dengan badge `INFO HALUT` dan sinkronisasi pengumuman resmi dari `officialContentService.getAnnouncements()`.
+4. **Efek Animasi Transisi Masuk ("Mengecil ke Kiri")**:
+   - Saat awal render (0–1.3 detik), running text membentang penuh 100% (`w-full`) hingga ke ujung kanan bar.
+   - Setelah jeda ~1.3 detik, running text mengecil dengan transisi fluid `transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]` ke arah kiri (`flex-1 min-w-0`), memberi ruang bagi Kategori Dokumen (RPJPD, RPJMD, RKPD, Lainnya) yang meluncur dan mengembang mulus dari kanan ke kiri (`max-w-0` &rarr; `max-w-[760px]`).
+   - Running text dilengkapi fitur auto-pause saat di-hover pengguna (`hover:[animation-play-state:paused]`) untuk kenyamanan membaca.
+

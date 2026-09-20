@@ -11,13 +11,60 @@ import {
   DOCUMENT_QUICK_CATEGORIES,
   DocumentCategoryCode,
 } from "@/data/documentCategories";
+import { officialContentService } from "@/services/officialContentService";
 
 interface DocumentQuickMenuProps {
   activeCode?: string;
   onSelect?: (code: DocumentCategoryCode) => void;
   floatingOnScroll?: boolean;
   className?: string;
+  showTicker?: boolean;
 }
+
+interface TickerItem {
+  id: string;
+  title: string;
+  href: string;
+  tag: string;
+}
+
+const DEFAULT_TICKER_ITEMS: TickerItem[] = [
+  {
+    id: "rpjpd-2045",
+    title:
+      "Publikasi Dokumen RPJPD Kabupaten Halmahera Utara 2025–2045: Menuju Halut Maju, Mandiri & Berkelanjutan",
+    href: "/dokumen?jenis=RPJPD",
+    tag: "RPJPD",
+  },
+  {
+    id: "rpjmd-2029",
+    title:
+      "Akselerasi Program Prioritas RPJMD: Peningkatan Infrastruktur & Kualitas Pelayanan Dasar Daerah",
+    href: "/dokumen?jenis=RPJMD",
+    tag: "RPJMD",
+  },
+  {
+    id: "rkpd-tahunan",
+    title:
+      "Rencana Kerja Pemerintah Daerah (RKPD) Terkini untuk Ketahanan Ekonomi & Percepatan Pembangunan",
+    href: "/dokumen?jenis=RKPD",
+    tag: "RKPD",
+  },
+  {
+    id: "geospasial-gis",
+    title:
+      "Monitoring Geospasial WebGIS Aktif: Pantau Lokasi & Realisasi Fisik Titik Sebaran Proyek Strategis Daerah",
+    href: "/geospasial",
+    tag: "WEBGIS",
+  },
+  {
+    id: "portal-bappeda",
+    title:
+      "Portal Resmi BAPPEDA Kabupaten Halmahera Utara — Pusat Sinkronisasi & Transparansi Perencanaan Terintegrasi",
+    href: "/dokumen",
+    tag: "BAPPEDA",
+  },
+];
 
 const CATEGORY_META: Record<
   DocumentCategoryCode,
@@ -54,6 +101,7 @@ export function DocumentQuickMenu({
   onSelect,
   floatingOnScroll = false,
   className = "",
+  showTicker,
 }: DocumentQuickMenuProps) {
   const menuRef = useRef<HTMLElement>(null);
   const reduceMotion = useReducedMotion();
@@ -63,6 +111,10 @@ export function DocumentQuickMenu({
   const router = useRouter();
   const { setIsSearchOpen } = useAccessibility();
   const [searchQuery, setSearchQuery] = useState("");
+
+  const isTickerMode = showTicker ?? !onSelect;
+  const [categoriesRevealed, setCategoriesRevealed] = useState(false);
+  const [tickerItems, setTickerItems] = useState<TickerItem[]>(DEFAULT_TICKER_ITEMS);
 
   const filteredCategories = searchQuery.trim()
     ? DOCUMENT_QUICK_CATEGORIES.filter(
@@ -77,6 +129,36 @@ export function DocumentQuickMenu({
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Entrance transition: Running text is initially full-width, then shrinks to reveal categories
+  useEffect(() => {
+    if (!isTickerMode) return;
+    const timer = setTimeout(() => {
+      setCategoriesRevealed(true);
+    }, 1300);
+    return () => clearTimeout(timer);
+  }, [isTickerMode]);
+
+  // Fetch live official announcements for running text
+  useEffect(() => {
+    if (!isTickerMode) return;
+    officialContentService
+      .getAnnouncements()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          const mapped: TickerItem[] = data.slice(0, 5).map((a) => ({
+            id: a.id,
+            title: a.title,
+            href: a.pdfUrl ? `/pengumuman?id=${a.id}` : "/pengumuman",
+            tag: a.type || "PENGUMUMAN",
+          }));
+          setTickerItems([...mapped, ...DEFAULT_TICKER_ITEMS]);
+        }
+      })
+      .catch(() => {
+        // fallback to default ticker items
+      });
+  }, [isTickerMode]);
 
   useEffect(() => {
     const closeWhenAnotherPanelOpens = (event: Event) => {
@@ -193,7 +275,7 @@ export function DocumentQuickMenu({
       );
     }
 
-    // Main Desktop / Header Pill Item
+    // Grid Item (Used on Document Catalog page)
     const content = (
       <div className="relative flex items-center justify-center gap-2 sm:gap-2.5 w-full">
         <span
@@ -298,57 +380,49 @@ export function DocumentQuickMenu({
                           alt=""
                           width={20}
                           height={20}
-                          style={{ width: 20, height: 20, maxWidth: 20, maxHeight: 20 }}
+                          style={{ width: 20, height: 20 }}
                           className="object-contain drop-shadow-xs"
                         />
                       </span>
                       <div>
                         <span className="text-xs font-black uppercase tracking-wider text-slate-800 block">
-                          Kategori Dokumen
+                          Filter Cepat Dokumen
                         </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          Pilih arsip &amp; perencanaan
+                        <span className="text-[10px] text-slate-400 font-medium block">
+                          Pilih kategori arsip perencanaan
                         </span>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => setIsFloatingOpen(false)}
-                      className="rounded-full p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition cursor-pointer"
-                      aria-label="Tutup panel"
+                      className="p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                      aria-label="Tutup filter cepat"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="w-4 h-4" />
                     </button>
                   </div>
 
-                  {/* Interactive Document Search Box */}
+                  {/* Real-time Category Filter Input */}
                   <form
                     onSubmit={(e) => {
                       e.preventDefault();
                       if (searchQuery.trim()) {
                         setIsFloatingOpen(false);
-                        router.push(`/dokumen?q=${encodeURIComponent(searchQuery.trim())}`);
+                        router.push(
+                          `/dokumen?q=${encodeURIComponent(searchQuery.trim())}`
+                        );
                       }
                     }}
-                    className="mb-2.5"
+                    className="mb-2"
                   >
-                    <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100/90 border border-slate-200/80 focus-within:border-amber-500 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-500/20 transition">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-xl bg-white shadow-2xs border border-slate-200/60 ml-0.5">
-                        <img
-                          src="/images/3dicons/zoom-dynamic-color.png"
-                          alt=""
-                          width={16}
-                          height={16}
-                          style={{ width: 16, height: 16 }}
-                          className="object-contain"
-                        />
-                      </span>
+                    <div className="relative flex items-center">
                       <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Cari arsip & dokumen..."
-                        className="flex-1 bg-transparent text-xs font-bold text-slate-800 placeholder:text-slate-400 focus:outline-none min-w-0"
+                        placeholder="Saring kategori atau ketik kata kunci..."
+                        className="w-full bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-amber-500 focus:bg-white text-slate-800 placeholder-slate-400 pr-12"
                       />
                       <button
                         type="button"
@@ -356,7 +430,7 @@ export function DocumentQuickMenu({
                           setIsFloatingOpen(false);
                           setIsSearchOpen(true);
                         }}
-                        className="px-2 py-1 rounded-lg bg-white hover:bg-slate-50 border border-slate-200 text-[10px] font-mono font-bold text-slate-500 shadow-2xs transition shrink-0 cursor-pointer"
+                        className="absolute right-1 px-1.5 py-0.5 text-[9px] font-bold bg-slate-200/70 hover:bg-slate-300 text-slate-600 rounded-md transition cursor-pointer"
                         title="Buka Dialog Pencarian Lengkap (⌘K)"
                       >
                         ⌘K
@@ -379,7 +453,11 @@ export function DocumentQuickMenu({
                           type="button"
                           onClick={() => {
                             setIsFloatingOpen(false);
-                            router.push(`/dokumen?q=${encodeURIComponent(searchQuery.trim())}`);
+                            router.push(
+                              `/dokumen?q=${encodeURIComponent(
+                                searchQuery.trim()
+                              )}`
+                            );
                           }}
                           className="text-xs font-bold text-blue-700 hover:underline inline-block cursor-pointer"
                         >
@@ -436,20 +514,123 @@ export function DocumentQuickMenu({
       document.body
     );
 
+  const doubledTicker = [...tickerItems, ...tickerItems];
+
   return (
     <>
-      <nav
-        ref={menuRef}
-        data-testid="document-quick-menu"
-        aria-label="Kategori dokumen publik"
-        className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl ${className}`}
-      >
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5">
-          {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
-            renderCategory(code, label)
-          )}
-        </div>
-      </nav>
+      {isTickerMode ? (
+        <nav
+          ref={menuRef}
+          data-testid="document-quick-menu"
+          aria-label="Informasi resmi dan kategori dokumen publik"
+          className={`w-full max-w-7xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl flex items-center justify-between overflow-hidden relative min-h-[56px] sm:min-h-[64px] ${className}`}
+        >
+          {/* Left: Running Text (Marquee Ticker) */}
+          <div
+            className={`flex items-center gap-2 sm:gap-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${
+              categoriesRevealed ? "flex-1 mr-1 sm:mr-3" : "w-full"
+            }`}
+          >
+            {/* Badge: INFO HALUT */}
+            <div className="shrink-0 flex items-center gap-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-700 text-white font-black text-xs shadow-md shadow-blue-900/20 select-none">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+              </span>
+              <span className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase whitespace-nowrap">
+                INFO HALUT
+              </span>
+            </div>
+
+            {/* Continuous Marquee Ticker Track */}
+            <div className="relative flex-1 overflow-hidden mask-fade-edges py-1">
+              <div className="animate-bappeda-marquee flex items-center gap-8 whitespace-nowrap will-change-transform">
+                {doubledTicker.map((item, idx) => (
+                  <Link
+                    key={`${item.id}-${idx}`}
+                    href={item.href}
+                    className="group inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors"
+                  >
+                    <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 group-hover:bg-blue-600 group-hover:text-white transition">
+                      {item.tag}
+                    </span>
+                    <span className="hover:underline line-clamp-1">
+                      {item.title}
+                    </span>
+                    <span className="text-amber-500 font-black ml-4 select-none">
+                      ✦
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: Kategori Dokumen (With smooth shrinking-left entrance transition) */}
+          <div
+            className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shrink-0 flex items-center ${
+              categoriesRevealed
+                ? "max-w-[760px] opacity-100 translate-x-0 scale-100 pointer-events-auto"
+                : "max-w-0 opacity-0 translate-x-10 scale-95 pointer-events-none"
+            }`}
+          >
+            {/* Subtle Vertical Divider */}
+            <div className="hidden md:block h-7 w-px bg-slate-200/80 mr-1.5 shrink-0" />
+
+            {/* Category Pills */}
+            <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 overflow-x-auto no-scrollbar py-0.5">
+              {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) => {
+                const meta = CATEGORY_META[code] || {
+                  icon3d: "/images/3dicons/file-text-dynamic-color.png",
+                  shortLabel: label,
+                  description: label,
+                };
+                return (
+                  <Link
+                    key={code}
+                    href={`/dokumen?jenis=${code}`}
+                    className="group relative flex items-center gap-2 sm:gap-2.5 h-10 sm:h-12 px-2.5 sm:px-3.5 rounded-xl sm:rounded-full cursor-pointer outline-none transition-all duration-200 hover:bg-blue-50/80 hover:text-blue-900 text-slate-700 active:scale-95 select-none shrink-0"
+                    title={meta.description}
+                  >
+                    <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-blue-50/70 group-hover:bg-blue-100/80 transition-all duration-200 shadow-2xs">
+                      <img
+                        src={meta.icon3d}
+                        alt={label}
+                        width={24}
+                        height={24}
+                        style={{
+                          width: 24,
+                          height: 24,
+                          maxWidth: 24,
+                          maxHeight: 24,
+                        }}
+                        className="h-5 w-5 sm:h-6 sm:w-6 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
+                        loading="lazy"
+                      />
+                    </span>
+                    <span className="whitespace-nowrap font-black tracking-tight text-xs sm:text-sm text-slate-700 group-hover:text-blue-950 transition-colors">
+                      {meta.shortLabel}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </nav>
+      ) : (
+        <nav
+          ref={menuRef}
+          data-testid="document-quick-menu"
+          aria-label="Kategori dokumen publik"
+          className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl ${className}`}
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5">
+            {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
+              renderCategory(code, label)
+            )}
+          </div>
+        </nav>
+      )}
       {floatingMenu}
     </>
   );

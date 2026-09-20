@@ -296,3 +296,29 @@ body.dyslexia-font {
   margin-top: 1rem;
   margin-bottom: 1rem;
 }
+
+/* BAPPEDA Infinite Continuous Running Text Marquee */
+@keyframes bappedaMarquee {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-bappeda-marquee {
+  display: flex;
+  width: max-content;
+  animation: bappedaMarquee 40s linear infinite;
+}
+
+.animate-bappeda-marquee:hover {
+  animation-play-state: paused;
+}
+
+.mask-fade-edges {
+  mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
+}
+
