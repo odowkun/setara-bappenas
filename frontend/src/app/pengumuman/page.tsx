@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Megaphone,
@@ -99,6 +100,48 @@ export default function PublicPengumumanPage() {
 
   // Document Modal Preview State
   const [activeDoc, setActiveDoc] = useState<AnnouncementItem | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const modalBodyRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and handle Escape key when document preview modal is active
+  useEffect(() => {
+    if (activeDoc) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+
+      // Prevent content shift by measuring scrollbar width
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setActiveDoc(null);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
+      // Auto-focus scrollable body reader so mouse wheel / keys scroll modal immediately
+      const timer = setTimeout(() => {
+        if (modalBodyRef.current) {
+          modalBodyRef.current.focus();
+        }
+      }, 50);
+
+      return () => {
+        clearTimeout(timer);
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [activeDoc]);
 
   useEffect(() => {
     const fetchAnnouncementsFromApi = async () => {
@@ -497,11 +540,23 @@ export default function PublicPengumumanPage() {
       </div>
 
       {/* OFFICIAL DOCUMENT READER MODAL WITH REAL MEDIA PREVIEW */}
-      {activeDoc && (
-        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
-          <div className="w-full max-w-4xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+      {mounted && activeDoc && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setActiveDoc(null);
+            }
+          }}
+          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-4xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] overscroll-contain"
+          >
             {/* OFFICIAL HEADER KOP SURAT */}
-            <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 space-y-3 relative">
+            <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 space-y-3 relative shrink-0">
               <button
                 type="button"
                 onClick={() => setActiveDoc(null)}
@@ -553,7 +608,11 @@ export default function PublicPengumumanPage() {
             </div>
 
             {/* DOCUMENT BODY READER */}
-            <div className="p-5 sm:p-7 flex-1 overflow-y-auto space-y-5 text-slate-800">
+            <div
+              ref={modalBodyRef}
+              tabIndex={0}
+              className="p-5 sm:p-7 flex-1 overflow-y-auto overscroll-contain space-y-5 text-slate-800 focus:outline-hidden"
+            >
               <h2 className="text-xl font-black text-slate-900 leading-snug">
                 {activeDoc.title}
               </h2>
@@ -658,7 +717,7 @@ export default function PublicPengumumanPage() {
             </div>
 
             {/* MODAL FOOTER ACTIONS */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <button
                   type="button"
@@ -703,7 +762,8 @@ export default function PublicPengumumanPage() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

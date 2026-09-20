@@ -163,3 +163,37 @@ Dua titik kerentanan yang teridentifikasi:
 3. **Pembersihan Timer Peta (`EsriLeafletMap.tsx`)**:
    - Timer `setTimeout` untuk auto-fit wilayah Halut dilacak menggunakan `fitBoundsTimeoutRef` dan dibatalkan (`clearTimeout`) saat unmount.
    - Pemanggilan `map.stop()` dieksekusi sebelum `map.remove()` untuk menghentikan seluruh `requestAnimationFrame` dan transisi inersia secara bersih.
+
+---
+
+## 8. Standar Modal Popup Scroll Lock & Overscroll Containment
+
+Status pembaruan: 20 September 2026.
+
+### A. Latar Belakang Masalah (Scroll Chaining & Background Bleed)
+Ketika pengguna membuka modal dialog (misal: pratinjau dokumen resmi pada `/pengumuman`, modal detail agenda pada `/agenda` atau `/dashboard/agenda`, Global Search, dan modal unduhan dokumen), jika pengguna melakukan scroll menggunakan mousewheel, gesture touchpad, atau swipe sentuh pada mobile, scroll event dapat merembet (*scroll chaining*) ke halaman latar belakang (`window` / `document.body`) alih-alih menggulir isi modal itu sendiri.
+
+### B. Standar Implementasi Solusi
+1. **React DOM Portal (`createPortal`)**:
+   Seluruh modal wajib dirender langsung di root `document.body` menggunakan `createPortal(..., document.body)` setelah komponen `mounted` (`useState(false)` -> `useEffect setMounted(true)`). Ini mencegah pemotongan stacking context CSS transform / overflow dari parent container.
+2. **Body Scroll Lock dengan Kompensasi Scrollbar**:
+   Saat modal aktif, kunci scroll halaman utama:
+   ```typescript
+   const originalOverflow = document.body.style.overflow;
+   const originalPaddingRight = document.body.style.paddingRight;
+   const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+   document.body.style.overflow = "hidden";
+   if (scrollBarWidth > 0) {
+     document.body.style.paddingRight = `${scrollBarWidth}px`;
+   }
+   ```
+   Saat modal ditutup atau unmount, kembalikan `overflow` dan `paddingRight` ke nilai awal.
+3. **Overscroll Containment (`overscroll-contain`)**:
+   Tambahkan utility class `overscroll-contain` pada:
+   - Lapisan backdrop modal (`fixed inset-0 ... overscroll-contain`).
+   - Kartu modal container (`w-full max-w-... overscroll-contain`).
+   - Wadah konten internal yang memiliki scrollbar (`overflow-y-auto overscroll-contain`).
+4. **Auto-Focus Target (`ref.current.focus()`)**:
+   Wadah scrollable internal diberikan atribut `tabIndex={0}` dan difokuskan secara otomatis setelah modal dibuka, memastikan event keyboard (`PageDown`, panah) dan mousewheel langsung mengontrol scrollbar modal.
+5. **Aksesibilitas & Keyboard Escape**:
+   Modal wajib menyertakan atribut ARIA `role="dialog"` dan `aria-modal="true"`, serta event listener tombol `Escape` untuk menutup modal.

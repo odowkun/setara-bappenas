@@ -38,11 +38,25 @@ export function DocumentDownloadModal({
   useEffect(() => {
     if (!document) return;
 
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape" && !submitting) onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [document, onClose, submitting]);
 
   const handleSubmit = async (event: FormEvent) => {
@@ -83,12 +97,20 @@ export function DocumentDownloadModal({
   if (!mounted || !document) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[1000000] flex items-center justify-center bg-slate-950/80 p-4 font-sans backdrop-blur-md">
+    <div
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !submitting) {
+          onClose();
+        }
+      }}
+      className="fixed inset-0 z-[1000000] flex items-center justify-center bg-slate-950/80 p-4 font-sans backdrop-blur-md overscroll-contain"
+    >
       <section
         role="dialog"
         aria-modal="true"
         aria-labelledby="download-dialog-title"
-        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md rounded-3xl border border-slate-200 bg-white p-6 text-slate-900 shadow-2xl overscroll-contain"
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex gap-3">

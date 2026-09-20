@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Calendar as CalendarIcon,
@@ -44,7 +45,7 @@ const MONTHS_NAME = [
   "Desember",
 ];
 
-export default function AdminAgendaPage() {
+export default function DashboardAgendaPage() {
   const [agendas, setAgendas] = useState<AgendaEvent[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -56,6 +57,33 @@ export default function AdminAgendaPage() {
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [activeModalEvent, setActiveModalEvent] = useState<AgendaEvent | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when inspector modal is open
+  useEffect(() => {
+    if (activeModalEvent) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setActiveModalEvent(null);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [activeModalEvent]);
 
   useEffect(() => {
     Promise.all([
@@ -663,13 +691,25 @@ export default function AdminAgendaPage() {
       )}
 
       {/* INSPECTOR MODAL FOR CLICKED ITEM */}
-      {activeModalEvent && (
-        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
+      {mounted && activeModalEvent && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setActiveModalEvent(null);
+            }
+          }}
+          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 relative overscroll-contain max-h-[90vh] overflow-y-auto"
+          >
             <button
               type="button"
               onClick={() => setActiveModalEvent(null)}
-              className="absolute top-6 right-6 p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
+              className="absolute top-6 right-6 p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -732,7 +772,7 @@ export default function AdminAgendaPage() {
               <button
                 type="button"
                 onClick={() => handleDelete(activeModalEvent.id)}
-                className="px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs flex items-center gap-1.5 transition"
+                className="px-4 py-2.5 rounded-2xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-extrabold text-xs flex items-center gap-1.5 transition cursor-pointer"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>Hapus Agenda</span>
@@ -747,7 +787,8 @@ export default function AdminAgendaPage() {
               </Link>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

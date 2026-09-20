@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Calendar as CalendarIcon,
@@ -54,6 +55,38 @@ export default function AgendaPage() {
   const [selectedEvent, setSelectedEvent] = useState<AgendaEvent | null>(null);
   const [hoveredEventId, setHoveredEventId] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<"calendar" | "list">("calendar");
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll and handle Escape key when agenda modal is active
+  useEffect(() => {
+    if (selectedEvent) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setSelectedEvent(null);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [selectedEvent]);
 
   useEffect(() => {
     Promise.all([
@@ -542,89 +575,104 @@ export default function AgendaPage() {
       </div>
 
       {/* APPLE INSPECTOR MODAL */}
-      {selectedEvent && (
-        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden p-6 sm:p-8 space-y-6 relative">
-            <button
-              type="button"
-              onClick={() => setSelectedEvent(null)}
-              className="absolute top-6 right-6 p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-black uppercase">
-                  {selectedEvent.category}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold">
-                  {computeAgendaStatus(selectedEvent.startDate || selectedEvent.date || "", selectedEvent.endDate)}
-                </span>
-              </div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                {selectedEvent.title}
-              </h2>
-            </div>
-
-            <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
-              <div className="flex items-center gap-3">
-                <CalendarIcon className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>
-                  Pelaksanaan:{" "}
-                  <strong className="text-slate-900">
-                    {formatAgendaDateRange(
-                      selectedEvent.startDate || selectedEvent.date || "",
-                      selectedEvent.endDate
-                    )}
-                  </strong>
-                </span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Clock className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Waktu: <strong className="text-slate-900">{selectedEvent.startTime} - {selectedEvent.endTime} WIT</strong></span>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3">
-                  <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Lokasi: <strong className="text-slate-900">{selectedEvent.location}</strong></span>
-                </div>
-                {(selectedEvent.mapUrl || selectedEvent.coordinates) && (
-                  <a
-                    href={selectedEvent.mapUrl || `https://www.google.com/maps?q=${encodeURIComponent(selectedEvent.coordinates || selectedEvent.location)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-2.5 py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[11px] font-black transition flex items-center gap-1 shrink-0"
-                  >
-                    <span>Buka Peta</span>
-                    <ExternalLink className="w-3 h-3 text-emerald-700" />
-                  </a>
-                )}
-              </div>
-              <div className="flex items-center gap-3">
-                <User className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Organizer: <strong className="text-slate-900">{selectedEvent.organizer}</strong></span>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Deskripsi Agenda</h4>
-              <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                {selectedEvent.description}
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+      {mounted && selectedEvent && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedEvent(null);
+            }
+          }}
+          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh] overscroll-contain relative"
+          >
+            <div className="p-6 sm:p-8 space-y-6 overflow-y-auto overscroll-contain">
               <button
                 type="button"
                 onClick={() => setSelectedEvent(null)}
-                className="px-6 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition"
+                className="absolute top-6 right-6 p-2 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition cursor-pointer"
               >
-                Tutup
+                <X className="w-5 h-5" />
               </button>
+
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-blue-100 text-blue-900 text-xs font-black uppercase">
+                    {selectedEvent.category}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 text-xs font-extrabold">
+                    {computeAgendaStatus(selectedEvent.startDate || selectedEvent.date || "", selectedEvent.endDate)}
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
+                  {selectedEvent.title}
+                </h2>
+              </div>
+
+              <div className="space-y-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+                <div className="flex items-center gap-3">
+                  <CalendarIcon className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>
+                    Pelaksanaan:{" "}
+                    <strong className="text-slate-900">
+                      {formatAgendaDateRange(
+                        selectedEvent.startDate || selectedEvent.date || "",
+                        selectedEvent.endDate
+                      )}
+                    </strong>
+                  </span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Waktu: <strong className="text-slate-900">{selectedEvent.startTime} - {selectedEvent.endTime} WIT</strong></span>
+                </div>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <MapPin className="w-4 h-4 text-blue-600 shrink-0" />
+                    <span>Lokasi: <strong className="text-slate-900">{selectedEvent.location}</strong></span>
+                  </div>
+                  {(selectedEvent.mapUrl || selectedEvent.coordinates) && (
+                    <a
+                      href={selectedEvent.mapUrl || `https://www.google.com/maps?q=${encodeURIComponent(selectedEvent.coordinates || selectedEvent.location)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-2.5 py-1 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-900 text-[11px] font-black transition flex items-center gap-1 shrink-0"
+                    >
+                      <span>Buka Peta</span>
+                      <ExternalLink className="w-3 h-3 text-emerald-700" />
+                    </a>
+                  )}
+                </div>
+                <div className="flex items-center gap-3">
+                  <User className="w-4 h-4 text-blue-600 shrink-0" />
+                  <span>Organizer: <strong className="text-slate-900">{selectedEvent.organizer}</strong></span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400">Deskripsi Agenda</h4>
+                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                  {selectedEvent.description}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setSelectedEvent(null)}
+                  className="px-6 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition cursor-pointer"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

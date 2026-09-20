@@ -26,11 +26,25 @@ export function DocumentPreviewModal({
   useEffect(() => {
     if (!document) return;
 
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+
+    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = "hidden";
+    if (scrollBarWidth > 0) {
+      document.body.style.paddingRight = `${scrollBarWidth}px`;
+    }
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") onClose();
     };
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, [document, onClose]);
 
   if (!mounted || !document) return null;
@@ -43,7 +57,7 @@ export function DocumentPreviewModal({
       role="dialog"
       aria-modal="true"
       aria-label={`Preview ${document.title}`}
-      className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen flex-col bg-slate-950/90 font-sans text-white backdrop-blur-xl"
+      className="fixed inset-0 z-[999999] flex h-[100dvh] w-screen flex-col bg-slate-950/90 font-sans text-white backdrop-blur-xl overscroll-contain"
     >
       <header className="flex shrink-0 items-center justify-between gap-3 border-b border-slate-800/80 px-4 py-4 md:px-8">
         <div className="min-w-0">

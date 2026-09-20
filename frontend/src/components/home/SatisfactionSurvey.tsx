@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Info, X, Send, CheckCircle2, HeartHandshake, ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
@@ -14,6 +15,33 @@ export const SatisfactionSurvey: React.FC = () => {
   const [feedback, setFeedback] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<SatisfactionLevel>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when feedback modal is open
+  useEffect(() => {
+    if (showModal) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setShowModal(false);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [showModal]);
 
   const [ikmStats, setIkmStats] = useState({
     sangat: "61%",
@@ -288,19 +316,21 @@ export const SatisfactionSurvey: React.FC = () => {
       </section>
 
       {/* Feedback Modal for "Kurang Memuaskan" */}
-      {showModal && (
+      {mounted && showModal && createPortal(
         <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
           onClick={() => setShowModal(false)}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[28px] border border-slate-200 shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in-95 duration-300"
+            className="bg-white rounded-[28px] border border-slate-200 shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in-95 duration-300 overscroll-contain"
           >
             {/* Close Button */}
             <button
               onClick={() => setShowModal(false)}
-              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition"
+              className="absolute top-4 right-4 p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition cursor-pointer"
             >
               <X className="w-4 h-4" />
             </button>
@@ -384,14 +414,15 @@ export const SatisfactionSurvey: React.FC = () => {
                 <button
                   onClick={handleSubmitFeedback}
                   disabled={!feedback.trim()}
-                  className="w-full py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20 disabled:shadow-none"
+                  className="w-full py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20 disabled:shadow-none cursor-pointer"
                 >
                   <Send className="w-4 h-4" /> Kirim Masukan
                 </button>
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

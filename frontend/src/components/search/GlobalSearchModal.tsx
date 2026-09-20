@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import { Search, X, FileText, Newspaper, MapPin, Bell, Camera, ArrowRight, Loader2 } from "lucide-react";
 import Link from "next/link";
@@ -19,17 +20,38 @@ export const GlobalSearchModal: React.FC = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  // Close on ESC key press
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setIsSearchOpen(false);
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when search modal is open
+  useEffect(() => {
+    if (isSearchOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
       }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setIsSearchOpen]);
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsSearchOpen(false);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isSearchOpen, setIsSearchOpen]);
 
   // Live Dynamic Search Effect with Debounce
   useEffect(() => {
@@ -62,7 +84,7 @@ export const GlobalSearchModal: React.FC = () => {
     return () => clearTimeout(timer);
   }, [query, isSearchOpen]);
 
-  if (!isSearchOpen) return null;
+  if (!mounted || !isSearchOpen) return null;
 
   const getIconComp = (type: string) => {
     switch (type) {
@@ -81,13 +103,15 @@ export const GlobalSearchModal: React.FC = () => {
     }
   };
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in duration-200 overscroll-contain"
       onClick={() => setIsSearchOpen(false)}
     >
       <div
-        className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-900 font-sans"
+        className="w-full max-w-2xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden text-slate-900 font-sans overscroll-contain"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Input Header */}
@@ -119,7 +143,7 @@ export const GlobalSearchModal: React.FC = () => {
         </div>
 
         {/* Results List */}
-        <div className="max-h-[60vh] overflow-y-auto p-4 flex flex-col gap-2.5">
+        <div className="max-h-[60vh] overflow-y-auto overscroll-contain p-4 flex flex-col gap-2.5">
           {!query && (
             <div className="px-2 pt-1 pb-2 text-[11px] font-extrabold uppercase tracking-wider text-slate-400">
               Rekomendasi Pencarian Cepat
@@ -171,6 +195,7 @@ export const GlobalSearchModal: React.FC = () => {
           <span>Tekan <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-mono font-bold text-slate-700">ESC</kbd> untuk menutup</span>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
