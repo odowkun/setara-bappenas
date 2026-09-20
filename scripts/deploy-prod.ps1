@@ -10,6 +10,7 @@ $ErrorActionPreference = "Continue"
 # Lepaskan kaitan proses dari runner agar tidak dibunuh saat 'Cleaning up orphan processes'
 $env:RUNNER_TRACKING_ID = $null
 Remove-Item env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+[System.Environment]::SetEnvironmentVariable("RUNNER_TRACKING_ID", $null, "Process")
 
 Write-Output "=================================================="
 Write-Output "[INFO] Memulai Otomasi Deployment BAPPEDA HALUT..."
@@ -29,14 +30,12 @@ if (!(Test-Path $prodRoot)) {
 $env:PATH = "C:\php83;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Roaming\npm;$env:PATH"
 $env:PM2_HOME = "C:\Users\Administrator\.pm2"
 
-# 0. Bangunkan segera PM2 jika sempat terhenti agar situs tidak di mode pemeliharaan
+# 0. Bangunkan segera PM2 jika sempat terhenti agar situs langsung keluar dari mode pemeliharaan
 $reloadBat = Join-Path $repoRoot "scripts\reload-pm2.bat"
 $prodReloadBat = Join-Path $prodRoot "scripts\reload-pm2.bat"
 if (Test-Path $reloadBat) {
-    Write-Output "[INFO] Memastikan PM2 aktif segera (Detached via WMI & Task Scheduler)..."
-    schtasks /Create /TN "Bappeda_PM2_Boot" /TR "$reloadBat" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
-    schtasks /Run /TN "Bappeda_PM2_Boot" | Out-Null
-    wmic process call create "$reloadBat" | Out-Null
+    Write-Output "[INFO] Membangkitkan PM2 segera di awal pipeline..."
+    & cmd.exe /c "`"$reloadBat`""
 }
 
 # 1. Sinkronisasi File Backend (Kecuali .env dan storage)
@@ -96,6 +95,12 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
+# Bersihkan cache Next.js lama agar tidak memakai resolusi usang
+$cacheDir = Join-Path $frontendDest ".next\cache"
+if (Test-Path $cacheDir) {
+    Remove-Item -Recurse -Force $cacheDir -ErrorAction SilentlyContinue
+}
+
 Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
 & $npmCmd install @swc/helpers@0.5.15 react-dom@19.0.0 react@19.0.0 --no-audit
 
@@ -118,14 +123,15 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-# 6. Reload PM2 (Zero-Downtime via WMI & Task Scheduler agar terlepas dari Job Object runner)
-Write-Output "[INFO] Mereload layanan PM2 secara detached..."
+# 6. Reload PM2 (Zero-Downtime & Detached via Task Scheduler)
+Write-Output "[INFO] Memastikan layanan PM2 terupdate dan aktif..."
 $finalReloadBat = if (Test-Path $prodReloadBat) { $prodReloadBat } else { $reloadBat }
 if (Test-Path $finalReloadBat) {
-    schtasks /Create /TN "Bappeda_PM2_Reload" /TR "$finalReloadBat" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
-    schtasks /Run /TN "Bappeda_PM2_Reload" | Out-Null
-    wmic process call create "$finalReloadBat" | Out-Null
-    Start-Sleep -Seconds 5
+    & cmd.exe /c "`"$finalReloadBat`""
+
+    schtasks /Create /TN "Bappeda_PM2_Service" /TR "cmd.exe /c `"$finalReloadBat`"" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
+    schtasks /Run /TN "Bappeda_PM2_Service" | Out-Null
+    Start-Sleep -Seconds 3
 }
 
 Write-Output "=================================================="
