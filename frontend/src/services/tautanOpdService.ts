@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "@/lib/apiClient";
+import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 
 export interface TautanOpdItem {
   id: string;
@@ -27,14 +27,24 @@ export const tautanOpdService = {
       const json = await res.json();
       if (!Array.isArray(json.data)) return [];
 
-      return json.data.map((item: any) => ({
-        id: String(item.id),
-        name: item.name,
-        logoUrl: item.logoUrl || item.logo_url || "/images/bappeda/logo-halut.png",
-        url: item.url || null,
-        orderIndex: Number(item.orderIndex ?? item.order_index ?? 0),
-        isActive: Boolean(item.isActive ?? item.is_active ?? true),
-      }));
+      return json.data.map((item: any) => {
+        let rawLogo = item.logoUrl || item.logo_url || "";
+        if (typeof rawLogo === "string" && rawLogo) {
+          rawLogo = rawLogo.replace(/^https?:\/\/[^\/]+(:8100)?\//, "/");
+          if (rawLogo.startsWith("/uploads/tautan-opd/")) {
+            rawLogo = rawLogo.replace("/uploads/tautan-opd/", "/storage/tautan-opd/");
+          }
+        }
+
+        return {
+          id: String(item.id),
+          name: item.name,
+          logoUrl: rawLogo || "/images/bappeda/logo-halut.png",
+          url: item.url || null,
+          orderIndex: Number(item.orderIndex ?? item.order_index ?? 0),
+          isActive: Boolean(item.isActive ?? item.is_active ?? true),
+        };
+      });
     } catch (error) {
       console.error("[tautanOpdService] Gagal memuat tautan OPD:", error);
       return [];
@@ -43,7 +53,7 @@ export const tautanOpdService = {
 
   async saveItem(payload: TautanOpdPayload, id?: string): Promise<boolean> {
     try {
-      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd${id ? `/${id}` : ""}`, {
+      const res = await authenticatedFetch(`/tautan-opd${id ? `/${id}` : ""}`, {
         method: id ? "PUT" : "POST",
         headers: {
           "Content-Type": "application/json",
@@ -60,7 +70,7 @@ export const tautanOpdService = {
 
   async deleteItem(id: string): Promise<boolean> {
     try {
-      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd/${id}`, { method: "DELETE" });
+      const res = await authenticatedFetch(`/tautan-opd/${id}`, { method: "DELETE" });
       return res.ok;
     } catch (error) {
       console.error("[tautanOpdService] Gagal menghapus tautan OPD:", error);
@@ -73,18 +83,25 @@ export const tautanOpdService = {
       const formData = new FormData();
       formData.append("logo", file);
 
-      const res = await authenticatedFetch(`${API_BASE_URL}/tautan-opd/upload-logo`, {
+      const res = await authenticatedFetch(`/tautan-opd/upload-logo`, {
         method: "POST",
         body: formData,
       });
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        console.error("[tautanOpdService] Upload failed with status", res.status, errorData);
+        return null;
+      }
 
       const json = await res.json();
-      return json.data?.logo_url || null;
+      let logoUrl = json.data?.logo_url || null;
+      if (typeof logoUrl === "string" && logoUrl) {
+        logoUrl = logoUrl.replace(/^https?:\/\/[^\/]+(:8100)?\//, "/");
+      }
+      return logoUrl;
     } catch (error) {
       console.error("[tautanOpdService] Gagal mengunggah logo OPD:", error);
       return null;
     }
   },
 };
-import { authenticatedFetch } from "@/lib/apiClient";

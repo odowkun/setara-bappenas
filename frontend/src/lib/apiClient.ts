@@ -37,9 +37,19 @@ export async function authenticatedFetch(
     throw new Error("Sesi dashboard tidak tersedia. Silakan login kembali.");
   }
 
-  const url = endpoint.startsWith("http")
-    ? endpoint
-    : `${API_BASE_URL}${endpoint}`;
+  let url: string;
+  if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
+    url = endpoint;
+  } else {
+    const base = API_BASE_URL.replace(/\/+$/, "");
+    const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+
+    if (base && (cleanEndpoint === base || cleanEndpoint.startsWith(`${base}/`))) {
+      url = cleanEndpoint;
+    } else {
+      url = `${base}${cleanEndpoint}`;
+    }
+  }
 
   return fetch(url, {
     ...options,

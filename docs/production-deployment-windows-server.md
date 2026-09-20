@@ -14,6 +14,10 @@ Untuk menjamin sistem lain di server tidak terganggu, seluruh port standar digan
 | **Backend API (Laravel)** | `8000` / `80` | **`8100`** | TCP/HTTP | `http://202.65.234.118:8100/api` |
 | **Database (MariaDB/MySQL)** | `3306` | **`3308`** | TCP/Internal | `127.0.0.1:3308` (db_bappeda_halut) |
 
+> [!NOTE]
+> **Aturan Routing Berkas Publik & Uploads**:
+> Cloudflare Tunnel hanya meneruskan path `/api/*` dan `/storage/*` ke port `8100` (Laravel). Oleh karena itu, seluruh upload publik (dokumen, media galeri, dan logo tautan OPD) WAJIB disimpan di disk `public` (`storage/app/public/...`) dan diakses melalui path `/storage/...`.
+
 ---
 
 ## 2. Arsitektur Runtime Server
