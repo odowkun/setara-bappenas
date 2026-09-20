@@ -1,23 +1,19 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BarChart3,
   Search,
-  Filter,
   Maximize2,
   X,
   Download,
   Eye,
-  Calendar,
-  Layers,
   Sparkles,
   Share2,
   ChevronLeft,
   ChevronRight,
   Loader2,
-  ArrowLeft,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -107,71 +103,74 @@ export default function PublicInfografisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans pb-24 pt-28 sm:pt-36">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        {/* Navigation Breadcrumb */}
-        <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-          <Link href="/" className="hover:text-blue-600 transition flex items-center gap-1">
-            <ArrowLeft className="w-3.5 h-3.5" /> Beranda
-          </Link>
-          <span>/</span>
-          <span className="text-slate-900 dark:text-slate-200 font-bold">Infografis Pembangunan</span>
-        </div>
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
+        {/* HERO TITLE BANNER & BREADCRUMB (PEDOMAN SINGLEPAGE PROFIL) */}
+        <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
+          {/* Breadcrumb */}
+          <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500">
+            <Link href="/" className="hover:text-blue-600 transition flex items-center gap-1">
+              <span>Beranda</span>
+            </Link>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+            <span className="text-slate-500">Informasi &amp; Publikasi</span>
+            <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+            <span className="text-blue-700 font-extrabold">Infografis Pembangunan</span>
+          </div>
 
-        {/* Hero Header Card */}
-        <div className="relative overflow-hidden rounded-[32px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 p-8 sm:p-12 text-white shadow-2xl">
-          <div className="absolute top-0 right-0 -mt-10 -mr-10 w-96 h-96 rounded-full bg-blue-500/15 blur-3xl pointer-events-none" />
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/20 border border-blue-400/30 text-xs font-bold tracking-wide text-blue-200">
-              <BarChart3 className="w-4 h-4 text-amber-400" />
-              Galeri Data &amp; Fakta Visual Daerah
+          <div className="space-y-2.5 max-w-3xl mx-auto flex flex-col items-center">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-[11px] font-black uppercase tracking-wider">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+              <span>GALERI DATA &amp; FAKTA VISUAL DAERAH</span>
             </div>
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Infografis Pembangunan Kabupaten Halmahera Utara
+            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+              Infografis Pembangunan Daerah
             </h1>
-            <p className="text-sm sm:text-base text-slate-200 font-normal leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
               Koleksi grafis informasi resmi yang menyajikan data makro pembangunan, indikator kemiskinan dan pertumbuhan, dokumen perencanaan (RPJPD/RPJMD), pemetaan spasial, dan akuntabilitas kinerja daerah.
             </p>
           </div>
         </div>
 
-        {/* Search Bar & Category Filters */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-5 shadow-sm space-y-4">
-          <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
-            <div className="relative flex-1 w-full">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+        {/* SEARCH & CATEGORY FILTER BAR */}
+        <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+            {/* SEARCH INPUT */}
+            <div className="relative w-full sm:w-96">
+              <Search className="w-4 h-4 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Cari infografis, kata kunci indikator, atau topik..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800 text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                  fetchData(1, selectedCategory, e.target.value);
+                }}
+                placeholder="Cari judul infografis atau topik..."
+                className="w-full pl-11 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none transition shadow-2xs"
               />
             </div>
-            <button
-              type="submit"
-              className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 transition shrink-0"
-            >
-              Cari Infografis
-            </button>
-          </form>
 
-          {/* Category Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-1">
-            <span className="text-xs font-bold text-slate-400 shrink-0 hidden sm:inline-flex items-center gap-1 mr-1">
-              <Filter className="w-3.5 h-3.5" /> Kategori:
-            </span>
+            <div className="text-xs font-bold text-slate-500">
+              Menampilkan <strong className="text-slate-900">{items.length}</strong> infografis daerah
+            </div>
+          </div>
+
+          {/* CATEGORY PILLS */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat}
+                type="button"
                 onClick={() => {
                   setSelectedCategory(cat);
                   setCurrentPage(1);
+                  fetchData(1, cat, searchTerm);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer ${
+                className={`px-4 py-2 rounded-2xl font-black text-xs transition whitespace-nowrap shrink-0 cursor-pointer ${
                   selectedCategory === cat
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                    ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
+                    : "bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200"
                 }`}
               >
                 {cat}
