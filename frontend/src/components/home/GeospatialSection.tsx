@@ -171,6 +171,43 @@ export const GeospatialSection: React.FC = () => {
     });
   }, [rawProjects]);
 
+  const totalProjectsCount = locations.length;
+
+  const totalPaguSum = React.useMemo(() => {
+    return rawProjects.reduce((acc, curr) => acc + (Number(curr.pagu_anggaran) || 0), 0);
+  }, [rawProjects]);
+
+  const formattedTotalPagu = React.useMemo(() => {
+    if (totalPaguSum <= 0) return "Rp 0";
+    if (totalPaguSum >= 1_000_000_000) {
+      const val = (totalPaguSum / 1_000_000_000).toLocaleString("id-ID", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 2,
+      });
+      return `Rp ${val} Miliar`;
+    }
+    if (totalPaguSum >= 1_000_000) {
+      const val = (totalPaguSum / 1_000_000).toLocaleString("id-ID", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 2,
+      });
+      return `Rp ${val} Juta`;
+    }
+    return new Intl.NumberFormat("id-ID", {
+      style: "currency",
+      currency: "IDR",
+      maximumFractionDigits: 0,
+    }).format(totalPaguSum);
+  }, [totalPaguSum]);
+
+  const uniqueKecamatanCount = React.useMemo(() => {
+    const list = rawProjects
+      .map((p) => p.kecamatan?.replace(/^Kecamatan\s+/i, "").trim())
+      .filter(Boolean);
+    const setKec = new Set(list);
+    return setKec.size > 0 ? `${setKec.size} Kecamatan` : "17 Kecamatan";
+  }, [rawProjects]);
+
   // Compute categories dynamically based ONLY on existing projects
   const categories = React.useMemo(() => {
     const presentCats = Array.from(new Set(locations.map((loc) => loc.category)));
@@ -590,15 +627,17 @@ export const GeospatialSection: React.FC = () => {
                 <div className="space-y-2 bg-white p-3 rounded-xl border border-blue-100 text-xs">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 font-medium">Total Proyek:</span>
-                    <span className="font-extrabold text-blue-900">5 Lokasi Terverifikasi</span>
+                    <span className="font-extrabold text-blue-900">
+                      {totalProjectsCount > 0 ? `${totalProjectsCount} Lokasi Terverifikasi` : "Memuat Lokasi..."}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 font-medium">Total Pagu:</span>
-                    <span className="font-extrabold text-blue-900">Rp 27,75 Miliar</span>
+                    <span className="font-extrabold text-blue-900">{formattedTotalPagu}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-500 font-medium">Wilayah:</span>
-                    <span className="font-extrabold text-blue-900">17 Kecamatan</span>
+                    <span className="font-extrabold text-blue-900">{uniqueKecamatanCount}</span>
                   </div>
                 </div>
               </div>
@@ -744,31 +783,37 @@ export const GeospatialSection: React.FC = () => {
                 className="space-y-2 h-[340px] max-h-[340px] overflow-y-auto pr-1 text-left custom-scrollbar"
                 style={{ overscrollBehavior: "contain" }}
               >
-                {filteredLocations.map((loc) => {
-                  const IconComp = loc.icon;
-                  const isSelected = loc.id === selectedId;
+                {filteredLocations.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-slate-400 font-medium bg-white rounded-xl border border-dashed border-slate-200">
+                    Tidak ada lokasi proyek yang sesuai.
+                  </div>
+                ) : (
+                  filteredLocations.map((loc) => {
+                    const IconComp = loc.icon;
+                    const isSelected = loc.id === selectedId;
 
-                  return (
-                    <div
-                      key={loc.id}
-                      onClick={() => handleSelectProject(loc.id)}
-                      className={`p-3 rounded-xl border cursor-pointer transition flex items-center gap-3 ${
-                        isSelected
-                          ? "bg-blue-700 border-blue-700 text-white shadow-md"
-                          : "bg-white border-slate-200 hover:border-blue-300 text-slate-800 hover:bg-blue-50/50"
-                      }`}
-                    >
-                      <div className={`p-2 rounded-lg shrink-0 ${isSelected ? "bg-white/20 text-white" : `${loc.badgeColor} text-white`}`}>
-                        <IconComp className="w-3.5 h-3.5" />
-                      </div>
+                    return (
+                      <div
+                        key={loc.id}
+                        onClick={() => handleSelectProject(loc.id)}
+                        className={`p-3 rounded-xl border cursor-pointer transition flex items-center gap-3 ${
+                          isSelected
+                            ? "bg-blue-700 border-blue-700 text-white shadow-md"
+                            : "bg-white border-slate-200 hover:border-blue-300 text-slate-800 hover:bg-blue-50/50"
+                        }`}
+                      >
+                        <div className={`p-2 rounded-lg shrink-0 ${isSelected ? "bg-white/20 text-white" : `${loc.badgeColor} text-white`}`}>
+                          <IconComp className="w-3.5 h-3.5" />
+                        </div>
 
-                      <div className="min-w-0 flex-1">
-                        <h5 className={`text-xs font-bold line-clamp-1 ${isSelected ? "text-white" : "text-slate-900"}`}>{loc.name}</h5>
-                        <p className={`text-[10px] line-clamp-1 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>{loc.kecamatan} • {loc.budget}</p>
+                        <div className="min-w-0 flex-1">
+                          <h5 className={`text-xs font-bold line-clamp-1 ${isSelected ? "text-white" : "text-slate-900"}`}>{loc.name}</h5>
+                          <p className={`text-[10px] line-clamp-1 ${isSelected ? "text-blue-100" : "text-slate-500"}`}>{loc.kecamatan} • {loc.budget}</p>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })
+                )}
               </div>
             </div>
           </div>

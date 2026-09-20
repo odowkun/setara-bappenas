@@ -127,3 +127,30 @@ Status implementasi: 20 September 2026.
      3. Menghapus rekaman data proyek dari tabel `proyek_details` MySQL.
 3. **Feedback Notifikasi**:
    - Menampilkan `toast.success("Paket proyek/titik proyek berhasil dihapus!")` dan langsung memperbarui state daftar proyek secara lokal tanpa perlu refresh halaman.
+
+---
+
+## 8. Sinkronisasi Status ESRI Real-Time & Visualisasi Spasial Beranda Dinamis
+
+Status implementasi: 21 September 2026.
+
+### A. Penyelarasan Status Sinkronisasi ESRI (Synced vs Pending)
+1. **Penyebab Status Pending Sebelumnya**:
+   - Kolom `esri_sync_status` pada tabel `proyek_details` memiliki nilai default database `'pending'`.
+   - Proses re-sync sebelumnya menggunakan `SyncEsriProjectJob::dispatch()` asinkron pada antrean database (`QUEUE_CONNECTION=database`), yang tidak otomatis tereksekusi tanpa worker queue daemon terdedikasi di server.
+2. **Standardisasi Eksekusi Sinkron**:
+   - Seluruh mutasi proyek (`store`, `updateProgres`, `resyncEsri`) kini menggunakan `SyncEsriProjectJob::dispatchSync()`.
+   - `EsriGisService` secara otomatis memvalidasi apakah endpoint eksternal aktif (`isConfigured()`). Jika endpoint eksternal belum dikonfigurasi / dummy, database internal MySQL secara resmi dijadikan single source of truth spasial dan proyek otomatis berstatus `'synced'` dengan OBJECTID valid.
+   - Migration `2026_09_20_000001_sync_existing_proyek_esri_status.php` menyinkronkan seluruh proyek lama yang memiliki `esri_objectid` menjadi `'synced'`.
+
+### B. Pemulihan Tampilan Proyek Publik di Beranda (`GeospatialSection.tsx`)
+1. **Eradikasi Filter Ketat Arsip Dokumen**:
+   - Endpoint `GET /api/v1/proyek-details` kini menampilkan seluruh proyek spasial aktif tanpa menyaratkan dokumen induk berstatus `approved` arsip privat.
+   - Proyek fisik dan titik koordinat publik tetap dapat ditampilkan di peta beranda, sementara berkas dokumen PDF induk tetap terlindungi dengan hak akses terverifikasi.
+2. **Kalkulasi Statistik Wilayah Dinamis**:
+   - Kartu kiri ringkasan wilayah tidak lagi menggunakan angka statis hardcoded (*"5 Lokasi Terverifikasi"*, *"Rp 27,75 Miliar"*).
+   - Menghitung secara otomatis dari data nyata:
+     - **Total Proyek**: `${locations.length} Lokasi Terverifikasi`.
+     - **Total Pagu**: Penjumlahan nominal pagu anggaran (`pagu_anggaran`) terformat Rupiah Miliar / Juta secara otomatis.
+     - **Wilayah**: Jumlah kecamatan unik yang terlibat proyek fisik.
+

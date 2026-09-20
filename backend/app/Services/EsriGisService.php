@@ -13,13 +13,37 @@ class EsriGisService
 
     public function __construct()
     {
-        $this->featureServiceUrl = config('services.esri.feature_service_url');
-        $this->geoprocessingUrl = config('services.esri.geoprocessing_url');
+        $featureUrl = config('services.esri.feature_service_url');
+        $geoUrl = config('services.esri.geoprocessing_url');
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('geo_settings')) {
+                $dbSetting = \Illuminate\Support\Facades\DB::table('geo_settings')->first();
+                if ($dbSetting) {
+                    if (! empty($dbSetting->esri_feature_service_url)) {
+                        $featureUrl = $dbSetting->esri_feature_service_url;
+                    }
+                    if (! empty($dbSetting->esri_geoprocessing_url)) {
+                        $geoUrl = $dbSetting->esri_geoprocessing_url;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback to config
+        }
+
+        $this->featureServiceUrl = $featureUrl;
+        $this->geoprocessingUrl = $geoUrl;
+    }
+
+    public function isConfigured(): bool
+    {
+        return ! empty($this->featureServiceUrl) && ! str_contains($this->featureServiceUrl, 'dummy');
     }
 
     public function addFeature(array $project): array
     {
-        if (! $this->featureServiceUrl) {
+        if (! $this->isConfigured()) {
             return $this->notConfigured();
         }
 
@@ -59,7 +83,7 @@ class EsriGisService
 
     public function updateFeature(int $objectId, array $attributes): array
     {
-        if (! $this->featureServiceUrl) {
+        if (! $this->isConfigured()) {
             return $this->notConfigured();
         }
 
@@ -84,7 +108,7 @@ class EsriGisService
 
     public function deleteFeature(int $objectId): array
     {
-        if (! $this->featureServiceUrl) {
+        if (! $this->isConfigured()) {
             return $this->notConfigured();
         }
 

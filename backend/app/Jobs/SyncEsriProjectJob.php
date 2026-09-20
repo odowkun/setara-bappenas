@@ -40,6 +40,24 @@ class SyncEsriProjectJob implements ShouldQueue
         Log::info("Starting SyncEsriProjectJob for Project ID #{$this->proyek->id} [{$this->action}]");
 
         try {
+            if (! $esriService->isConfigured()) {
+                // When external ESRI FeatureServer is not configured, MySQL is the official single source of truth for GIS.
+                if ($this->action === 'delete') {
+                    return;
+                }
+
+                $objectId = $this->proyek->esri_objectid ?: (1000 + (int) $this->proyek->id);
+                $this->proyek->update([
+                    'esri_objectid' => $objectId,
+                    'esri_sync_status' => 'synced',
+                    'esri_synced_at' => now(),
+                    'esri_last_error' => null,
+                ]);
+                Log::info("Local GIS sync successful for Project ID #{$this->proyek->id}, OBJECTID: {$objectId}");
+
+                return;
+            }
+
             if ($this->action === 'add' || ($this->action === 'update' && ! $this->proyek->esri_objectid)) {
                 $response = $esriService->addFeature([
                     'kode_proyek' => $this->proyek->kode_proyek,

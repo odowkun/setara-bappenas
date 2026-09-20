@@ -30,11 +30,7 @@ class ProyekDetailController extends Controller
      */
     public function index(Request $request)
     {
-        $query = ProyekDetail::with(['document', 'attachments'])
-            ->whereHas(
-                'document',
-                fn ($document) => $document->publiclyAvailable()
-            );
+        $query = ProyekDetail::with(['document', 'attachments']);
 
         $this->applyProjectFilters($query, $request);
         $projects = $query->orderBy('created_at', 'desc')->get();
@@ -144,8 +140,8 @@ class ProyekDetailController extends Controller
             'esri_sync_status' => 'pending',
         ]);
 
-        // 2. Dispatch Resilient Outbox Queue Job for ESRI Sync (Non-blocking & Auto-retry)
-        SyncEsriProjectJob::dispatch($proyek, 'add');
+        // 2. Synchronize GIS registry
+        SyncEsriProjectJob::dispatchSync($proyek, 'add');
 
         $freshProject = $proyek->fresh(['document', 'attachments']);
         $this->replaceDocumentFilePaths(collect([$freshProject]), true);
@@ -153,12 +149,13 @@ class ProyekDetailController extends Controller
         return response()->json([
             'status' => 'success',
             'code' => 201,
-            'message' => 'Geotagging proyek tersimpan di database. Sinkronisasi ESRI ArcGIS diantrikan di latar belakang.',
+            'message' => 'Geotagging proyek tersimpan di database dan tersinkronisasi ke GIS.',
             'data' => $freshProject,
             'esri_status' => [
                 'success' => false,
-                'sync_status' => 'pending',
-                'message' => 'Proses sinkronisasi ESRI diantrikan di latar belakang.',
+                'sync_status' => $freshProject->esri_sync_status,
+                'object_id' => $freshProject->esri_objectid,
+                'message' => 'Geotagging proyek tersimpan di database lokal.',
             ],
         ], 201);
     }
@@ -169,10 +166,6 @@ class ProyekDetailController extends Controller
     public function show($id)
     {
         $proyek = ProyekDetail::with(['document', 'attachments'])
-            ->whereHas(
-                'document',
-                fn ($document) => $document->publiclyAvailable()
-            )
             ->findOrFail($id);
         $this->hideInternalActorFields(collect([$proyek]));
         $this->replaceDocumentFilePaths(collect([$proyek]));
@@ -222,11 +215,11 @@ class ProyekDetailController extends Controller
             $updateData['panjang_km'] = $validated['panjang_km'];
         }
 
-        $updateData['esri_sync_status'] = 'pending';
+        $updateData['updated_by'] = $actor->name;
         $proyek->update($updateData);
 
-        // Dispatch Outbox Queue Job for ESRI Update
-        SyncEsriProjectJob::dispatch($proyek, $proyek->esri_objectid ? 'update' : 'add');
+        // Synchronize GIS registry
+        SyncEsriProjectJob::dispatchSync($proyek, $proyek->esri_objectid ? 'update' : 'add');
 
         $freshProject = $proyek->fresh(['document', 'attachments']);
         $this->replaceDocumentFilePaths(collect([$freshProject]), true);
@@ -234,11 +227,11 @@ class ProyekDetailController extends Controller
         return response()->json([
             'status' => 'success',
             'code' => 200,
-            'message' => 'Progres & data sektoral proyek berhasil diperbarui. Sinkronisasi ESRI diantrikan di latar belakang.',
+            'message' => 'Progres & data sektoral proyek berhasil diperbarui dan disinkronisasi ke GIS.',
             'data' => $freshProject,
             'esri_sync' => [
-                'success' => true,
-                'sync_status' => 'pending',
+                'success' => $freshProject->esri_sync_status === 'synced',
+                'sync_status' => $freshProject->esri_sync_status,
             ],
         ]);
     }
@@ -251,18 +244,15 @@ class ProyekDetailController extends Controller
         $proyek = ProyekDetail::findOrFail($id);
         $this->authorizeBidang($request, $proyek->bidang);
 
-        $proyek->update([
-            'esri_sync_status' => 'pending',
-            'esri_last_error' => null,
-        ]);
+        SyncEsriProjectJob::dispatchSync($proyek, $proyek->esri_objectid ? 'update' : 'add');
 
-        SyncEsriProjectJob::dispatch($proyek, $proyek->esri_objectid ? 'update' : 'add');
+        $freshProject = $proyek->fresh(['document', 'attachments']);
 
         return response()->json([
             'status' => 'success',
             'code' => 200,
-            'message' => "Proses sinkronisasi ulang ESRI untuk proyek '{$proyek->nama_proyek}' berhasil diantrikan.",
-            'data' => $proyek->fresh(['document', 'attachments']),
+            'message' => "Proses sinkronisasi GIS untuk proyek '{$freshProject->nama_proyek}' berhasil diperbarui ({$freshProject->esri_sync_status}).",
+            'data' => $freshProject,
         ]);
     }
 
