@@ -27,16 +27,6 @@ const CATEGORY_META: Record<
     description: string;
   }
 > = {
-  RKPD: {
-    icon3d: "/images/3dicons/calender-dynamic-color.png",
-    shortLabel: "RKPD",
-    description: "Rencana Kerja Pemerintah Daerah",
-  },
-  RTRW: {
-    icon3d: "/images/3dicons/explorer-dynamic-color.png",
-    shortLabel: "RTRW",
-    description: "Rencana Tata Ruang Wilayah",
-  },
   RPJPD: {
     icon3d: "/images/3dicons/target-dynamic-color.png",
     shortLabel: "RPJPD",
@@ -47,10 +37,10 @@ const CATEGORY_META: Record<
     shortLabel: "RPJMD",
     description: "Rencana Pembangunan 5 Tahun",
   },
-  LKPJ: {
-    icon3d: "/images/3dicons/sheild-dynamic-color.png",
-    shortLabel: "LKPJ",
-    description: "Laporan Pertanggungjawaban",
+  RKPD: {
+    icon3d: "/images/3dicons/calender-dynamic-color.png",
+    shortLabel: "RKPD",
+    description: "Rencana Kerja Pemerintah Daerah",
   },
   LAINNYA: {
     icon3d: "/images/3dicons/folder-dynamic-color.png",
@@ -452,9 +442,9 @@ export function DocumentQuickMenu({
         ref={menuRef}
         data-testid="document-quick-menu"
         aria-label="Kategori dokumen publik"
-        className={`w-full max-w-5xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl ${className}`}
+        className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl ${className}`}
       >
-        <div className="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-6 gap-1 sm:gap-1.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5">
           {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
             renderCategory(code, label)
           )}

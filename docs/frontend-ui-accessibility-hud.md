@@ -47,7 +47,7 @@ Sebelumnya, tombol floating di sisi bawah layar menggunakan desain solid blue st
   - **Fallback State**: Saat tidak ada kategori yang cocok dengan kata kunci pencarian, menampilkan pesan ramah dan tombol "Cari di semua dokumen &rarr;".
   - Drawer vertikal muncul dengan animasi smooth saat ditekan.
   - Rotasi `ChevronUp` 180° saat drawer terbuka.
-  - Daftar filter cepat: RKPD, RTRW, RPJPD, RPJMD, LKPJ, dan Lainnya.
+  - Daftar filter cepat terstandardisasi: **RPJPD, RPJMD, RKPD, dan Lainnya**.
   - Indikator aktif kategori dengan high-contrast background dan shadow.
 
 ---

@@ -1,18 +1,14 @@
 export const PRIMARY_DOCUMENT_CATEGORY_CODES = [
-  "RKPD",
-  "RTRW",
   "RPJPD",
   "RPJMD",
-  "LKPJ",
+  "RKPD",
 ] as const;
 
 export const DOCUMENT_QUICK_CATEGORIES = [
-  { code: "RKPD", label: "RKPD" },
-  { code: "RTRW", label: "RTRW" },
   { code: "RPJPD", label: "RPJPD" },
   { code: "RPJMD", label: "RPJMD" },
-  { code: "LKPJ", label: "LKPJ" },
-  { code: "LAINNYA", label: "Dokumen Publik Lainnya" },
+  { code: "RKPD", label: "RKPD" },
+  { code: "LAINNYA", label: "Lainnya" },
 ] as const;
 
 export type DocumentCategoryCode =
