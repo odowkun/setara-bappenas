@@ -154,3 +154,21 @@ Status implementasi: 21 September 2026.
      - **Total Pagu**: Penjumlahan nominal pagu anggaran (`pagu_anggaran`) terformat Rupiah Miliar / Juta secara otomatis.
      - **Wilayah**: Jumlah kecamatan unik yang terlibat proyek fisik.
 
+---
+
+## 9. Standar Penentuan Titik Koordinat & Input Manual Wilayah Administratif
+
+Status implementasi: 21 September 2026.
+
+### A. Alur Kerja Penentuan Titik Pin Peta (`GeotaggingProyekPage`)
+1. **Penetapan Koordinat Murni via Klik Peta**:
+   - Ketika pengguna mengklik atau menggeser pin lokasi pada "Peta Interaktif Penentuan Titik & Delineasi Tapak Proyek", sistem hanya mengabadikan nilai `latitude` dan `longitude`.
+   - Sistem **TIDAK** lagi melakukan overwrite otomatis pada kolom *Kecamatan (Kab. Halut)* dan *Desa / Kelurahan*.
+2. **Pengisian Manual Wilayah Administratif**:
+   - Pengguna bebas memilih Kecamatan dan Desa/Kelurahan secara manual menggunakan komponen `SearchableSelect`.
+   - Pemilihan Kecamatan dan Desa manual tidak akan mengubah atau mereset koordinat titik pin presisi yang sebelumnya telah dipilih pengguna di peta.
+   - Jika pengguna memilih Kecamatan atau Desa sebelum menentukan pin peta, peta tetap membantu dengan memusatkan tampilan ke koordinat default wilayah terkait.
+3. **Reset State Pasca-Simpan**:
+   - Setelah proyek berhasil disimpan, seluruh field termasuk koordinat, pagu anggaran, nama proyek, kecamatan, dan desa direset secara bersih untuk persiapan entri paket berikutnya.
+
+

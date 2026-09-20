@@ -112,30 +112,13 @@ export default function GeotaggingProyekPage() {
 
   const handleMapLocationSelect = (lat: number, lng: number) => {
     setHasSelectedLocation(true);
-    const region = halutRegionService.findRegionByCoords(lat, lng);
-
-    if (region.isWithinHalut) {
-      setLocationWarning(null);
-      setForm((prev) => ({
-        ...prev,
-        latitude: lat,
-        longitude: lng,
-        kecamatan: region.kecamatan,
-        desa_kelurahan: region.desa,
-      }));
-      toast.success(`Lokasi terdeteksi: Kec. ${region.kecamatan}, Desa ${region.desa}`);
-    } else {
-      const warnMsg = "Kecamatan & Desa tidak ditemukan (titik di luar wilayah Kabupaten Halmahera Utara)";
-      setLocationWarning(warnMsg);
-      setForm((prev) => ({
-        ...prev,
-        latitude: lat,
-        longitude: lng,
-        kecamatan: "",
-        desa_kelurahan: "",
-      }));
-      toast.error("Lokasi di luar wilayah Kabupaten Halmahera Utara!");
-    }
+    setLocationWarning(null);
+    setForm((prev) => ({
+      ...prev,
+      latitude: lat,
+      longitude: lng,
+    }));
+    toast.success(`Titik pin ditentukan (${lat.toFixed(5)}, ${lng.toFixed(5)}). Silakan pilih Kecamatan & Desa.`);
   };
 
   // Helper formatting rupiah
@@ -166,43 +149,38 @@ export default function GeotaggingProyekPage() {
     });
   }, [selectedDocId]);
 
-  // Handle Kecamatan Change & Auto Map Fly-To Coordinates
+  // Handle Kecamatan Change & Keep Pin if Already Selected
   const handleKecamatanSelect = (kecName: string) => {
     const kecObj = halutRegionService.getKecamatanByName(kecName);
-    if (kecObj) {
-      const firstDesa = kecObj.desas.length > 0 ? kecObj.desas[0] : null;
-      const targetLat = firstDesa ? firstDesa.lat : kecObj.lat;
-      const targetLng = firstDesa ? firstDesa.lng : kecObj.lng;
-
-      setForm({
-        ...form,
-        kecamatan: kecObj.name,
-        desa_kelurahan: firstDesa ? firstDesa.name : "",
-        latitude: targetLat,
-        longitude: targetLng,
-      });
-      setHasSelectedLocation(true);
-    }
+    setForm((prev) => ({
+      ...prev,
+      kecamatan: kecName,
+      desa_kelurahan: "",
+      // Jika pengguna belum menentukan titik pin di peta, pusatkan ke kecamatan
+      ...(hasSelectedLocation
+        ? {}
+        : {
+            latitude: kecObj ? kecObj.lat : prev.latitude,
+            longitude: kecObj ? kecObj.lng : prev.longitude,
+          }),
+    }));
   };
 
-  // Handle Desa Change & Auto Map Fly-To Coordinates
+  // Handle Desa Change & Keep Pin if Already Selected
   const handleDesaSelect = (desaName: string) => {
     const desasList = halutRegionService.getDesaListByKecamatan(form.kecamatan);
     const desaObj = desasList.find((d) => d.name.toLowerCase() === desaName.toLowerCase());
-    if (desaObj) {
-      setForm({
-        ...form,
-        desa_kelurahan: desaObj.name,
-        latitude: desaObj.lat,
-        longitude: desaObj.lng,
-      });
-      setHasSelectedLocation(true);
-    } else {
-      setForm({
-        ...form,
-        desa_kelurahan: desaName,
-      });
-    }
+    setForm((prev) => ({
+      ...prev,
+      desa_kelurahan: desaName,
+      // Jika pengguna belum menentukan titik pin di peta, pusatkan ke desa
+      ...(hasSelectedLocation
+        ? {}
+        : {
+            latitude: desaObj ? desaObj.lat : prev.latitude,
+            longitude: desaObj ? desaObj.lng : prev.longitude,
+          }),
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -252,11 +230,15 @@ export default function GeotaggingProyekPage() {
             : `Data resmi tersimpan di database. ${res.esri_status?.message || "Sinkronisasi ESRI belum tersedia."}`
         );
         
-        setForm({
-          ...form,
+        setForm((prev) => ({
+          ...prev,
           nama_proyek: "",
+          kecamatan: "",
+          desa_kelurahan: "",
           lokasi_deskripsi: "",
-        });
+          pagu_anggaran: 0,
+        }));
+        setDisplayPagu("");
         setHasSelectedLocation(false);
         
         const updatedList = await proyekService.getProjects(selectedDocId, undefined, true);
