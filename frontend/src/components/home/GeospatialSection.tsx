@@ -337,14 +337,15 @@ export const GeospatialSection: React.FC = () => {
                 rel="noreferrer"
                 className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
               >
-                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Resmi
+                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Lampiran
               </a>
             ) : (
               <Link
                 href="/pengumuman"
                 className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
               >
-                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Renstra
+                <FileText className="w-4 h-4 text-blue-950 shrink-0" />
+                <span>{pinnedAnnouncement ? "Buka Detail Pengumuman" : "Unduh Berkas Renstra"}</span>
               </Link>
             )}
             <Link

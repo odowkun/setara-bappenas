@@ -96,6 +96,23 @@ class OfficialDatabaseSourceTest extends TestCase
         $response->assertJsonFragment(['title' => 'Masih Berlaku']);
         $response->assertJsonMissing(['title' => 'Sudah Kedaluwarsa']);
         $response->assertJsonMissing(['title' => 'Masih Draf']);
+
+        // Pengumuman PIN selalu tampil meski tanggal berlaku lewat
+        DB::table('announcements')->insert([
+            'title' => 'Pengumuman Resmi Dipin',
+            'is_published' => true,
+            'is_important' => true,
+            'valid_until' => today()->subDay(),
+            'announcement_type_id' => $typeId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $responseWithPin = $this->getJson('/api/v1/pengumuman')->assertOk();
+        $responseWithPin->assertJsonFragment(['title' => 'Pengumuman Resmi Dipin']);
+
+        // Parameter all=1 menampilkan seluruh arsip pengumuman yang tayang
+        $responseArchive = $this->getJson('/api/v1/pengumuman?all=1')->assertOk();
+        $responseArchive->assertJsonFragment(['title' => 'Sudah Kedaluwarsa']);
     }
 
     public function test_geoprocessing_result_is_persisted_with_an_honest_source(): void

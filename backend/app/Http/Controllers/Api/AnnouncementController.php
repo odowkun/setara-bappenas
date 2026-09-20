@@ -20,16 +20,26 @@ class AnnouncementController extends Controller
     {
         $query = Announcement::query()
             ->with('type')
-            ->where('is_published', true)
-            ->where(function ($builder): void {
-                $builder->whereNull('valid_until')
+            ->where('is_published', true);
+
+        // Pengumuman yang disematkan (PIN) selalu tampil di publik.
+        // Jika tidak meminta semua arsip (?all=1), filter pengumuman aktif atau pinned.
+        if (! $request->boolean('all')) {
+            $query->where(function ($builder): void {
+                $builder->where('is_important', true)
+                    ->orWhereNull('valid_until')
                     ->orWhereDate('valid_until', '>=', today());
             });
+        }
+
         $this->applyFilters($query, $request);
 
         return response()->json([
             'success' => true,
-            'data' => $query->orderByDesc('is_important')->orderByDesc('published_at')->get(),
+            'data' => $query->orderByDesc('is_important')
+                ->orderByDesc('published_at')
+                ->latest('id')
+                ->get(),
         ]);
     }
 
@@ -156,16 +166,7 @@ class AnnouncementController extends Controller
 
     public function attachment(Request $request, Announcement $announcement)
     {
-        $user = auth('sanctum')->user();
-        $isAdmin = $user && $user->hasAnyRole(['superadmin', 'admin', 'admin_bidang', 'admin_umum']);
-
-        if (!$isAdmin) {
-            abort_unless(
-                $announcement->is_published
-                && ($announcement->valid_until === null || $announcement->valid_until->isToday() || $announcement->valid_until->isFuture()),
-                404
-            );
-        }
+        abort_unless($announcement->is_published, 404);
 
         abort_unless(
             $announcement->file_path

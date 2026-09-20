@@ -58,9 +58,14 @@ Halaman tambah juga menjadi halaman edit ketika menerima `?edit={id}`. Data edit
 
 ### Agenda dan Pengumuman
 
-Form tambah/edit dapat menyimpan draf. Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Fitur Sematkan / Pin (`PATCH /pengumuman/{id}/pin`) memungkinkan admin memilih Pengumuman Resmi Utama yang langsung tampil di banner Beranda dan Hero Card Pengumuman Publik. 
+Form tambah/edit dapat menyimpan draf. Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Fitur Sematkan / Pin (`PATCH /pengumuman/{id}/pin`) memungkinkan admin memilih Pengumuman Resmi Utama yang langsung tampil di banner Beranda dan Hero Card Pengumuman Publik.
 
-Lampiran Pengumuman disimpan pada disk privat; `GET /pengumuman/{id}/attachment` mendukung parameter `?download=1` untuk unduhan langsung, dan secara default mengembalikan respons `inline` agar gambar (JPG/PNG/WEBP) dan dokumen PDF dapat dipratinjau secara nyata (real interactive preview) di modal pratinjau publik tanpa memunculkan kop surat atau stempel TTD mockup statis. Hak akses draf tetap terlindungi dan hanya dapat dipratinjau oleh administrator terautentikasi.
+**Aturan Penayangan & Arsip Pengumuman Resmi**:
+1. **Prioritas Sematan Beranda (PIN)**: Pengumuman yang ditandai `is_important = true` selalu diprioritaskan dan ditampilkan pada banner Beranda tanpa terhalang filter tanggal kedaluwarsa (`valid_until`), sampai administrator secara sadar melepas pin.
+2. **Arsip Publik Lengkap**: Halaman publik `/pengumuman` mengakses `GET /api/v1/pengumuman?all=1` untuk menampilkan seluruh arsip dokumen resmi yang telah diterbitkan (termasuk yang telah melampaui tanggal berlaku dengan penanda status arsip/kedaluwarsa).
+3. **Masa Berlaku Permanen secara Default**: Form tambah pengumuman menetapkan masa berlaku secara opsional (default tanpa kedaluwarsa / permanen) untuk mencegah pengumuman langsung menghilang saat tanggal server berganti (misalnya zona waktu WIT UTC+9).
+4. **Akses Lampiran Arsip**: Lampiran pengumuman yang berstatus terbit (`is_published = true`) tetap dapat diunduh oleh masyarakat umum (`GET /pengumuman/{id}/attachment`) meskipun telah melewati `valid_until`, guna menjamin keterbukaan informasi publik dan keutuhan riwayat regulasi/surat edaran.
+5. **Draf Privat**: Hak akses lampiran untuk pengumuman yang berstatus draf tetap terlindungi dan hanya dapat diakses atau dipratinjau oleh administrator terautentikasi.
 
 ### Galeri
 

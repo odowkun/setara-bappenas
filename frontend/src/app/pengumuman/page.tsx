@@ -105,7 +105,7 @@ export default function PublicPengumumanPage() {
       setLoading(true);
       try {
         const [rows, types] = await Promise.all([
-          officialContentService.getAnnouncements(),
+          officialContentService.getAnnouncements(false, true),
           officialContentService.getAnnouncementTypes(),
         ]);
         setAnnouncements(rows);
@@ -354,12 +354,24 @@ export default function PublicPengumumanPage() {
                           </span>
                         )}
 
-                        <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 ml-auto sm:ml-0">
-                          <Clock className="w-3.5 h-3.5 text-slate-400" />
-                          {item.validUntil
-                            ? `Berlaku s/d ${formatIndonesianDateOnly(item.validUntil)}`
-                            : "Permanen"}
-                        </span>
+                        {(() => {
+                          const isExpired = Boolean(
+                            item.validUntil &&
+                            new Date(item.validUntil).setHours(23, 59, 59, 999) < Date.now()
+                          );
+                          return (
+                            <span className={`text-[11px] font-bold flex items-center gap-1 ml-auto sm:ml-0 ${
+                              isExpired ? "text-amber-600" : "text-slate-500"
+                            }`}>
+                              <Clock className={`w-3.5 h-3.5 ${isExpired ? "text-amber-500" : "text-slate-400"}`} />
+                              {item.validUntil
+                                ? isExpired
+                                  ? `Berlaku s/d ${formatIndonesianDateOnly(item.validUntil)} (Selesai)`
+                                  : `Berlaku s/d ${formatIndonesianDateOnly(item.validUntil)}`
+                                : "Permanen"}
+                            </span>
+                          );
+                        })()}
                       </div>
 
                       {/* TITLE & DESCRIPTION */}

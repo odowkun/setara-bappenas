@@ -150,7 +150,7 @@ export default function EditPengumumanPage() {
     formData.append("content", content.trim());
     formData.append("is_important", isImportant ? "1" : "0");
     formData.append("is_published", publish ? "1" : "0");
-    if (hasExpiryDate) formData.append("valid_until", validUntil);
+    formData.append("valid_until", hasExpiryDate && validUntil ? validUntil : "");
     if (attachment) formData.append("attachment", attachment);
 
     try {

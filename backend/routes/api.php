@@ -448,7 +448,8 @@ Route::prefix('v1')->group(function () {
             $ann = DB::table('announcements')
                 ->where('is_published', true)
                 ->where(function ($query): void {
-                    $query->whereNull('valid_until')
+                    $query->where('is_important', true)
+                        ->orWhereNull('valid_until')
                         ->orWhereDate('valid_until', '>=', today());
                 })
                 ->where(function ($query) use ($q): void {

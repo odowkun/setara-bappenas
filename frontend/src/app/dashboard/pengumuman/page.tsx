@@ -224,10 +224,24 @@ export default function PengumumanManagementPage() {
                   }`}>
                     {item.isPublished ? "Tayang" : "Draf"}
                   </span>
-                  <span className="text-[11px] font-bold text-slate-400 flex items-center gap-1 whitespace-nowrap shrink-0">
-                    <Calendar className="w-3 h-3" />
-                    {item.validUntil ? `Berlaku s/d ${item.validUntil} (WIT)` : "Permanen (Tanpa Batas Waktu)"}
-                  </span>
+                  {(() => {
+                    const isExpired = Boolean(
+                      item.validUntil &&
+                      new Date(item.validUntil).setHours(23, 59, 59, 999) < Date.now()
+                    );
+                    return (
+                      <span className={`text-[11px] font-bold flex items-center gap-1 whitespace-nowrap shrink-0 ${
+                        isExpired ? "text-amber-600 font-extrabold" : "text-slate-400"
+                      }`}>
+                        <Calendar className={`w-3 h-3 ${isExpired ? "text-amber-500" : "text-slate-400"}`} />
+                        {item.validUntil
+                          ? isExpired
+                            ? `Berlaku s/d ${item.validUntil} (Kedaluwarsa)`
+                            : `Berlaku s/d ${item.validUntil} (WIT)`
+                          : "Permanen (Tanpa Batas Waktu)"}
+                      </span>
+                    );
+                  })()}
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">

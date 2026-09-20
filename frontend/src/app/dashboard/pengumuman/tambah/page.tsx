@@ -41,9 +41,14 @@ export default function TambahPengumumanPage() {
   const [showAddType, setShowAddType] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
 
-  // Validity Date Toggle
-  const [hasExpiryDate, setHasExpiryDate] = useState(true);
-  const [validUntil, setValidUntil] = useState(new Date().toISOString().slice(0, 10));
+  // Validity Date Toggle (Default Permanen)
+  const defaultFutureDate = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 30);
+    return d.toISOString().slice(0, 10);
+  };
+  const [hasExpiryDate, setHasExpiryDate] = useState(false);
+  const [validUntil, setValidUntil] = useState(defaultFutureDate());
 
   const [content, setContent] = useState("");
   const [isImportant, setIsImportant] = useState(false);
@@ -129,7 +134,7 @@ export default function TambahPengumumanPage() {
     formData.append("content", content.trim());
     formData.append("is_important", isImportant ? "1" : "0");
     formData.append("is_published", publish ? "1" : "0");
-    if (hasExpiryDate) formData.append("valid_until", validUntil);
+    formData.append("valid_until", hasExpiryDate && validUntil ? validUntil : "");
     if (attachment) formData.append("attachment", attachment);
 
     try {

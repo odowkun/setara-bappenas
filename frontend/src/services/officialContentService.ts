@@ -178,10 +178,13 @@ export const officialContentService = {
     return json.data;
   },
 
-  async getAnnouncements(admin = false): Promise<AnnouncementItem[]> {
+  async getAnnouncements(admin = false, includeAll = false): Promise<AnnouncementItem[]> {
+    const endpoint = admin
+      ? "/admin/pengumuman"
+      : `/pengumuman${includeAll ? "?all=1" : ""}`;
     const json = admin
-      ? await adminJson("/admin/pengumuman")
-      : await publicJson("/pengumuman");
+      ? await adminJson(endpoint)
+      : await publicJson(endpoint);
     return Array.isArray(json.data) ? json.data.map(mapAnnouncement) : [];
   },
 
