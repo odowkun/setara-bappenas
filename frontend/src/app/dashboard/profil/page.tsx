@@ -40,8 +40,8 @@ export default function ProfilHubPage() {
       color: "bg-blue-50 text-blue-700 border-blue-200",
     },
     {
-      title: "2. Visi & Misi Pembangunan",
-      description: "Kelola Visi dan Misi strategis pembangunan daerah Kabupaten Halmahera Utara.",
+      title: "2. Visi & Misi Pemerintah Daerah",
+      description: "Kelola Visi dan Misi strategis Pemerintah Daerah Kabupaten Halmahera Utara.",
       href: "/dashboard/profil/visi-misi",
       icon: Target,
       color: "bg-amber-50 text-amber-900 border-amber-200",

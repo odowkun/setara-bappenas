@@ -86,7 +86,7 @@ export default function PublicTentangPage() {
               Tentang BAPPEDA Halmahera Utara
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-              Profil resmi, narasi sejarah pembentukan, visi & misi pembangunan daerah.
+              Profil resmi, narasi sejarah pembentukan, visi & misi pemerintah daerah.
             </p>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function PublicTentangPage() {
                   <Target className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight">Visi & Misi Pembangunan Daerah</h2>
+                  <h2 className="text-lg font-black text-slate-900 tracking-tight">Visi & Misi Pemerintah Daerah</h2>
                   <p className="text-xs text-slate-500 font-medium">Arah kebijakan utama dan prioritas pembangunan Kabupaten Halmahera Utara</p>
                 </div>
               </div>
@@ -137,7 +137,7 @@ export default function PublicTentangPage() {
               <div className="p-6 sm:p-8 rounded-2xl bg-white border border-blue-100/80 shadow-sm border-l-4 border-l-blue-600 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-black uppercase tracking-wider text-blue-900">
                   <Award className="w-4 h-4 text-blue-600" />
-                  <span>Visi Utama BAPPEDA</span>
+                  <span>Visi Utama</span>
                 </div>
                 <p className="text-base sm:text-xl font-black text-slate-900 leading-snug italic">
                   "{visiMisiData?.content || "Data visi belum tersedia."}"

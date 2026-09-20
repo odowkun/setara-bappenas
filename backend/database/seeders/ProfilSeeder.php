@@ -25,12 +25,12 @@ class ProfilSeeder extends Seeder
             ]
         );
 
-        // 2. Visi & Misi BAPPEDA
+        // 2. Visi & Misi Pemerintah Daerah
         Profil::updateOrCreate(
             ['key' => 'visi_misi'],
             [
-                'title' => 'Visi & Misi BAPPEDA Halmahera Utara',
-                'subtitle' => 'Arah dan Prioritas Pembangunan Daerah Kabupaten Halmahera Utara',
+                'title' => 'Visi & Misi Pemerintah Daerah Halmahera Utara',
+                'subtitle' => 'Arah dan Prioritas Pemerintah Daerah Kabupaten Halmahera Utara',
                 'content' => 'Terwujudnya Kabupaten Halmahera Utara yang Maju, Sejahtera, Berdaya Saing, dan Berkelanjutan Berbasis Sumber Daya Lokal.',
                 'meta_json' => [
                     'misi' => [

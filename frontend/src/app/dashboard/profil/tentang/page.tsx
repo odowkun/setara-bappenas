@@ -171,8 +171,8 @@ export default function DashboardTentangEditorPage() {
           "Accept": "application/json",
         },
         body: JSON.stringify({
-          title: "Visi & Misi BAPPEDA Halmahera Utara",
-          subtitle: "Arah dan Prioritas Pembangunan Daerah Kabupaten Halmahera Utara",
+          title: "Visi & Misi Pemerintah Daerah",
+          subtitle: "Arah dan Prioritas Pemerintah Daerah Kabupaten Halmahera Utara",
           content: visiContent,
           meta_json: {
             misi: misiList.filter((m) => m.trim() !== ""),
@@ -182,7 +182,7 @@ export default function DashboardTentangEditorPage() {
 
       if (resTentang.ok && resVisi.ok) {
         setSaved(true);
-        toast.success("Profil, Sejarah, serta Visi & Misi BAPPEDA berhasil disimpan!");
+        toast.success("Profil, Sejarah, serta Visi & Misi Pemerintah Daerah berhasil disimpan!");
         setTimeout(() => setSaved(false), 3500);
       } else {
         toast.error("Gagal menyimpan data profil ke database!");
@@ -335,12 +335,12 @@ export default function DashboardTentangEditorPage() {
             <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-in fade-in duration-150">
               <h2 className="text-sm font-black text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
                 <Target className="w-4 h-4 text-blue-600" />
-                <span>2. Editor Visi & Misi Pembangunan Daerah</span>
+                <span>2. Editor Visi & Misi Pemerintah Daerah</span>
               </h2>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Teks Visi Utama BAPPEDA *</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Teks Visi Utama *</label>
                   <textarea
                     rows={3}
                     required
