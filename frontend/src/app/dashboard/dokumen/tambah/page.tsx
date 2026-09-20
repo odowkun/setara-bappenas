@@ -424,7 +424,7 @@ export default function TambahDokumenPage() {
               Unggah Berkas Dokumen Perencanaan *
             </label>
             <p className="mb-3 text-[11px] font-medium text-blue-800">
-              Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
+              Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca. Format standar kearsipan: <strong>PDF</strong> (untuk berkas Word/Office, silakan simpan atau ekspor ke format PDF sebelum diunggah).
             </p>
             <ResumableChunkUploader
               onUploadSuccess={handleUploadSuccess}

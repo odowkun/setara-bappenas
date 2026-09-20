@@ -123,3 +123,13 @@ Jika runner gagal konek (`Failed to create a session`), sinkronkan jam Windows S
 w32tm /unregister; w32tm /register; net start w32time; w32tm /resync /force; Get-Date
 ```
 
+### D. Konversi Berkas Office & Watermark Otomatis (LibreOffice)
+- **PDF & Gambar (JPG/PNG)**: Diproses 100% secara instan oleh pustaka PHP murni (`FPDI` + `FPDF`) tanpa dependensi software luar.
+- **Word/Excel/PowerPoint (.docx/.xlsx/.pptx)**: Membutuhkan LibreOffice Headless untuk merender dokumen ke PDF sebelum ditempeli watermark resmi BAPPEDA HALUT.
+- **Lokasi Deteksi Otomatis Backend**:
+  - `C:\Program Files\LibreOffice\program\soffice.exe`
+  - `C:\Program Files (x86)\LibreOffice\program\soffice.exe`
+  - Variabel sistem `PATH`
+- **Rekomendasi Operasional**: Standar kearsipan resmi mewajibkan dokumen perencanaan (RPJPD, RPJMD, RKPD, dll.) berformat **PDF**. Jika server belum menginstal LibreOffice, admin/operator OPD wajib menyimpan (Save As / Export) dokumen ke format PDF sebelum mengunggah.
+
+

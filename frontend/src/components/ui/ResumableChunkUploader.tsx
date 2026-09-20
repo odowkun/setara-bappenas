@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { authenticatedFetch } from "@/lib/apiClient";
+import { toast } from "@/lib/swal";
 import {
   UploadCloud,
   CheckCircle2,
@@ -103,18 +104,39 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
               throw new Error("Server belum mengonfirmasi watermark dokumen");
             }
           } else {
-            throw new Error(`Server status ${res.status}`);
+            let errorMsg = `Gagal mengunggah berkas (${res.status})`;
+            try {
+              const errData = await res.json();
+              if (errData?.message) {
+                errorMsg = errData.message;
+              }
+            } catch {
+              // ignore json parse error
+            }
+
+            // Jika status 4xx (client error / validasi / format belum didukung server), jangan retry berulang-ulang
+            if (res.status >= 400 && res.status < 500) {
+              setUploading(false);
+              setNetworkError(false);
+              setStatusText(`❌ ${errorMsg}`);
+              toast.error(errorMsg);
+              return;
+            }
+
+            throw new Error(errorMsg);
           }
-        } catch (err) {
+        } catch (err: unknown) {
           retries++;
           setNetworkError(true);
-          setStatusText(`⚠️ Menghubungkan kembali... (${retries}/5)`);
+          const errorMsg = err instanceof Error ? err.message : "Gangguan koneksi";
+          setStatusText(`⚠️ Gangguan jaringan (${errorMsg}), mencoba ulang (${retries}/5)...`);
           await new Promise((r) => setTimeout(r, 2000 * retries));
         }
       }
 
       if (!chunkUploaded) {
-        setStatusText("❌ Gagal mengunggah berkas. Silakan coba lagi.");
+        setStatusText("❌ Gagal mengunggah berkas setelah 5 kali percobaan jaringan. Silakan coba lagi.");
+        toast.error("Gagal mengunggah berkas setelah 5 kali percobaan jaringan.");
         setUploading(false);
         return;
       }
@@ -271,6 +293,13 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
                 onClick={() => {
                   setSelectedFile(null);
                   setUploading(false);
+                  setProgress(0);
+                  setCurrentChunk(0);
+                  setStatusText("Ready");
+                  setNetworkError(false);
+                  if (fileInputRef.current) {
+                    fileInputRef.current.value = "";
+                  }
                 }}
                 className="text-xs font-extrabold text-slate-400 hover:text-rose-600 px-3 py-1.5 rounded-xl hover:bg-rose-50 transition"
               >

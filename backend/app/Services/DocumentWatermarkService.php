@@ -174,6 +174,17 @@ class DocumentWatermarkService
             return $configuredBinary;
         }
 
+        // Jalur standar instalasi LibreOffice di Windows Server
+        $windowsCandidates = [
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+        ];
+        foreach ($windowsCandidates as $candidate) {
+            if (file_exists($candidate)) {
+                return $candidate;
+            }
+        }
+
         $detectedBinary = (new ExecutableFinder)->find('soffice');
         if ($detectedBinary !== null) {
             return $detectedBinary;
@@ -185,7 +196,7 @@ class DocumentWatermarkService
         }
 
         throw new RuntimeException(
-            'LibreOffice belum tersedia di server untuk memproses dokumen Office.'
+            'Server belum memasang LibreOffice untuk konversi otomatis Word/Office (.docx). Harap unggah dokumen dalam format PDF resmi.'
         );
     }
 
