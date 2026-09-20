@@ -89,7 +89,16 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
 }
 
 & $npmCmd install --prefer-offline --no-audit
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "npm install gagal dengan kode exit $LASTEXITCODE"
+    exit 1
+}
+
 & $npmCmd run build
+if ($LASTEXITCODE -ne 0) {
+    Write-Error "Next.js build gagal dengan kode exit $LASTEXITCODE"
+    exit 1
+}
 
 # Pastikan public & static tersalin ke standalone
 $publicSrc = Join-Path $frontendDest "public"
