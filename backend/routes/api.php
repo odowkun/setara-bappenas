@@ -217,6 +217,8 @@ Route::prefix('v1')->group(function () {
     Route::delete('/surveys/services/{id}', [SurveyController::class, 'deleteService'])
         ->middleware(['auth:sanctum', 'permission:manage_survey|manage_kritik', AuditAdminMutation::class])
         ->name('surveys.services.destroy');
+    Route::post('/surveys/quick', [SurveyController::class, 'quickRate'])
+        ->middleware('throttle:30,1');
     Route::post('/surveys', [SurveyController::class, 'store'])
         ->middleware('throttle:10,1');
     Route::get('/kritik/public', [KritikController::class, 'publicFeed']);

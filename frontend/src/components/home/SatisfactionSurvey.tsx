@@ -3,9 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import { Info, X, Send, CheckCircle2, HeartHandshake, ArrowRight } from "lucide-react";
+import { Info, X, Send, CheckCircle2, HeartHandshake, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { API_BASE_URL } from "@/lib/apiClient";
+import { fetchIkmStats, submitQuickSurvey } from "@/services/surveyService";
+import { toast } from "@/lib/swal";
 
 type SatisfactionLevel = "sangat" | "cukup" | "kurang" | null;
 
@@ -14,11 +15,45 @@ export const SatisfactionSurvey: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<SatisfactionLevel>(null);
   const [mounted, setMounted] = useState(false);
+  const [totalResponden, setTotalResponden] = useState<number>(38);
+
+  const [ikmStats, setIkmStats] = useState({
+    sangat: "61%",
+    cukup: "21%",
+    kurang: "18%",
+  });
 
   useEffect(() => {
     setMounted(true);
+    const saved = localStorage.getItem("bappeda_ikm_voted") as SatisfactionLevel;
+    if (saved) {
+      setSelected(saved);
+    }
+  }, []);
+
+  const loadStats = async () => {
+    try {
+      const stats = await fetchIkmStats();
+      if (stats) {
+        setIkmStats({
+          sangat: `${stats.sangat}%`,
+          cukup: `${stats.cukup}%`,
+          kurang: `${stats.kurang}%`,
+        });
+        if (typeof stats.total_responden === "number") {
+          setTotalResponden(stats.total_responden);
+        }
+      }
+    } catch (err) {
+      console.warn("[SatisfactionSurvey] Gagal memuat statistik riil:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadStats();
   }, []);
 
   // Lock body scroll when feedback modal is open
@@ -43,51 +78,65 @@ export const SatisfactionSurvey: React.FC = () => {
     }
   }, [showModal]);
 
-  const [ikmStats, setIkmStats] = useState({
-    sangat: "61%",
-    cukup: "21%",
-    kurang: "18%",
-  });
+  const handleSelect = async (level: SatisfactionLevel) => {
+    if (!level || isSubmitting) return;
 
-  useEffect(() => {
-    const fetchIkmConfig = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/surveys/config`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data && json.data.stats) {
-            setIkmStats({
-              sangat: `${json.data.stats.sangat || 61}%`,
-              cukup: `${json.data.stats.cukup || 21}%`,
-              kurang: `${json.data.stats.kurang || 18}%`,
-            });
-          }
-        }
-      } catch (err) {
-        console.warn("[SatisfactionSurvey] API offline:", err);
-      }
-    };
-
-    fetchIkmConfig();
-  }, []);
-
-  const handleSelect = (level: SatisfactionLevel) => {
-    setSelected(level);
     if (level === "kurang") {
       setShowModal(true);
       setSubmitted(false);
       setFeedback("");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSelected(level);
+    localStorage.setItem("bappeda_ikm_voted", level);
+
+    const res = await submitQuickSurvey(level);
+    setIsSubmitting(false);
+
+    if (res.success && res.stats) {
+      setIkmStats({
+        sangat: `${res.stats.sangat}%`,
+        cukup: `${res.stats.cukup}%`,
+        kurang: `${res.stats.kurang}%`,
+      });
+      setTotalResponden(res.stats.total_responden);
+      toast.success(
+        level === "sangat"
+          ? "Terima kasih! Penilaian Sangat Memuaskan Anda berhasil dicatat secara riil."
+          : "Terima kasih! Penilaian Cukup Memuaskan Anda berhasil dicatat secara riil."
+      );
+    } else {
+      toast.error(res.message || "Gagal mencatat penilaian.");
     }
   };
 
-  const handleSubmitFeedback = () => {
-    if (feedback.trim()) {
+  const handleSubmitFeedback = async () => {
+    if (!feedback.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    const res = await submitQuickSurvey("kurang", feedback.trim());
+    setIsSubmitting(false);
+
+    if (res.success && res.stats) {
+      setIkmStats({
+        sangat: `${res.stats.sangat}%`,
+        cukup: `${res.stats.cukup}%`,
+        kurang: `${res.stats.kurang}%`,
+      });
+      setTotalResponden(res.stats.total_responden);
+      setSelected("kurang");
+      localStorage.setItem("bappeda_ikm_voted", "kurang");
       setSubmitted(true);
+      toast.success("Terima kasih! Masukan Anda berhasil dicatat untuk evaluasi layanan.");
       setTimeout(() => {
         setShowModal(false);
         setSubmitted(false);
         setFeedback("");
-      }, 2000);
+      }, 1500);
+    } else {
+      toast.error(res.message || "Gagal mengirim masukan.");
     }
   };
 
@@ -243,7 +292,7 @@ export const SatisfactionSurvey: React.FC = () => {
           </div>
 
           {/* Info Banner */}
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200/80">
+          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Info className="w-4 h-4 text-white" />
@@ -254,6 +303,10 @@ export const SatisfactionSurvey: React.FC = () => {
                   Untuk memberikan penilaian cepat terhadap layanan informasi website, silahkan klik salah satu ikon atau emoji di bawah ini!
                 </p>
               </div>
+            </div>
+            <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-950 text-xs font-extrabold shadow-xs shrink-0">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span>{totalResponden} Responden Riil Terdata</span>
             </div>
           </div>
 
@@ -283,6 +336,7 @@ export const SatisfactionSurvey: React.FC = () => {
                     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
                   }}
                   onClick={() => handleSelect(card.id)}
+                  disabled={isSubmitting}
                   onMouseEnter={() => setHoveredCard(card.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                   className={`
@@ -292,8 +346,15 @@ export const SatisfactionSurvey: React.FC = () => {
                       ? `${card.borderColor} ${card.bgColor} shadow-xl scale-[1.02]`
                       : `border-slate-200 bg-white hover:${card.bgColor} hover:${card.borderColor} hover:shadow-lg`
                     }
+                    ${isSubmitting ? "opacity-75 cursor-wait" : ""}
                   `}
                 >
+                  {isSelected && (
+                    <div className="absolute top-3.5 right-3.5 px-2.5 py-0.5 rounded-full bg-white/95 border border-slate-200 text-[10px] font-black uppercase tracking-wider text-slate-700 shadow-xs">
+                      Pilihan Anda
+                    </div>
+                  )}
+
                   {/* Emoji */}
                   <div className="transition-all duration-300">
                     {card.emoji(isHovered, isSelected)}
@@ -413,10 +474,20 @@ export const SatisfactionSurvey: React.FC = () => {
                 {/* Submit Button */}
                 <button
                   onClick={handleSubmitFeedback}
-                  disabled={!feedback.trim()}
+                  disabled={!feedback.trim() || isSubmitting}
                   className="w-full py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-200 disabled:text-slate-400 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition shadow-lg shadow-blue-600/20 disabled:shadow-none cursor-pointer"
                 >
-                  <Send className="w-4 h-4" /> Kirim Masukan
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Mengirim Masukan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-4 h-4" />
+                      <span>Kirim Masukan</span>
+                    </>
+                  )}
                 </button>
               </div>
             )}

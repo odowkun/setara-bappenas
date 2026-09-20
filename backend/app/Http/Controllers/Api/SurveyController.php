@@ -27,6 +27,7 @@ class SurveyController extends Controller
     {
         $surveys = Survey::query()
             ->select([
+                'id',
                 'ikm_score',
                 'u1_persyaratan',
                 'u2_prosedur',
@@ -41,6 +42,7 @@ class SurveyController extends Controller
             'code' => 200,
             'data' => [
                 'summary' => $this->buildSummary($surveys),
+                'stats' => $this->calculateStats($surveys),
             ],
         ]);
     }
@@ -62,6 +64,7 @@ class SurveyController extends Controller
             'data' => [
                 'questions' => $questions,
                 'services' => $services,
+                'stats' => $this->calculateStats(),
             ],
         ]);
     }
@@ -239,6 +242,123 @@ class SurveyController extends Controller
         ], 201);
     }
 
+    public function quickRate(Request $request)
+    {
+        $validated = $request->validate([
+            'rating' => 'required|string|in:sangat,cukup,kurang',
+            'feedback' => 'nullable|string|max:2000',
+        ]);
+
+        $rating = $validated['rating'];
+        $feedback = $validated['feedback'] ?? null;
+
+        if ($rating === 'sangat') {
+            $u1 = 5; $u2 = 5; $u3 = 5; $u4 = 5; $u5 = 5;
+            $ikmScore = 100.00;
+        } elseif ($rating === 'cukup') {
+            $u1 = 4; $u2 = 4; $u3 = 3; $u4 = 3; $u5 = 4;
+            $ikmScore = 72.00;
+        } else {
+            $u1 = 2; $u2 = 2; $u3 = 2; $u4 = 3; $u5 = 2;
+            $ikmScore = 44.00;
+        }
+
+        $survey = Survey::query()->create([
+            'nama_responden' => 'Pengunjung Website',
+            'email' => null,
+            'pekerjaan' => 'Masyarakat Umum',
+            'jenis_layanan' => 'Layanan Informasi Publik & Portal Website BAPPEDA',
+            'u1_persyaratan' => $u1,
+            'u2_prosedur' => $u2,
+            'u3_kecepatan' => $u3,
+            'u4_produk' => $u4,
+            'u5_sikap' => $u5,
+            'ikm_score' => $ikmScore,
+            'saran_masukan' => $feedback,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $newStats = $this->calculateStats();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 201,
+            'message' => 'Terima kasih! Penilaian kepuasan Anda berhasil dicatat secara riil.',
+            'data' => [
+                'id' => $survey->id,
+                'rating' => $rating,
+                'stats' => $newStats,
+            ],
+        ], 201);
+    }
+
+    public function calculateStats($surveys = null): array
+    {
+        if ($surveys === null) {
+            $surveys = Survey::query()->select('ikm_score')->get();
+        }
+
+        $total = $surveys->count();
+        if ($total === 0) {
+            return [
+                'sangat' => 0,
+                'cukup' => 0,
+                'kurang' => 0,
+                'total_responden' => 0,
+                'counts' => [
+                    'sangat' => 0,
+                    'cukup' => 0,
+                    'kurang' => 0,
+                ],
+            ];
+        }
+
+        $sangatCount = 0;
+        $cukupCount = 0;
+        $kurangCount = 0;
+
+        foreach ($surveys as $survey) {
+            $score = (float) $survey->ikm_score;
+            if ($score >= 80.00) {
+                $sangatCount++;
+            } elseif ($score >= 60.00) {
+                $cukupCount++;
+            } else {
+                $kurangCount++;
+            }
+        }
+
+        $sangatPercent = (int) round(($sangatCount / $total) * 100);
+        $cukupPercent = (int) round(($cukupCount / $total) * 100);
+        $kurangPercent = (int) round(($kurangCount / $total) * 100);
+
+        // Normalize sum to 100%
+        $sum = $sangatPercent + $cukupPercent + $kurangPercent;
+        if ($sum !== 100 && $total > 0) {
+            $diff = 100 - $sum;
+            if ($sangatPercent >= $cukupPercent && $sangatPercent >= $kurangPercent) {
+                $sangatPercent += $diff;
+            } elseif ($cukupPercent >= $kurangPercent) {
+                $cukupPercent += $diff;
+            } else {
+                $kurangPercent += $diff;
+            }
+        }
+
+        return [
+            'sangat' => $sangatPercent,
+            'cukup' => $cukupPercent,
+            'kurang' => $kurangPercent,
+            'total_responden' => $total,
+            'counts' => [
+                'sangat' => $sangatCount,
+                'cukup' => $cukupCount,
+                'kurang' => $kurangCount,
+            ],
+        ];
+    }
+
     private function buildSummary($surveys): array
     {
         $totalResponden = $surveys->count();
@@ -261,6 +381,7 @@ class SurveyController extends Controller
             'ikm_score' => round($avgScore, 2),
             'mutu_pelayanan' => $mutu,
             'kategori' => $kategori,
+            'stats' => $this->calculateStats($surveys),
             'u1_avg' => round($surveys->avg('u1_persyaratan') ?? 0, 2),
             'u2_avg' => round($surveys->avg('u2_prosedur') ?? 0, 2),
             'u3_avg' => round($surveys->avg('u3_kecepatan') ?? 0, 2),

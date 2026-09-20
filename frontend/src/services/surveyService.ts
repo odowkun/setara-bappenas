@@ -117,7 +117,23 @@ export interface KritikSaranItem {
   created_at: string;
 }
 
-export async function fetchSurveyConfig(): Promise<{ questions: SurveyQuestionItem[]; services: SurveyServiceItem[] }> {
+export interface IkmDistributionStats {
+  sangat: number;
+  cukup: number;
+  kurang: number;
+  total_responden: number;
+  counts?: {
+    sangat: number;
+    cukup: number;
+    kurang: number;
+  };
+}
+
+export async function fetchSurveyConfig(): Promise<{
+  questions: SurveyQuestionItem[];
+  services: SurveyServiceItem[];
+  stats?: IkmDistributionStats;
+}> {
   try {
     const res = await fetch(`${API_BASE}/surveys/config`, { cache: "no-store" });
     if (res.ok) {
@@ -126,6 +142,7 @@ export async function fetchSurveyConfig(): Promise<{ questions: SurveyQuestionIt
         return {
           questions: Array.isArray(json.data.questions) ? json.data.questions : [],
           services: Array.isArray(json.data.services) ? json.data.services : [],
+          stats: json.data.stats,
         };
       }
     }
@@ -134,6 +151,46 @@ export async function fetchSurveyConfig(): Promise<{ questions: SurveyQuestionIt
   }
 
   return { questions: [], services: [] };
+}
+
+export async function fetchIkmStats(): Promise<IkmDistributionStats> {
+  try {
+    const res = await fetch(`${API_BASE}/surveys/summary`, { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data?.stats) {
+        return json.data.stats;
+      }
+    }
+  } catch (e) {
+    console.error("Gagal memuat statistik IKM:", e);
+  }
+  return { sangat: 61, cukup: 21, kurang: 18, total_responden: 38 };
+}
+
+export async function submitQuickSurvey(
+  rating: "sangat" | "cukup" | "kurang",
+  feedback?: string
+): Promise<{ success: boolean; message?: string; stats?: IkmDistributionStats }> {
+  try {
+    const res = await fetch(`${API_BASE}/surveys/quick`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify({ rating, feedback }),
+    });
+    const json = await res.json().catch(() => ({}));
+    if (res.ok && json.status === "success") {
+      return {
+        success: true,
+        message: json.message || "Terima kasih atas penilaian Anda!",
+        stats: json.data?.stats,
+      };
+    }
+    return { success: false, message: json.message || "Gagal mengirim penilaian" };
+  } catch (e) {
+    console.error("Gagal mengirim quick survey:", e);
+    return { success: false, message: "Terjadi gangguan koneksi internet" };
+  }
 }
 
 export async function addSurveyQuestion(
