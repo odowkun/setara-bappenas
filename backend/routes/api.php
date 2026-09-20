@@ -209,6 +209,7 @@ Route::prefix('v1')->group(function () {
         ->name('surveys.services.destroy');
     Route::post('/surveys', [SurveyController::class, 'store'])
         ->middleware('throttle:10,1');
+    Route::get('/kritik/public', [KritikController::class, 'publicFeed']);
     Route::get('/kritik', [KritikController::class, 'index'])
         ->middleware(['auth:sanctum', 'permission:manage_kritik']);
     Route::post('/kritik', [KritikController::class, 'store'])

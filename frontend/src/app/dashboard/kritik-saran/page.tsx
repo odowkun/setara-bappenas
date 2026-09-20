@@ -27,6 +27,7 @@ import {
   SurveyServiceItem,
 } from "@/services/surveyService";
 import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 const API_BASE = API_BASE_URL;
 
@@ -318,6 +319,8 @@ export default function DashboardKritikSaranPage() {
                             className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
                               item.status === "Sudah Ditanggapi"
                                 ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                : item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
+                                ? "bg-sky-100 text-sky-900 border-sky-300"
                                 : "bg-amber-100 text-amber-900 border-amber-300"
                             }`}
                           >
@@ -330,7 +333,11 @@ export default function DashboardKritikSaranPage() {
                             onClick={() => {
                               setActiveKritikModal(item);
                               setCatatanBalasan(item.catatan_balasan || "");
-                              setStatusBalasan(item.status || "Sudah Ditanggapi");
+                              setStatusBalasan(
+                                item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
+                                  ? "Dalam Proses Tindak Lanjut"
+                                  : "Sudah Ditanggapi"
+                              );
                             }}
                             className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs transition cursor-pointer"
                           >
@@ -464,17 +471,17 @@ export default function DashboardKritikSaranPage() {
             <form onSubmit={handleSaveTanggapan} className="space-y-4">
               <div>
                 <label className="block text-xs font-black uppercase text-slate-700 mb-1.5">
-                  Status Tanggapan
+                  Status Tanggapan *
                 </label>
-                <select
+                <SearchableSelect
                   value={statusBalasan}
-                  onChange={(e) => setStatusBalasan(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
-                >
-                  <option value="Sudah Ditanggapi">Sudah Ditanggapi</option>
-                  <option value="Menunggu Tanggapan">Menunggu Tanggapan</option>
-                  <option value="Dalam Proses">Dalam Proses Tindak Lanjut</option>
-                </select>
+                  onChange={(val) => setStatusBalasan(String(val))}
+                  options={[
+                    { value: "Sudah Ditanggapi", label: "Sudah Ditanggapi" },
+                    { value: "Dalam Proses Tindak Lanjut", label: "Dalam Proses Tindak Lanjut" },
+                  ]}
+                  placeholder="-- Pilih Status Tanggapan --"
+                />
               </div>
 
               <div>

@@ -449,4 +449,39 @@ class SecurityRbacPrivacyTest extends TestCase
 
         return $documentId;
     }
+
+    public function test_public_kritik_endpoint_masks_name_and_strips_private_contacts(): void
+    {
+        $this->postJson('/api/v1/kritik', [
+            'nama' => 'Budi Santoso',
+            'email' => 'budi.santoso@example.com',
+            'telepon' => '081299998888',
+            'subjek' => 'Saran publik',
+            'pesan' => 'Mohon ditingkatkan transparansi data.',
+        ])->assertCreated();
+
+        $response = $this->getJson('/api/v1/kritik/public')->assertOk();
+        $response->assertJsonStructure([
+            'status',
+            'code',
+            'data' => [
+                '*' => [
+                    'id',
+                    'nama',
+                    'skpd_tujuan',
+                    'subjek',
+                    'pesan',
+                    'status',
+                    'catatan_balasan',
+                    'created_at',
+                ],
+            ],
+        ]);
+
+        $content = $response->getContent();
+        $this->assertStringContainsString('B*** S***', $content);
+        $this->assertStringNotContainsString('Budi Santoso', $content);
+        $this->assertStringNotContainsString('budi.santoso@example.com', $content);
+        $this->assertStringNotContainsString('081299998888', $content);
+    }
 }

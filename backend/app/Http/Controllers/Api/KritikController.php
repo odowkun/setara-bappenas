@@ -54,10 +54,54 @@ class KritikController extends Controller
         ], 201);
     }
 
+    public function publicFeed()
+    {
+        $kritiks = Kritik::query()
+            ->latest()
+            ->take(100)
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'nama' => $this->maskName($item->nama),
+                    'skpd_tujuan' => $item->skpd_tujuan,
+                    'subjek' => $item->subjek,
+                    'pesan' => $item->pesan,
+                    'status' => $item->status,
+                    'catatan_balasan' => $item->catatan_balasan,
+                    'created_at' => $item->created_at ? $item->created_at->toISOString() : null,
+                ];
+            });
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'data' => $kritiks,
+        ]);
+    }
+
+    private function maskName(?string $name): string
+    {
+        if (empty($name)) {
+            return 'Warga (***)';
+        }
+
+        $parts = preg_split('/\s+/', trim($name));
+        $maskedParts = array_map(function ($part) {
+            $len = mb_strlen($part);
+            if ($len <= 1) {
+                return $part . '***';
+            }
+            return mb_substr($part, 0, 1) . '***';
+        }, $parts);
+
+        return implode(' ', $maskedParts);
+    }
+
     public function updateTanggapan(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:Menunggu Tanggapan,Dalam Proses,Sudah Ditanggapi,Ditutup',
+            'status' => 'required|string|in:Menunggu Tanggapan,Dalam Proses,Dalam Proses Tindak Lanjut,Sudah Ditanggapi,Ditutup',
             'catatan_balasan' => 'nullable|string|max:5000',
         ]);
 

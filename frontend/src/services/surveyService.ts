@@ -257,3 +257,29 @@ export async function submitKritik(data: {
   }
   return false;
 }
+
+export interface PublicKritikItem {
+  id: number;
+  nama: string;
+  skpd_tujuan: string;
+  subjek: string;
+  pesan: string;
+  status: string;
+  catatan_balasan?: string;
+  created_at: string;
+}
+
+export async function fetchPublicKritikList(): Promise<PublicKritikItem[]> {
+  try {
+    const res = await fetch(`${API_BASE}/kritik/public`, { cache: "no-store" });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.data && Array.isArray(json.data)) {
+        return json.data;
+      }
+    }
+  } catch (e) {
+    console.warn("API fetch public kritik failed:", e);
+  }
+  return [];
+}

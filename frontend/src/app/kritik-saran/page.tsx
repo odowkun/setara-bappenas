@@ -16,8 +16,17 @@ import {
   ShieldCheck,
   Clock,
   Sparkles,
+  Search,
+  Filter,
+  Calendar,
 } from "lucide-react";
-import { submitKritik, fetchSurveyConfig } from "@/services/surveyService";
+import {
+  submitKritik,
+  fetchSurveyConfig,
+  fetchPublicKritikList,
+  PublicKritikItem,
+} from "@/services/surveyService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 import { toast } from "@/lib/swal";
 
 export default function KritikSaranPublicPage() {
@@ -32,17 +41,30 @@ export default function KritikSaranPublicPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
+  // Public List State
+  const [publicList, setPublicList] = useState<PublicKritikItem[]>([]);
+  const [loadingList, setLoadingList] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("Semua");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+
   useEffect(() => {
-    loadConfig();
+    loadInitialData();
   }, []);
 
-  const loadConfig = async () => {
-    const cfg = await fetchSurveyConfig();
+  const loadInitialData = async () => {
+    setLoadingList(true);
+    const [cfg, list] = await Promise.all([
+      fetchSurveyConfig(),
+      fetchPublicKritikList(),
+    ]);
+
     if (cfg.services && cfg.services.length > 0) {
       const names = cfg.services.map((s) => s.name);
       setSkpdList(names);
       setSkpdTujuan(names[0]);
     }
+    setPublicList(list);
+    setLoadingList(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,15 +88,64 @@ export default function KritikSaranPublicPage() {
     if (success) {
       toast.success("Kritik & Saran berhasil dikirimkan!");
       setSubmitted(true);
+      // Reload public feed
+      const updated = await fetchPublicKritikList();
+      setPublicList(updated);
     } else {
       toast.error("Gagal mengirimkan kritik & saran. Silakan coba lagi.");
     }
   };
 
+  const formatMaskedName = (name: string) => {
+    if (!name) return "Warga (***)";
+    if (name.includes("***")) return name;
+    const parts = name.trim().split(/\s+/);
+    return parts
+      .map((p) => (p.length > 1 ? `${p[0]}***` : `${p}***`))
+      .join(" ");
+  };
+
+  const formatDate = (isoStr: string) => {
+    if (!isoStr) return "-";
+    try {
+      const d = new Date(isoStr);
+      return d.toLocaleDateString("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      });
+    } catch {
+      return isoStr;
+    }
+  };
+
+  const filteredItems = publicList.filter((item) => {
+    const matchStatus =
+      statusFilter === "Semua"
+        ? true
+        : statusFilter === "Sudah Ditanggapi"
+        ? item.status === "Sudah Ditanggapi"
+        : item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses";
+
+    const matchSearch =
+      searchQuery.trim() === "" ||
+      item.subjek.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.pesan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.skpd_tujuan.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (item.catatan_balasan && item.catatan_balasan.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    return matchStatus && matchSearch;
+  });
+
+  const totalDitanggapi = publicList.filter((k) => k.status === "Sudah Ditanggapi").length;
+  const totalProses = publicList.filter(
+    (k) => k.status === "Dalam Proses Tindak Lanjut" || k.status === "Dalam Proses"
+  ).length;
+
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
-        {/* HERO TITLE BANNER & BREADCRUMB (SESUAI PEDOMAN HALAMAN BERITA & SURVEI KEPUASAN) */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
+        {/* HERO TITLE BANNER & BREADCRUMB */}
         <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
           {/* Breadcrumb */}
           <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500">
@@ -101,7 +172,7 @@ export default function KritikSaranPublicPage() {
           </div>
         </div>
 
-        {/* SINGLE UNIFIED HIGHLIGHT CARD CONTAINER */}
+        {/* STATS & HIGHLIGHT CARD CONTAINER */}
         <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-br from-blue-900 via-blue-950 to-slate-950 text-white shadow-xl relative overflow-hidden border border-blue-800/40">
           <div className="absolute right-4 top-4 opacity-5 pointer-events-none">
             <MessageSquare className="w-48 h-48 text-white" />
@@ -112,11 +183,13 @@ export default function KritikSaranPublicPage() {
             <div className="space-y-1.5 md:pr-6">
               <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-blue-300">
                 <MessageSquare className="w-4 h-4 text-blue-400 shrink-0" />
-                <span>SALURAN MASUKAN WARGA</span>
+                <span>TOTAL ASPIRASI WARGA</span>
               </div>
-              <div className="text-2xl font-black text-white">Respon Terbuka</div>
+              <div className="text-2xl sm:text-3xl font-black text-white">
+                {publicList.length} <span className="text-sm font-bold text-blue-300">Masukan</span>
+              </div>
               <p className="text-[11px] text-blue-200/80 font-medium pt-2 border-t border-blue-800/40">
-                Kritik &amp; masukan warga diteruskan ke pimpinan BAPPEDA
+                Aspirasi publik transparan &amp; terpantau
               </p>
             </div>
 
@@ -124,11 +197,13 @@ export default function KritikSaranPublicPage() {
             <div className="space-y-1.5 pt-4 md:pt-0 md:px-6">
               <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-emerald-400">
                 <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>KERAHASIAAN DIJAMIN</span>
+                <span>SUDAH DITANGGAPI RESMI</span>
               </div>
-              <div className="text-2xl font-black text-white">Aman &amp; Terverifikasi</div>
+              <div className="text-2xl sm:text-3xl font-black text-emerald-400">
+                {totalDitanggapi} <span className="text-sm font-bold text-emerald-300/80">Tindak Lanjut</span>
+              </div>
               <p className="text-[11px] text-blue-200/80 font-medium pt-2 border-t border-blue-800/40">
-                Identitas Anda terlindungi sesuai ketentuan informasi publik
+                Identitas pelapor disensor terlindungi (***)
               </p>
             </div>
 
@@ -136,11 +211,13 @@ export default function KritikSaranPublicPage() {
             <div className="space-y-1.5 pt-4 md:pt-0 md:pl-6">
               <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-widest text-amber-300">
                 <Clock className="w-4 h-4 text-amber-400 shrink-0" />
-                <span>TINDAK LANJUT CEPAT</span>
+                <span>DALAM PROSES TINDAK LANJUT</span>
               </div>
-              <div className="text-2xl font-black text-white">Responsif 24/7</div>
+              <div className="text-2xl sm:text-3xl font-black text-amber-300">
+                {totalProses} <span className="text-sm font-bold text-amber-200/80">Diproses</span>
+              </div>
               <p className="text-[11px] text-blue-200/80 font-medium pt-2 border-t border-blue-800/40">
-                Diproses oleh tim Sekretariat &amp; Bidang Terkait
+                Koordinasi teknis oleh pimpinan &amp; bidang
               </p>
             </div>
           </div>
@@ -217,20 +294,13 @@ export default function KritikSaranPublicPage() {
                 <label className="block text-xs font-black uppercase text-slate-700 mb-1.5">
                   Bidang / Unit Tujuan *
                 </label>
-                <div className="relative">
-                  <select
-                    value={skpdTujuan}
-                    onChange={(e) => setSkpdTujuan(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition shadow-2xs cursor-pointer appearance-none"
-                  >
-                    {skpdList.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                </div>
+                <SearchableSelect
+                  options={skpdList.map((s) => ({ value: s, label: s }))}
+                  value={skpdTujuan}
+                  onChange={(val) => setSkpdTujuan(String(val))}
+                  placeholder="-- Pilih Bidang / Unit Tujuan --"
+                  searchPlaceholder="Cari bidang atau unit tujuan BAPPEDA..."
+                />
               </div>
             </div>
 
@@ -306,7 +376,182 @@ export default function KritikSaranPublicPage() {
             </div>
           </div>
         )}
+
+        {/* PUBLIC LIST: TRANSPARANSI KRITIK, SARAN & TANGGAPAN RESMI BAPPEDA */}
+        <div className="space-y-6 pt-6 border-t border-slate-200">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-black text-[11px] uppercase tracking-wider border border-blue-200/60">
+                <Sparkles className="w-3.5 h-3.5 text-blue-600" />
+                <span>TRANSPARANSI KETERBUKAAN INFORMASI PUBLIK</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                Aspirasi Warga &amp; Tanggapan BAPPEDA
+              </h2>
+              <p className="text-xs text-slate-500 font-medium">
+                Daftar masukan warga beserta tanggapan tindak lanjut resmi. Identitas pelapor dilindungi dengan sensor nama (<code className="text-blue-700 font-black">***</code>).
+              </p>
+            </div>
+
+            {/* Filter Tabs */}
+            <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Semua")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  statusFilter === "Semua"
+                    ? "bg-white text-slate-900 shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Semua ({publicList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Sudah Ditanggapi")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  statusFilter === "Sudah Ditanggapi"
+                    ? "bg-emerald-600 text-white shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Sudah Ditanggapi ({totalDitanggapi})
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusFilter("Dalam Proses")}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                  statusFilter === "Dalam Proses"
+                    ? "bg-blue-600 text-white shadow-2xs"
+                    : "text-slate-600 hover:text-slate-900"
+                }`}
+              >
+                Dalam Proses ({totalProses})
+              </button>
+            </div>
+          </div>
+
+          {/* Search Box */}
+          <div className="relative max-w-md">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari berdasarkan subjek, pesan, atau bidang..."
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
+            />
+          </div>
+
+          {/* Cards List */}
+          {loadingList ? (
+            <div className="p-12 text-center text-slate-500 font-bold text-xs bg-slate-50 rounded-3xl border border-slate-200">
+              Memuat data aspirasi publik...
+            </div>
+          ) : filteredItems.length === 0 ? (
+            <div className="p-12 text-center text-slate-500 font-bold text-xs bg-slate-50 rounded-3xl border border-slate-200 space-y-1">
+              <MessageSquare className="w-8 h-8 text-slate-300 mx-auto" />
+              <div>Belum ada data kritik &amp; saran pada kategori ini.</div>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              {filteredItems.map((item) => {
+                const isDitanggapi = item.status === "Sudah Ditanggapi";
+                const isProses =
+                  item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses";
+
+                return (
+                  <div
+                    key={item.id}
+                    className="p-6 rounded-3xl bg-white border border-slate-200/90 shadow-2xs hover:border-blue-200 transition space-y-4"
+                  >
+                    {/* Card Top Meta */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-100">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* Censored Name */}
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-100 border border-slate-200 text-slate-800 font-black text-xs">
+                          <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                          <span>{formatMaskedName(item.nama)}</span>
+                        </div>
+
+                        {/* SKPD / Unit Badge */}
+                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-bold text-[11px] border border-blue-100">
+                          <Building2 className="w-3 h-3 shrink-0" />
+                          <span>{item.skpd_tujuan}</span>
+                        </div>
+
+                        {/* Date */}
+                        <div className="inline-flex items-center gap-1 text-[11px] text-slate-400 font-semibold">
+                          <Calendar className="w-3 h-3" />
+                          <span>{formatDate(item.created_at)}</span>
+                        </div>
+                      </div>
+
+                      {/* Status Badge */}
+                      <div className="shrink-0">
+                        {isDitanggapi ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-black">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>Sudah Ditanggapi</span>
+                          </span>
+                        ) : isProses ? (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-sky-50 text-sky-800 border border-sky-200 text-[11px] font-black">
+                            <Clock className="w-3.5 h-3.5 text-sky-600" />
+                            <span>Dalam Proses Tindak Lanjut</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[11px] font-black">
+                            <Clock className="w-3.5 h-3.5 text-amber-600" />
+                            <span>Menunggu Tanggapan</span>
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Subjek & Pesan Warga */}
+                    <div className="space-y-1.5">
+                      <h3 className="text-base font-black text-slate-900 leading-snug">
+                        {item.subjek}
+                      </h3>
+                      <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 text-xs font-medium text-slate-700 leading-relaxed">
+                        "{item.pesan}"
+                      </div>
+                    </div>
+
+                    {/* OFFICIAL RESPONSE BOX */}
+                    {item.catatan_balasan ? (
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 via-indigo-50/40 to-blue-50/90 border border-blue-200/80 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-blue-600 shrink-0" />
+                            <span className="text-xs font-black uppercase tracking-wider text-blue-950">
+                              Tanggapan Resmi BAPPEDA Kabupaten Halmahera Utara
+                            </span>
+                          </div>
+                          <span className="px-2.5 py-0.5 rounded-full bg-blue-600 text-white font-black text-[10px] shrink-0">
+                            Resmi
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-slate-800 italic leading-relaxed pt-1">
+                          "{item.catatan_balasan}"
+                        </p>
+                      </div>
+                    ) : isProses ? (
+                      <div className="p-3.5 rounded-xl bg-sky-50/70 border border-sky-200 text-xs font-semibold text-sky-900 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-sky-600 shrink-0" />
+                        <span>
+                          Aspirasi sedang dalam proses kajian teknis dan tindak lanjut oleh unit kerja BAPPEDA terkait.
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
 }
+
