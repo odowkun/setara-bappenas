@@ -526,41 +526,41 @@ export function DocumentQuickMenu({
               ref={menuRef}
               data-testid="document-quick-menu"
               aria-label="Informasi resmi dan kategori dokumen publik"
-              className={`pointer-events-auto w-full rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-2xl shadow-blue-950/20 backdrop-blur-2xl flex items-center justify-between overflow-hidden relative min-h-[54px] sm:min-h-[62px] ${className}`}
+              className={`pointer-events-auto w-full rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-2 sm:p-2 shadow-2xl shadow-blue-950/20 backdrop-blur-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 overflow-hidden relative sm:min-h-[62px] ${className}`}
             >
-              {/* Left: Running Text (Marquee Ticker) */}
+              {/* Top Line (Mobile) / Left Side (Desktop): Running Text (Marquee Ticker) */}
               <div
-                className={`flex items-center gap-2 sm:gap-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${
-                  categoriesRevealed ? "flex-1 mr-1 sm:mr-3" : "w-full"
+                className={`w-full sm:flex-1 flex items-center gap-2 sm:gap-3 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] min-w-0 ${
+                  categoriesRevealed ? "sm:mr-3" : "w-full"
                 }`}
               >
                 {/* Sleek Live Indicator without "INFO HALUT" text */}
                 <div
-                  className="shrink-0 flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-blue-600/10 border border-blue-500/25 text-blue-600 shadow-sm select-none"
+                  className="shrink-0 flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-blue-600/10 border border-blue-500/25 text-blue-600 shadow-xs select-none"
                   title="Warta Terkini BAPPEDA"
                 >
-                  <span className="relative flex h-2.5 w-2.5">
+                  <span className="relative flex h-2 sm:h-2.5 w-2 sm:w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-600" />
+                    <span className="relative inline-flex rounded-full h-2 sm:h-2.5 w-2 sm:w-2.5 bg-blue-600" />
                   </span>
                 </div>
 
                 {/* Continuous Marquee Ticker Track */}
-                <div className="relative flex-1 overflow-hidden mask-fade-edges py-1">
-                  <div className="animate-bappeda-marquee flex items-center gap-8 whitespace-nowrap will-change-transform">
+                <div className="relative flex-1 overflow-hidden mask-fade-edges py-0.5 sm:py-1">
+                  <div className="animate-bappeda-marquee flex items-center gap-6 sm:gap-8 whitespace-nowrap will-change-transform">
                     {doubledTicker.map((item, idx) => (
                       <Link
                         key={`${item.id}-${idx}`}
                         href={item.href}
-                        className="group inline-flex items-center gap-2 text-xs sm:text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors"
+                        className="group inline-flex items-center gap-1.5 sm:gap-2 text-[11px] sm:text-sm font-semibold text-slate-700 hover:text-blue-700 transition-colors"
                       >
-                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 group-hover:bg-blue-600 group-hover:text-white transition">
+                        <span className="text-[9px] sm:text-[10px] font-black uppercase px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200/60 group-hover:bg-blue-600 group-hover:text-white transition">
                           {item.tag}
                         </span>
                         <span className="hover:underline line-clamp-1">
                           {item.title}
                         </span>
-                        <span className="text-amber-500 font-black ml-4 select-none">
+                        <span className="text-amber-500 font-black ml-3 sm:ml-4 select-none">
                           ✦
                         </span>
                       </Link>
@@ -569,19 +569,20 @@ export function DocumentQuickMenu({
                 </div>
               </div>
 
-              {/* Right: Kategori Dokumen (With smooth shrinking-left entrance transition) */}
+              {/* Bottom Line (Mobile) / Right Side (Desktop): Kategori Dokumen */}
               <div
-                className={`transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-hidden shrink-0 flex items-center ${
+                className={`w-full sm:w-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 flex flex-col sm:flex-row items-center ${
                   categoriesRevealed
-                    ? "max-w-[760px] opacity-100 translate-x-0 scale-100 pointer-events-auto"
-                    : "max-w-0 opacity-0 translate-x-10 scale-95 pointer-events-none"
+                    ? "max-h-20 sm:max-h-none opacity-100 translate-y-0 sm:translate-x-0 scale-100 pointer-events-auto"
+                    : "max-h-0 sm:max-h-none sm:max-w-0 opacity-0 translate-y-2 sm:translate-y-0 sm:translate-x-10 scale-95 pointer-events-none"
                 }`}
               >
-                {/* Subtle Vertical Divider */}
+                {/* Subtle Divider: Horizontal on mobile, vertical on desktop */}
+                <div className="w-full sm:hidden h-px bg-slate-200/70 my-0.5" />
                 <div className="hidden md:block h-7 w-px bg-slate-200/80 mr-1.5 shrink-0" />
 
-                {/* Category Pills */}
-                <div className="flex items-center gap-1 sm:gap-1.5 shrink-0 overflow-x-auto no-scrollbar py-0.5">
+                {/* Category Pills (4-column grid on mobile, flex on desktop) */}
+                <div className="grid grid-cols-4 gap-1 w-full sm:flex sm:items-center sm:gap-1.5 sm:w-auto overflow-x-auto no-scrollbar py-0.5">
                   {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) => {
                     const meta = CATEGORY_META[code] || {
                       icon3d: "/images/3dicons/file-text-dynamic-color.png",
@@ -592,26 +593,26 @@ export function DocumentQuickMenu({
                       <Link
                         key={code}
                         href={`/dokumen?jenis=${code}`}
-                        className="group relative flex items-center gap-2 sm:gap-2.5 h-10 sm:h-11 px-2.5 sm:px-3 rounded-xl sm:rounded-full cursor-pointer outline-none transition-all duration-200 hover:bg-blue-50/80 hover:text-blue-900 text-slate-700 active:scale-95 select-none shrink-0"
+                        className="group relative flex items-center justify-center gap-1 sm:gap-2.5 h-8.5 sm:h-11 px-1 sm:px-3 rounded-xl sm:rounded-full cursor-pointer outline-none transition-all duration-200 hover:bg-blue-50/80 hover:text-blue-900 text-slate-700 active:scale-95 select-none"
                         title={meta.description}
                       >
-                        <span className="flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-blue-50/70 group-hover:bg-blue-100/80 transition-all duration-200 shadow-2xs">
+                        <span className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-blue-50/70 group-hover:bg-blue-100/80 transition-all duration-200 shadow-2xs">
                           <img
                             src={meta.icon3d}
                             alt={label}
                             width={22}
                             height={22}
                             style={{
-                              width: 22,
-                              height: 22,
+                              width: 18,
+                              height: 18,
                               maxWidth: 22,
                               maxHeight: 22,
                             }}
-                            className="h-5 w-5 sm:h-5.5 sm:w-5.5 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
+                            className="h-4 w-4 sm:h-5.5 sm:w-5.5 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
                             loading="lazy"
                           />
                         </span>
-                        <span className="whitespace-nowrap font-black tracking-tight text-xs sm:text-xs text-slate-700 group-hover:text-blue-950 transition-colors">
+                        <span className="whitespace-nowrap font-black tracking-tight text-[11px] sm:text-xs text-slate-700 group-hover:text-blue-950 transition-colors">
                           {meta.shortLabel}
                         </span>
                       </Link>

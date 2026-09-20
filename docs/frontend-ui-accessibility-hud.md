@@ -218,6 +218,11 @@ Status pembaruan: 21 September 2026.
    - Saat awal render (0–1.3 detik), running text membentang penuh 100% (`w-full`) hingga ke ujung kanan bar.
    - Setelah jeda ~1.3 detik, running text mengecil dengan transisi fluid `transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]` ke arah kiri (`flex-1 min-w-0`), memberi ruang bagi Kategori Dokumen (RPJPD, RPJMD, RKPD, Lainnya) yang meluncur dan mengembang mulus dari kanan ke kiri (`max-w-0` &rarr; `max-w-[760px]`).
    - Running text dilengkapi fitur auto-pause saat di-hover pengguna (`hover:[animation-play-state:paused]`) untuk kenyamanan membaca.
+5. **Desain Responsif Mobile 2 Baris (2-Line Responsive Dock)**:
+   - Pada layar desktop/tablet (`sm:` ke atas), floating dock tetap tampil dalam 1 baris ramping yang menyatukan running text (sisi kiri) dan pills kategori dokumen (sisi kanan).
+   - Pada layar smartphone/mobile (`< sm`), dock otomatis bertransformasi menjadi 2 baris terpisah secara rapi:
+     - **Baris Atas (Line 1)**: Teks berjalan (running marquee ticker) dengan live pulsing dot membentang penuh selebar layar (`w-full`), sehingga warta/informasi terkini dapat dibaca jelas tanpa terpotong atau terdesak.
+     - **Baris Bawah (Line 2)**: 4 tombol dokumen publik (`RPJPD`, `RPJMD`, `RKPD`, `Lainnya`) tersusun presisi dalam 4 kolom (`grid grid-cols-4`) lengkap dengan visual ikon 3D dan label tebal, dipisahkan pembatas halus (`border-t border-slate-200/70`).
 
 ### B. Resolusi Bug Floating Menghilang Saat Di-scroll (Safari & Nested Overflow Fix)
 
