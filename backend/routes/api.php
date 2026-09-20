@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PejabatController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\ProyekDetailController;
+use App\Http\Controllers\Api\RunningTextController;
 use App\Http\Controllers\Api\SpatialLayerController;
 use App\Http\Controllers\Api\SurveyController;
 use App\Http\Controllers\Api\TautanOpdController;
@@ -277,6 +278,23 @@ Route::prefix('v1')->group(function () {
     Route::delete('/agenda-categories/{agendaCategory}', [ContentTaxonomyController::class, 'destroyAgendaCategory'])
         ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
         ->name('agenda-categories.destroy');
+
+    // Running Text (Teks Berjalan)
+    Route::get('/running-texts', [RunningTextController::class, 'index']);
+    Route::get('/admin/running-texts', [RunningTextController::class, 'adminIndex'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman']);
+    Route::post('/admin/running-texts', [RunningTextController::class, 'store'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
+        ->name('running-texts.store');
+    Route::put('/admin/running-texts/{id}', [RunningTextController::class, 'update'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
+        ->name('running-texts.update');
+    Route::patch('/admin/running-texts/{id}/toggle', [RunningTextController::class, 'toggle'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
+        ->name('running-texts.toggle');
+    Route::delete('/admin/running-texts/{id}', [RunningTextController::class, 'destroy'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
+        ->name('running-texts.destroy');
 
     // Pengumuman dan tipe pengumuman.
     Route::get('/pengumuman', [AnnouncementController::class, 'index']);

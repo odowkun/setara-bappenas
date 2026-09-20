@@ -88,15 +88,16 @@ class Document extends Model
     {
         return $query
             ->where('is_public', true)
-            ->where('classification', 'public')
-            ->where('governance_status', 'approved')
-            ->where('storage_status', 'private')
-            ->whereHas('currentVersion', function (Builder $versionQuery): void {
-                $versionQuery
-                    ->where('status', 'approved')
-                    ->where('integrity_status', 'valid');
+            ->where(function ($q) {
+                $q->where('classification', 'public')
+                  ->orWhereNull('classification');
+            })
+            ->where(function ($q) {
+                $q->where('governance_status', 'approved')
+                  ->orWhereNull('governance_status');
             });
     }
+
 
     public function currentVersion(): BelongsTo
     {

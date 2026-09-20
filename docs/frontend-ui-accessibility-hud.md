@@ -207,12 +207,15 @@ Status pembaruan: 21 September 2026.
 ### A. Latar Belakang & Persyaratan Desain
 1. **Penghapusan Tombol Menu Aksesibilitas**:
    Tombol floating "Menu Aksesibilitas" pada sisi kiri bawah dinonaktifkan dari tampilan UI publik agar tampilan bersih dan tidak menghalangi viewport pengguna.
-2. **Penyelarasan Lebar Penuh Setara Navbar**:
-   Area kontrol cepat dokumen diperluas dari `max-w-4xl` menjadi `max-w-7xl mx-auto w-full` agar selaras secara visual dengan lebar Navbar utama.
-3. **Running Text (Marquee Ticker) Terintegrasi**:
-   Sisi kiri menampung teks berjalan kontinu (marquee) dengan badge `INFO HALUT` dan sinkronisasi pengumuman resmi dari `officialContentService.getAnnouncements()`.
+2. **Penyelarasan Lebar Penuh Setara Navbar & Floating Bar di Bagian Bawah Layar**:
+   Komponen `DocumentQuickMenu.tsx` dijadikan floating bar mengambang di bawah layar (`fixed bottom-3 sm:bottom-6 left-0 right-0 max-w-7xl mx-auto px-3 sm:px-6 z-[60]`) dengan backdrop blur (`bg-white/95 backdrop-blur-2xl shadow-2xl`).
+3. **Running Text Dinamis & Penghapusan Teks "INFO HALUT"**:
+   - Teks "INFO HALUT" ditiadakan, diganti dengan live pulsing indicator minimalis.
+   - Konten teks berjalan bersifat dinamis, diambil via `runningTextService.getPublicItems()` dari endpoint `GET /api/v1/running-texts`.
+   - Modul pengelolaan teks berjalan tersedia di Dashboard Admin (`/dashboard/running-text`) yang terletak persis di bawah menu **Agenda Kerja & Kalender**.
 4. **Efek Animasi Transisi Masuk ("Mengecil ke Kiri")**:
    - Saat awal render (0–1.3 detik), running text membentang penuh 100% (`w-full`) hingga ke ujung kanan bar.
    - Setelah jeda ~1.3 detik, running text mengecil dengan transisi fluid `transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]` ke arah kiri (`flex-1 min-w-0`), memberi ruang bagi Kategori Dokumen (RPJPD, RPJMD, RKPD, Lainnya) yang meluncur dan mengembang mulus dari kanan ke kiri (`max-w-0` &rarr; `max-w-[760px]`).
    - Running text dilengkapi fitur auto-pause saat di-hover pengguna (`hover:[animation-play-state:paused]`) untuk kenyamanan membaca.
+
 

@@ -40,6 +40,7 @@ import {
   Shield,
   Target,
   Printer,
+  ScrollText,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -98,6 +99,7 @@ const menuItems: MenuItem[] = [
       { title: "Pengumuman Resmi", href: "/dashboard/pengumuman", icon: Megaphone, permissions: ["manage_pengumuman"] },
       { title: "Galeri Foto & Video", href: "/dashboard/galeri", icon: Image, permissions: ["manage_galeri"] },
       { title: "Agenda Kerja & Kalender", href: "/dashboard/agenda", icon: Calendar, permissions: ["manage_pengumuman"] },
+      { title: "Teks Berjalan (Running Text)", href: "/dashboard/running-text", icon: ScrollText, permissions: ["manage_pengumuman"] },
     ],
   },
   {
