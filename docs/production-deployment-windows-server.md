@@ -17,6 +17,7 @@ Untuk menjamin sistem lain di server tidak terganggu, seluruh port standar digan
 > [!NOTE]
 > **Aturan Routing Berkas Publik & Uploads**:
 > Cloudflare Tunnel hanya meneruskan path `/api/*` dan `/storage/*` ke port `8100` (Laravel). Oleh karena itu, seluruh upload publik (dokumen, media galeri, dan logo tautan OPD) WAJIB disimpan di disk `public` (`storage/app/public/...`) dan diakses melalui path `/storage/...`.
+> Untuk mengatasi limitasi NTFS symlink di Windows Server 2016, berkas `/storage/*` dilayani langsung via `backend/server.php` dan fallback `backend/routes/web.php` langsung dari direktori fisik `storage/app/public/`.
 
 ---
 

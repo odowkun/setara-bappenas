@@ -44,6 +44,7 @@ export default function TautanOpdDashboardPage() {
   const [dragActive, setDragActive] = useState(false);
   const [editingItem, setEditingItem] = useState<TautanOpdItem | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
 
   const canManage = hasPermission("manage_tautan_opd");
 
@@ -67,6 +68,7 @@ export default function TautanOpdDashboardPage() {
   const resetForm = () => {
     setEditingItem(null);
     setForm(emptyForm);
+    setLocalPreviewUrl(null);
   };
 
   const handleCreateNew = () => {
@@ -78,6 +80,7 @@ export default function TautanOpdDashboardPage() {
 
   const startEdit = (item: TautanOpdItem) => {
     setEditingItem(item);
+    setLocalPreviewUrl(null);
     setForm({
       name: item.name,
       logoUrl: item.logoUrl,
@@ -93,12 +96,21 @@ export default function TautanOpdDashboardPage() {
   const uploadLogoFile = async (file?: File) => {
     if (!file) return;
 
+    // Instant local preview in browser
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      setLocalPreviewUrl(objectUrl);
+    } catch {
+      // ignore
+    }
+
     setUploading(true);
     const logoUrl = await tautanOpdService.uploadLogo(file);
     setUploading(false);
 
     if (!logoUrl) {
       toast.error("Logo OPD gagal diunggah.");
+      setLocalPreviewUrl(null);
       return;
     }
 
@@ -260,12 +272,13 @@ export default function TautanOpdDashboardPage() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-700">Logo OPD *</label>
-                  {form.logoUrl && (
+                  {(form.logoUrl || localPreviewUrl) && (
                     <button
                       type="button"
                       onClick={(e) => {
                         e.preventDefault();
                         setForm((prev) => ({ ...prev, logoUrl: "" }));
+                        setLocalPreviewUrl(null);
                       }}
                       className="text-[10px] font-bold text-rose-600 hover:underline"
                     >
@@ -291,9 +304,16 @@ export default function TautanOpdDashboardPage() {
                   }`}
                 >
                   <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden shrink-0">
-                    {form.logoUrl ? (
+                    {localPreviewUrl || form.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={form.logoUrl} alt="Preview logo OPD" className="w-full h-full object-contain p-1.5" />
+                      <img
+                        src={localPreviewUrl || form.logoUrl}
+                        alt="Preview logo OPD"
+                        className="w-full h-full object-contain p-1.5"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
+                        }}
+                      />
                     ) : uploading ? (
                       <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     ) : (
@@ -307,7 +327,7 @@ export default function TautanOpdDashboardPage() {
                       ) : (
                         <Upload className="w-3.5 h-3.5 text-blue-600" />
                       )}
-                      <span>{uploading ? "Mengunggah..." : form.logoUrl ? "Ganti Berkas Logo" : "Pilih / Tarik Logo"}</span>
+                      <span>{uploading ? "Mengunggah..." : (localPreviewUrl || form.logoUrl) ? "Ganti Berkas Logo" : "Pilih / Tarik Logo"}</span>
                     </span>
                     <p className="text-[10px] font-medium text-slate-400 truncate">JPG, PNG, WEBP, SVG maks 10MB</p>
                   </div>
@@ -412,7 +432,14 @@ export default function TautanOpdDashboardPage() {
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-16 h-16 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img src={item.logoUrl} alt={item.name} className="w-full h-full object-contain p-2" />
+                        <img
+                          src={item.logoUrl}
+                          alt={item.name}
+                          className="w-full h-full object-contain p-2"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
+                          }}
+                        />
                       </div>
                       <div className="min-w-0">
                         <h3 className="text-sm font-black text-slate-900 truncate">{item.name}</h3>

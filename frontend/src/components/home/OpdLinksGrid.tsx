@@ -48,7 +48,14 @@ export const OpdLinksGrid: React.FC = () => {
                     </span>
                     <span className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={item.logoUrl} alt={item.name} className="w-full h-full object-contain p-2" />
+                      <img
+                        src={item.logoUrl}
+                        alt={item.name}
+                        className="w-full h-full object-contain p-2"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
+                        }}
+                      />
                     </span>
                     <span className="text-sm sm:text-base font-black text-slate-900 text-center leading-tight">
                       {item.name}

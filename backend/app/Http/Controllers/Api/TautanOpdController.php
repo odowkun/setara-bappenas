@@ -98,7 +98,7 @@ class TautanOpdController extends Controller
         if (! is_dir($publicStorageDir)) {
             @mkdir($publicStorageDir, 0755, true);
         }
-        if (is_dir($publicStorageDir) && ! is_link(public_path('storage'))) {
+        if (is_dir($publicStorageDir)) {
             @copy($targetDir.DIRECTORY_SEPARATOR.$filename, $publicStorageDir.DIRECTORY_SEPARATOR.$filename);
         }
 
