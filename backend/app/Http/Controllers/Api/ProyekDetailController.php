@@ -76,7 +76,21 @@ class ProyekDetailController extends Controller
         }
 
         if ($request->has('status_progres') && $request->status_progres !== 'semua') {
-            $query->where('status_progres', $request->status_progres);
+            if ($request->status_progres === 'selesai' || $request->status_progres === '100') {
+                $query->where(function ($q) {
+                    $q->where('status_progres', 'selesai')
+                      ->orWhere('persentase_progres', '>=', 100);
+                });
+            } else {
+                $query->where('status_progres', $request->status_progres);
+            }
+        }
+
+        if ($request->boolean('only_completed') || $request->input('min_progress') == 100) {
+            $query->where(function ($q) {
+                $q->where('status_progres', 'selesai')
+                  ->orWhere('persentase_progres', '>=', 100);
+            });
         }
     }
 

@@ -50,13 +50,15 @@ export const proyekService = {
   getProjects: async (
     documentId?: string | number,
     bidang?: string,
-    adminMode = false
+    adminMode = false,
+    statusProgres?: string
   ): Promise<ProyekDetail[]> => {
     try {
       let endpoint = adminMode ? "/admin/proyek-details" : "/proyek-details";
       const params = new URLSearchParams();
       if (documentId) params.append('document_id', String(documentId));
       if (bidang && bidang !== 'semua') params.append('bidang', bidang);
+      if (statusProgres && statusProgres !== 'semua') params.append('status_progres', statusProgres);
       if (params.toString()) endpoint += `?${params.toString()}`;
 
       const res = adminMode

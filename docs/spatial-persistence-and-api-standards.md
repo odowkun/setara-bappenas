@@ -206,5 +206,37 @@ Penghapusan permanen (`DELETE /api/v1/documents/{id}?permanent=1`) mengeksekusi 
   - **Arsipkan** (`Archive` icon): Menarik dokumen dari publikasi tetapi mempertahankan versi, hash sha256, dan riwayat audit.
   - **Hapus Permanen** (`Trash2` icon): Menghapus total dokumen induk beserta seluruh data turunan proyek dan lampiran.
 
+---
 
+## 11. Standar Filter Publikasi Proyek Halaman Beranda (100% Progres Sektoral Selesai)
 
+Status implementasi: 21 September 2026.
+
+### A. Latar Belakang & Persyaratan Bisnis
+Halaman beranda portal publik BAPPEDA Kabupaten Halmahera Utara difokuskan untuk menyajikan capaian hasil pembangunan daerah yang telah terealisasi penuh (selesai 100%). Proyek yang masih dalam tahap awal (`belum_mulai`), proses tender, atau masih dalam pengerjaan konstruksi menengah (`dalam_proses` < 100%) tetap tersimpan dan dapat dipantau pada modul internal Monev (`/dashboard/update-progres`) atau peta spasial lengkap (`/gis-peta`), namun tidak ditampilkan pada halaman muka beranda.
+
+### B. Implementasi Backend & API Endpoint
+1. **Filter Fleksibel `status_progres` pada `ProyekDetailController.php`**:
+   - Parameter `status_progres=selesai` atau `status_progres=100` memfilter query database:
+     ```php
+     $query->where(function ($q) {
+         $q->where('status_progres', 'selesai')
+           ->orWhere('persentase_progres', '>=', 100);
+     });
+     ```
+   - Mendukung juga parameter boolean `only_completed=1` atau `min_progress=100`.
+
+### C. Integrasi Frontend `GeospatialSection.tsx`
+1. **Multi-layer Filtering (Server-side & Client-side)**:
+   - Memanggil `proyekService.getProjects(undefined, undefined, false, "selesai")`.
+   - Melakukan validasi protektif client-side:
+     ```typescript
+     const completedOnly = (projects || []).filter(
+       (p) => Number(p.persentase_progres) === 100 || p.status_progres === "selesai"
+     );
+     ```
+2. **Sinkronisasi Metrik Ringkasan Wilayah**:
+   - **Total Proyek**: Menghitung secara eksklusif jumlah lokasi proyek yang telah selesai 100%.
+   - **Total Pagu**: Akumulasi pagu anggaran hanya dari proyek yang selesai 100%.
+   - **Sebaran Wilayah**: Daftar kecamatan dihitung dari lokasi proyek yang 100% selesai.
+   - **Marker Peta Spasial & Daftar Kanan**: Hanya merender titik marker dan item direktori proyek selesai 100%.

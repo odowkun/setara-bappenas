@@ -72,14 +72,21 @@ export const GeospatialSection: React.FC = () => {
 
   React.useEffect(() => {
     Promise.all([
-      proyekService.getProjects(),
+      proyekService.getProjects(undefined, undefined, false, "selesai"),
       proyekService.getBufferAnalyses(),
       officialContentService.getAnnouncements().catch(() => []),
     ]).then(([projects, analyses, announcements]) => {
-      setRawProjects(projects);
+      // Halaman Beranda: Hanya menampilkan proyek dengan progres sektoral 100% (status selesai)
+      const completedOnly = (projects || []).filter(
+        (p) =>
+          Number(p.persentase_progres) === 100 ||
+          p.status_progres === "selesai"
+      );
+      setRawProjects(completedOnly);
       setGeoAnalyses(analyses);
       const pinned =
-        (Array.isArray(announcements) && announcements.find((a) => a.isImportant)) ||
+        (Array.isArray(announcements) &&
+          announcements.find((a) => a.isImportant)) ||
         (Array.isArray(announcements) && announcements[0]) ||
         null;
       setPinnedAnnouncement(pinned);
