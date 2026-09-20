@@ -8,11 +8,12 @@ Halaman Ikhtisar Dashboard (`/dashboard`) dirancang sebagai Executive Control Ce
 ## 2. Struktur Visual & Metrik
 Dashboard terbagi dalam beberapa komponen utama:
 
-### A. 4 Kartu Metrik Ringkasan Utama
+### A. 5 Kartu Metrik Ringkasan Utama
 1. **Pengguna Sistem**: Total pengguna terdaftar di seluruh tingkatan peran (SuperAdmin, Admin Umum, Admin Bidang).
 2. **Dokumen Perencanaan**: Total dokumen induk (RPJPD, RPJMD, RKPD, Data Sektoral, dll.) beserta akumulasi unduhan warga secara publik.
 3. **Proyek Geotagging**: Jumlah titik proyek riil di lapangan, rasio serapan anggaran (total realisasi / total pagu), serta tautan ke pemantauan proyek sektoral.
 4. **Kepuasan Warga (IKM)**: Nilai Indeks Kepuasan Masyarakat dari survei online beserta predikat mutu pelayanan publik (A - Sangat Baik).
+5. **Kritik & Saran Warga**: Total kritik & saran masuk dari masyarakat dilengkapi badge indikator jumlah aduan yang **Belum Dijawab** (menunggu tindak lanjut) serta tautan langsung ke halaman manajemen tanggapan. Pada Admin Sidebar juga terpasang counter badge notifikasi otomatis.
 
 ### B. Baris Grafik 1 (Makro APBD & Geotagging Operasional)
 - **Kiri (7 Kolom)**: Grafik Batang Kumulatif Realisasi Keuangan vs. Fisik Bulanan APBD (Januari - Juli). Dilengkapi indikator tooltip dan status kuartal aktif.
@@ -56,7 +57,10 @@ SuperAdmin dapat memperbarui nilai persentase realisasi bulanan dan target sekto
       "total_downloads": 7266,
       "top_documents": [ ... ],
       "survey_count": 4,
-      "avg_ikm": 96
+      "avg_ikm": 96,
+      "kritik_total": 5,
+      "kritik_pending": 2,
+      "kritik_responded": 3
     },
     "meta": {
       "source_text": "Sistem Informasi Akuntansi Keuangan Daerah & Geotagging BAPPEDA Halut",

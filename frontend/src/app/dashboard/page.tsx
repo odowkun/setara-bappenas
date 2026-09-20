@@ -8,7 +8,7 @@ import { adminService } from "@/services/adminService";
 import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { AuditLog } from "@/types/auth";
 import { toast } from "@/lib/swal";
-import { getIkmGrade } from "@/services/surveyService";
+import { getIkmGrade, fetchPublicKritikList } from "@/services/surveyService";
 import {
   Users,
   FileText,
@@ -33,6 +33,7 @@ import {
   Building2,
   AlertCircle,
   HelpCircle,
+  MessageSquare,
   ExternalLink,
 } from "lucide-react";
 
@@ -85,6 +86,9 @@ interface PublicEngagement {
   }[];
   survey_count: number;
   avg_ikm: number;
+  kritik_total?: number;
+  kritik_pending?: number;
+  kritik_responded?: number;
 }
 
 const formatRupiah = (val: number) => {
@@ -110,6 +114,10 @@ export default function DashboardPage() {
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendItem[]>([]);
   const [projectsSummary, setProjectsSummary] = useState<ProjectsSummary | null>(null);
   const [publicEngagement, setPublicEngagement] = useState<PublicEngagement | null>(null);
+  const [kritikStats, setKritikStats] = useState<{ total: number; pending: number }>({
+    total: 0,
+    pending: 0,
+  });
   const [chartMeta, setChartMeta] = useState({
     source_text: "Sistem Informasi Keuangan Daerah & Geotagging BAPPEDA Halut",
     status_text: "Q3 2026 Status: 89.4% (On-Track)",
@@ -178,6 +186,13 @@ export default function DashboardPage() {
     });
 
     fetchCharts();
+
+    fetchPublicKritikList().then((list) => {
+      if (Array.isArray(list)) {
+        const pending = list.filter((k) => k.status !== "Sudah Ditanggapi" && k.status !== "Ditutup").length;
+        setKritikStats({ total: list.length, pending });
+      }
+    });
   }, [user]);
 
   const handleSaveCharts = async () => {
@@ -250,113 +265,166 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* 2. OVERVIEW METRIC CARDS GRID (4 CARDS) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Users */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-blue-300 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pengguna Sistem</span>
-            <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-100">
-              <Users className="w-5 h-5" />
-            </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">{usersCount} Terdaftar</div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">3 Peran (Superadmin, Umum, Bidang)</p>
-          </div>
-          {isSuperAdmin && (
-            <Link
-              href="/dashboard/users"
-              className="text-xs font-bold text-blue-700 hover:underline inline-flex items-center gap-1"
-            >
-              <span>Kelola Pengguna</span>
-              <ArrowUpRight className="w-3.5 h-3.5" />
-            </Link>
-          )}
-        </div>
+      {/* 2. OVERVIEW METRIC CARDS GRID (5 CARDS) */}
+      {(() => {
+        const displayKritikTotal = publicEngagement?.kritik_total ?? kritikStats.total;
+        const displayKritikPending = publicEngagement?.kritik_pending ?? kritikStats.pending;
 
-        {/* Card 2: Dokumen & Unduhan */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-emerald-300 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dokumen Perencanaan</span>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold border border-emerald-100">
-              <FileText className="w-5 h-5" />
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+            {/* Card 1: Users */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-blue-300 transition flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Pengguna Sistem</span>
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-100">
+                    <Users className="w-5 h-5" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{usersCount} Terdaftar</div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">3 Peran (Superadmin, Umum, Bidang)</p>
+                </div>
+              </div>
+              {isSuperAdmin && (
+                <Link
+                  href="/dashboard/users"
+                  className="text-xs font-bold text-blue-700 hover:underline inline-flex items-center gap-1 pt-1"
+                >
+                  <span>Kelola Pengguna</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              )}
             </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">{docsCount} Dokumen</div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              {publicEngagement ? `${publicEngagement.total_downloads.toLocaleString("id-ID")}x Total Diunduh Publik` : "RPJPD, RPJMD, RKPD, Renstra"}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/dokumen"
-            className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1"
-          >
-            <span>Repository Publik</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
 
-        {/* Card 3: Proyek Geotagging Riil */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-indigo-300 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Proyek Geotagging</span>
-            <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold border border-indigo-100">
-              <MapPin className="w-5 h-5" />
+            {/* Card 2: Dokumen & Unduhan */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-emerald-300 transition flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Dokumen Perencanaan</span>
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold border border-emerald-100">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">{docsCount} Dokumen</div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {publicEngagement ? `${publicEngagement.total_downloads.toLocaleString("id-ID")}x Total Diunduh` : "RPJPD, RPJMD, RKPD"}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/dokumen"
+                className="text-xs font-bold text-emerald-700 hover:underline inline-flex items-center gap-1 pt-1"
+              >
+                <span>Repository Publik</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-          </div>
-          <div>
-            <div className="text-2xl font-black text-slate-900">
-              {projectsSummary ? `${projectsSummary.total_projects} Titik Proyek` : "6 Titik Proyek"}
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              {projectsSummary ? `Serapan: ${projectsSummary.serapan_persen}% (${formatRupiah(projectsSummary.total_realisasi)})` : "Sinkron ESRI ArcGIS"}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/update-progres"
-            className="text-xs font-bold text-indigo-700 hover:underline inline-flex items-center gap-1"
-          >
-            <span>Progres Sektoral</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
 
-        {/* Card 4: IKM Kepuasan Warga */}
-        <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kepuasan Warga (IKM)</span>
-            <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-100">
-              <HeartHandshake className="w-5 h-5" />
+            {/* Card 3: Proyek Geotagging Riil */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-indigo-300 transition flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Proyek Geotagging</span>
+                  <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold border border-indigo-100">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900">
+                    {projectsSummary ? `${projectsSummary.total_projects} Titik Proyek` : "6 Titik Proyek"}
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {projectsSummary ? `Serapan: ${projectsSummary.serapan_persen}% (${formatRupiah(projectsSummary.total_realisasi)})` : "Sinkron ESRI ArcGIS"}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/update-progres"
+                className="text-xs font-bold text-indigo-700 hover:underline inline-flex items-center gap-1 pt-1"
+              >
+                <span>Progres Sektoral</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Card 4: IKM Kepuasan Warga */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kepuasan Warga (IKM)</span>
+                  <div className="w-10 h-10 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-100">
+                    <HeartHandshake className="w-5 h-5" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-amber-600 flex items-center gap-2">
+                    <span>{publicEngagement ? `${publicEngagement.avg_ikm}` : "96.0"}</span>
+                    {(() => {
+                      const score = publicEngagement ? Number(publicEngagement.avg_ikm) : 96.0;
+                      const grade = getIkmGrade(score);
+                      return (
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${grade.badgeClass}`}>
+                          {grade.kategori.toUpperCase()} ({grade.mutu})
+                        </span>
+                      );
+                    })()}
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {publicEngagement ? `${publicEngagement.survey_count} Responden Masuk` : "Survei Kepuasan Online"}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/survey-kepuasan"
+                className="text-xs font-bold text-amber-700 hover:underline inline-flex items-center gap-1 pt-1"
+              >
+                <span>Laporan IKM</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            {/* Card 5: Kritik & Saran Warga */}
+            <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-rose-300 transition flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Kritik &amp; Saran</span>
+                  <div className="w-10 h-10 rounded-2xl bg-rose-50 text-rose-700 flex items-center justify-center font-bold border border-rose-100">
+                    <MessageSquare className="w-5 h-5" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-2xl font-black text-slate-900 flex items-center flex-wrap gap-1.5">
+                    <span>{displayKritikTotal} Masukan</span>
+                    {displayKritikPending > 0 ? (
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
+                        {displayKritikPending} Belum Dijawab
+                      </span>
+                    ) : (
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        Semua Terjawab
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                    {displayKritikPending > 0
+                      ? `${displayKritikPending} pesan perlu tindak lanjut`
+                      : "Seluruh kritik & saran telah direspons"}
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/dashboard/kritik-saran"
+                className="text-xs font-bold text-rose-700 hover:underline inline-flex items-center gap-1 pt-1"
+              >
+                <span>Kelola Masukan</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
-          <div>
-            <div className="text-2xl font-black text-amber-600 flex items-center gap-2">
-              <span>{publicEngagement ? `${publicEngagement.avg_ikm}` : "96.0"}</span>
-              {(() => {
-                const score = publicEngagement ? Number(publicEngagement.avg_ikm) : 96.0;
-                const grade = getIkmGrade(score);
-                return (
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${grade.badgeClass}`}>
-                    {grade.kategori.toUpperCase()} ({grade.mutu})
-                  </span>
-                );
-              })()}
-            </div>
-            <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-              {publicEngagement ? `${publicEngagement.survey_count} Responden Masuk` : "Survei Kepuasan Online"}
-            </p>
-          </div>
-          <Link
-            href="/dashboard/survey-kepuasan"
-            className="text-xs font-bold text-amber-700 hover:underline inline-flex items-center gap-1"
-          >
-            <span>Laporan IKM</span>
-            <ArrowUpRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* 3. CHARTS ROW 1: TREN APBD BULANAN & SEBARAN PROYEK GEOTAGGING RIIL */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">

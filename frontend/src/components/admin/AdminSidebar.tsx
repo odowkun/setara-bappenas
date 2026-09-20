@@ -5,6 +5,8 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/apiClient";
+import { fetchPublicKritikList } from "@/services/surveyService";
 import {
   LayoutDashboard,
   Users,
@@ -188,10 +190,19 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const currentPath = pendingPath || pathname;
   const { user, logout, hasRole, hasPermission } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [pendingKritikCount, setPendingKritikCount] = useState<number>(0);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchPublicKritikList()
+      .then((list) => {
+        if (Array.isArray(list)) {
+          const pending = list.filter((k) => k.status !== "Sudah Ditanggapi" && k.status !== "Ditutup").length;
+          setPendingKritikCount(pending);
+        }
+      })
+      .catch(() => {});
+  }, [pathname]);
 
   const [openSubMenus, setOpenSubMenus] = useState<Record<string, boolean>>({
     "/dashboard/profil": false,
@@ -338,7 +349,12 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                                   }`}
                                 >
                                   <SubIcon className={`w-3.5 h-3.5 ${isSubActive ? "text-white" : isSubChildActive ? "text-blue-700" : "text-slate-400"}`} />
-                                  <span>{sub.title}</span>
+                                  <span className="truncate">{sub.title}</span>
+                                  {sub.href === "/dashboard/survey-kepuasan" && pendingKritikCount > 0 && (
+                                    <span className="ml-auto px-1.5 py-0.5 rounded-full text-[9px] font-black bg-rose-500 text-white animate-pulse shrink-0">
+                                      {pendingKritikCount}
+                                    </span>
+                                  )}
                                 </Link>
                                 <button
                                   type="button"
@@ -367,14 +383,23 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                                         key={`${child.href}-${child.title}`}
                                         href={child.href}
                                         onClick={() => handleLinkClick(child.href)}
-                                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold transition ${
+                                        className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg text-[10.5px] font-bold transition ${
                                           isChildActive
                                             ? "bg-blue-700 text-white shadow-2xs"
                                             : "text-slate-600 hover:text-blue-700 hover:bg-blue-50"
                                         }`}
                                       >
-                                        <ChildIcon className={`w-3 h-3 ${isChildActive ? "text-white" : "text-slate-400"}`} />
-                                        <span>{child.title}</span>
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <ChildIcon className={`w-3 h-3 shrink-0 ${isChildActive ? "text-white" : "text-slate-400"}`} />
+                                          <span className="truncate">{child.title}</span>
+                                        </div>
+                                        {child.href === "/dashboard/kritik-saran" && pendingKritikCount > 0 && (
+                                          <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-black shrink-0 ${
+                                            isChildActive ? "bg-white text-rose-600" : "bg-rose-500 text-white"
+                                          }`}>
+                                            {pendingKritikCount}
+                                          </span>
+                                        )}
                                       </Link>
                                     );
                                   })}

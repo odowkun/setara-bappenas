@@ -154,7 +154,7 @@ export default function DashboardKritikSaranPage() {
   const totalResponded = kritikList.filter((k) => k.status === "Sudah Ditanggapi").length;
 
   return (
-    <div className="space-y-6 w-full max-w-[1400px] mx-auto font-sans">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER BAR */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>

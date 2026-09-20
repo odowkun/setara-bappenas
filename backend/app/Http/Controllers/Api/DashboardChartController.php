@@ -47,9 +47,21 @@ class DashboardChartController extends Controller
 
         $totalDownloads = (int) DB::table('documents')->sum('downloads');
 
-        // 5. IKM Kepuasan Warga
+        // 5. IKM Kepuasan Warga & Statistik Kritik Saran Warga
         $surveyCount = DB::table('surveys')->count();
         $avgIkm = (float) round(DB::table('surveys')->avg('ikm_score') ?? 0, 1);
+
+        $kritikTotal = DB::table('kritiks')->count();
+        $kritikPending = DB::table('kritiks')
+            ->where(function ($q) {
+                $q->whereIn('status', ['Menunggu Tanggapan', 'Dalam Proses', 'Dalam Proses Tindak Lanjut'])
+                  ->orWhereNull('catatan_balasan');
+            })
+            ->where('status', '!=', 'Sudah Ditanggapi')
+            ->count();
+        $kritikResponded = DB::table('kritiks')
+            ->where('status', 'Sudah Ditanggapi')
+            ->count();
 
         return response()->json([
             'status' => 'success',
@@ -76,6 +88,9 @@ class DashboardChartController extends Controller
                     'top_documents' => $topDocuments,
                     'survey_count' => $surveyCount,
                     'avg_ikm' => $avgIkm,
+                    'kritik_total' => $kritikTotal,
+                    'kritik_pending' => $kritikPending,
+                    'kritik_responded' => $kritikResponded,
                 ],
                 'meta' => [
                     'source_text' => 'Sistem Informasi Akuntansi Keuangan Daerah & Geotagging BAPPEDA Halut',
