@@ -65,7 +65,7 @@ export const HeroSection: React.FC = () => {
   };
 
   return (
-    <section className="relative pt-28 sm:pt-36 pb-8 sm:pb-16 overflow-hidden bg-blue-900">
+    <section className="relative pt-24 sm:pt-32 pb-8 sm:pb-14 overflow-hidden bg-blue-900">
       {/* SEAMLESS BACKGROUND VIDEO: Dual-Video Crossfade with Deep Royal Blue & Gold Overlay Gradient */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
         <SeamlessBackgroundVideo
@@ -76,20 +76,20 @@ export const HeroSection: React.FC = () => {
         <div className="absolute inset-0 bg-gradient-to-b from-blue-950/95 via-blue-900/90 to-white z-20 pointer-events-none" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-12 relative z-20">
-        {/* CLEAN THIN HEADLINE */}
-        <div className="text-center max-w-4xl mx-auto space-y-6 sm:space-y-8 pt-4 sm:pt-6">
-          <h1 className="text-2xl sm:text-5xl lg:text-7xl font-semibold text-white leading-snug sm:leading-[1.15] tracking-normal drop-shadow-md">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5 sm:space-y-9 relative z-20">
+        {/* CLEAN REFINED HEADLINE */}
+        <div className="text-center max-w-4xl sm:max-w-5xl mx-auto pt-2 sm:pt-4">
+          <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold text-white leading-snug sm:leading-[1.2] tracking-tight drop-shadow-md">
             Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara
           </h1>
         </div>
 
         <DocumentQuickMenu floatingOnScroll showTicker />
 
-        {/* SINGLE FULL-WIDTH HERO OPENING VIDEO PRESENTATION CARD */}
+        {/* SINGLE PROPORTIONAL HERO OPENING VIDEO PRESENTATION CARD */}
         {(heroVideo?.is_active ?? true) && (
-          <div className="max-w-5xl mx-auto pt-4">
-            <div className="relative rounded-[36px] overflow-hidden border-4 border-white/90 shadow-2xl bg-slate-950 aspect-video group">
+          <div className="max-w-3xl lg:max-w-4xl mx-auto pt-1 sm:pt-3">
+            <div className="relative rounded-2xl sm:rounded-[32px] overflow-hidden border-2 sm:border-4 border-white/90 shadow-2xl bg-slate-950 aspect-video group">
               {/* HTML5 Video Player with Fallback Poster */}
               <video
                 ref={videoRef}
@@ -122,16 +122,16 @@ export const HeroSection: React.FC = () => {
               )}
 
               {/* Video Header Badge Overlay */}
-              <div className="absolute top-6 left-6 right-6 z-20 flex items-center justify-between pointer-events-none">
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-xs font-bold shadow-lg">
-                  <Sparkles className="w-4 h-4 text-amber-400 animate-pulse" />
+              <div className="absolute top-3.5 sm:top-5 left-3.5 sm:left-5 right-3.5 sm:right-5 z-20 flex items-center justify-between pointer-events-none">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-[10px] sm:text-xs font-bold shadow-lg">
+                  <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-400 animate-pulse" />
                   <span>
                     {heroVideo?.badge_title || "VIDEO SAMBUTAN PEMBUKAAN"}
                   </span>
                 </div>
 
                 {(heroVideo?.badge_subtitle || !heroVideo) && (
-                  <div className="hidden sm:flex items-center gap-2 text-xs font-bold text-blue-950 bg-amber-400 backdrop-blur-md px-4 py-2 rounded-full shadow-lg border border-amber-300">
+                  <div className="hidden sm:flex items-center gap-1.5 text-[10px] sm:text-xs font-bold text-blue-950 bg-amber-400 backdrop-blur-md px-3.5 py-1.5 rounded-full shadow-lg border border-amber-300">
                     {heroVideo?.badge_subtitle || "Pembangunan Halut 2026"}
                   </div>
                 )}
@@ -141,55 +141,55 @@ export const HeroSection: React.FC = () => {
               <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
                 <button
                   onClick={togglePlay}
-                  className="pointer-events-auto w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 backdrop-blur-xl flex items-center justify-center shadow-2xl border-4 border-white/80 transform hover:scale-110 active:scale-95 transition duration-300 group-hover:shadow-amber-400/50"
+                  className="pointer-events-auto w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 backdrop-blur-xl flex items-center justify-center shadow-2xl border-2 sm:border-4 border-white/80 transform hover:scale-110 active:scale-95 transition duration-300 group-hover:shadow-amber-400/50 cursor-pointer"
                   aria-label={isPlaying ? "Pause Video" : "Play Video"}
                 >
                   {isPlaying ? (
-                    <Pause className="w-10 h-10 text-blue-950 fill-blue-950" />
+                    <Pause className="w-7 h-7 sm:w-9 sm:h-9 text-blue-950 fill-blue-950" />
                   ) : (
-                    <Play className="w-10 h-10 text-blue-950 fill-blue-950 ml-1" />
+                    <Play className="w-7 h-7 sm:w-9 sm:h-9 text-blue-950 fill-blue-950 ml-0.5 sm:ml-1" />
                   )}
                 </button>
               </div>
 
               {/* Video Footer Metadata & Control Bar */}
-              <div className="absolute bottom-0 inset-x-0 z-20 p-6 sm:p-8 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex items-end justify-between gap-4">
-                <div className="space-y-1.5 max-w-2xl">
-                  <h3 className="text-xl sm:text-2xl font-black text-white leading-snug drop-shadow-md">
+              <div className="absolute bottom-0 inset-x-0 z-20 p-4 sm:p-6 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex items-end justify-between gap-3 sm:gap-4">
+                <div className="space-y-1 max-w-xl sm:max-w-2xl">
+                  <h3 className="text-sm sm:text-lg font-black text-white leading-snug drop-shadow-md">
                     {heroVideo?.title || "Sambutan & Arah Kebijakan Pembangunan"}
                   </h3>
-                  <p className="text-xs sm:text-sm text-slate-300 font-medium line-clamp-2 leading-relaxed">
+                  <p className="text-[10px] sm:text-xs text-slate-300 font-medium line-clamp-2 leading-relaxed">
                     {heroVideo?.subtitle ||
                       "Paparan strategi sinkronisasi perencanaan pembangunan nasional (RPJPN) dengan Kabupaten Halmahera Utara."}
                   </p>
                 </div>
 
-              {/* Quick Audio & Fullscreen Buttons */}
-              <div className="flex items-center gap-2 shrink-0">
-                <button
-                  onClick={toggleMute}
-                  className="p-3 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30"
-                  title={isMuted ? "Unmute Audio" : "Mute Audio"}
-                >
-                  {isMuted ? (
-                    <VolumeX className="w-5 h-5" />
-                  ) : (
-                    <Volume2 className="w-5 h-5" />
-                  )}
-                </button>
+                {/* Quick Audio & Fullscreen Buttons */}
+                <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  <button
+                    onClick={toggleMute}
+                    className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30 cursor-pointer"
+                    title={isMuted ? "Unmute Audio" : "Mute Audio"}
+                  >
+                    {isMuted ? (
+                      <VolumeX className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    ) : (
+                      <Volume2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+                    )}
+                  </button>
 
-                <button
-                  onClick={() => {
-                    if (videoRef.current) {
-                      if (videoRef.current.requestFullscreen) {
-                        videoRef.current.requestFullscreen();
+                  <button
+                    onClick={() => {
+                      if (videoRef.current) {
+                        if (videoRef.current.requestFullscreen) {
+                          videoRef.current.requestFullscreen();
+                        }
                       }
-                    }
                     }}
-                    className="p-3 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30"
+                    className="p-2 sm:p-2.5 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30 cursor-pointer"
                     title="Fullscreen"
                   >
-                    <Maximize2 className="w-5 h-5" />
+                    <Maximize2 className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
                   </button>
                 </div>
               </div>
