@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 interface ResumableChunkUploaderProps {
-  onUploadSuccess: (fileUrl: string, fileSizeStr: string) => void;
+  onUploadSuccess: (fileUrl: string, fileSizeStr: string, fileName?: string) => void;
   acceptedTypes?: string;
   chunkSizeMB?: number; // default 5MB
 }
@@ -94,7 +94,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
               setCompletedUrl(finalUrl);
               setStatusText("✅ Watermark BAPPEDA HALUT berhasil diterapkan!");
               localStorage.removeItem(fileKey);
-              onUploadSuccess(finalUrl, sizeStr);
+              onUploadSuccess(finalUrl, sizeStr, file.name);
               setUploading(false);
               return;
             }

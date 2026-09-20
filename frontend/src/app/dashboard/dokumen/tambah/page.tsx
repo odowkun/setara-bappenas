@@ -119,17 +119,34 @@ export default function TambahDokumenPage() {
     }
   };
 
-  const handleUploadSuccess = (uploadedUrl: string, uploadedSize: string) => {
+  const handleUploadSuccess = (uploadedUrl: string, uploadedSize: string, fileName?: string) => {
     setFileUrl(uploadedUrl);
     setFileSizeStr(uploadedSize);
+    if (fileName && !title.trim()) {
+      const cleanTitle = fileName
+        .replace(/\.[^/.]+$/, "")
+        .replace(/[_-]+/g, " ")
+        .trim();
+      setTitle(cleanTitle);
+      toast.success(`Judul dokumen terisi otomatis dari nama berkas.`);
+    }
   };
 
   const handleSave = async (submitForReview: boolean) => {
-    if (!title || !fileUrl) {
+    if (!fileUrl) {
       showErrorSwal(
-        "Dokumen Belum Siap",
-        "Tunggu hingga unggahan selesai dan watermark BAPPEDA HALUT berhasil diterapkan."
+        "Berkas Belum Diunggah",
+        "Silakan unggah berkas PDF perencanaan terlebih dahulu hingga muncul tanda hijau berkas berhasil diunggah utuh."
       );
+      return;
+    }
+
+    if (!title.trim()) {
+      showErrorSwal(
+        "Judul Dokumen Belum Diisi",
+        "Silakan lengkapi kolom Judul Dokumen Resmi Perencanaan di bagian atas formulir terlebih dahulu."
+      );
+      window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
 
