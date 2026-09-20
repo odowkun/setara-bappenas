@@ -1,5 +1,16 @@
 import { User, AdminNews, AdminDocument, AuditLog, JenisDokumenItem } from "@/types/auth";
-import { API_BASE_URL, withAuthHeaders } from "@/lib/apiClient";
+import { API_BASE_URL, STORAGE_BASE_URL, withAuthHeaders } from "@/lib/apiClient";
+
+export function normalizeMediaUrl(url?: string | null): string {
+  if (!url || typeof url !== "string" || !url.trim()) {
+    return "/images/bappeda/logo-halut.png";
+  }
+  const clean = url.trim().replace(/^https?:\/\/[^\/]+(:8100|:8000)?\//, "/");
+  if (clean.startsWith("/storage/")) {
+    return `${STORAGE_BASE_URL}${clean}`;
+  }
+  return clean;
+}
 
 interface UserMutationInput extends Partial<User> {
   name: string;
@@ -274,7 +285,7 @@ export const adminService = {
           date: item.date || item.created_at?.split("T")[0] || "",
           views: item.views || 0,
           isPublished: Boolean(item.is_published),
-          featuredImage: item.image || item.image_url || "",
+          featuredImage: normalizeMediaUrl(item.image || item.image_url),
           summary: item.summary || (item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 160) + "..." : ""),
           readTime: "3 mnt baca",
           content: item.content,
@@ -289,6 +300,9 @@ export const adminService = {
   fetchNewsById: async (id: string): Promise<any> => {
     const res = await adminService.apiFetch(`/admin/news/${id}`);
     if (!res?.data) throw new Error("Berita tidak ditemukan di database.");
+    if (res.data.image) {
+      res.data.image = normalizeMediaUrl(res.data.image);
+    }
     return res.data;
   },
 

@@ -122,9 +122,27 @@ Utamakan rollback kode tanpa menghapus kolom audit. Kolom status dan audit aman 
 
 Jika frontend harus di-rollback sendiri, backend baru tetap kompatibel untuk pembacaan. Namun frontend lama yang selalu mengirim status publik dapat melewati kebiasaan “draf dahulu”, sehingga frontend dan backend sebaiknya dipasang sebagai satu release.
 
+## Optimasi Media Sampul Berita & Pencegahan Broken Image
+
+1. **Auto-Upload & Dual-Variant Processing**:
+   - `OptimizedMediaUploader` langsung memicu pengunggahan otomatis saat pengguna memilih gambar (`handleSelectFile`), tanpa memerlukan klik tombol terpisah.
+   - Menggunakan Intervention Image v3 untuk menghasilkan 2 varian:
+     - Master HD Asli di `/storage/media/originals/`
+     - Varian WebP Teroptimasi di `/storage/media/web/` (skala max-width 1920px, kualitas 80%, ukuran berkurang hingga 95%).
+     - Varian Thumbnail WebP di `/storage/media/thumbs/` (skala max-width 400px, kualitas 75%).
+2. **Root-Relative Storage URLs**:
+   - Backend `MediaController` mengembalikan path root-relative (`/storage/media/...`) untuk menghindari domain/port absolut lokal (`http://127.0.0.1:8100` atau `http://localhost:8000`) yang menyebabkan mixed-content block di browser HTTPS.
+   - Model `News` menyematkan accessor/mutator `getImageAttribute` & `setImageAttribute` untuk otomatis membersihkan URL absolut host lokal yang usang.
+3. **Pencegahan Broken Image (Fallback & Error Handlers)**:
+   - Frontend (`adminService.ts`, `dashboard/berita`, `berita`, `berita/[slug]`, `LatestNewsCarousel`) menerapkan `normalizeMediaUrl` dan fallback bawaan `/images/bappeda/logo-halut.png` saat gambar belum ada atau gagal dimuat via event `onError`.
+   - `TambahBeritaPage` melarang penyimpanan ketika proses unggah masih berlangsung (`isImageUploading` guard) dan menjamin artikel baru tidak pernah tersimpan dengan path gambar kosong.
+4. **Otomasi Storage Symlink di Server**:
+   - Skrip deployment produksi `scripts/deploy-prod.ps1` menyertakan `php artisan storage:link` untuk memastikan symlink storage selalu aktif.
+
 ## Penjaga regresi
 
-- `OfficialPublicationWorkflowTest` menguji draf, publish, unpublish, filter publik, route edit nyata, lampiran privat, dokumen, proyek tanpa default palsu, dan pola mock frontend.
+- `OfficialPublicationWorkflowTest` menguji draf, publish, unpublish, filter publik, route edit nyata, lampiran privat, dokumen, proyek tanpa default palsu, pola mock frontend, serta URL root-relative upload media dan normalisasi gambar di model `News`.
 - `DatabaseSourceOfTruthTest` dan `OfficialDatabaseSourceTest` menjaga agar frontend tidak kembali memakai record browser/mock.
 - `npm run build` memvalidasi route dan TypeScript seluruh halaman.
+
 

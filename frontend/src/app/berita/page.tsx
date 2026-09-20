@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { officialContentService } from "@/services/officialContentService";
+import { normalizeMediaUrl } from "@/services/adminService";
 
 interface NewsItem {
   id: string;
@@ -63,7 +64,7 @@ export default function PublicNewsPage() {
               author: item.author || "Belum tersedia",
               date: item.date || item.created_at?.split("T")[0] || "",
               views: Number(item.views) || 0,
-              featuredImage: item.image || "",
+              featuredImage: normalizeMediaUrl(item.image),
               summary: item.summary || "",
               readTime: "3 mnt baca",
             }));
@@ -135,8 +136,14 @@ export default function PublicNewsPage() {
               <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto lg:h-[420px] overflow-hidden bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={headlineNews.featuredImage}
+                  src={headlineNews.featuredImage || "/images/bappeda/logo-halut.png"}
                   alt={headlineNews.title}
+                  onError={(e) => {
+                    const target = e.currentTarget;
+                    if (!target.src.includes("logo-halut.png")) {
+                      target.src = "/images/bappeda/logo-halut.png";
+                    }
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
                 />
               </div>
@@ -260,8 +267,14 @@ export default function PublicNewsPage() {
                   <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
-                      src={item.featuredImage}
+                      src={item.featuredImage || "/images/bappeda/logo-halut.png"}
                       alt={item.title}
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        if (!target.src.includes("logo-halut.png")) {
+                          target.src = "/images/bappeda/logo-halut.png";
+                        }
+                      }}
                       className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
                     />
                     <span className="absolute top-3 left-3 px-3 py-1 rounded-xl text-[10px] font-black bg-blue-900/90 text-white backdrop-blur-md border border-white/20">

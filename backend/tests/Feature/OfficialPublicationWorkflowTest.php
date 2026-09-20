@@ -343,6 +343,38 @@ class OfficialPublicationWorkflowTest extends TestCase
             ->assertOk();
     }
 
+    public function test_media_upload_optimized_returns_root_relative_paths_and_news_normalizes_images(): void
+    {
+        Storage::fake('public');
+        $this->actingAsAdminUmum();
+
+        $imageFile = UploadedFile::fake()->image('musrenbang-2026.jpg', 800, 600);
+
+        $response = $this->postJson('/api/v1/media/upload-optimized', [
+            'media' => $imageFile,
+        ])->assertOk();
+
+        $data = $response->json('data');
+        $this->assertStringStartsWith('/storage/media/originals/', $data['master_url']);
+        $this->assertStringStartsWith('/storage/media/web/', $data['web_url']);
+        $this->assertStringStartsWith('/storage/media/thumbs/', $data['thumb_url']);
+
+        // Test News model normalizes obsolete absolute hostnames
+        $newsCategory = DB::table('news_categories')->value('name');
+        $news = \App\Models\News::create([
+            'title' => 'Berita Dengan URL Host Lama',
+            'slug' => 'berita-host-lama-1',
+            'category' => $newsCategory,
+            'author' => 'Super Admin',
+            'date' => '2026-09-20',
+            'content' => '<p>Konten berita</p>',
+            'image' => 'http://127.0.0.1:8100/storage/media/web/test-image.webp',
+            'is_published' => true,
+        ]);
+
+        $this->assertEquals('/storage/media/web/test-image.webp', $news->fresh()->image);
+    }
+
     private function actingAsAdminUmum(): User
     {
         $user = User::factory()->create(['role' => 'admin_umum']);

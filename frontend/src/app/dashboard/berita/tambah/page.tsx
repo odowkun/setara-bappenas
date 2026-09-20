@@ -44,6 +44,7 @@ export default function TambahBeritaPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [isImageUploading, setIsImageUploading] = useState(false);
 
   useEffect(() => {
     officialContentService.getNewsCategories()
@@ -110,6 +111,11 @@ export default function TambahBeritaPage() {
   };
 
   const handleSave = async (publish: boolean) => {
+    if (isImageUploading) {
+      toast.error("Foto sampul masih dalam proses unggah dan optimasi WebP. Mohon tunggu beberapa detik...");
+      return;
+    }
+
     if (!title.trim() || !content.trim() || !selectedCategory) {
       toast.error("Judul, kategori, dan isi berita wajib diisi.");
       return;
@@ -117,12 +123,13 @@ export default function TambahBeritaPage() {
 
     setSaving(true);
     try {
+      const finalImage = mediaData?.webUrl || mediaData?.masterUrl || "/images/bappeda/logo-halut.png";
       const payload = {
         title: title.trim(),
         summary,
         category: selectedCategory,
         content,
-        image: mediaData?.webUrl || mediaData?.masterUrl || "",
+        image: finalImage,
         is_published: publish,
       };
       if (editingId) {
@@ -291,6 +298,8 @@ export default function TambahBeritaPage() {
             </label>
             <OptimizedMediaUploader
               onUploadSuccess={(data) => setMediaData(data)}
+              onUploadStatusChange={(uploading) => setIsImageUploading(uploading)}
+              initialUrl={mediaData?.webUrl || mediaData?.masterUrl || undefined}
               label="Unggah Foto Sampul Berita Utama"
             />
           </div>

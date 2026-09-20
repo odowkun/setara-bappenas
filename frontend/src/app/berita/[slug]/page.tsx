@@ -14,6 +14,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/apiClient";
+import { normalizeMediaUrl } from "@/services/adminService";
 
 export default function PublicNewsDetailPage() {
   const params = useParams();
@@ -31,7 +32,10 @@ export default function PublicNewsDetailPage() {
         if (res.ok) {
           const json = await res.json();
           if (json.success && json.data) {
-            setArticle(json.data);
+            setArticle({
+              ...json.data,
+              image: json.data.image ? normalizeMediaUrl(json.data.image) : "",
+            });
           }
         }
       } catch (err) {
@@ -143,6 +147,12 @@ export default function PublicNewsDetailPage() {
           <img
             src={displayData.image}
             alt={displayData.title}
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.src.includes("logo-halut.png")) {
+                target.src = "/images/bappeda/logo-halut.png";
+              }
+            }}
             className="w-full h-full object-cover"
           />
         </div>}

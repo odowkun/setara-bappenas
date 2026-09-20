@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Newspaper, Calendar, Eye, User, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/apiClient";
+import { normalizeMediaUrl } from "@/services/adminService";
 
 interface NewsCardItem {
   id: string;
@@ -40,7 +41,7 @@ export const LatestNewsCarousel: React.FC = () => {
               author: item.author || "Belum tersedia",
               views: item.views || 0,
               desc: item.summary || (item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 140) + "..." : item.title),
-              image: item.image || item.image_url || "",
+              image: normalizeMediaUrl(item.image || item.image_url),
               link: `/berita/${item.slug || item.id}`,
             }));
             setNewsItems(mapped);
@@ -129,8 +130,14 @@ export const LatestNewsCarousel: React.FC = () => {
                     <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.image}
+                        src={item.image || "/images/bappeda/logo-halut.png"}
                         alt={item.title}
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (!target.src.includes("logo-halut.png")) {
+                            target.src = "/images/bappeda/logo-halut.png";
+                          }
+                        }}
                         className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
                       />
                       <div className="absolute top-3 left-3">

@@ -38,4 +38,24 @@ class News extends Model
         'views' => 'integer',
         'date' => 'date:Y-m-d',
     ];
+
+    /**
+     * Normalize image URLs to root-relative paths, stripping any obsolete dev/local absolute hosts.
+     */
+    public function getImageAttribute($value): ?string
+    {
+        if (!$value) {
+            return '';
+        }
+
+        return preg_replace('#^https?://[^/]+(:8100|:8000)?/#', '/', $value);
+    }
+
+    public function setImageAttribute($value): void
+    {
+        if ($value) {
+            $value = preg_replace('#^https?://[^/]+(:8100|:8000)?/#', '/', $value);
+        }
+        $this->attributes['image'] = $value;
+    }
 }

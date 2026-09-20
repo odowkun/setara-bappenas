@@ -77,6 +77,7 @@ if (Test-Path "C:\php83\php.exe") {
 }
 
 & $phpExe artisan migrate --force
+& $phpExe artisan storage:link
 & $phpExe artisan config:cache
 & $phpExe artisan route:cache
 & $phpExe artisan view:cache

@@ -272,8 +272,14 @@ export default function BeritaManagementPage() {
                 <div className="flex items-center gap-4 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.featuredImage}
+                    src={item.featuredImage || "/images/bappeda/logo-halut.png"}
                     alt={item.title}
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (!target.src.includes("logo-halut.png")) {
+                        target.src = "/images/bappeda/logo-halut.png";
+                      }
+                    }}
                     className="w-20 h-20 rounded-2xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition"
                   />
                   <div className="space-y-1 overflow-hidden">

@@ -25,9 +25,12 @@ class MediaController extends Controller
         $originalSizeStr = round($file->getSize() / 1024 / 1024, 2) . ' MB';
 
         // 1. Store Master Original (4K / Full HD untouched for download/archiving)
+        if (!file_exists(storage_path('app/public/media/originals'))) {
+            mkdir(storage_path('app/public/media/originals'), 0755, true);
+        }
         $masterFileName = time() . '_master_' . preg_replace('/[^A-Za-z0-9\-.]/', '', $originalName);
         $masterPath = $file->storeAs('public/media/originals', $masterFileName);
-        $masterUrl = asset('storage/media/originals/' . $masterFileName);
+        $masterUrl = '/storage/media/originals/' . $masterFileName;
 
         $webUrl = $masterUrl;
         $thumbUrl = $masterUrl;
@@ -53,19 +56,19 @@ class MediaController extends Controller
 
                 // Scale down max width 1920px while preserving aspect ratio, encode WebP 80% quality
                 $image->scale(width: 1920);
-                $image->toWebp(80)->save($webStoragePath);
-                $webUrl = asset('storage/media/web/' . $webFileName);
+                $image->save($webStoragePath, quality: 80);
+                $webUrl = '/storage/media/web/' . $webFileName;
 
                 // Thumbnail 300px WebP
                 $thumbFileName = time() . '_thumb_' . pathinfo($originalName, PATHINFO_FILENAME) . '.webp';
                 $thumbStoragePath = storage_path('app/public/media/thumbs/' . $thumbFileName);
                 $image->scale(width: 400);
-                $image->toWebp(75)->save($thumbStoragePath);
-                $thumbUrl = asset('storage/media/thumbs/' . $thumbFileName);
+                $image->save($thumbStoragePath, quality: 75);
+                $thumbUrl = '/storage/media/thumbs/' . $thumbFileName;
 
-                $optimizedSizeBytes = filesize($webStoragePath);
+                $optimizedSizeBytes = file_exists($webStoragePath) ? filesize($webStoragePath) : 0;
                 $optimizedSizeStr = round($optimizedSizeBytes / 1024, 1) . ' KB';
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 // Fallback to master URL if Intervention fails
                 $webUrl = $masterUrl;
             }
