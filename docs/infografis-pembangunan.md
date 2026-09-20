@@ -91,3 +91,5 @@ Controller: `App\Http\Controllers\Api\InfografisController`
    - `frontend/src/app/dashboard/infografis/page.tsx`
    - Menerapkan standar layout dashboard: `w-full space-y-6 font-sans pb-12`.
    - Menggunakan `@/lib/swal` untuk notifikasi Toast dan konfirmasi hapus (`showDeleteConfirm`).
+   - Menggunakan komponen custom `SearchableSelect` dengan dukungan *creatable*: admin dapat memilih kategori/badge yang tersedia, atau mengetikkan kategori baru secara dinamis jika belum terdaftar.
+   - Pola yang sama diterapkan pada dashboard Teks Berjalan (`frontend/src/app/dashboard/running-text/page.tsx`).

@@ -26,6 +26,7 @@ import {
   RunningTextItem,
   RunningTextPayload,
 } from "@/services/runningTextService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 const DEFAULT_TAGS = ["INFORMASI", "RPJPD", "RPJMD", "RKPD", "WEBGIS", "PENGUMUMAN", "AGENDA"];
 
@@ -49,6 +50,18 @@ export default function RunningTextDashboardPage() {
   const [form, setForm] = useState(emptyForm);
 
   const canManage = hasPermission("manage_pengumuman");
+
+  const tagOptions = useMemo(() => {
+    const existing = new Set<string>(DEFAULT_TAGS);
+    items.forEach((item) => {
+      if (item.tag) existing.add(item.tag.toUpperCase());
+    });
+    if (form.tag) existing.add(form.tag.toUpperCase());
+    return Array.from(existing).map((t) => ({
+      value: t,
+      label: t,
+    }));
+  }, [items, form.tag]);
 
   const fetchItems = async () => {
     setLoading(true);
@@ -401,34 +414,23 @@ export default function RunningTextDashboardPage() {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              {/* Tag / Category Chips */}
+              {/* Tag / Category Select */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  Kategori / Label Badge
+                  Kategori / Label Badge <span className="text-rose-500">*</span>
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {DEFAULT_TAGS.map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setForm({ ...form, tag: t })}
-                      className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                        form.tag === t
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
-                </div>
-                <input
-                  type="text"
-                  placeholder="Atau ketik label custom..."
+                <SearchableSelect
+                  options={tagOptions}
                   value={form.tag}
-                  onChange={(e) => setForm({ ...form, tag: e.target.value.toUpperCase() })}
-                  className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-xs font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  onChange={(val) => setForm({ ...form, tag: String(val).toUpperCase() })}
+                  creatable={true}
+                  createLabelPrefix="Tambah label badge:"
+                  placeholder="-- Pilih atau Ketik Kategori/Badge --"
+                  searchPlaceholder="Cari kategori atau ketik label baru..."
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Pilih label yang tersedia, atau ketik nama baru lalu tekan Enter / klik &quot;Tambah label badge&quot; jika belum ada.
+                </p>
               </div>
 
               {/* Content */}

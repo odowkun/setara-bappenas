@@ -30,6 +30,7 @@ import {
   InfografisItem,
   InfografisPayload,
 } from "@/services/infografisService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 const CATEGORY_OPTIONS = [
   "Perencanaan",
@@ -102,6 +103,32 @@ export default function InfografisDashboardPage() {
   }, [items, searchTerm, filterCategory, filterStatus]);
 
   const pinnedCount = useMemo(() => items.filter((i) => i.isPinned).length, [items]);
+
+  const allCategories = useMemo(() => {
+    const set = new Set<string>(CATEGORY_OPTIONS);
+    items.forEach((item) => {
+      if (item.category) set.add(item.category);
+    });
+    if (form.category) set.add(form.category);
+    return Array.from(set);
+  }, [items, form.category]);
+
+  const categorySelectOptions = useMemo(() => {
+    return allCategories.map((c) => ({
+      value: c,
+      label: c,
+    }));
+  }, [allCategories]);
+
+  const filterCategoryOptions = useMemo(() => {
+    return [
+      { value: "Semua", label: "Semua Kategori" },
+      ...allCategories.map((c) => ({
+        value: c,
+        label: c,
+      })),
+    ];
+  }, [allCategories]);
 
   const handleOpenAdd = () => {
     setEditingItem(null);
@@ -290,18 +317,15 @@ export default function InfografisDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-2">
             {/* Category Select */}
-            <select
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-            >
-              <option value="Semua">Semua Kategori</option>
-              {CATEGORY_OPTIONS.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+            <div className="w-52">
+              <SearchableSelect
+                options={filterCategoryOptions}
+                value={filterCategory}
+                onChange={(val) => setFilterCategory(String(val))}
+                placeholder="Semua Kategori"
+                searchPlaceholder="Cari kategori..."
+              />
+            </div>
 
             {/* Status Pills */}
             <div className="inline-flex rounded-2xl bg-slate-100 dark:bg-slate-800 p-1">
@@ -561,24 +585,20 @@ export default function InfografisDashboardPage() {
               {/* Category */}
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                  Kategori Topik
+                  Kategori Topik <span className="text-rose-500">*</span>
                 </label>
-                <div className="flex flex-wrap gap-1.5 mb-2">
-                  {CATEGORY_OPTIONS.map((c) => (
-                    <button
-                      key={c}
-                      type="button"
-                      onClick={() => setForm({ ...form, category: c })}
-                      className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                        form.category === c
-                          ? "bg-blue-600 text-white shadow-sm"
-                          : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
+                <SearchableSelect
+                  options={categorySelectOptions}
+                  value={form.category}
+                  onChange={(val) => setForm({ ...form, category: String(val) })}
+                  creatable={true}
+                  createLabelPrefix="Tambah kategori baru:"
+                  placeholder="-- Pilih atau Ketik Kategori --"
+                  searchPlaceholder="Cari kategori atau ketik baru..."
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Pilih kategori yang tersedia, atau ketik nama baru lalu tekan Enter / klik &quot;Tambah kategori baru&quot; jika belum ada.
+                </p>
               </div>
 
               {/* Image Upload / URL */}
