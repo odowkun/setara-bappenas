@@ -261,6 +261,17 @@ class DocumentController extends Controller
 
     public function uploadChunk(Request $request)
     {
+        $originalName = $request->file('file')?->getClientOriginalName() ?? '';
+        $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
+
+        if ($extension !== 'pdf') {
+            return response()->json([
+                'status' => 'error',
+                'code' => 422,
+                'message' => 'Hanya berkas format PDF resmi (.pdf) yang diperbolehkan untuk dokumen perencanaan BAPPEDA HALUT.',
+            ], 422);
+        }
+
         $receiver = new FileReceiver(
             'file',
             $request,

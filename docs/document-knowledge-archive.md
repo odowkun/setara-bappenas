@@ -120,7 +120,9 @@ Versi yang ditolak dapat diperbaiki dan diajukan ulang. Approval revisi menggant
 ### Dokumen baru
 
 ```text
-Upload/konversi/watermark
+Upload PDF resmi (.pdf)
+        ↓
+Watermark BAPPEDA HALUT (FPDI + FPDF murni)
         ↓
 berkas *_watermarked.pdf pada disk privat
         ↓

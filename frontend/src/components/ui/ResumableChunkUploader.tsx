@@ -24,7 +24,7 @@ const BACKEND_BASE_URL = STORAGE_BASE_URL;
 
 export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   onUploadSuccess,
-  acceptedTypes = ".pdf,.docx,.xlsx,.pptx,.jpg,.png,.jpeg",
+  acceptedTypes = ".pdf",
   chunkSizeMB = 5,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -144,6 +144,31 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   };
 
   const handleFileSelect = (file: File) => {
+    // Validasi ekstensi berkas jika dibatasi (misal: hanya .pdf)
+    const fileExt = `.${file.name.split(".").pop()?.toLowerCase()}`;
+    const allowed = acceptedTypes
+      .split(",")
+      .map((t) => t.trim().toLowerCase());
+
+    const isAllowed = allowed.some((ext) => {
+      if (ext.startsWith(".")) {
+        return ext === fileExt;
+      }
+      return file.type === ext;
+    });
+
+    if (!isAllowed) {
+      toast.error(
+        acceptedTypes === ".pdf"
+          ? "Hanya berkas format PDF (.pdf) resmi yang diperbolehkan untuk dokumen perencanaan."
+          : `Format berkas tidak diizinkan. Berkas yang diterima: ${acceptedTypes}`
+      );
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
     setSelectedFile(file);
     const chunks = Math.ceil(file.size / CHUNK_SIZE);
     setProgress(0);
@@ -195,6 +220,8 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
     setStatusText("Unggah dijeda. Klik Lanjutkan untuk meneruskan.");
   };
 
+  const isPdfOnly = acceptedTypes.trim() === ".pdf";
+
   return (
     <div className="font-sans text-xs">
       {/* Hidden File Input */}
@@ -202,7 +229,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
         type="file"
         ref={fileInputRef}
         onChange={handleInputChange}
-        accept={acceptedTypes}
+        accept={isPdfOnly ? ".pdf,application/pdf" : acceptedTypes}
         className="hidden"
       />
 
@@ -234,35 +261,48 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
             {/* Title & Description */}
             <div className="space-y-1">
               <h3 className="font-black text-slate-900 text-base tracking-tight group-hover:text-blue-700 transition">
-                Pilih atau Tarik Berkas Dokumen Di Sini
+                {isPdfOnly
+                  ? "Pilih atau Tarik Berkas Dokumen PDF Di Sini"
+                  : "Pilih atau Tarik Berkas Dokumen Di Sini"}
               </h3>
               <p className="text-slate-500 font-medium text-xs">
-                Unggah berkas resmi perencanaan daerah Halmahera Utara
+                {isPdfOnly
+                  ? "Format resmi kearsipan BAPPEDA HALUT (Wajib berkas *.pdf)"
+                  : "Unggah berkas resmi perencanaan daerah Halmahera Utara"}
               </p>
             </div>
 
             {/* Allowed Document Format Extension Pills */}
             <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
-              <span className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 font-black text-[10px] border border-red-200/80 shadow-2xs flex items-center gap-1">
-                <FileText className="w-3 h-3 text-red-600" />
-                <span>PDF</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200/80 shadow-2xs flex items-center gap-1">
-                <FileText className="w-3 h-3 text-blue-600" />
-                <span>DOCX</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-black text-[10px] border border-emerald-200/80 shadow-2xs flex items-center gap-1">
-                <FileText className="w-3 h-3 text-emerald-600" />
-                <span>XLSX</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-black text-[10px] border border-amber-200/80 shadow-2xs flex items-center gap-1">
-                <FileText className="w-3 h-3 text-amber-600" />
-                <span>PPTX</span>
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-black text-[10px] border border-purple-200/80 shadow-2xs flex items-center gap-1">
-                <ImageIcon className="w-3 h-3 text-purple-600" />
-                <span>JPG / PNG</span>
-              </span>
+              {isPdfOnly ? (
+                <span className="px-3.5 py-1.5 rounded-xl bg-red-50 text-red-700 font-extrabold text-xs border border-red-200/80 shadow-2xs flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-red-600" />
+                  <span>Hanya Menerima Dokumen PDF (*.pdf)</span>
+                </span>
+              ) : (
+                <>
+                  <span className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 font-black text-[10px] border border-red-200/80 shadow-2xs flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-red-600" />
+                    <span>PDF</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200/80 shadow-2xs flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-blue-600" />
+                    <span>DOCX</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 font-black text-[10px] border border-emerald-200/80 shadow-2xs flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-emerald-600" />
+                    <span>XLSX</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-black text-[10px] border border-amber-200/80 shadow-2xs flex items-center gap-1">
+                    <FileText className="w-3 h-3 text-amber-600" />
+                    <span>PPTX</span>
+                  </span>
+                  <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-black text-[10px] border border-purple-200/80 shadow-2xs flex items-center gap-1">
+                    <ImageIcon className="w-3 h-3 text-purple-600" />
+                    <span>JPG / PNG</span>
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>

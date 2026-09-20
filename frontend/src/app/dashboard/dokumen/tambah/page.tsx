@@ -421,12 +421,13 @@ export default function TambahDokumenPage() {
           {/* Resumable Chunked File Uploader Component */}
           <div>
             <label className="block text-xs font-extrabold text-slate-700 mb-2">
-              Unggah Berkas Dokumen Perencanaan *
+              Unggah Berkas Dokumen Perencanaan (Wajib PDF) *
             </label>
             <p className="mb-3 text-[11px] font-medium text-blue-800">
-              Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca. Format standar kearsipan: <strong>PDF</strong> (untuk berkas Word/Office, silakan simpan atau ekspor ke format PDF sebelum diunggah).
+              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
             </p>
             <ResumableChunkUploader
+              acceptedTypes=".pdf"
               onUploadSuccess={handleUploadSuccess}
               chunkSizeMB={5}
             />
