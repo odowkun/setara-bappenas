@@ -18,8 +18,14 @@ export default function GlobalError({
             Terjadi pembaruan sistem sementara. Silakan segarkan halaman browser Anda.
           </p>
           <button
-            onClick={() => reset()}
-            className="w-full py-3 rounded-full bg-blue-700 text-white font-bold text-sm shadow-md"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.reload();
+              } else {
+                reset();
+              }
+            }}
+            className="w-full py-3 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-bold text-sm shadow-md transition cursor-pointer active:scale-95"
           >
             Segarkan Kembali
           </button>

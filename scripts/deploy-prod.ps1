@@ -43,6 +43,8 @@ if (Test-Path $backendSrc) {
     robocopy $backendSrc $backendDest /E /XD storage .git /XF .env .env.* /R:2 /W:1 | Out-Null
     if ($LASTEXITCODE -gt 7) {
         Write-Error "Robocopy backend gagal dengan exit code $LASTEXITCODE"
+    } else {
+        $global:LASTEXITCODE = 0
     }
 }
 
@@ -56,6 +58,8 @@ if (Test-Path $frontendSrc) {
     robocopy $frontendSrc $frontendDest /E /XD node_modules .next .git /XF .env .env.* /R:2 /W:1 | Out-Null
     if ($LASTEXITCODE -gt 7) {
         Write-Error "Robocopy frontend gagal dengan exit code $LASTEXITCODE"
+    } else {
+        $global:LASTEXITCODE = 0
     }
 }
 
@@ -65,6 +69,11 @@ $scriptsDest = Join-Path $prodRoot "scripts"
 if (Test-Path $scriptsSrc) {
     if (!(Test-Path $scriptsDest)) { New-Item -ItemType Directory -Path $scriptsDest -Force | Out-Null }
     robocopy $scriptsSrc $scriptsDest /E /R:2 /W:1 | Out-Null
+    if ($LASTEXITCODE -gt 7) {
+        Write-Error "Robocopy scripts gagal dengan exit code $LASTEXITCODE"
+    } else {
+        $global:LASTEXITCODE = 0
+    }
 }
 
 # 4. Update Backend Laravel
@@ -91,41 +100,45 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
-# Bersihkan cache Next.js lama dan swc helpers yang usang
+# Bersihkan cache Next.js lama
 $cacheDir = Join-Path $frontendDest ".next\cache"
 if (Test-Path $cacheDir) {
     Remove-Item -Recurse -Force $cacheDir -ErrorAction SilentlyContinue
 }
-$oldSwcDir = Join-Path $frontendDest "node_modules\@swc\helpers"
-if (Test-Path $oldSwcDir) {
-    Remove-Item -Recurse -Force $oldSwcDir -ErrorAction SilentlyContinue
-}
 
-Write-Output "[INFO] Memasang dependensi penting..."
-& $npmCmd install @swc/helpers@0.5.15 react-dom@19.0.0 react@19.0.0 --no-audit
+Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
+& $npmCmd install --legacy-peer-deps --prefer-offline --no-audit
+$global:LASTEXITCODE = 0
 
 Write-Output "[INFO] Menjalankan Next.js build..."
+$env:NODE_ENV = "production"
 & $npmCmd run build
-if ($LASTEXITCODE -ne 0) {
-    Write-Output "[WARN] Next.js build menghasilkan exit code $LASTEXITCODE. Menjaga layanan tetap aktif dengan build eksisting..."
-} else {
-    Write-Output "[SUCCESS] Next.js build berhasil! Menyinkronkan artefak standalone..."
-    $standaloneDir = Join-Path $frontendDest ".next\standalone"
-    if (Test-Path $standaloneDir) {
-        robocopy $standaloneDir $frontendDest server.js /R:2 /W:1 | Out-Null
-    }
+$buildExit = $LASTEXITCODE
 
-    $publicSrc = Join-Path $frontendDest "public"
-    $publicDest = Join-Path $frontendDest ".next\standalone\public"
-    if (Test-Path $publicSrc) {
-        robocopy $publicSrc $publicDest /E /R:2 /W:1 | Out-Null
-    }
+if ($buildExit -ne 0) {
+    Write-Output "[ERROR] Next.js build gagal dengan exit code $buildExit!"
+    throw "Next.js build failed with exit code $buildExit"
+}
 
-    $staticSrc = Join-Path $frontendDest ".next\static"
-    $staticDest = Join-Path $frontendDest ".next\standalone\.next\static"
-    if (Test-Path $staticSrc) {
-        robocopy $staticSrc $staticDest /E /R:2 /W:1 | Out-Null
-    }
+Write-Output "[SUCCESS] Next.js build berhasil! Menyinkronkan artefak standalone..."
+$standaloneDir = Join-Path $frontendDest ".next\standalone"
+if (Test-Path $standaloneDir) {
+    robocopy $standaloneDir $frontendDest server.js /R:2 /W:1 | Out-Null
+    $global:LASTEXITCODE = 0
+}
+
+$publicSrc = Join-Path $frontendDest "public"
+$publicDest = Join-Path $frontendDest ".next\standalone\public"
+if (Test-Path $publicSrc) {
+    robocopy $publicSrc $publicDest /E /R:2 /W:1 | Out-Null
+    $global:LASTEXITCODE = 0
+}
+
+$staticSrc = Join-Path $frontendDest ".next\static"
+$staticDest = Join-Path $frontendDest ".next\standalone\.next\static"
+if (Test-Path $staticSrc) {
+    robocopy $staticSrc $staticDest /E /R:2 /W:1 | Out-Null
+    $global:LASTEXITCODE = 0
 }
 
 # 6. Reload PM2 (Zero-Downtime & Detached via Task Scheduler)

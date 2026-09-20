@@ -106,6 +106,8 @@ Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
 - **Alur Kerja**: Sinkronisasi kode ➡️ Migrasi database Laravel ➡️ Cache config ➡️ Build frontend ➡️ PM2 Zero-Downtime Reload.
 - **Standar Kompatibilitas PowerShell 5.1**: Server menggunakan Windows Server 2016 (PowerShell 5.1). Script deployment (`scripts/deploy-prod.ps1`) TIDAK BOLEH menggunakan operator `||`/`&&` (fitur PowerShell 7+) dan hindari karakter non-ASCII/emoji di file tanpa BOM untuk mencegah parsing error pada Windows code page (CP1252/ANSI).
 - **Isolasi Proses PM2 (Cegah Orphan Process Termination)**: GitHub Actions runner secara otomatis membunuh child process yang dibuat selama job (`Cleaning up orphan processes`). Reload PM2 dijalankan secara detached via Windows Task Scheduler (`scripts/reload-pm2.bat`) dengan melepaskan `RUNNER_TRACKING_ID`, sehingga proses Node.js (3100) dan PHP (8100) tetap hidup 24/7.
+- **Normalisasi Exit Code Robocopy**: Perintah `robocopy` mengembalikan nilai 1–7 untuk status sukses penyalinan berkas, yang dapat mencemari `$LASTEXITCODE` di PowerShell. Script `deploy-prod.ps1` selalu mereset `$global:LASTEXITCODE = 0` jika nilai `<= 7` sebelum menjalankan `npm run build`.
+- **Penanganan ChunkLoadError & Cache Deployment**: Saat deployment baru memperbarui hash chunk frontend Next.js, `error.tsx` dan `global-error.tsx` secara otomatis mendeteksi `ChunkLoadError` dan memicu `window.location.reload()` secara cerdas (debounced) agar browser pengguna segera memuat chunk terbaru tanpa tertahan di layar error boundary.
 
 #### Perintah Auto-Start Runner (Background 24/7):
 ```powershell
