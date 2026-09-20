@@ -279,6 +279,16 @@ export const Navbar: React.FC = () => {
                     <div className="text-[10px] text-slate-500 font-normal">Jadwal & Agenda Pembangunan</div>
                   </div>
                 </Link>
+                <Link
+                  href="/infografis"
+                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-800 transition group"
+                >
+                  <BarChart3 className="w-4 h-4 text-blue-600 group-hover:scale-110 transition shrink-0" />
+                  <div>
+                    <div className="font-bold text-xs">Infografis Pembangunan</div>
+                    <div className="text-[10px] text-slate-500 font-normal">Data Visual & Capaian Halut</div>
+                  </div>
+                </Link>
               </div>
             )}
           </div>
@@ -502,6 +512,13 @@ export const Navbar: React.FC = () => {
                   className="block p-2 rounded-xl hover:bg-blue-50 hover:text-blue-700"
                 >
                   Agenda Kerja & Kalender
+                </Link>
+                <Link
+                  href="/infografis"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block p-2 rounded-xl hover:bg-blue-50 hover:text-blue-700"
+                >
+                  Infografis Pembangunan
                 </Link>
               </div>
             )}

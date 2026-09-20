@@ -43,6 +43,7 @@ import {
 } from "@/services/officialContentService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
+import { PinnedInfographicsSection } from "@/components/home/PinnedInfographicsSection";
 
 const EsriLeafletMap = dynamic(
   () => import("@/components/gis/EsriLeafletMap"),
@@ -352,6 +353,9 @@ export const GeospatialSection: React.FC = () => {
     <section className="py-8 sm:py-16 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
         
+        {/* PINNED INFOGRAPHICS STRIP: 5 Pinned Infographics */}
+        <PinnedInfographicsSection />
+
         {/* TOP INDEPENDENT CARD 1: Pengumuman Resmi Perencanaan Daerah */}
         <div className="p-5 sm:p-10 rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
           <div className="max-w-3xl space-y-3 relative z-10">

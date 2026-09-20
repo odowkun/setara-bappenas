@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\DocumentFileController;
 use App\Http\Controllers\Api\DocumentGovernanceController;
 use App\Http\Controllers\Api\GaleriController;
 use App\Http\Controllers\Api\GeoSettingController;
+use App\Http\Controllers\Api\InfografisController;
 use App\Http\Controllers\Api\JenisDokumenController;
 use App\Http\Controllers\Api\KritikController;
 use App\Http\Controllers\Api\MediaController;
@@ -364,6 +365,27 @@ Route::prefix('v1')->group(function () {
     Route::delete('/news-categories/{newsCategory}', [ContentTaxonomyController::class, 'destroyNewsCategory'])
         ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
         ->name('news-categories.destroy');
+
+    // Infografis Endpoints
+    Route::get('/infografis', [InfografisController::class, 'index']);
+    Route::get('/infografis/{id}', [InfografisController::class, 'show']);
+    Route::get('/admin/infografis', [InfografisController::class, 'adminIndex'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita']);
+    Route::post('/admin/infografis', [InfografisController::class, 'store'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
+        ->name('infografis.store');
+    Route::put('/admin/infografis/{id}', [InfografisController::class, 'update'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
+        ->name('infografis.update');
+    Route::patch('/admin/infografis/{id}/pin', [InfografisController::class, 'togglePin'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
+        ->name('infografis.pin');
+    Route::patch('/admin/infografis/{id}/publish', [InfografisController::class, 'togglePublish'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
+        ->name('infografis.publish');
+    Route::delete('/admin/infografis/{id}', [InfografisController::class, 'destroy'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita', AuditAdminMutation::class])
+        ->name('infografis.destroy');
 
     // Global Unified Search Endpoint
     Route::get('/search', function (Request $request) {

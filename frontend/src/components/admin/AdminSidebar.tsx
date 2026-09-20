@@ -41,6 +41,7 @@ import {
   Target,
   Printer,
   ScrollText,
+  BarChart3,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -97,6 +98,7 @@ const menuItems: MenuItem[] = [
     subItems: [
       { title: "Berita & Artikel", href: "/dashboard/berita", icon: Newspaper, permissions: ["manage_berita"] },
       { title: "Pengumuman Resmi", href: "/dashboard/pengumuman", icon: Megaphone, permissions: ["manage_pengumuman"] },
+      { title: "Infografis Daerah", href: "/dashboard/infografis", icon: BarChart3, permissions: ["manage_berita"] },
       { title: "Galeri Foto & Video", href: "/dashboard/galeri", icon: Image, permissions: ["manage_galeri"] },
       { title: "Agenda Kerja & Kalender", href: "/dashboard/agenda", icon: Calendar, permissions: ["manage_pengumuman"] },
       { title: "Teks Berjalan (Running Text)", href: "/dashboard/running-text", icon: ScrollText, permissions: ["manage_pengumuman"] },
