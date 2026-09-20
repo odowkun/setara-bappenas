@@ -26,23 +26,27 @@ jobs:
             New-Item -ItemType Directory -Path $prodRoot -Force | Out-Null
           }
 
+          # Helper Robocopy agar exit code 1-7 di-normalize menjadi 0 (mencegah false failure GitHub Actions)
+          function Copy-Safe ($src, $dest, $excludeDirs = "", $excludeFiles = "") {
+            $xd = if ($excludeDirs) { "/XD $excludeDirs" } else { "" }
+            $xf = if ($excludeFiles) { "/XF $excludeFiles" } else { "" }
+            cmd.exe /c "robocopy `"$src`" `"$dest`" /E $xd $xf & if %ERRORLEVEL% leq 7 exit 0"
+          }
+
           # Setup PATH & Environment
           $env:PATH = "C:\php83;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Roaming\npm;$env:PATH"
           $env:PM2_HOME = "C:\Users\Administrator\.pm2"
 
-          # 1. Salin file terbaru dari repo menggunakan robocopy (aman: menjaga .env & storage)
+          # 1. Salin file terbaru dari repo menggunakan robocopy safe (menjaga .env & storage)
           Write-Output "📂 Menyinkronkan file repository ke direktori produksi..."
           if (Test-Path "backend") {
-            robocopy "backend" "$prodRoot\backend" /E /XD storage /XF .env .env.* | Out-Null
-            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+            Copy-Safe "backend" "$prodRoot\backend" "storage" ".env .env.*"
           }
           if (Test-Path "frontend") {
-            robocopy "frontend" "$prodRoot\frontend" /E /XD node_modules .next /XF .env .env.* | Out-Null
-            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+            Copy-Safe "frontend" "$prodRoot\frontend" "node_modules .next" ".env .env.*"
           }
           if (Test-Path "scripts") {
-            robocopy "scripts" "$prodRoot\scripts" /E | Out-Null
-            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+            Copy-Safe "scripts" "$prodRoot\scripts"
           }
 
           # 2. Update Backend Laravel
@@ -56,27 +60,21 @@ jobs:
           # 3. Update & Build Frontend Next.js
           Write-Output "⚛️ Memperbarui Frontend Next.js..."
           Set-Location "$prodRoot\frontend"
-          npm install --prefer-offline --no-audit
-          npm run build
+          cmd.exe /c "npm install --prefer-offline --no-audit"
+          cmd.exe /c "npm run build"
 
           if (Test-Path "public") {
-            robocopy "public" ".next\standalone\public" /E | Out-Null
-            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+            Copy-Safe "public" ".next\standalone\public"
           }
           if (Test-Path ".next\static") {
-            robocopy ".next\static" ".next\standalone\.next\static" /E | Out-Null
-            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
+            Copy-Safe ".next\static" ".next\standalone\.next\static"
           }
 
           # 4. Reload PM2 Zero-Downtime
           Write-Output "🔄 Mereload layanan PM2 (Zero-Downtime)..."
-          pm2 reload bappeda-api --update-env 2>$null
-          if ($LASTEXITCODE -ne 0) { pm2 restart bappeda-api }
-
-          pm2 reload bappeda-fe --update-env 2>$null
-          if ($LASTEXITCODE -ne 0) { pm2 restart bappeda-fe }
-
-          pm2 save
+          cmd.exe /c "pm2 reload bappeda-api --update-env || pm2 restart bappeda-api"
+          cmd.exe /c "pm2 reload bappeda-fe --update-env || pm2 restart bappeda-fe"
+          cmd.exe /c "pm2 save"
 
           Write-Output "=================================================="
           Write-Output "🎉 DEPLOYMENT BERHASIL! Web Bappeda Halut Terupdate!"
