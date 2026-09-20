@@ -9,6 +9,7 @@ jobs:
   deploy:
     name: Deploy to Windows Server (HP ProLiant)
     runs-on: self-hosted
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4

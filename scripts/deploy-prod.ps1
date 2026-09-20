@@ -100,18 +100,17 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
-# Bersihkan cache Next.js lama
-$cacheDir = Join-Path $frontendDest ".next\cache"
-if (Test-Path $cacheDir) {
-    Remove-Item -Recurse -Force $cacheDir -ErrorAction SilentlyContinue
-}
+# Environment variables untuk akselerasi & stabilitas build di server Windows
+$env:NODE_ENV = "production"
+$env:CI = "1"
+$env:NEXT_TELEMETRY_DISABLED = "1"
+$env:NODE_OPTIONS = "--max-old-space-size=4096"
 
 Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
 & $npmCmd install --legacy-peer-deps --prefer-offline --no-audit
 $global:LASTEXITCODE = 0
 
 Write-Output "[INFO] Menjalankan Next.js build..."
-$env:NODE_ENV = "production"
 & $npmCmd run build
 $buildExit = $LASTEXITCODE
 
