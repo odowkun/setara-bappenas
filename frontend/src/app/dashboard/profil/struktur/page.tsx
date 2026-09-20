@@ -487,7 +487,7 @@ export default function StrukturEditorPage() {
       </div>
 
       {/* 2. BOTTOM SECTION: Struktur Organisasi BAPPEDA Halmahera Utara */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+      <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
         <StrukturOrganisasiChart
           data={treeData}
           title="Struktur Organisasi BAPPEDA Halmahera Utara"

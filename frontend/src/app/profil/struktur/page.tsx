@@ -65,18 +65,18 @@ export default function PublicStrukturPage() {
           /* 2. FULL WIDTH CONTENT CONTAINER (NO SIDEBAR) */
           <div className="space-y-8">
             {/* SECTION: BAGAN STRUKTUR ORGANISASI CHART */}
-            <div className="p-6 sm:p-8 rounded-[32px] bg-blue-50/50 border border-blue-100/80 space-y-6">
-              <div className="flex items-center gap-3 border-b border-blue-100/60 pb-4">
-                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20">
+            <div className="p-3 sm:p-8 rounded-2xl sm:rounded-[32px] bg-blue-50/50 border border-blue-100/80 space-y-4 sm:space-y-6">
+              <div className="flex items-center gap-3 border-b border-blue-100/60 pb-3 sm:pb-4">
+                <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20 shrink-0">
                   <Network className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-black text-slate-900 tracking-tight">Bagan Hirarki Kelembagaan Resmi</h2>
-                  <p className="text-xs text-slate-500 font-medium">Visualisasi hirarki pejabat dan unit kerja BAPPEDA Halmahera Utara</p>
+                  <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">Bagan Hirarki Kelembagaan Resmi</h2>
+                  <p className="text-[11px] sm:text-xs text-slate-500 font-medium">Visualisasi hirarki pejabat dan unit kerja BAPPEDA Halmahera Utara</p>
                 </div>
               </div>
 
-              <div className="p-4 sm:p-6 rounded-2xl bg-white border border-blue-100/60 shadow-sm overflow-hidden">
+              <div className="p-2 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-blue-100/60 shadow-sm overflow-hidden">
                 <StrukturOrganisasiChart
                   data={treeData}
                   title="Bagan Hirarki Kelembagaan BAPPEDA Halmahera Utara"

@@ -17,6 +17,7 @@ import {
   Maximize2,
   Minimize2,
   Network,
+  Target,
 } from "lucide-react";
 
 export interface OrgNode {
@@ -177,7 +178,7 @@ export const StrukturOrganisasiChart: React.FC<{
   showSaveButton?: boolean;
 }> = ({ data: rawData, title = "Struktur Organisasi BAPPEDA Halmahera Utara", showSaveButton = true }) => {
   const data = rawData;
-  // Default by demand: Vertical (Bagan Memanjang)
+  // Default: Vertical (Bagan Memanjang) on mobile, easily toggled to horizontal canvas
   const [viewMode, setViewMode] = useState<"vertical" | "horizontal">("vertical");
   const [zoomLevel, setZoomLevel] = useState(85);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -185,11 +186,20 @@ export const StrukturOrganisasiChart: React.FC<{
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setZoomLevel(60);
+    }
   }, []);
 
   const handleZoomIn = () => setZoomLevel((prev) => Math.min(prev + 15, 140));
-  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 15, 40));
-  const handleResetZoom = () => setZoomLevel(85);
+  const handleZoomOut = () => setZoomLevel((prev) => Math.max(prev - 15, 35));
+  const handleResetZoom = () => {
+    if (typeof window !== "undefined" && window.innerWidth < 640) {
+      setZoomLevel(60);
+    } else {
+      setZoomLevel(85);
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -238,43 +248,45 @@ export const StrukturOrganisasiChart: React.FC<{
   );
 
   return (
-    <div className="space-y-6 font-sans w-full max-w-full overflow-hidden">
+    <div className="space-y-4 sm:space-y-6 font-sans w-full max-w-full overflow-hidden">
       {/* Clean Single-Row Top Control Header Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 pb-4">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900">{title}</h2>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
+          <h2 className="text-lg sm:text-2xl font-black text-slate-900 tracking-tight">{title}</h2>
+          <p className="text-[11px] sm:text-xs text-slate-500 font-medium mt-0.5">
             Struktur Kelembagaan Resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara
           </p>
         </div>
 
-        {/* Action Icon Buttons */}
-        <div className="flex items-center gap-2 shrink-0">
+        {/* Action Buttons: Responsive Switcher & Print */}
+        <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto flex-wrap">
           <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200">
             <button
               type="button"
               onClick={() => setViewMode("vertical")}
-              title="Bagan Memanjang"
-              className={`p-2 rounded-xl transition ${
+              title="Bagan Vertikal (Hirarki Memanjang)"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition text-xs ${
                 viewMode === "vertical"
                   ? "bg-white text-blue-700 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <Rows className="w-4 h-4" />
+              <Rows className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-[11px] sm:text-xs">Vertikal</span>
             </button>
 
             <button
               type="button"
               onClick={() => setViewMode("horizontal")}
-              title="Bagan Lebar (Interactive Canvas)"
-              className={`p-2 rounded-xl transition ${
+              title="Bagan Kanvas Interaktif"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold transition text-xs ${
                 viewMode === "horizontal"
                   ? "bg-white text-blue-700 shadow-sm"
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              <LayoutGrid className="w-4 h-4" />
+              <LayoutGrid className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+              <span className="text-[11px] sm:text-xs">Kanvas</span>
             </button>
           </div>
 
@@ -283,16 +295,17 @@ export const StrukturOrganisasiChart: React.FC<{
             type="button"
             onClick={handlePrint}
             title="Cetak Bagan"
-            className="p-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition"
+            className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition flex items-center gap-1"
           >
             <Printer className="w-4 h-4" />
+            <span className="hidden md:inline text-xs font-bold">Cetak</span>
           </button>
         </div>
       </div>
 
       {/* Mode 1: Vertical Stacked Tree Layout (Bagan Memanjang - Default) */}
       {viewMode === "vertical" && (
-        <div className="p-6 sm:p-8 rounded-3xl bg-slate-50 border border-slate-200 space-y-6">
+        <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 space-y-4 sm:space-y-6">
           <RenderVerticalNode node={data} isRoot />
         </div>
       )}
@@ -303,7 +316,7 @@ export const StrukturOrganisasiChart: React.FC<{
           {/* Render inside React Portal on document.body when in Fullscreen mode */}
           {isFullscreen && mounted ? (
             createPortal(
-              <div className="fixed inset-0 z-[99999] bg-slate-100 p-4 sm:p-6 flex flex-col w-screen h-screen overflow-hidden animate-in fade-in duration-150 font-sans">
+              <div className="fixed inset-0 z-[99999] bg-slate-100 p-2 sm:p-6 flex flex-col w-screen h-[100dvh] overflow-hidden animate-in fade-in duration-150 font-sans">
                 {canvasComponent}
               </div>,
               document.body
@@ -495,6 +508,32 @@ const InteractiveCanvasOrgChart: React.FC<{
     };
   }, []);
 
+  // Center camera on root node (Kepala Badan)
+  const centerOnRoot = () => {
+    const el = containerRef.current;
+    if (!el) return;
+    const rootNode = nodes.find((n) => n.type === "root") || nodes[0];
+    if (!rootNode) return;
+
+    const scale = zoomLevel / 100;
+    const targetLeft = Math.max(0, (rootNode.x + CARD_W / 2) * scale - el.clientWidth / 2);
+    const targetTop = Math.max(0, rootNode.y * scale - 24);
+
+    el.scrollTo({
+      left: targetLeft,
+      top: targetTop,
+      behavior: "smooth",
+    });
+  };
+
+  // Center on root node upon mount or nodes update
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      centerOnRoot();
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [nodes.length]);
+
   const handleMouseDown = (e: React.MouseEvent, id: string, nodeX: number, nodeY: number) => {
     e.preventDefault();
     setDraggingId(id);
@@ -520,9 +559,38 @@ const InteractiveCanvasOrgChart: React.FC<{
     setDraggingId(null);
   };
 
+  const handleTouchStart = (e: React.TouchEvent, id: string, nodeX: number, nodeY: number) => {
+    if (!showSaveButton) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+    setDraggingId(id);
+    dragOffset.current = {
+      x: touch.clientX - nodeX * (zoomLevel / 100),
+      y: touch.clientY - nodeY * (zoomLevel / 100),
+    };
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!draggingId) return;
+    const touch = e.touches[0];
+    if (!touch) return;
+
+    const scale = zoomLevel / 100;
+    const newX = (touch.clientX - dragOffset.current.x) / scale;
+    const newY = (touch.clientY - dragOffset.current.y) / scale;
+
+    setNodes((prev) =>
+      prev.map((n) => (n.id === draggingId ? { ...n, x: Math.max(10, newX), y: Math.max(10, newY) } : n))
+    );
+  };
+
+  const handleTouchEnd = () => {
+    setDraggingId(null);
+  };
+
   // SVG Connection Lines Map
-  const CARD_W = 280;
-  const CARD_H = 115;
+  const CARD_W = 290;
+  const CARD_H = 124;
 
   const svgConnections = useMemo(() => {
     const nodeMap = new Map<string, CanvasNode>();
@@ -602,48 +670,58 @@ const InteractiveCanvasOrgChart: React.FC<{
   return (
     <div className="space-y-3 font-sans w-full max-w-full overflow-hidden flex flex-col h-full">
       {/* Dedicated Toolbar ABOVE Canvas Box */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl text-xs font-bold shadow-sm w-full max-w-full overflow-x-auto bg-white border border-slate-200 text-slate-900 shrink-0">
+      <div className="flex flex-wrap items-center justify-between gap-2.5 sm:gap-3 p-3 sm:p-4 rounded-2xl text-xs font-bold shadow-sm w-full max-w-full bg-white border border-slate-200 text-slate-900 shrink-0">
         {showSaveButton ? (
-          <div className="flex items-center gap-2 font-extrabold shrink-0 text-blue-900">
+          <div className="flex items-center gap-2 font-extrabold text-blue-900 text-[11px] sm:text-xs">
             <Move className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>💡 Tips: Klik & geser (drag) kartu pejabat untuk menata posisi bagan secara bebas!</span>
+            <span className="hidden sm:inline">Tips: Klik & geser (drag) kartu pejabat untuk menata posisi bagan secara bebas!</span>
+            <span className="sm:hidden">Geser kartu pejabat untuk atur posisi</span>
           </div>
         ) : (
-          <div className="flex items-center gap-2 font-extrabold shrink-0 text-blue-900">
+          <div className="flex items-center gap-2 font-extrabold text-blue-900 text-[11px] sm:text-xs">
             <Network className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Bagan Hirarki Kelembagaan Resmi Kabupaten Halmahera Utara</span>
+            <span className="hidden sm:inline">Bagan Hirarki Kelembagaan Resmi Kabupaten Halmahera Utara</span>
+            <span className="sm:hidden">Bagan Kelembagaan BAPPEDA</span>
           </div>
         )}
 
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Zoom & Reset Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto flex-wrap">
+          {/* Zoom & Reset & Center Controls */}
           <div className="flex items-center gap-1 bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
             <button
               type="button"
               onClick={handleZoomOut}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
+              className="p-1 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
               title="Perkecil Zoom"
             >
-              <ZoomOut className="w-4 h-4" />
+              <ZoomOut className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
-            <span className="px-1.5 font-mono text-[11px] font-extrabold text-slate-800">
+            <span className="px-1 sm:px-1.5 font-mono text-[10px] sm:text-[11px] font-extrabold text-slate-800 min-w-[34px] text-center">
               {zoomLevel}%
             </span>
             <button
               type="button"
               onClick={handleZoomIn}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
+              className="p-1 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
               title="Perbesar Zoom"
             >
-              <ZoomIn className="w-4 h-4" />
+              <ZoomIn className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
             <button
               type="button"
               onClick={handleResetZoom}
-              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
+              className="p-1 sm:p-1.5 rounded-lg hover:bg-slate-100 text-slate-700 transition"
               title="Reset Zoom"
             >
               <RotateCcw className="w-3.5 h-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={centerOnRoot}
+              className="p-1 sm:p-1.5 rounded-lg hover:bg-blue-50 text-blue-600 transition"
+              title="Pusatkan ke Kepala Badan"
+            >
+              <Target className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             </button>
           </div>
 
@@ -703,16 +781,26 @@ const InteractiveCanvasOrgChart: React.FC<{
         onMouseMove={showSaveButton ? handleMouseMove : undefined}
         onMouseUp={showSaveButton ? handleMouseUp : undefined}
         onMouseLeave={showSaveButton ? handleMouseUp : undefined}
+        onTouchMove={showSaveButton && draggingId ? handleTouchMove : undefined}
+        onTouchEnd={showSaveButton ? handleTouchEnd : undefined}
+        onTouchCancel={showSaveButton ? handleTouchEnd : undefined}
         className={
           isFullscreen
-            ? `relative flex-1 w-full max-w-full overflow-auto border border-slate-200 rounded-3xl p-6 select-none bg-slate-50 shadow-2xl ${
+            ? `relative flex-1 w-full max-w-full overflow-auto border border-slate-200 rounded-3xl p-4 sm:p-6 select-none bg-slate-50 shadow-2xl touch-pan-x touch-pan-y ${
                 showSaveButton ? "cursor-grab active:cursor-grabbing" : "cursor-default"
               }`
-            : `relative w-full max-w-full overflow-auto max-h-[75vh] min-h-[600px] border border-slate-200 rounded-3xl p-6 select-none bg-slate-50 shadow-inner ${
+            : `relative w-full max-w-full overflow-auto h-[60vh] sm:h-[75vh] min-h-[420px] sm:min-h-[600px] border border-slate-200 rounded-2xl sm:rounded-3xl p-3 sm:p-6 select-none bg-slate-50 shadow-inner touch-pan-x touch-pan-y ${
                 showSaveButton ? "cursor-grab active:cursor-grabbing" : "cursor-default"
               }`
         }
       >
+        {/* Mobile Navigation Hint Pill */}
+        <div className="sm:hidden sticky top-2 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex justify-center w-full">
+          <div className="px-3 py-1 rounded-full bg-slate-900/85 backdrop-blur-xs text-white text-[10px] font-bold shadow-md flex items-center gap-1.5 whitespace-nowrap">
+            <span>↔ Geser layar untuk menjelajah bagan</span>
+          </div>
+        </div>
+
         {/* Zoomable & Auto-Expanding Canvas Area */}
         <div
           className="relative transition-transform duration-75 origin-top-left"
@@ -740,11 +828,15 @@ const InteractiveCanvasOrgChart: React.FC<{
           {/* Render Interactive Drag Cards Matched to Blue Bidang Theme */}
           {nodes.map((node) => {
             const isDragging = draggingId === node.id;
+            const isRoot = node.type === "root";
+            const isSekretaris = node.type === "sekretaris";
+            const isBidang = node.type === "bidang";
 
             return (
               <div
                 key={node.id}
                 onMouseDown={showSaveButton ? (e) => handleMouseDown(e, node.id, node.x, node.y) : undefined}
+                onTouchStart={showSaveButton ? (e) => handleTouchStart(e, node.id, node.x, node.y) : undefined}
                 style={{
                   position: "absolute",
                   left: `${node.x}px`,
@@ -752,24 +844,30 @@ const InteractiveCanvasOrgChart: React.FC<{
                   width: `${CARD_W}px`,
                   height: `${CARD_H}px`,
                 }}
-                className={`rounded-2xl p-3 border transition-shadow z-10 flex flex-col justify-between shadow-sm ${
-                  showSaveButton ? "cursor-grab active:cursor-grabbing" : "cursor-default"
+                className={`rounded-2xl p-3 border transition-shadow z-10 flex flex-col justify-between shadow-sm select-none ${
+                  showSaveButton ? "cursor-grab active:cursor-grabbing touch-none" : "cursor-default"
                 } ${
-                  isDragging ? "shadow-2xl scale-105 border-blue-600 z-50 ring-2 ring-blue-500/50" : ""
+                  isDragging ? "shadow-2xl scale-105 border-blue-500 z-50 ring-4 ring-blue-500/40" : ""
                 } ${
-                  node.type === "root"
-                    ? "bg-blue-950 text-white border-blue-900 shadow-blue-950/30"
-                    : node.type === "sekretaris" || node.type === "bidang"
-                    ? "bg-white border-blue-500 text-slate-900"
-                    : "bg-blue-50/90 border-blue-300 text-slate-900"
+                  isRoot
+                    ? "bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 text-white border-2 border-blue-500/80 shadow-xl shadow-blue-950/40"
+                    : isSekretaris
+                    ? "bg-white border-2 border-blue-600 text-slate-900 shadow-md shadow-blue-500/10"
+                    : isBidang
+                    ? "bg-white border-2 border-sky-400 text-slate-900 shadow-sm"
+                    : "bg-blue-50/90 border border-blue-200 text-slate-900 shadow-xs"
                 }`}
               >
-                {/* Position Badge — MATCHED BLUE STYLING (NO YELLOW) */}
+                {/* Position Badge */}
                 <div
                   className={`py-1 px-2.5 rounded-lg font-black text-[9.5px] uppercase leading-tight tracking-tight whitespace-normal break-words ${
-                    node.type === "root"
-                      ? "bg-blue-800 text-sky-200 border border-blue-700"
-                      : "bg-blue-100 text-blue-950 border border-blue-200"
+                    isRoot
+                      ? "bg-blue-600 text-white border border-blue-400/50 shadow-xs tracking-wide"
+                      : isSekretaris
+                      ? "bg-blue-700 text-white border border-blue-800 shadow-xs tracking-wide"
+                      : isBidang
+                      ? "bg-sky-100 text-blue-950 border border-sky-300"
+                      : "bg-blue-100/90 text-blue-900 border border-blue-200"
                   }`}
                 >
                   {node.position}
@@ -782,13 +880,17 @@ const InteractiveCanvasOrgChart: React.FC<{
                     <img
                       src={node.avatar.startsWith("http") ? node.avatar : `${STORAGE_BASE_URL}${node.avatar}`}
                       alt={node.name}
-                      className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-sm shrink-0"
+                      className={`w-10 h-10 rounded-xl object-cover shrink-0 shadow-sm ${
+                        isRoot ? "border-2 border-blue-400" : "border border-blue-300"
+                      }`}
                     />
                   ) : (
                     <div
                       className={`w-10 h-10 rounded-xl font-black text-xs flex items-center justify-center shrink-0 border shadow-sm ${
-                        node.type === "root"
-                          ? "bg-blue-800 text-sky-200 border-blue-700"
+                        isRoot
+                          ? "bg-blue-800 text-white border-blue-500"
+                          : isSekretaris || isBidang
+                          ? "bg-blue-100 text-blue-900 border-blue-300"
                           : "bg-blue-200 text-blue-950 border-blue-300"
                       }`}
                     >
@@ -806,15 +908,19 @@ const InteractiveCanvasOrgChart: React.FC<{
                     </div>
                   )}
 
-                  {/* Official Name & NIP — NO TRUNCATE */}
+                  {/* Official Name & NIP — 100% VISIBLE WITH HIGH CONTRAST */}
                   <div className="min-w-0 flex-1 space-y-0.5">
-                    <p className="text-[11px] font-black leading-tight break-words text-slate-900">
+                    <p
+                      className={`text-[11.5px] font-black leading-tight break-words ${
+                        isRoot ? "text-white drop-shadow-xs" : "text-slate-900"
+                      }`}
+                    >
                       {node.name}
                     </p>
                     {node.nip && (
                       <p
-                        className={`text-[9px] font-mono leading-none ${
-                          node.type === "root" ? "text-blue-200" : "text-slate-500"
+                        className={`text-[9.5px] font-mono leading-none ${
+                          isRoot ? "text-sky-200 font-semibold" : "text-slate-500 font-medium"
                         }`}
                       >
                         NIP: {node.nip}
@@ -842,12 +948,12 @@ const RenderVerticalNode: React.FC<{
   const hasChildren = validChildren.length > 0;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {/* Node Card */}
       <div
-        className={`p-4 sm:p-5 rounded-2xl border transition shadow-sm ${
+        className={`p-3.5 sm:p-5 rounded-2xl border transition shadow-sm ${
           isRoot
-            ? "bg-blue-950 text-white border-blue-900 shadow-blue-900/20"
+            ? "bg-gradient-to-br from-blue-950 via-slate-900 to-blue-900 text-white border-2 border-blue-500/70 shadow-lg shadow-blue-950/30"
             : "bg-white border-slate-200 hover:border-blue-500"
         }`}
       >
@@ -857,13 +963,15 @@ const RenderVerticalNode: React.FC<{
             <img
               src={node.avatar.startsWith("http") ? node.avatar : `${STORAGE_BASE_URL}${node.avatar}`}
               alt={node.name}
-              className="w-12 h-12 rounded-2xl object-cover border border-blue-300 shadow-sm shrink-0"
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl object-cover shadow-sm shrink-0 ${
+                isRoot ? "border-2 border-blue-400" : "border border-blue-300"
+              }`}
             />
           ) : (
             <div
-              className={`w-12 h-12 rounded-2xl font-black text-sm flex items-center justify-center shrink-0 border ${
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center shrink-0 border ${
                 isRoot
-                  ? "bg-blue-800 text-sky-200 border-blue-700"
+                  ? "bg-blue-800 text-white border-blue-600"
                   : "bg-blue-100 text-blue-800 border-blue-200"
               }`}
             >
@@ -876,30 +984,34 @@ const RenderVerticalNode: React.FC<{
                   .map((n) => n[0])
                   .join("")
               ) : (
-                <User className="w-6 h-6" />
+                <User className="w-5 h-5 sm:w-6 sm:h-6" />
               )}
             </div>
           )}
 
-          <div className="min-w-0 space-y-0.5">
-            <h3
-              className={`text-xs sm:text-sm font-black uppercase tracking-tight ${
-                isRoot ? "text-sky-200" : "text-blue-950"
-              }`}
-            >
-              {node.position}
-            </h3>
-            <p
-              className={`text-xs font-bold ${
+          <div className="min-w-0 flex-1 space-y-0.5 sm:space-y-1">
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span
+                className={`text-[9px] sm:text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md ${
+                  isRoot
+                    ? "bg-blue-600 text-white border border-blue-400/40 shadow-xs"
+                    : "bg-blue-50 text-blue-800 border border-blue-200"
+                }`}
+              >
+                {node.position}
+              </span>
+            </div>
+            <h4
+              className={`text-xs sm:text-sm font-black break-words ${
                 isRoot ? "text-white" : "text-slate-900"
               }`}
             >
               {node.name}
-            </p>
+            </h4>
             {node.nip && (
               <p
-                className={`text-[10px] font-mono ${
-                  isRoot ? "text-blue-200" : "text-slate-500"
+                className={`text-[9px] sm:text-[10px] font-mono ${
+                  isRoot ? "text-sky-200 font-medium" : "text-slate-500"
                 }`}
               >
                 NIP: {node.nip}
@@ -911,21 +1023,21 @@ const RenderVerticalNode: React.FC<{
 
       {/* Render Children Vertically Stacked with Per-Child Gap & Termination Math */}
       {hasChildren && (
-        <div className="pl-6 sm:pl-8 ml-6 sm:ml-8 space-y-4">
+        <div className="pl-3.5 sm:pl-8 ml-3 sm:ml-8 space-y-3 sm:space-y-4">
           {validChildren.map((child, idx) => {
             const isLast = idx === validChildren.length - 1;
 
             return (
               <div key={child.id || idx} className="relative">
-                {/* Vertical stem line segment: extends -bottom-4 (16px gap) for siblings, terminates at h-[29px] for last child */}
+                {/* Vertical stem line segment */}
                 <div
-                  className={`absolute -left-6 sm:-left-8 top-0 w-0.5 bg-blue-400 z-0 ${
-                    isLast ? "h-[29px]" : "-bottom-4"
+                  className={`absolute -left-3.5 sm:-left-8 top-0 w-0.5 bg-blue-400 z-0 ${
+                    isLast ? "h-[24px] sm:h-[29px]" : "-bottom-3 sm:-bottom-4"
                   }`}
                 />
 
                 {/* Horizontal branch line connecting stem to card */}
-                <div className="absolute -left-6 sm:-left-8 top-[28px] h-0.5 w-6 sm:w-8 bg-blue-400 z-0" />
+                <div className="absolute -left-3.5 sm:-left-8 top-[23px] sm:top-[28px] h-0.5 w-3.5 sm:w-8 bg-blue-400 z-0" />
 
                 <RenderVerticalNode node={child} />
               </div>
