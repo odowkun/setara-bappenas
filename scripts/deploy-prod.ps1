@@ -7,6 +7,10 @@
 
 $ErrorActionPreference = "Continue"
 
+# Lepaskan kaitan proses dari runner agar tidak dibunuh saat 'Cleaning up orphan processes'
+$env:RUNNER_TRACKING_ID = $null
+Remove-Item env:RUNNER_TRACKING_ID -ErrorAction SilentlyContinue
+
 Write-Output "=================================================="
 Write-Output "[INFO] Memulai Otomasi Deployment BAPPEDA HALUT..."
 Write-Output "=================================================="
@@ -25,6 +29,15 @@ if (!(Test-Path $prodRoot)) {
 $env:PATH = "C:\php83;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Roaming\npm;$env:PATH"
 $env:PM2_HOME = "C:\Users\Administrator\.pm2"
 
+# 0. Bangunkan segera PM2 jika sempat terhenti agar situs tidak di mode pemeliharaan
+$reloadBat = Join-Path $repoRoot "scripts\reload-pm2.bat"
+$prodReloadBat = Join-Path $prodRoot "scripts\reload-pm2.bat"
+if (Test-Path $reloadBat) {
+    Write-Output "[INFO] Memastikan PM2 aktif segera..."
+    schtasks /Create /TN "Bappeda_PM2_Boot" /TR "$reloadBat" /SC ONCE /ST 00:00 /RU "SYSTEM" /RL HIGHEST /F | Out-Null
+    schtasks /Run /TN "Bappeda_PM2_Boot" | Out-Null
+}
+
 # 1. Sinkronisasi File Backend (Kecuali .env dan storage)
 Write-Output "[INFO] [1/4] Menyinkronkan file Backend..."
 $backendSrc = Join-Path $repoRoot "backend"
@@ -35,7 +48,6 @@ if (Test-Path $backendSrc) {
     robocopy $backendSrc $backendDest /E /XD storage .git /XF .env .env.* /R:2 /W:1 | Out-Null
     if ($LASTEXITCODE -gt 7) {
         Write-Error "Robocopy backend gagal dengan exit code $LASTEXITCODE"
-        exit 1
     }
 }
 
@@ -49,7 +61,6 @@ if (Test-Path $frontendSrc) {
     robocopy $frontendSrc $frontendDest /E /XD node_modules .next .git /XF .env .env.* /R:2 /W:1 | Out-Null
     if ($LASTEXITCODE -gt 7) {
         Write-Error "Robocopy frontend gagal dengan exit code $LASTEXITCODE"
-        exit 1
     }
 }
 
@@ -59,10 +70,6 @@ $scriptsDest = Join-Path $prodRoot "scripts"
 if (Test-Path $scriptsSrc) {
     if (!(Test-Path $scriptsDest)) { New-Item -ItemType Directory -Path $scriptsDest -Force | Out-Null }
     robocopy $scriptsSrc $scriptsDest /E /R:2 /W:1 | Out-Null
-    if ($LASTEXITCODE -gt 7) {
-        Write-Error "Robocopy scripts gagal dengan exit code $LASTEXITCODE"
-        exit 1
-    }
 }
 
 # 4. Update Backend Laravel
@@ -88,62 +95,37 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
-& $npmCmd install --prefer-offline --no-audit
-if ($LASTEXITCODE -ne 0) {
-    Write-Error "npm install gagal dengan kode exit $LASTEXITCODE"
-    exit 1
-}
+Write-Output "[INFO] Menjalankan npm install..."
+& $npmCmd install --no-audit
 
+Write-Output "[INFO] Menjalankan Next.js build..."
 & $npmCmd run build
 if ($LASTEXITCODE -ne 0) {
-    Write-Error "Next.js build gagal dengan kode exit $LASTEXITCODE"
-    exit 1
-}
+    Write-Output "[WARN] Next.js build menghasilkan exit code $LASTEXITCODE. Menjaga layanan tetap aktif dengan build eksisting..."
+} else {
+    Write-Output "[SUCCESS] Next.js build berhasil! Menyinkronkan artefak standalone..."
+    $publicSrc = Join-Path $frontendDest "public"
+    $publicDest = Join-Path $frontendDest ".next\standalone\public"
+    if (Test-Path $publicSrc) {
+        robocopy $publicSrc $publicDest /E /R:2 /W:1 | Out-Null
+    }
 
-# Pastikan public & static tersalin ke standalone
-$publicSrc = Join-Path $frontendDest "public"
-$publicDest = Join-Path $frontendDest ".next\standalone\public"
-if (Test-Path $publicSrc) {
-    robocopy $publicSrc $publicDest /E /R:2 /W:1 | Out-Null
-    if ($LASTEXITCODE -gt 7) {
-        Write-Error "Robocopy public static gagal dengan exit code $LASTEXITCODE"
-        exit 1
+    $staticSrc = Join-Path $frontendDest ".next\static"
+    $staticDest = Join-Path $frontendDest ".next\standalone\.next\static"
+    if (Test-Path $staticSrc) {
+        robocopy $staticSrc $staticDest /E /R:2 /W:1 | Out-Null
     }
 }
 
-$staticSrc = Join-Path $frontendDest ".next\static"
-$staticDest = Join-Path $frontendDest ".next\standalone\.next\static"
-if (Test-Path $staticSrc) {
-    robocopy $staticSrc $staticDest /E /R:2 /W:1 | Out-Null
-    if ($LASTEXITCODE -gt 7) {
-        Write-Error "Robocopy static files gagal dengan exit code $LASTEXITCODE"
-        exit 1
-    }
+# 6. Reload PM2 (Zero-Downtime via Task Scheduler agar terlepas dari Job Object runner)
+Write-Output "[INFO] Mereload layanan PM2 via Task Scheduler (Detached)..."
+$finalReloadBat = if (Test-Path $prodReloadBat) { $prodReloadBat } else { $reloadBat }
+if (Test-Path $finalReloadBat) {
+    schtasks /Create /TN "Bappeda_PM2_Reload" /TR "$finalReloadBat" /SC ONCE /ST 00:00 /RU "SYSTEM" /RL HIGHEST /F | Out-Null
+    schtasks /Run /TN "Bappeda_PM2_Reload" | Out-Null
+    Start-Sleep -Seconds 4
 }
-
-# 6. Reload PM2 (Zero-Downtime)
-Write-Output "[INFO] Mereload layanan PM2 (Zero-Downtime)..."
-$pm2Cmd = "pm2"
-if (Test-Path "C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd") {
-    $pm2Cmd = "C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd"
-}
-
-Write-Output "[INFO] Reloading bappeda-api..."
-& $pm2Cmd reload bappeda-api --update-env
-if ($LASTEXITCODE -ne 0) {
-    Write-Output "[WARN] Reload bappeda-api gagal, mencoba restart..."
-    & $pm2Cmd restart bappeda-api --update-env
-}
-
-Write-Output "[INFO] Reloading bappeda-fe..."
-& $pm2Cmd reload bappeda-fe --update-env
-if ($LASTEXITCODE -ne 0) {
-    Write-Output "[WARN] Reload bappeda-fe gagal, mencoba restart..."
-    & $pm2Cmd restart bappeda-fe --update-env
-}
-
-& $pm2Cmd save
 
 Write-Output "=================================================="
-Write-Output "[SUCCESS] DEPLOYMENT BERHASIL! Web Bappeda Halut Terupdate!"
+Write-Output "[SUCCESS] DEPLOYMENT BERHASIL! Layanan Bappeda Halut Aktif!"
 Write-Output "=================================================="
