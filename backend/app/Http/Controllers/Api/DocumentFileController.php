@@ -37,7 +37,16 @@ class DocumentFileController extends Controller
         Document $document,
         DocumentVersion $version
     ): Response {
-        $this->assertCanManage($request, $document);
+        if ($actor = $request->user()) {
+            if ($actor->hasRole('admin_bidang')) {
+                abort_unless($actor->bidang === $document->bidang, 404);
+                abort_if(
+                    in_array($document->classification, ['confidential', 'restricted'], true),
+                    404
+                );
+            }
+        }
+
         abort_unless((int) $version->document_id === (int) $document->id, 404);
         $this->assertIntegrity($version);
 

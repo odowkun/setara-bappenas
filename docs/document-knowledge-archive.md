@@ -397,6 +397,7 @@ Base path: `/api/v1`.
 |---|---|---|
 | `GET` | `/admin/documents` | `manage_dokumen`; repository sesuai scope |
 | `GET` | `/admin/documents/{id}/governance` | Detail metadata, versi, dan approval log |
+| `GET` | `/admin/documents/{id}/versions/{version}/preview-file` | Temporary signed URL preview inline dokumen untuk admin |
 | `PUT` | `/admin/documents/{id}/governance` | Klasifikasi/retensi/legal hold |
 | `POST` | `/documents` | Membuat dokumen dan v1 privat |
 | `POST` | `/documents/{id}/versions` | Menambah path hasil pipeline watermark sebagai revisi |

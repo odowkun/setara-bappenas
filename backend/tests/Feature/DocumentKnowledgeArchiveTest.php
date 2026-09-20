@@ -236,6 +236,32 @@ class DocumentKnowledgeArchiveTest extends TestCase
             ->assertJsonPath('data.unique_views', 2);
     }
 
+    public function test_admin_preview_url_serves_inline_stream_via_temporary_signed_route(): void
+    {
+        $uploader = $this->makeUser('admin_bidang', 'infrastruktur');
+        [$document, $version] = $this->storeDraft(
+            $uploader,
+            'Dokumen Draft Untuk Admin Preview'
+        );
+
+        $adminIndexResponse = $this->actingAs($uploader)
+            ->getJson('/api/v1/admin/documents')
+            ->assertOk();
+
+        $previewUrl = (string) $adminIndexResponse->json('data.0.preview_url');
+        $this->assertNotEmpty($previewUrl);
+        $this->assertStringContainsString('signature=', $previewUrl);
+
+        // Akses langsung tanpa bearer token (seperti saat browser membuka link di tab baru)
+        $this->get($previewUrl)
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+
+        // Akses dengan URL yang ditamper harus 403 Forbidden
+        $this->get($previewUrl.'tampered')
+            ->assertForbidden();
+    }
+
     public function test_email_download_grant_logs_and_increments_only_when_stream_is_consumed_once(): void
     {
         $uploader = $this->makeUser('admin_bidang', 'infrastruktur');

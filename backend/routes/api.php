@@ -137,8 +137,6 @@ Route::prefix('v1')->group(function () {
         [DocumentFileController::class, 'adminPreview']
     )
         ->middleware([
-            'auth:sanctum',
-            'permission:manage_dokumen',
             'signed:relative',
             'throttle:120,1',
         ])
