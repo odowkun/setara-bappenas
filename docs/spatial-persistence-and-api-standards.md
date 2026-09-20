@@ -102,4 +102,28 @@ Untuk menjamin peta selalu berfokus pada wilayah yurisdiksi Kabupaten Halmahera 
    - Tombol manual `-` (zoom out) mendeteksi level zoom aktif via event `zoomend`.
    - Ketika berada di level zoom terjauh (`currentZoom <= minZoomLevel`), tombol `-` otomatis dinonaktifkan (`disabled`), diberikan styling `opacity-30 cursor-not-allowed`, dan menampilkan tooltip informatif: *"Tampilan terjauh (Terkunci pada batas seluruh Halut)"*.
 
+---
 
+## 7. Standar Penghapusan Proyek Sektoral & Lampiran Teknis
+
+Status implementasi: 20 September 2026.
+
+### A. Titik Akses UI Penghapusan Proyek
+1. **Daftar Proyek Fisik & Status Monev (`/dashboard/dokumen/[id]`)**:
+   - Setiap kartu proyek kini dilengkapi tombol aksi hapus bersimbol tempat sampah (`Trash2`) merah (`bg-rose-50 text-rose-600 border border-rose-200`).
+   - Setiap berkas lampiran teknis yang terunggah juga memiliki tombol hapus cepat per lampiran.
+2. **Tabel Sinkronisasi Sektoral & Progres Monev (`/dashboard/update-progres`)**:
+   - Kolom **Aksi Update** pada tabel data sektoral kini memiliki tombol hapus proyek (`Trash2`) di samping tombol "Edit Progres" dan "Re-sync ESRI".
+
+### B. Alur Konfirmasi & Interaksi Pengguna
+1. **SweetAlert2 Confirmation**:
+   - Wajib menggunakan `showDeleteConfirm(projectName)` dari `@/lib/swal`.
+   - Melarang penggunaan dialog browser bawaan `confirm()`.
+2. **Cascade & Sinkronisasi 2-Way**:
+   - Saat dikonfirmasi, frontend memanggil `proyekService.deleteProject(id)` -> `DELETE /api/v1/proyek-details/{id}`.
+   - Backend Laravel secara otomatis:
+     1. Menghapus berkas lampiran fisik dari penyimpanan `storage/app/public/proyek_attachments/{id}`.
+     2. Mengirim request `deleteFeatures` ke endpoint ArcGIS REST API jika proyek memiliki `esri_objectid`.
+     3. Menghapus rekaman data proyek dari tabel `proyek_details` MySQL.
+3. **Feedback Notifikasi**:
+   - Menampilkan `toast.success("Paket proyek/titik proyek berhasil dihapus!")` dan langsung memperbarui state daftar proyek secara lokal tanpa perlu refresh halaman.

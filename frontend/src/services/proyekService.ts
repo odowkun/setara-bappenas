@@ -159,30 +159,36 @@ export const proyekService = {
 
   deleteAttachment: async (attachmentId: string | number): Promise<boolean> => {
     try {
-      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-attachments/${attachmentId}`, {
+      const res = await authenticatedFetch(`/proyek-attachments/${attachmentId}`, {
         method: "DELETE",
         headers: { Accept: "application/json" },
       });
-      return res.ok;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || `Gagal menghapus lampiran (Kode: ${res.status})`);
+      }
+      return true;
     } catch (e) {
       console.warn("[proyekService] Failed to delete attachment from API", e);
+      throw e;
     }
-
-    return false;
   },
 
   deleteProject: async (projectId: string | number): Promise<boolean> => {
     try {
-      const res = await authenticatedFetch(`${API_BASE_URL}/proyek-details/${projectId}`, {
+      const res = await authenticatedFetch(`/proyek-details/${projectId}`, {
         method: "DELETE",
         headers: { Accept: "application/json" },
       });
-      return res.ok;
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || `Gagal menghapus proyek (Kode: ${res.status})`);
+      }
+      return true;
     } catch (e) {
       console.warn("[proyekService] Failed to delete project from API", e);
+      throw e;
     }
-
-    return false;
   },
 
   // 5. Geoprocessing Buffer Analysis (Fitur 5: Geoprocessing ESRI Analysis)

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -27,8 +28,9 @@ import {
   Search,
   Edit2,
   Download,
+  Trash2,
 } from "lucide-react";
-import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { showSuccessSwal, showErrorSwal, showDeleteConfirm, toast } from "@/lib/swal";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 // Dynamic import for Leaflet map component (SSR safe)
@@ -83,6 +85,38 @@ export default function DocumentDetailPage() {
   const [bufferRadius, setBufferRadius] = useState<number>(500);
   const [bufferGeoJson, setBufferGeoJson] = useState<any>(null);
   const [runningGP, setRunningGP] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Lock body scroll when any modal is open
+  useEffect(() => {
+    const isAnyModalOpen = Boolean(isGeotagModalOpen || selectedProjectForUpdate || selectedProjectForAttachment);
+    if (isAnyModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+          setIsGeotagModalOpen(false);
+          setSelectedProjectForUpdate(null);
+          setSelectedProjectForAttachment(null);
+        }
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [isGeotagModalOpen, selectedProjectForUpdate, selectedProjectForAttachment]);
 
   // Load Document & Associated Spatial Projects
   useEffect(() => {
@@ -204,6 +238,43 @@ export default function DocumentDetailPage() {
       toast.error("Gagal mengunggah lampiran teknis.");
     } finally {
       setSubmittingAttachment(false);
+    }
+  };
+
+  // Handle Delete Project
+  const handleDeleteProject = async (projectId: string | number, projectName: string) => {
+    const res = await showDeleteConfirm(projectName);
+    if (!res.isConfirmed) return;
+
+    try {
+      await proyekService.deleteProject(projectId);
+      toast.success(`Titik proyek "${projectName}" berhasil dihapus!`);
+      setProjects((prev) => prev.filter((p) => String(p.id) !== String(projectId)));
+    } catch (err: any) {
+      toast.error(err?.message || "Gagal menghapus titik proyek dari database.");
+    }
+  };
+
+  // Handle Delete Attachment
+  const handleDeleteAttachment = async (attachmentId: string | number, fileName: string, projectId: string | number) => {
+    const res = await showDeleteConfirm(fileName);
+    if (!res.isConfirmed) return;
+
+    try {
+      await proyekService.deleteAttachment(attachmentId);
+      toast.success(`Lampiran "${fileName}" berhasil dihapus!`);
+      setProjects((prev) =>
+        prev.map((p) =>
+          String(p.id) === String(projectId)
+            ? {
+                ...p,
+                attachments: p.attachments?.filter((att) => String(att.id) !== String(attachmentId)),
+              }
+            : p
+        )
+      );
+    } catch (err: any) {
+      toast.error(err?.message || "Gagal menghapus lampiran.");
     }
   };
 
@@ -447,15 +518,24 @@ export default function DocumentDetailPage() {
                           <span>Lampiran Teknis:</span>
                         </span>
                         {prj.attachments.map((att) => (
-                          <a
-                            key={att.id}
-                            href={att.file_path}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-[10px] text-blue-700 font-bold truncate block hover:underline"
-                          >
-                            📎 {att.file_name} ({att.file_size})
-                          </a>
+                          <div key={att.id} className="flex items-center justify-between gap-1 text-[10px]">
+                            <a
+                              href={att.file_path}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="text-blue-700 font-bold truncate hover:underline flex-1"
+                            >
+                              📎 {att.file_name} ({att.file_size})
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteAttachment(att.id, att.file_name, prj.id)}
+                              className="text-slate-400 hover:text-rose-600 p-0.5 rounded cursor-pointer transition"
+                              title="Hapus Lampiran"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
                         ))}
                       </div>
                     )}
@@ -485,6 +565,15 @@ export default function DocumentDetailPage() {
                       <Paperclip className="w-3.5 h-3.5 text-slate-500" />
                       <span>Upload Lampiran</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteProject(prj.id, prj.nama_proyek)}
+                      className="p-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 font-bold text-xs transition flex items-center justify-center cursor-pointer shrink-0"
+                      title={`Hapus Proyek ${prj.nama_proyek}`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </div>
               ))}
@@ -494,9 +583,19 @@ export default function DocumentDetailPage() {
       </div>
 
       {/* MODAL: Geotagging Proyek Pembangunan */}
-      {isGeotagModalOpen && (
-        <div className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl space-y-4 my-8">
+      {mounted && isGeotagModalOpen && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsGeotagModalOpen(false);
+          }}
+          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-3xl rounded-3xl bg-white p-6 shadow-2xl space-y-4 my-8 overscroll-contain max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-black text-slate-900">Tambah Detail Lokasi Proyek Renja</h3>
@@ -599,26 +698,38 @@ export default function DocumentDetailPage() {
                     />
                   </div>
 
-                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-200 text-[11px] text-blue-900 space-y-1">
-                    <strong className="block font-bold">Koordinat Tertangkap (X/Y):</strong>
-                    <div>Latitude: <code className="font-bold text-blue-800">{newProjectForm.latitude}</code></div>
-                    <div>Longitude: <code className="font-bold text-blue-800">{newProjectForm.longitude}</code></div>
+                  <div>
+                    <label className="text-xs font-bold text-slate-700 block mb-1">Deskripsi Tambahan / Rincian</label>
+                    <textarea
+                      rows={2}
+                      value={newProjectForm.lokasi_deskripsi}
+                      onChange={(e) => setNewProjectForm({ ...newProjectForm, lokasi_deskripsi: e.target.value })}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium text-slate-900 focus:outline-none resize-none"
+                    />
                   </div>
                 </div>
 
-                {/* Interactive Leaflet Pin Picker */}
+                {/* Left/Right: Interactive Leaflet Map Coordinate Picker */}
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-700 block">Pilih Titik Lokasi Peta (Drop Pin)</label>
-                  <div className="h-[260px]">
-                    <GeotaggingMapPicker
-                      selectedLat={newProjectForm.latitude}
-                      selectedLng={newProjectForm.longitude}
-                      onLocationSelect={(lat, lng) => {
-                        setHasSelectedGeotagLocation(true);
-                        setNewProjectForm({ ...newProjectForm, latitude: lat, longitude: lng });
-                      }}
-                    />
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-bold text-slate-700">Pilih Koordinat di Peta *</label>
+                    <span className="text-[10px] font-mono bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">
+                      {newProjectForm.latitude.toFixed(5)}, {newProjectForm.longitude.toFixed(5)}
+                    </span>
                   </div>
+
+                  <GeotaggingMapPicker
+                    initialLat={newProjectForm.latitude}
+                    initialLng={newProjectForm.longitude}
+                    onLocationSelect={(lat, lng) => {
+                      setNewProjectForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+                      setHasSelectedGeotagLocation(true);
+                    }}
+                  />
+
+                  <p className="text-[10px] text-slate-500 italic">
+                    * Klik langsung pada peta Halmahera Utara di atas untuk menentukan titik lokasi presisi.
+                  </p>
                 </div>
               </div>
 
@@ -626,7 +737,7 @@ export default function DocumentDetailPage() {
                 <button
                   type="button"
                   onClick={() => setIsGeotagModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs hover:bg-slate-200 cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer"
                 >
                   Batal
                 </button>
@@ -640,13 +751,24 @@ export default function DocumentDetailPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL: Update Data Sektoral & Progres */}
-      {selectedProjectForUpdate && (
-        <div className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4">
+      {mounted && selectedProjectForUpdate && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedProjectForUpdate(null);
+          }}
+          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 overscroll-contain max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-black text-slate-900">Update Progres Proyek Sektoral</h3>
@@ -722,13 +844,24 @@ export default function DocumentDetailPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* MODAL: Upload Lampiran Teknis */}
-      {selectedProjectForAttachment && (
-        <div className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4">
+      {mounted && selectedProjectForAttachment && createPortal(
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedProjectForAttachment(null);
+          }}
+          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 overscroll-contain max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-black text-slate-900">Unggah Lampiran Teknis Proyek</h3>
@@ -789,7 +922,8 @@ export default function DocumentDetailPage() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

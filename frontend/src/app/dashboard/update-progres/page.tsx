@@ -23,8 +23,9 @@ import {
   FileText,
   RefreshCw,
   Edit2,
+  Trash2,
 } from "lucide-react";
-import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { showSuccessSwal, showErrorSwal, showDeleteConfirm, toast } from "@/lib/swal";
 
 const formatRupiahString = (val: number | string) => {
   const num = typeof val === "number" ? val : parseInt(String(val).replace(/[^0-9]/g, "")) || 0;
@@ -61,6 +62,28 @@ export default function UpdateProgresPage() {
     loadDocuments();
     loadProjects("semua");
   }, []);
+
+  // Lock body scroll when editing modal is open
+  useEffect(() => {
+    if (editingProject) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.style.overflow = "hidden";
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setEditingProject(null);
+      };
+      window.addEventListener("keydown", handleKeyDown);
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+        window.removeEventListener("keydown", handleKeyDown);
+      };
+    }
+  }, [editingProject]);
 
   const loadDocuments = async () => {
     const docs = await adminService.fetchDocuments(user?.bidang, user?.role);
@@ -134,6 +157,22 @@ export default function UpdateProgresPage() {
     } catch (err: any) {
       toast.dismiss("resync");
       toast.error(err.message || "Gagal mengantrikan re-sync ESRI.");
+    }
+  };
+
+  const handleDeleteProject = async (projectId: string | number, projectName: string) => {
+    const res = await showDeleteConfirm(projectName);
+    if (!res.isConfirmed) return;
+
+    try {
+      await proyekService.deleteProject(projectId);
+      toast.success(`Paket proyek "${projectName}" berhasil dihapus!`);
+      setProjects((prev) => prev.filter((p) => String(p.id) !== String(projectId)));
+      if (editingProject && String(editingProject.id) === String(projectId)) {
+        setEditingProject(null);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Gagal menghapus proyek dari database.");
     }
   };
 
@@ -429,6 +468,14 @@ export default function UpdateProgresPage() {
                         <Edit2 className="w-3.5 h-3.5" />
                         <span>Edit Progres</span>
                       </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteProject(prj.id, prj.nama_proyek)}
+                        className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 transition cursor-pointer shrink-0"
+                        title={`Hapus Proyek ${prj.nama_proyek}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -440,8 +487,20 @@ export default function UpdateProgresPage() {
 
       {/* EDIT MODAL WITH PORTAL (FULLSCREEN BACKDROP OVERLAY) */}
       {editingProject && mounted && createPortal(
-        <div className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans animate-in fade-in duration-200">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-100">
+        <div
+          role="dialog"
+          aria-modal="true"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setEditingProject(null);
+            }
+          }}
+          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans animate-in fade-in duration-200 overscroll-contain"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl space-y-4 border border-slate-100 overscroll-contain max-h-[90vh] overflow-y-auto"
+          >
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-base font-black text-slate-900">Update Status Progres Proyek</h3>
