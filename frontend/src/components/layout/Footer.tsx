@@ -36,7 +36,7 @@ export const Footer: React.FC = () => {
     };
   }, []);
   return (
-    <footer className="py-12 sm:py-16 px-4 sm:px-6 bg-white font-sans">
+    <footer className="pt-12 sm:pt-16 pb-24 sm:pb-28 px-4 sm:px-6 bg-white font-sans">
       <div className="max-w-7xl mx-auto rounded-[32px] bg-slate-50 text-slate-700 p-8 sm:p-12 border border-slate-200/80 shadow-xs space-y-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10">
           {/* Col 1: Brand & Official Logo (Same as Navbar logo-halut.png) */}

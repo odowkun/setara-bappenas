@@ -218,4 +218,14 @@ Status pembaruan: 21 September 2026.
    - Setelah jeda ~1.3 detik, running text mengecil dengan transisi fluid `transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]` ke arah kiri (`flex-1 min-w-0`), memberi ruang bagi Kategori Dokumen (RPJPD, RPJMD, RKPD, Lainnya) yang meluncur dan mengembang mulus dari kanan ke kiri (`max-w-0` &rarr; `max-w-[760px]`).
    - Running text dilengkapi fitur auto-pause saat di-hover pengguna (`hover:[animation-play-state:paused]`) untuk kenyamanan membaca.
 
+### B. Resolusi Bug Floating Menghilang Saat Di-scroll (Safari & Nested Overflow Fix)
 
+1. **Penyebab Masalah (Safari / WebKit Compositor Clipping)**:
+   - Pada Safari (macOS & iOS), elemen dengan `position: fixed` yang bersarang di dalam container induk dengan `overflow: hidden` (seperti `section` pada `HeroSection.tsx` dan `page.tsx`) akan otomatis di-*clip* atau dihilangkan oleh engine WebKit saat container induk tergulung keluar dari viewport.
+   - Selain itu, z-index lokal di dalam section induk tertutupi oleh elemen-elemen seksi berikutnya yang memiliki stacking context sendiri (`motion.div` dengan transform & opacity dari `ScrollReveal`).
+2. **Solusi Arsitektur (`createPortal`)**:
+   - Komponen `DocumentQuickMenu.tsx` pada mode `isTickerMode` kini di-*render* langsung ke `document.body` menggunakan React `createPortal(..., document.body)`.
+   - Dengan *portal rendering*, elemen floating bar berada di root level viewport tanpa hambatan `overflow: hidden` atau *stacking context clipping* dari container manapun.
+   - Menaikkan z-index ke `z-[70]` sehingga stabil mengambang di atas semua layer halaman tanpa menimpa modal global dialog (`z-[999999]`).
+   - Menambahkan padding bawah ekstra pada `Footer.tsx` (`pb-24 sm:pb-28`) agar floating bar tidak menutupi baris hak cipta / tautan footer di bagian paling bawah halaman.
+   - Melewatkan *unnecessary observer* saat `isTickerMode` aktif untuk optimasi konsumsi CPU dan render pipeline.
