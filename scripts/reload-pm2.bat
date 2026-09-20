@@ -22,16 +22,17 @@ if %ERRORLEVEL% neq 0 (
 cd /d C:\bappeda-halut\frontend
 set PORT=3100
 set HOSTNAME=0.0.0.0
-echo [PM2 Helper] Memeriksa bappeda-fe (Port 3100)...
-call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd restart bappeda-fe --update-env
-if %ERRORLEVEL% neq 0 (
-    echo [PM2 Helper] Membersihkan dan memulai baru bappeda-fe...
-    call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd delete bappeda-fe
-    if exist server.js (
-        call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd start server.js --name bappeda-fe
-    ) else if exist .next\standalone\server.js (
-        call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd start .next\standalone\server.js --name bappeda-fe
-    )
+echo [PM2 Helper] Membersihkan dan memulai bappeda-fe (Port 3100)...
+call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd delete bappeda-fe >nul 2>&1
+if exist server.js (
+    echo [PM2 Helper] Menjalankan server.js...
+    call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd start server.js --name bappeda-fe
+) else if exist .next\standalone\server.js (
+    echo [PM2 Helper] Menjalankan .next\standalone\server.js...
+    call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd start .next\standalone\server.js --name bappeda-fe
+) else (
+    echo [PM2 Helper] Menjalankan npm start fallback...
+    call C:\Users\Administrator\AppData\Roaming\npm\pm2.cmd start "npm start -- -p 3100" --name bappeda-fe
 )
 
 :: 4. Simpan status dan tampilkan daftar proses

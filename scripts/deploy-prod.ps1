@@ -30,13 +30,8 @@ if (!(Test-Path $prodRoot)) {
 $env:PATH = "C:\php83;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Roaming\npm;$env:PATH"
 $env:PM2_HOME = "C:\Users\Administrator\.pm2"
 
-# 0. Bangunkan segera PM2 jika sempat terhenti agar situs langsung keluar dari mode pemeliharaan
 $reloadBat = Join-Path $repoRoot "scripts\reload-pm2.bat"
 $prodReloadBat = Join-Path $prodRoot "scripts\reload-pm2.bat"
-if (Test-Path $reloadBat) {
-    Write-Output "[INFO] Membangkitkan PM2 segera di awal pipeline..."
-    & cmd.exe /c "`"$reloadBat`""
-}
 
 # 1. Sinkronisasi File Backend (Kecuali .env dan storage)
 Write-Output "[INFO] [1/4] Menyinkronkan file Backend..."
@@ -95,13 +90,17 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
-# Bersihkan cache Next.js lama agar tidak memakai resolusi usang
+# Bersihkan cache Next.js lama dan swc helpers yang usang
 $cacheDir = Join-Path $frontendDest ".next\cache"
 if (Test-Path $cacheDir) {
     Remove-Item -Recurse -Force $cacheDir -ErrorAction SilentlyContinue
 }
+$oldSwcDir = Join-Path $frontendDest "node_modules\@swc\helpers"
+if (Test-Path $oldSwcDir) {
+    Remove-Item -Recurse -Force $oldSwcDir -ErrorAction SilentlyContinue
+}
 
-Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
+Write-Output "[INFO] Memasang dependensi penting..."
 & $npmCmd install @swc/helpers@0.5.15 react-dom@19.0.0 react@19.0.0 --no-audit
 
 Write-Output "[INFO] Menjalankan Next.js build..."
@@ -110,6 +109,11 @@ if ($LASTEXITCODE -ne 0) {
     Write-Output "[WARN] Next.js build menghasilkan exit code $LASTEXITCODE. Menjaga layanan tetap aktif dengan build eksisting..."
 } else {
     Write-Output "[SUCCESS] Next.js build berhasil! Menyinkronkan artefak standalone..."
+    $standaloneDir = Join-Path $frontendDest ".next\standalone"
+    if (Test-Path $standaloneDir) {
+        robocopy $standaloneDir $frontendDest server.js /R:2 /W:1 | Out-Null
+    }
+
     $publicSrc = Join-Path $frontendDest "public"
     $publicDest = Join-Path $frontendDest ".next\standalone\public"
     if (Test-Path $publicSrc) {
