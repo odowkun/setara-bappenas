@@ -6,6 +6,9 @@ import {
   X,
   Download,
   Eye,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from "lucide-react";
 import {
   infografisService,
@@ -16,6 +19,7 @@ export const PinnedInfographicsSection: React.FC = () => {
   const [items, setItems] = useState<InfografisItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInfografis, setSelectedInfografis] = useState<InfografisItem | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
 
   useEffect(() => {
     infografisService
@@ -33,6 +37,7 @@ export const PinnedInfographicsSection: React.FC = () => {
 
   const handleOpenInfografis = (item: InfografisItem) => {
     setSelectedInfografis(item);
+    setZoomScale(1);
     infografisService.recordView(item.id).then((newCount) => {
       if (newCount !== null) {
         setItems((prev) =>
@@ -74,15 +79,15 @@ export const PinnedInfographicsSection: React.FC = () => {
                 <img
                   src={item.imageUrl}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100"
                   loading="lazy"
                 />
 
-                {/* Gradients */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-transparent opacity-95 group-hover:opacity-90 transition-opacity" />
+                {/* Subtle Hover Overlay */}
+                <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/45 transition-colors pointer-events-none" />
 
                 {/* Top Badge: Category & Pin Indicator */}
-                <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10">
+                <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10 pointer-events-none">
                   <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider bg-blue-600/90 backdrop-blur-md text-white shadow-sm">
                     {item.category}
                   </span>
@@ -92,26 +97,11 @@ export const PinnedInfographicsSection: React.FC = () => {
                 </div>
 
                 {/* Center Hover Magnify Icon */}
-                <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                  <span className="w-11 h-11 rounded-full bg-amber-400 text-blue-950 flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition-transform">
-                    <Maximize2 className="w-5 h-5" />
+                <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 pointer-events-none">
+                  <span className="px-3.5 py-2 rounded-xl bg-amber-400 text-blue-950 font-black text-xs shadow-xl flex items-center gap-1.5 transform scale-90 group-hover:scale-100 transition-transform">
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Perbesar</span>
                   </span>
-                </div>
-
-                {/* Bottom Content Metadata */}
-                <div className="absolute bottom-0 inset-x-0 p-3.5 z-10 space-y-1.5">
-                  <h3 className="text-xs font-black text-white leading-snug line-clamp-2 group-hover:text-amber-300 transition-colors drop-shadow-sm">
-                    {item.title}
-                  </h3>
-                  <div className="flex items-center justify-between text-[10px] text-slate-300 font-medium pt-1 border-t border-white/10">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-3 h-3 text-slate-400" />
-                      {item.viewCount} dilihat
-                    </span>
-                    <span className="text-amber-400 font-bold text-[10px] flex items-center gap-0.5">
-                      Perbesar &rarr;
-                    </span>
-                  </div>
                 </div>
               </div>
             ))}
@@ -120,7 +110,10 @@ export const PinnedInfographicsSection: React.FC = () => {
       {/* Lightbox Modal */}
       {selectedInfografis && (
         <div
-          onClick={() => setSelectedInfografis(null)}
+          onClick={() => {
+            setSelectedInfografis(null);
+            setZoomScale(1);
+          }}
           className="fixed inset-0 z-[999999] bg-slate-950/90 backdrop-blur-xl p-4 sm:p-6 flex flex-col justify-between animate-in fade-in duration-200"
         >
           {/* Modal Top Bar */}
@@ -153,18 +146,56 @@ export const PinnedInfographicsSection: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Interactive Zoom Controls */}
+              <div className="flex items-center bg-white/10 rounded-xl p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((z) => Math.max(1, Number((z - 0.25).toFixed(2))))}
+                  disabled={zoomScale <= 1}
+                  className="p-1.5 rounded-lg hover:bg-white/20 text-white disabled:opacity-40 transition cursor-pointer"
+                  title="Perkecil (-)"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-[11px] font-mono font-bold px-1.5 text-slate-200 min-w-[42px] text-center">
+                  {Math.round(zoomScale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((z) => Math.min(3, Number((z + 0.25).toFixed(2))))}
+                  disabled={zoomScale >= 3}
+                  className="p-1.5 rounded-lg hover:bg-white/20 text-white disabled:opacity-40 transition cursor-pointer"
+                  title="Perbesar (+)"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                {zoomScale !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale(1)}
+                    className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
+                    title="Reset Ukuran (100%)"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
               <a
                 href={selectedInfografis.imageUrl}
                 download
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white text-white hover:text-slate-950 text-xs font-bold transition cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-blue-950 text-xs font-black transition cursor-pointer shadow-lg shadow-amber-400/20"
               >
                 <Download className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Unduh HD</span>
               </a>
               <button
-                onClick={() => setSelectedInfografis(null)}
+                onClick={() => {
+                  setSelectedInfografis(null);
+                  setZoomScale(1);
+                }}
                 className="p-2 rounded-xl bg-white/10 hover:bg-rose-600 text-white transition cursor-pointer"
                 title="Tutup (Esc)"
               >
@@ -173,30 +204,26 @@ export const PinnedInfographicsSection: React.FC = () => {
             </div>
           </div>
 
-          {/* Modal Main Image Display */}
+          {/* Modal Main Image Display with Zoom */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 overflow-hidden"
+            className="relative flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 overflow-auto"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={selectedInfografis.imageUrl}
               alt={selectedInfografis.title}
-              className="max-h-full max-w-full object-contain rounded-xl shadow-2xl drop-shadow-2xl"
+              onClick={() => setZoomScale((z) => (z > 1 ? 1 : 1.75))}
+              style={{
+                transform: `scale(${zoomScale})`,
+                transformOrigin: "center center",
+              }}
+              className={`max-h-full max-w-full object-contain rounded-xl shadow-2xl drop-shadow-2xl transition-transform duration-200 select-none ${
+                zoomScale > 1 ? "cursor-zoom-out" : "cursor-zoom-in"
+              }`}
+              title={zoomScale > 1 ? "Klik untuk mengembalikan ukuran normal" : "Klik untuk memperbesar (Zoom)"}
             />
           </div>
-
-          {/* Modal Footer Description */}
-          {selectedInfografis.description && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="border-t border-white/10 pt-3 text-center max-w-3xl mx-auto"
-            >
-              <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                {selectedInfografis.description}
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

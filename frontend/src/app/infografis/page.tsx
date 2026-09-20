@@ -18,6 +18,9 @@ import {
   ChevronRight,
   Loader2,
   ArrowLeft,
+  ZoomIn,
+  ZoomOut,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "@/lib/swal";
 import {
@@ -30,6 +33,7 @@ const CATEGORIES = [
   "Semua",
   "Perencanaan",
   "Ekonomi",
+  "Sosial & SDM",
   "Spasial",
   "Kesehatan",
   "Anggaran",
@@ -44,6 +48,7 @@ export default function PublicInfografisPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState<InfografisPagination | undefined>(undefined);
   const [selectedInfografis, setSelectedInfografis] = useState<InfografisItem | null>(null);
+  const [zoomScale, setZoomScale] = useState(1);
 
   const fetchData = async (page = 1, cat = selectedCategory, search = searchTerm) => {
     setLoading(true);
@@ -200,71 +205,39 @@ export default function PublicInfografisPage() {
                 key={item.id}
                 id={item.slug}
                 onClick={() => handleOpenInfografis(item)}
-                className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col cursor-pointer select-none"
+                className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-slate-950 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 aspect-[3/4] cursor-pointer select-none"
               >
-                {/* Poster Container */}
-                <div className="relative aspect-[4/5] bg-slate-950 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.imageUrl}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100"
-                    loading="lazy"
-                  />
+                {/* Full Poster Image */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={item.imageUrl}
+                  alt={item.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100"
+                  loading="lazy"
+                />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent opacity-85 group-hover:opacity-80 transition-opacity" />
+                {/* Subtle Hover Gradient */}
+                <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/50 transition-colors pointer-events-none" />
 
-                  {/* Category & Pin Badge */}
-                  <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10">
-                    <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-600/95 backdrop-blur-md text-white shadow-sm">
-                      {item.category}
+                {/* Top Badge: Category & Pin */}
+                <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10 pointer-events-none">
+                  <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-600/95 backdrop-blur-md text-white shadow-sm">
+                    {item.category}
+                  </span>
+
+                  {item.isPinned && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-400 text-blue-950 shadow-sm">
+                      ★ Tersemat
                     </span>
-
-                    {item.isPinned && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-400 text-blue-950 shadow-sm">
-                        ★ Tersemat
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Center Hover Magnify */}
-                  <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                    <span className="w-12 h-12 rounded-full bg-amber-400 text-blue-950 flex items-center justify-center shadow-xl transform scale-75 group-hover:scale-100 transition-transform">
-                      <Maximize2 className="w-6 h-6" />
-                    </span>
-                  </div>
+                  )}
                 </div>
 
-                {/* Card Body */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-3">
-                  <div className="space-y-1.5">
-                    <h3 className="text-sm font-black text-slate-900 dark:text-slate-100 leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
-                      {item.title}
-                    </h3>
-                    {item.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 font-normal line-clamp-2 leading-relaxed">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 font-medium">
-                    <span className="flex items-center gap-1">
-                      <Eye className="w-3.5 h-3.5" />
-                      {item.viewCount} dilihat
-                    </span>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleShare(item);
-                      }}
-                      className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-blue-600 transition"
-                      title="Bagikan infografis"
-                    >
-                      <Share2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+                {/* Center Hover Magnify */}
+                <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                  <span className="px-4 py-2.5 rounded-2xl bg-amber-400 text-blue-950 font-black text-xs shadow-2xl flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform">
+                    <Maximize2 className="w-4 h-4" />
+                    <span>Perbesar Gambar</span>
+                  </span>
                 </div>
               </div>
             ))}
@@ -298,7 +271,10 @@ export default function PublicInfografisPage() {
       {/* Lightbox Modal */}
       {selectedInfografis && (
         <div
-          onClick={() => setSelectedInfografis(null)}
+          onClick={() => {
+            setSelectedInfografis(null);
+            setZoomScale(1);
+          }}
           className="fixed inset-0 z-[999999] bg-slate-950/90 backdrop-blur-2xl p-4 sm:p-6 flex flex-col justify-between animate-in fade-in duration-200"
         >
           {/* Top Control Bar */}
@@ -331,13 +307,48 @@ export default function PublicInfografisPage() {
             </div>
 
             <div className="flex items-center gap-2">
+              {/* Interactive Zoom Controls */}
+              <div className="flex items-center bg-white/10 rounded-xl p-1 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((z) => Math.max(1, Number((z - 0.25).toFixed(2))))}
+                  disabled={zoomScale <= 1}
+                  className="p-1.5 rounded-lg hover:bg-white/20 text-white disabled:opacity-40 transition cursor-pointer"
+                  title="Perkecil (-)"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </button>
+                <span className="text-[11px] font-mono font-bold px-1.5 text-slate-200 min-w-[42px] text-center">
+                  {Math.round(zoomScale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setZoomScale((z) => Math.min(3, Number((z + 0.25).toFixed(2))))}
+                  disabled={zoomScale >= 3}
+                  className="p-1.5 rounded-lg hover:bg-white/20 text-white disabled:opacity-40 transition cursor-pointer"
+                  title="Perbesar (+)"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
+                {zoomScale !== 1 && (
+                  <button
+                    type="button"
+                    onClick={() => setZoomScale(1)}
+                    className="p-1.5 rounded-lg hover:bg-white/20 text-white transition cursor-pointer"
+                    title="Reset Ukuran (100%)"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
               <button
                 type="button"
                 onClick={() => handleShare(selectedInfografis)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white text-white hover:text-slate-950 text-xs font-bold transition cursor-pointer"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white text-white hover:text-slate-950 text-xs font-bold transition cursor-pointer"
               >
                 <Share2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Bagikan</span>
+                <span>Bagikan</span>
               </button>
               <a
                 href={selectedInfografis.imageUrl}
@@ -347,10 +358,13 @@ export default function PublicInfografisPage() {
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-blue-950 text-xs font-black transition cursor-pointer shadow-lg shadow-amber-400/20"
               >
                 <Download className="w-3.5 h-3.5" />
-                <span>Unduh Gambar HD</span>
+                <span className="hidden sm:inline">Unduh HD</span>
               </a>
               <button
-                onClick={() => setSelectedInfografis(null)}
+                onClick={() => {
+                  setSelectedInfografis(null);
+                  setZoomScale(1);
+                }}
                 className="p-2 rounded-xl bg-white/10 hover:bg-rose-600 text-white transition cursor-pointer ml-1"
                 title="Tutup (Esc)"
               >
@@ -359,30 +373,26 @@ export default function PublicInfografisPage() {
             </div>
           </div>
 
-          {/* Center Image Canvas */}
+          {/* Center Image Canvas with Zoom Pan */}
           <div
             onClick={(e) => e.stopPropagation()}
-            className="relative flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 overflow-hidden"
+            className="relative flex-1 flex items-center justify-center p-2 sm:p-4 min-h-0 overflow-auto"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={selectedInfografis.imageUrl}
               alt={selectedInfografis.title}
-              className="max-h-full max-w-full object-contain rounded-2xl shadow-2xl drop-shadow-2xl"
+              onClick={() => setZoomScale((z) => (z > 1 ? 1 : 1.75))}
+              style={{
+                transform: `scale(${zoomScale})`,
+                transformOrigin: "center center",
+              }}
+              className={`max-h-full max-w-full object-contain rounded-2xl shadow-2xl drop-shadow-2xl transition-transform duration-200 select-none ${
+                zoomScale > 1 ? "cursor-zoom-out" : "cursor-zoom-in"
+              }`}
+              title={zoomScale > 1 ? "Klik untuk mengembalikan ukuran normal" : "Klik untuk memperbesar (Zoom)"}
             />
           </div>
-
-          {/* Bottom Caption Box */}
-          {selectedInfografis.description && (
-            <div
-              onClick={(e) => e.stopPropagation()}
-              className="border-t border-white/10 pt-3 text-center max-w-3xl mx-auto"
-            >
-              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
-                {selectedInfografis.description}
-              </p>
-            </div>
-          )}
         </div>
       )}
     </div>

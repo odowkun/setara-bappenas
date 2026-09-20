@@ -77,13 +77,14 @@ Controller: `App\Http\Controllers\Api\InfografisController`
 
 1. **Komponen Pinned Homepage**:
    - `frontend/src/components/home/PinnedInfographicsSection.tsx`
-   - Diletakkan di `frontend/src/components/home/GeospatialSection.tsx` tepat sebelum kartu `dalev` pengumuman resmi.
-   - Memiliki styling bento-grid / carousel responsif dengan badge kategori, tombol zoom, dan pintasan menuju galeri lengkap.
+   - Diletakkan di `frontend/src/components/home/GeospatialSection.tsx` tepat sebelum kartu pengumuman resmi.
+   - Menampilkan poster infografis murni (*pure image poster*) tanpa blok teks deskripsi di kartu.
+   - Dilengkapi tombol overlay hover zoom dan modal Lightbox interaktif dengan kontrol pembesaran bertahap (100% - 300%) & unduhan gambar HD.
 
-2. **Halaman Publik**:
+2. **Halaman Galeri Publik**:
    - `frontend/src/app/infografis/page.tsx`
-   - Menggunakan Glassmorphism & palet Bappeda (Navy `#0A192F`, Biru `#1E3A8A`, Emas `#F59E0B`).
-   - Modal Lightbox resolusi penuh tanpa distorsi rasio aspek.
+   - Menampilkan kartu infografis murni berupa gambar poster resolusi tinggi (bebas dari teks judul/deskripsi di bawah kartu agar visual fokus dan bersih).
+   - Dilengkapi interaktivitas klik untuk memperbesar (*zoom-in*), navigasi pan/scroll saat perbesaran aktif, persentase zoom (100%–300%), reset ukuran, dan tombol unduh HD.
 
 3. **Menu Navigasi**:
    - `frontend/src/components/layout/Navbar.tsx`
