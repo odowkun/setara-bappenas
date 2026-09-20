@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { ExternalLink, Link2Off } from "lucide-react";
 import { tautanOpdService, TautanOpdItem } from "@/services/tautanOpdService";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
 export const OpdLinksGrid: React.FC = () => {
   const [items, setItems] = useState<TautanOpdItem[]>([]);
@@ -41,6 +42,10 @@ export const OpdLinksGrid: React.FC = () => {
                 <div key={index} className="h-40 rounded-lg bg-slate-100 border border-slate-200 animate-pulse" />
               ))
             : items.map((item) => {
+                const logoSrc = item.logoUrl.startsWith("/storage/")
+                  ? `${STORAGE_BASE_URL}${item.logoUrl}`
+                  : item.logoUrl;
+
                 const content = (
                   <>
                     <span className="absolute top-3 right-3 text-slate-300 group-hover:text-blue-500 transition">
@@ -49,7 +54,7 @@ export const OpdLinksGrid: React.FC = () => {
                     <span className="h-20 w-20 sm:h-24 sm:w-24 rounded-full border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.logoUrl}
+                        src={logoSrc}
                         alt={item.name}
                         className="w-full h-full object-contain p-2"
                         onError={(e) => {

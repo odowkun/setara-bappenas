@@ -8,8 +8,21 @@ Route::get('/', function () {
 
 // Fallback penyaji berkas /storage/* untuk server produksi Windows
 Route::get('/storage/{path}', function (string $path) {
-    $filePath = storage_path('app/public/'.$path);
-    if (! file_exists($filePath) || is_dir($filePath)) {
+    $candidates = [
+        storage_path('app/public/'.$path),
+        public_path('storage/'.$path),
+        public_path($path),
+    ];
+
+    $filePath = null;
+    foreach ($candidates as $cand) {
+        if (file_exists($cand) && !is_dir($cand)) {
+            $filePath = $cand;
+            break;
+        }
+    }
+
+    if (! $filePath) {
         abort(404);
     }
 

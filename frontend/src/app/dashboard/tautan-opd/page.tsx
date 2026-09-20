@@ -24,6 +24,7 @@ import {
   TautanOpdItem,
   TautanOpdPayload,
 } from "@/services/tautanOpdService";
+import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
 const emptyForm = {
   name: "",
@@ -307,7 +308,12 @@ export default function TautanOpdDashboardPage() {
                     {localPreviewUrl || form.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={localPreviewUrl || form.logoUrl}
+                        src={
+                          localPreviewUrl ||
+                          (form.logoUrl.startsWith("/storage/")
+                            ? `${STORAGE_BASE_URL}${form.logoUrl}`
+                            : form.logoUrl)
+                        }
                         alt="Preview logo OPD"
                         className="w-full h-full object-contain p-1.5"
                         onError={(e) => {
@@ -433,7 +439,11 @@ export default function TautanOpdDashboardPage() {
                       <div className="w-16 h-16 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={item.logoUrl}
+                          src={
+                            item.logoUrl.startsWith("/storage/")
+                              ? `${STORAGE_BASE_URL}${item.logoUrl}`
+                              : item.logoUrl
+                          }
                           alt={item.name}
                           className="w-full h-full object-contain p-2"
                           onError={(e) => {

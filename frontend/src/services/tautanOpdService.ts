@@ -33,6 +33,10 @@ export const tautanOpdService = {
           rawLogo = rawLogo.replace(/^https?:\/\/[^\/]+(:8100)?\//, "/");
           if (rawLogo.startsWith("/uploads/tautan-opd/")) {
             rawLogo = rawLogo.replace("/uploads/tautan-opd/", "/storage/tautan-opd/");
+          } else if (rawLogo.startsWith("tautan-opd/")) {
+            rawLogo = `/storage/${rawLogo}`;
+          } else if (rawLogo.startsWith("/tautan-opd/")) {
+            rawLogo = `/storage${rawLogo}`;
           }
         }
 

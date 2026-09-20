@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authenticatedFetch, API_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
+import SearchableSelect, { SearchableOption } from "@/components/ui/SearchableSelect";
 import {
   Building2,
   Save,
@@ -40,7 +41,7 @@ export default function DashboardTentangEditorPage() {
   const [misiList, setMisiList] = useState<string[]>([]);
 
   // 3. Informasi Instansi State
-  const [tahunBerdiri, setTahunBerdiri] = useState("");
+  const [tahunBerdiri, setTahunBerdiri] = useState("2003");
   const [alamat, setAlamat] = useState("");
   const [telepon, setTelepon] = useState("");
   const [email, setEmail] = useState("");
@@ -48,7 +49,7 @@ export default function DashboardTentangEditorPage() {
   // Jam Kerja Builder State
   const [seninJumatActive, setSeninJumatActive] = useState(true);
   const [seninJumatStart, setSeninJumatStart] = useState("08:00");
-  const [seninJumatEnd, setSeninJumatEnd] = useState("16:30");
+  const [seninJumatEnd, setSeninJumatEnd] = useState("16:00");
 
   const [sabtuActive, setSabtuActive] = useState(false);
   const [sabtuStart, setSabtuStart] = useState("09:00");
@@ -58,22 +59,28 @@ export default function DashboardTentangEditorPage() {
   const [mingguStart, setMingguStart] = useState("09:00");
   const [mingguEnd, setMingguEnd] = useState("12:00");
 
-  const [jamKerjaManual, setJamKerjaManual] = useState("Senin - Jumat: 08:00 - 16:30 WIT");
+  const [jamKerjaManual, setJamKerjaManual] = useState("Senin - Jumat: 08:00 - 16:00 WIT");
+  const isLoadedRef = useRef(false);
 
   // Time Options Generator (06:00 to 20:00)
-  const timeOptions = [
+  const timeOptions: SearchableOption[] = [
     "06:00", "06:30", "07:00", "07:30", "08:00", "08:30",
     "09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
     "12:00", "12:30", "13:00", "13:30", "14:00", "14:30",
     "15:00", "15:30", "16:00", "16:30", "17:00", "17:30",
     "18:00", "18:30", "19:00", "19:30", "20:00"
-  ];
+  ].map((t) => ({ value: t, label: t }));
 
   // Year options generator (1950 to 2026)
-  const yearOptions = Array.from({ length: 2026 - 1950 + 1 }, (_, i) => (2026 - i).toString());
+  const yearOptions: SearchableOption[] = Array.from({ length: 2026 - 1950 + 1 }, (_, i) => {
+    const y = (2026 - i).toString();
+    return { value: y, label: `Tahun ${y}` };
+  });
 
-  // Automatically update formatted Jam Kerja string whenever controls change
+  // Automatically update formatted Jam Kerja string whenever controls change AFTER initial load
   useEffect(() => {
+    if (!isLoadedRef.current) return;
+
     const parts: string[] = [];
     if (seninJumatActive) {
       parts.push(`Senin - Jumat: ${seninJumatStart} - ${seninJumatEnd} WIT`);
@@ -96,7 +103,7 @@ export default function DashboardTentangEditorPage() {
   const fetchTentangData = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/profil/tentang`);
+      const res = await fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
         if (json.success && json.data) {
@@ -104,17 +111,43 @@ export default function DashboardTentangEditorPage() {
           setSejarahContent(d.content || "");
 
           if (d.meta_json) {
-            if (d.meta_json.tahun_berdiri) setTahunBerdiri(d.meta_json.tahun_berdiri);
+            if (d.meta_json.tahun_berdiri) setTahunBerdiri(String(d.meta_json.tahun_berdiri));
             if (d.meta_json.alamat) setAlamat(d.meta_json.alamat);
             if (d.meta_json.telepon) setTelepon(d.meta_json.telepon);
             if (d.meta_json.email) setEmail(d.meta_json.email);
-            if (d.meta_json.jam_kerja) setJamKerjaManual(d.meta_json.jam_kerja);
+            if (d.meta_json.jam_kerja) {
+              setJamKerjaManual(d.meta_json.jam_kerja);
+
+              // Parse Senin - Jumat
+              const sjMatch = d.meta_json.jam_kerja.match(/Senin\s*-\s*Jumat:\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/i);
+              if (sjMatch) {
+                setSeninJumatActive(true);
+                setSeninJumatStart(sjMatch[1]);
+                setSeninJumatEnd(sjMatch[2]);
+              }
+
+              // Parse Sabtu
+              const sabtuMatch = d.meta_json.jam_kerja.match(/Sabtu:\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/i);
+              if (sabtuMatch) {
+                setSabtuActive(true);
+                setSabtuStart(sabtuMatch[1]);
+                setSabtuEnd(sabtuMatch[2]);
+              }
+
+              // Parse Minggu
+              const mingguMatch = d.meta_json.jam_kerja.match(/Minggu:\s*(\d{2}:\d{2})\s*-\s*(\d{2}:\d{2})/i);
+              if (mingguMatch) {
+                setMingguActive(true);
+                setMingguStart(mingguMatch[1]);
+                setMingguEnd(mingguMatch[2]);
+              }
+            }
           }
         }
       }
 
       // Load Visi & Misi data
-      const resVisi = await fetch(`${API_BASE_URL}/profil/visi_misi`);
+      const resVisi = await fetch(`${API_BASE_URL}/profil/visi_misi`, { cache: "no-store" });
       if (resVisi.ok) {
         const jsonVisi = await resVisi.json();
         if (jsonVisi.success && jsonVisi.data) {
@@ -129,6 +162,9 @@ export default function DashboardTentangEditorPage() {
       console.error("Gagal memuat data profil tentang:", err);
     } finally {
       setLoading(false);
+      setTimeout(() => {
+        isLoadedRef.current = true;
+      }, 100);
     }
   };
 
@@ -407,17 +443,13 @@ export default function DashboardTentangEditorPage() {
                 {/* SELECT TAHUN BERDIRI DROPDOWN */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Tahun Berdiri Instansi *</label>
-                  <select
+                  <SearchableSelect
+                    options={yearOptions}
                     value={tahunBerdiri}
-                    onChange={(e) => setTahunBerdiri(e.target.value)}
-                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-extrabold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
-                  >
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        Tahun {year}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setTahunBerdiri(String(val))}
+                    placeholder="Pilih Tahun Berdiri..."
+                    searchPlaceholder="Cari tahun..."
+                  />
                 </div>
 
                 <div>
@@ -473,26 +505,26 @@ export default function DashboardTentangEditorPage() {
 
                     {seninJumatActive && (
                       <div className="flex items-center gap-2 text-xs font-bold">
-                        <span>Buka:</span>
-                        <select
-                          value={seninJumatStart}
-                          onChange={(e) => setSeninJumatStart(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                        <span>- Tutup:</span>
-                        <select
-                          value={seninJumatEnd}
-                          onChange={(e) => setSeninJumatEnd(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
+                        <span className="text-slate-600">Buka:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={seninJumatStart}
+                            onChange={(val) => setSeninJumatStart(String(val))}
+                            placeholder="08:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
+                        <span className="text-slate-600">- Tutup:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={seninJumatEnd}
+                            onChange={(val) => setSeninJumatEnd(String(val))}
+                            placeholder="16:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
                         <span className="text-slate-400 font-mono">WIT</span>
                       </div>
                     )}
@@ -512,26 +544,26 @@ export default function DashboardTentangEditorPage() {
 
                     {sabtuActive ? (
                       <div className="flex items-center gap-2 text-xs font-bold">
-                        <span>Buka:</span>
-                        <select
-                          value={sabtuStart}
-                          onChange={(e) => setSabtuStart(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                        <span>- Tutup:</span>
-                        <select
-                          value={sabtuEnd}
-                          onChange={(e) => setSabtuEnd(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
+                        <span className="text-slate-600">Buka:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={sabtuStart}
+                            onChange={(val) => setSabtuStart(String(val))}
+                            placeholder="09:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
+                        <span className="text-slate-600">- Tutup:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={sabtuEnd}
+                            onChange={(val) => setSabtuEnd(String(val))}
+                            placeholder="15:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
                         <span className="text-slate-400 font-mono">WIT</span>
                       </div>
                     ) : (
@@ -553,26 +585,26 @@ export default function DashboardTentangEditorPage() {
 
                     {mingguActive ? (
                       <div className="flex items-center gap-2 text-xs font-bold">
-                        <span>Buka:</span>
-                        <select
-                          value={mingguStart}
-                          onChange={(e) => setMingguStart(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
-                        <span>- Tutup:</span>
-                        <select
-                          value={mingguEnd}
-                          onChange={(e) => setMingguEnd(e.target.value)}
-                          className="px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-200 font-mono text-xs font-bold cursor-pointer"
-                        >
-                          {timeOptions.map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
-                        </select>
+                        <span className="text-slate-600">Buka:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={mingguStart}
+                            onChange={(val) => setMingguStart(String(val))}
+                            placeholder="09:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
+                        <span className="text-slate-600">- Tutup:</span>
+                        <div className="w-28">
+                          <SearchableSelect
+                            options={timeOptions}
+                            value={mingguEnd}
+                            onChange={(val) => setMingguEnd(String(val))}
+                            placeholder="12:00"
+                            searchPlaceholder="Pukul..."
+                          />
+                        </div>
                         <span className="text-slate-400 font-mono">WIT</span>
                       </div>
                     ) : (

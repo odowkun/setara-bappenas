@@ -9,12 +9,25 @@ import {
   BookOpen,
   Target,
   Award,
+  Calendar,
+  Clock,
+  MapPin,
+  Phone,
+  Mail,
+  ShieldCheck,
 } from "lucide-react";
 
 interface TentangData {
   title: string;
   subtitle: string;
   content: string;
+  meta_json?: {
+    tahun_berdiri?: string;
+    alamat?: string;
+    telepon?: string;
+    email?: string;
+    jam_kerja?: string;
+  };
 }
 
 interface VisiMisiData {
@@ -170,7 +183,131 @@ export default function PublicTentangPage() {
                 </div>
               </div>
             </div>
-          </div>
+
+            {/* SECTION 3: INFORMASI INSTANSI, JAM KERJA & KONTAK */}
+            <div className="p-6 sm:p-8 rounded-[32px] bg-blue-50/50 border border-blue-100/80 space-y-6">
+                <div className="flex items-center gap-3 border-b border-blue-100/60 pb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-slate-900 tracking-tight">
+                      Informasi Kelembagaan, Jam Kerja &amp; Kontak
+                    </h2>
+                    <p className="text-xs text-slate-500 font-medium">
+                      Data legalitas tahun pendirian, jadwal operasional kantor, dan saluran komunikasi resmi instansi
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {/* Card 1: Tahun Berdiri */}
+                  <div className="p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Tahun Berdiri</span>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Calendar className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-lg font-black text-slate-900">
+                        {tentangData?.meta_json?.tahun_berdiri ? `Tahun ${tentangData.meta_json.tahun_berdiri}` : "Tahun 2003"}
+                      </div>
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Lembaga Perencana Daerah
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 2: Jam Kerja */}
+                  <div className="p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm flex flex-col justify-between space-y-3 sm:col-span-1 lg:col-span-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Jam Layanan</span>
+                      <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                        <Clock className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-xs font-black text-slate-900 leading-snug">
+                        {tentangData?.meta_json?.jam_kerja || "Senin - Jumat: 08:00 - 16:30 WIT"}
+                      </div>
+                      <p className="text-[11px] text-emerald-700 font-bold mt-0.5">
+                        Waktu Indonesia Timur (WIT)
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 3: Telepon */}
+                  <div className="p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Telepon Kantor</span>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Phone className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      {tentangData?.meta_json?.telepon ? (
+                        <a
+                          href={`tel:${tentangData.meta_json.telepon.replace(/\s+/g, "")}`}
+                          className="text-xs font-black text-blue-700 hover:underline block truncate"
+                        >
+                          {tentangData.meta_json.telepon}
+                        </a>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-900">(0924) 2621111</span>
+                      )}
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Saluran Komunikasi Resmi
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Card 4: Email */}
+                  <div className="p-5 rounded-2xl bg-white border border-blue-100/60 shadow-sm flex flex-col justify-between space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">Email Instansi</span>
+                      <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Mail className="w-4 h-4" />
+                      </div>
+                    </div>
+                    <div>
+                      {tentangData?.meta_json?.email ? (
+                        <a
+                          href={`mailto:${tentangData.meta_json.email}`}
+                          className="text-xs font-black text-blue-700 hover:underline block truncate"
+                          title={tentangData.meta_json.email}
+                        >
+                          {tentangData.meta_json.email}
+                        </a>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-900">info@bappeda.halut.go.id</span>
+                      )}
+                      <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                        Korespondensi &amp; Administrasi
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Full Width Card: Alamat Lengkap */}
+                <div className="p-5 sm:p-6 rounded-2xl bg-white border border-blue-100/60 shadow-sm flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      Alamat Kantor Sekretariat
+                    </span>
+                    <p className="text-xs sm:text-sm font-bold text-slate-900 leading-relaxed">
+                      {tentangData?.meta_json?.alamat || "Jl. Ir. Hein Namotemo M.SP 2 Tobelo, Halmahera Utara, Maluku Utara"}
+                    </p>
+                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-extrabold uppercase tracking-wider shrink-0">
+                    Kabupaten Halmahera Utara
+                  </span>
+                </div>
+              </div>
+            </div>
         )}
       </div>
     </div>

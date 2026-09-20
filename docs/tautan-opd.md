@@ -42,8 +42,14 @@ Secara default modul dashboard Tautan OPD hanya dapat diakses oleh `superadmin`.
 Admin lain dapat mengakses modul ini jika diberi permission `manage_tautan_opd`
 melalui halaman Manajemen Pengguna.
 
-## Upload Logo
+## Upload Logo & Resolusi Jalur Berkas
 
 Form dashboard mendukung unggah logo melalui area pilih/tarik berkas, lalu
 menyimpan URL hasil upload ke kolom `logo_url`. Terdapat preview logo responsif serta opsi "Hapus Logo" dan "Ganti Berkas Logo".
+
+### Standar Penyajian Berkas Windows Server:
+1. **Server Routing (`backend/server.php` & `backend/routes/web.php`)**:
+   - `backend/server.php` memprioritaskan penanganan prefix `/storage/*` langsung ke kandidat lokasi `storage/app/public` dan `public/storage` sebelum mengembalikan `false`. Hal ini memastikan server bawaan PHP (`php artisan serve`) di Windows tidak mengembalikan status 404 ketika melayani aset gambar upload.
+2. **Penyajian URL Frontend**:
+   - URL logo di normalisasi oleh `tautanOpdService.ts` dan diprefix dengan `STORAGE_BASE_URL` baik di grid publik `OpdLinksGrid.tsx` maupun kartu admin `dashboard/tautan-opd/page.tsx`.
 

@@ -1,10 +1,40 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { MapPin, Phone, Mail, Globe, ShieldCheck, HeartHandshake, FileText, Newspaper, Camera, Map } from "lucide-react";
+import { API_BASE_URL } from "@/lib/apiClient";
 
 export const Footer: React.FC = () => {
+  const [contact, setContact] = useState<{
+    alamat: string;
+    telepon: string;
+    email: string;
+  }>({
+    alamat: "Jl. Ir. Hein Namotemo M.SP 2 Tobelo, Halmahera Utara, Maluku Utara",
+    telepon: "+62 821 4810 7771",
+    email: "info@bappeda.halmaherautarakab.go.id",
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted || !json?.data?.meta_json) return;
+        const meta = json.data.meta_json;
+        setContact({
+          alamat: meta.alamat || "Jl. Ir. Hein Namotemo M.SP 2 Tobelo, Halmahera Utara, Maluku Utara",
+          telepon: meta.telepon || "+62 821 4810 7771",
+          email: meta.email || "info@bappeda.halmaherautarakab.go.id",
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   return (
     <footer className="py-12 sm:py-16 px-4 sm:px-6 bg-white font-sans">
       <div className="max-w-7xl mx-auto rounded-[32px] bg-slate-50 text-slate-700 p-8 sm:p-12 border border-slate-200/80 shadow-xs space-y-10">
@@ -105,18 +135,31 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3 text-xs text-slate-600 font-medium">
               <li className="flex items-start gap-2.5">
                 <MapPin className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
-                <span>
-                  Jl. Kawasan Pemerintahan, Tobelo, Kabupaten Halmahera Utara, Maluku Utara
-                </span>
+                <span>{contact.alamat}</span>
               </li>
-              <li className="flex items-center gap-2.5">
-                <Phone className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>(0924) 2621111</span>
-              </li>
-              <li className="flex items-center gap-2.5">
-                <Mail className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>bappeda@halmaherautarakab.go.id</span>
-              </li>
+              {contact.telepon && (
+                <li className="flex items-center gap-2.5">
+                  <Phone className="w-4 h-4 text-blue-600 shrink-0" />
+                  <a
+                    href={`tel:${contact.telepon.replace(/\s+/g, "")}`}
+                    className="hover:text-blue-700 transition font-bold"
+                  >
+                    {contact.telepon}
+                  </a>
+                </li>
+              )}
+              {contact.email && (
+                <li className="flex items-center gap-2.5">
+                  <Mail className="w-4 h-4 text-blue-600 shrink-0" />
+                  <a
+                    href={`mailto:${contact.email}`}
+                    className="hover:text-blue-700 transition font-bold truncate block max-w-[220px]"
+                    title={contact.email}
+                  >
+                    {contact.email}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>
