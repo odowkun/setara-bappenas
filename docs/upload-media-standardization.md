@@ -52,6 +52,18 @@ Sebelumnya, beberapa modul dashboard menggunakan antarmuka upload berkas yang ti
    - Peningkatan estetika dropzone dengan gradient icon container dan extension pills (PDF, DED / AMDAL, JPG / PNG).
    - Mendukung multi-file drag-and-drop dan kompresi gambar otomatis di sisi klien.
 
+### E. Pengaturan Video Sambutan Utama Beranda (`frontend/src/app/dashboard/galeri/page.tsx`)
+
+1. **Integrasi Tab Pengaturan Video Utama**:
+   - Ditempatkan langsung di halaman Manajemen Galeri (`/dashboard/galeri`) melalui tab bar navigasi: **Daftar Album Galeri** dan **Video Sambutan Utama (Beranda)**.
+   - Dilengkapi form komprehensif: URL video, file uploader video (MP4/MOV s.d. 100MB), cover poster uploader, judul sambutan, deskripsi paparan, label badge kiri, dan label badge kanan.
+2. **Interactive Live Preview**:
+   - Panel sebelah kanan menampilkan replika kartu video beranda secara real-time.
+   - Admin dapat langsung menguji pemutaran video, audio, dan visual cover poster sebelum menyimpan perubahan ke database.
+3. **Database & API**:
+   - Tabel: `hero_video_settings` (migration `2026_09_21_000002_create_hero_video_settings_table.php`).
+   - Endpoint: `GET /api/v1/hero-video` (publik) dan `GET/PUT /api/v1/admin/hero-video` (admin RBAC `manage_galeri`).
+
 ---
 
 ## 3. Matriks Konsistensi Komponen Upload
@@ -62,10 +74,11 @@ Sebelumnya, beberapa modul dashboard menggunakan antarmuka upload berkas yang ti
 | **Dasar Hukum & Regulasi** | PDF | Ya | Ya (`blue-700` → `indigo-600`) | Ya | Ya (Watermark Terverifikasi) |
 | **Pengumuman (Tambah/Edit)** | PDF, Dokumen, Foto, Video | Ya | Ya (`blue-700` → `indigo-600`) | Ya | Ya (Berkas Siap / Terlampir) |
 | **Galeri (Tambah/Edit)** | Foto, Video | Ya | Ya (`blue-700` → `indigo-600`) | Ya | Ya (Cover Badge & Preview) |
+| **Video Sambutan Beranda** | Video (MP4/MOV), Poster | Ya | Ya (`amber-500` & `blue-600`) | Ya | Ya (Live Preview & Status Tayang) |
 | **Lampiran Teknis Spasial** | PDF, DED, Foto | Ya | Ya (`blue-700` → `indigo-600`) | Ya | Ya (Auto Compression) |
 
 ---
 
 ## 4. Verifikasi & Build
 
-- Pengujian kompilasi Next.js produksi: `npm run build` dijalankan dan selesai tanpa error (`Compiled successfully`, 63/63 halaman static/dynamic lulus tanpa linting/type warning).
+- Pengujian kompilasi Next.js produksi: `npm run build` dijalankan dan selesai tanpa error (`Compiled successfully`, 64/64 halaman static/dynamic lulus tanpa linting/type warning).

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Galeri;
+use App\Models\HeroVideoSetting;
 use App\Services\OfficialPublicationService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -188,5 +189,73 @@ class GaleriController extends Controller
             'publishedAt' => $galeri->published_at?->toISOString(),
             'createdAt' => $galeri->created_at?->toISOString(),
         ];
+    }
+
+    public function getHeroVideo()
+    {
+        $setting = HeroVideoSetting::getActiveSetting();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'id' => $setting->id,
+                'video_url' => $setting->video_url,
+                'poster_url' => $setting->poster_url,
+                'badge_title' => $setting->badge_title,
+                'badge_subtitle' => $setting->badge_subtitle,
+                'title' => $setting->title,
+                'subtitle' => $setting->subtitle,
+                'is_active' => (bool) $setting->is_active,
+                'updated_by' => $setting->updated_by,
+                'updated_at' => $setting->updated_at?->toISOString(),
+            ],
+        ]);
+    }
+
+    public function getAdminHeroVideo()
+    {
+        return $this->getHeroVideo();
+    }
+
+    public function updateHeroVideo(Request $request)
+    {
+        $validated = $request->validate([
+            'video_url' => 'required|string|max:1000',
+            'poster_url' => 'nullable|string|max:1000',
+            'badge_title' => 'nullable|string|max:100',
+            'badge_subtitle' => 'nullable|string|max:100',
+            'title' => 'required|string|max:255',
+            'subtitle' => 'nullable|string|max:2000',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $setting = HeroVideoSetting::getActiveSetting();
+        $setting->update([
+            'video_url' => $validated['video_url'],
+            'poster_url' => $validated['poster_url'] ?? $setting->poster_url,
+            'badge_title' => $validated['badge_title'] ?? $setting->badge_title,
+            'badge_subtitle' => $validated['badge_subtitle'] ?? $setting->badge_subtitle,
+            'title' => $validated['title'],
+            'subtitle' => $validated['subtitle'] ?? null,
+            'is_active' => isset($validated['is_active']) ? (bool) $validated['is_active'] : $setting->is_active,
+            'updated_by' => $request->user()?->name ?? 'Admin',
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pengaturan video utama berhasil diperbarui.',
+            'data' => [
+                'id' => $setting->id,
+                'video_url' => $setting->video_url,
+                'poster_url' => $setting->poster_url,
+                'badge_title' => $setting->badge_title,
+                'badge_subtitle' => $setting->badge_subtitle,
+                'title' => $setting->title,
+                'subtitle' => $setting->subtitle,
+                'is_active' => (bool) $setting->is_active,
+                'updated_by' => $setting->updated_by,
+                'updated_at' => $setting->updated_at?->toISOString(),
+            ],
+        ]);
     }
 }

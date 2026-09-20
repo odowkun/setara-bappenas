@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
+import HeroVideoSettingsPanel from "@/components/admin/HeroVideoSettingsPanel";
 
 export default function GaleriManagementPage() {
   const { hasRole } = useAuth();
@@ -31,6 +32,16 @@ export default function GaleriManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["Semua"]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"albums" | "hero-video">("albums");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("tab") === "video" || params.get("tab") === "hero-video") {
+        setActiveTab("hero-video");
+      }
+    }
+  }, []);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -118,18 +129,69 @@ export default function GaleriManagementPage() {
           </p>
         </div>
 
-        {hasRole(["superadmin", "admin_umum", "admin_bidang"]) && (
-          <Link
-            href="/dashboard/galeri/tambah"
-            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab(activeTab === "hero-video" ? "albums" : "hero-video")}
+            className={`px-5 py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0 border cursor-pointer ${
+              activeTab === "hero-video"
+                ? "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
+                : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
+            }`}
           >
-            <FolderPlus className="w-4 h-4" />
-            <span>Buat Album Galeri Baru</span>
-          </Link>
-        )}
+            <Video className="w-4 h-4 text-amber-600" />
+            <span>{activeTab === "hero-video" ? "Lihat Daftar Album" : "Pengaturan Video Beranda"}</span>
+          </button>
+
+          {hasRole(["superadmin", "admin_umum", "admin_bidang"]) && (
+            <Link
+              href="/dashboard/galeri/tambah"
+              className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+            >
+              <FolderPlus className="w-4 h-4" />
+              <span>Buat Album Galeri Baru</span>
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* SEARCH BAR & CATEGORY SELECTOR */}
+      {/* TABS NAVIGATION */}
+      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-2xs w-fit">
+        <button
+          type="button"
+          onClick={() => setActiveTab("albums")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "albums"
+              ? "bg-blue-600 text-white shadow-sm"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          }`}
+        >
+          <Layers className="w-4 h-4" />
+          <span>Daftar Album Galeri ({albums.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("hero-video")}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "hero-video"
+              ? "bg-amber-500 text-blue-950 font-black shadow-sm"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          }`}
+        >
+          <Video className="w-4 h-4 text-amber-600" />
+          <span>Video Sambutan Utama (Beranda)</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-amber-100 text-amber-900 font-black uppercase">
+            Live
+          </span>
+        </button>
+      </div>
+
+      {activeTab === "hero-video" ? (
+        <HeroVideoSettingsPanel />
+      ) : (
+        <>
+          {/* SEARCH BAR & CATEGORY SELECTOR */}
       <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-96">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -309,27 +371,29 @@ export default function GaleriManagementPage() {
         )}
       </div>
 
-      {/* PAGINATION */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 pt-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer text-xs font-bold"
-          >
-            &larr; Prev
-          </button>
-          <span className="text-xs font-bold text-slate-600">
-            Halaman {currentPage} dari {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-            className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer text-xs font-bold"
-          >
-            Next &rarr;
-          </button>
-        </div>
+          {/* PAGINATION */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-6">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer text-xs font-bold"
+              >
+                &larr; Prev
+              </button>
+              <span className="text-xs font-bold text-slate-600">
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="p-2 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 cursor-pointer text-xs font-bold"
+              >
+                Next &rarr;
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {/* LIGHTBOX MODAL */}
