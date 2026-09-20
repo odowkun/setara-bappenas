@@ -223,6 +223,8 @@ Status pembaruan: 21 September 2026.
    - Pada layar smartphone/mobile (`< sm`), dock otomatis bertransformasi menjadi 2 baris terpisah secara rapi:
      - **Baris Atas (Line 1)**: Teks berjalan (running marquee ticker) dengan live pulsing dot membentang penuh selebar layar (`w-full`), sehingga warta/informasi terkini dapat dibaca jelas tanpa terpotong atau terdesak.
      - **Baris Bawah (Line 2)**: 4 tombol dokumen publik (`RPJPD`, `RPJMD`, `RKPD`, `Lainnya`) tersusun presisi dalam 4 kolom (`grid grid-cols-4`) lengkap dengan visual ikon 3D dan label tebal, dipisahkan pembatas halus (`border-t border-slate-200/70`).
+6. **Penyederhanaan Visual Hero Section (`HeroSection.tsx`)**:
+   - Menghapus tombol CTA kuning `Jelajahi Portal Sekarang` di bawah judul utama beranda agar area hero tampil lebih bersih, berwibawa, dan langsung terfokus pada headline kelembagaan serta video profil tanpa gangguan tombol yang berlebihan.
 
 ### B. Resolusi Bug Floating Menghilang Saat Di-scroll (Safari & Nested Overflow Fix)
 

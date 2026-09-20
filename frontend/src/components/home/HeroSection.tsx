@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import Link from "next/link";
 import { DocumentQuickMenu } from "@/components/documents/DocumentQuickMenu";
 import { SkeletonImage } from "@/components/ui/SkeletonImage";
 import {
@@ -16,7 +15,6 @@ import {
   Volume2,
   VolumeX,
   Maximize2,
-  ArrowRight,
   Sparkles,
 } from "lucide-react";
 
@@ -84,17 +82,6 @@ export const HeroSection: React.FC = () => {
           <h1 className="text-2xl sm:text-5xl lg:text-7xl font-semibold text-white leading-snug sm:leading-[1.15] tracking-normal drop-shadow-md">
             Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara
           </h1>
-
-          {/* Center Action Pill Button (ROYAL BLUE BRAND & GOLDEN ACCENT) */}
-          <div className="pt-2 flex items-center justify-center">
-            <Link
-              href="/dokumen"
-              className="px-8 py-4 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-sm shadow-2xl shadow-amber-500/30 flex items-center gap-2.5 transition transform hover:scale-105 border border-amber-300"
-            >
-              Jelajahi Portal Sekarang{" "}
-              <ArrowRight className="w-4 h-4 text-blue-950" />
-            </Link>
-          </div>
         </div>
 
         <DocumentQuickMenu floatingOnScroll showTicker />
