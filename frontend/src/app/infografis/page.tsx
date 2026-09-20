@@ -198,13 +198,13 @@ export default function PublicInfografisPage() {
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6">
             {items.map((item) => (
               <div
                 key={item.id}
                 id={item.slug}
                 onClick={() => handleOpenInfografis(item)}
-                className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-slate-950 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 aspect-[3/4] cursor-pointer select-none"
+                className="group relative rounded-2xl sm:rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-slate-950 shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 aspect-[3/4] cursor-pointer select-none"
               >
                 {/* Full Poster Image */}
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -219,23 +219,23 @@ export default function PublicInfografisPage() {
                 <div className="absolute inset-0 bg-slate-950/20 group-hover:bg-slate-950/50 transition-colors pointer-events-none" />
 
                 {/* Top Badge: Category & Pin */}
-                <div className="absolute top-4 inset-x-4 flex items-center justify-between z-10 pointer-events-none">
-                  <span className="px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-600/95 backdrop-blur-md text-white shadow-sm">
+                <div className="absolute top-2.5 inset-x-2.5 sm:top-4 sm:inset-x-4 flex items-center justify-between z-10 pointer-events-none">
+                  <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-blue-600/95 backdrop-blur-md text-white shadow-sm">
                     {item.category}
                   </span>
 
                   {item.isPinned && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-amber-400 text-blue-950 shadow-sm">
-                      ★ Tersemat
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg sm:rounded-xl text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-amber-400 text-blue-950 shadow-sm">
+                      ★ <span className="hidden sm:inline">Tersemat</span>
                     </span>
                   )}
                 </div>
 
                 {/* Center Hover Magnify */}
                 <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                  <span className="px-4 py-2.5 rounded-2xl bg-amber-400 text-blue-950 font-black text-xs shadow-2xl flex items-center gap-2 transform scale-90 group-hover:scale-100 transition-transform">
-                    <Maximize2 className="w-4 h-4" />
-                    <span>Perbesar Gambar</span>
+                  <span className="px-3 py-1.5 sm:px-4 sm:py-2.5 rounded-xl sm:rounded-2xl bg-amber-400 text-blue-950 font-black text-[11px] sm:text-xs shadow-2xl flex items-center gap-1.5 sm:gap-2 transform scale-90 group-hover:scale-100 transition-transform">
+                    <Maximize2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span>Perbesar</span>
                   </span>
                 </div>
               </div>

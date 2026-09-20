@@ -96,3 +96,13 @@ Controller: `App\Http\Controllers\Api\InfografisController`
    - Menggunakan `@/lib/swal` untuk notifikasi Toast dan konfirmasi hapus (`showDeleteConfirm`).
    - Menggunakan komponen custom `SearchableSelect` dengan dukungan *creatable*: admin dapat memilih kategori/badge yang tersedia, atau mengetikkan kategori baru secara dinamis jika belum terdaftar.
    - Pola yang sama diterapkan pada dashboard Teks Berjalan (`frontend/src/app/dashboard/running-text/page.tsx`).
+
+5. **Optimasi Responsif Mobile (Mobile Snap Carousel & 2-Column Grid)**:
+   - **Homepage Snap Carousel (`PinnedInfographicsSection.tsx`)**:
+     - Menggantikan tumpukan 1 kolom vertikal yang berukuran terlalu raksasa di layar ponsel dengan **Horizontal Snap Carousel** yang elegan.
+     - Kartu mobile berukuran proporsional (`w-[72vw] max-w-[270px] aspect-[4/5]`) dengan efek *peek* (kartu berikutnya tampak sebagian di sisi kanan untuk memancing gestur swipe).
+     - Dilengkapi header mini dengan slide counter dinamis (`1 / 5`), tombol panah geser navigasi (Prev / Next), dan titik pagination (*dots*) interaktif.
+     - Menggunakan React `createPortal(..., document.body)` untuk modal Lightbox HD agar tidak terhalang batas container maupun bilah navigasi bawah (*floating dock*).
+   - **Halaman Katalog (`/infografis`)**:
+     - Ditata menjadi 2 kolom rapi di mobile (`grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6`) dengan badge dan tombol perbesar yang proporsional.
+

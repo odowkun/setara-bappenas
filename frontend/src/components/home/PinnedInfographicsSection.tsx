@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Maximize2,
   X,
@@ -9,6 +10,9 @@ import {
   ZoomIn,
   ZoomOut,
   RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Sparkles,
 } from "lucide-react";
 import {
   infografisService,
@@ -20,6 +24,13 @@ export const PinnedInfographicsSection: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedInfografis, setSelectedInfografis] = useState<InfografisItem | null>(null);
   const [zoomScale, setZoomScale] = useState(1);
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     infografisService
@@ -34,6 +45,17 @@ export const PinnedInfographicsSection: React.FC = () => {
         setLoading(false);
       });
   }, []);
+
+  // Lock body scroll when modal is open
+  useEffect(() => {
+    if (selectedInfografis) {
+      const original = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = original;
+      };
+    }
+  }, [selectedInfografis]);
 
   const handleOpenInfografis = (item: InfografisItem) => {
     setSelectedInfografis(item);
@@ -50,14 +72,154 @@ export const PinnedInfographicsSection: React.FC = () => {
     });
   };
 
+  const handleScroll = () => {
+    if (!carouselRef.current) return;
+    const { scrollLeft, clientWidth } = carouselRef.current;
+    if (clientWidth === 0) return;
+    const cardWidth = clientWidth * 0.72 + 12; // 72vw + gap
+    const index = Math.round(scrollLeft / cardWidth);
+    setActiveSlide(Math.min(Math.max(0, index), items.length - 1));
+  };
+
+  const scrollToSlide = (index: number) => {
+    if (!carouselRef.current) return;
+    const container = carouselRef.current;
+    const card = container.children[index] as HTMLElement;
+    if (card) {
+      card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+      setActiveSlide(index);
+    }
+  };
+
+  const handlePrev = () => {
+    scrollToSlide(Math.max(0, activeSlide - 1));
+  };
+
+  const handleNext = () => {
+    scrollToSlide(Math.min(items.length - 1, activeSlide + 1));
+  };
+
   if (!loading && items.length === 0) {
     return null;
   }
 
   return (
     <div className="w-full pb-2">
-      {/* 5 Pinned Infographics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+      {/* MOBILE CAROUSEL VIEW (< sm) */}
+      <div className="block sm:hidden space-y-3">
+        {/* Mobile Header: Label & Slide Counter Controls */}
+        <div className="flex items-center justify-between px-1">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-[11px] font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span>Infografis Pilihan</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full">
+              {items.length > 0 ? `${activeSlide + 1} / ${items.length}` : "..."}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handlePrev}
+                disabled={activeSlide === 0}
+                aria-label="Sebelumnya"
+                className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={activeSlide >= items.length - 1}
+                aria-label="Selanjutnya"
+                className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-700 disabled:opacity-30 disabled:pointer-events-none active:scale-95 transition"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Horizontal Snap Container with Card Peek */}
+        <div
+          ref={carouselRef}
+          onScroll={handleScroll}
+          className="flex items-stretch gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar -mx-4 px-4 py-1"
+        >
+          {loading
+            ? Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[72vw] max-w-[270px] aspect-[4/5] shrink-0 snap-center rounded-2xl bg-slate-100 animate-pulse p-4 flex flex-col justify-end"
+                >
+                  <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
+                  <div className="h-3 bg-slate-200 rounded w-1/2" />
+                </div>
+              ))
+            : items.map((item, idx) => (
+                <div
+                  key={item.id}
+                  onClick={() => handleOpenInfografis(item)}
+                  className={`w-[72vw] max-w-[270px] aspect-[4/5] shrink-0 snap-center relative rounded-2xl overflow-hidden border border-slate-200/90 bg-slate-950 shadow-md active:scale-98 transition-all duration-200 cursor-pointer select-none ${
+                    activeSlide === idx ? "ring-2 ring-blue-500/40 shadow-xl" : "opacity-90"
+                  }`}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={item.imageUrl}
+                    alt={item.title}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40 pointer-events-none" />
+
+                  {/* Top Badges */}
+                  <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between z-10 pointer-events-none">
+                    <span className="px-2 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider bg-blue-600/95 backdrop-blur-md text-white shadow-sm">
+                      {item.category}
+                    </span>
+                    <span className="w-5 h-5 rounded-full bg-amber-400 text-blue-950 flex items-center justify-center text-[10px] font-black shadow-sm" title="Tersemat di Beranda">
+                      ★
+                    </span>
+                  </div>
+
+                  {/* Bottom Tap to Enlarge Pill */}
+                  <div className="absolute bottom-3 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+                    <span className="text-[11px] font-black text-white line-clamp-1 drop-shadow-sm flex-1 mr-2">
+                      {item.title}
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-amber-400 text-blue-950 font-extrabold text-[10px] shadow-md flex items-center gap-1 shrink-0">
+                      <Maximize2 className="w-3 h-3" />
+                      <span>Perbesar</span>
+                    </span>
+                  </div>
+                </div>
+              ))}
+        </div>
+
+        {/* Mobile Pagination Dots */}
+        {items.length > 1 && (
+          <div className="flex items-center justify-center gap-1.5 pt-1">
+            {items.map((_, dotIdx) => (
+              <button
+                key={dotIdx}
+                type="button"
+                onClick={() => scrollToSlide(dotIdx)}
+                aria-label={`Slide ${dotIdx + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 cursor-pointer ${
+                  activeSlide === dotIdx ? "w-6 bg-blue-600" : "w-1.5 bg-slate-300"
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* DESKTOP GRID VIEW (sm+) */}
+      <div className="hidden sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {loading
           ? Array.from({ length: 5 }).map((_, i) => (
               <div
@@ -68,7 +230,7 @@ export const PinnedInfographicsSection: React.FC = () => {
                 <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded w-1/2" />
               </div>
             ))
-          : items.map((item, idx) => (
+          : items.map((item) => (
               <div
                 key={item.id}
                 onClick={() => handleOpenInfografis(item)}
@@ -107,8 +269,8 @@ export const PinnedInfographicsSection: React.FC = () => {
             ))}
       </div>
 
-      {/* Lightbox Modal */}
-      {selectedInfografis && (
+      {/* Lightbox Modal (Portaled directly to document.body) */}
+      {mounted && selectedInfografis && createPortal(
         <div
           onClick={() => {
             setSelectedInfografis(null);
@@ -224,7 +386,8 @@ export const PinnedInfographicsSection: React.FC = () => {
               title={zoomScale > 1 ? "Klik untuk mengembalikan ukuran normal" : "Klik untuk memperbesar (Zoom)"}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
