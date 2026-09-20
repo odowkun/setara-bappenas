@@ -87,6 +87,20 @@ export default function PublicInfografisPage() {
     }
   };
 
+  const handleOpenInfografis = (item: InfografisItem) => {
+    setSelectedInfografis(item);
+    infografisService.recordView(item.id).then((newCount) => {
+      if (newCount !== null) {
+        setItems((prev) =>
+          prev.map((it) => (it.id === item.id ? { ...it, viewCount: newCount } : it))
+        );
+        setSelectedInfografis((prev) =>
+          prev && prev.id === item.id ? { ...prev, viewCount: newCount } : prev
+        );
+      }
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50/50 dark:bg-slate-950 font-sans pb-24 pt-28 sm:pt-36">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
@@ -185,7 +199,7 @@ export default function PublicInfografisPage() {
               <div
                 key={item.id}
                 id={item.slug}
-                onClick={() => setSelectedInfografis(item)}
+                onClick={() => handleOpenInfografis(item)}
                 className="group relative rounded-3xl overflow-hidden border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 flex flex-col cursor-pointer select-none"
               >
                 {/* Poster Container */}
@@ -237,7 +251,7 @@ export default function PublicInfografisPage() {
                   <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 text-[11px] text-slate-400 font-medium">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3.5 h-3.5" />
-                      {item.viewCount} tayangan
+                      {item.viewCount} dilihat
                     </span>
                     <button
                       type="button"
@@ -305,6 +319,10 @@ export default function PublicInfografisPage() {
                         year: "numeric",
                       })
                     : "Resmi BAPPEDA"}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-slate-300 font-medium bg-white/10 px-2 py-0.5 rounded-md">
+                  <Eye className="w-3 h-3 text-slate-300" />
+                  {selectedInfografis.viewCount} dilihat
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black truncate text-slate-100">

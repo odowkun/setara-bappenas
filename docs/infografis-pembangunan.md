@@ -5,13 +5,15 @@ Modul **Infografis Pembangunan** dirancang untuk menyajikan data visual, ringkas
 
 Fitur ini terdiri dari 3 pilar utama:
 1. **Homepage 5 Pinned Infographics (`PinnedInfographicsSection`)**: 
-   - Ditampilkan tepat di bawah video arahan pimpinan / di atas kartu pengumuman resmi (*pinned announcement card*) pada beranda.
-   - Menampilkan maksimal 5 infografis unggulan yang di-pin oleh admin.
-   - Dilengkapi fitur interaktif Lightbox (pembesaran gambar resolusi tinggi) & tombol unduh langsung.
+   - Ditampilkan tepat di atas kartu pengumuman resmi (*pinned announcement card*) pada beranda.
+   - Menampilkan maksimal 5 infografis unggulan yang di-pin oleh admin secara langsung tanpa baris header teks terpisah (tampilan minimalis & elegan).
+   - Dilengkapi counter impresi dinamis (`{viewCount} dilihat`) yang otomatis bertambah saat pengguna mengklik dan membuka infografis.
+   - Dilengkapi fitur interaktif Lightbox (pembesaran gambar resolusi tinggi) & tombol unduh langsung HD.
 2. **Halaman Galeri Publik (`/infografis`)**:
    - Dapat diakses melalui navigasi dropdown **Berita & Agenda > Infografis Pembangunan**.
    - Menyediakan filter kategori visual (Semua, Statistik & Capaian, Perekonomian & Fiskal, Spasial & Wilayah, Sosial & SDM, Regulasi & Rencana).
    - Pencarian real-time berdasarkan judul/deskripsi.
+   - Counter impresi dinamis terintegrasi (`recordView` via `GET /api/v1/infografis/{id}` yang otomatis memicu `$infografis->increment('view_count')` di database server).
    - Modal Lightbox interaktif lengkap dengan unduhan gambar HD dan tombol bagikan tautan.
 3. **Manajemen Dinamis di Dashboard Admin (`/dashboard/infografis`)**:
    - Terintegrasi di menu sidebar admin: **Media, Pengumuman & Agenda > Infografis Daerah**.

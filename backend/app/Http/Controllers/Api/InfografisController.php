@@ -67,6 +67,7 @@ class InfografisController extends Controller
             ->firstOrFail();
 
         $infografis->increment('view_count');
+        $infografis->refresh();
 
         return response()->json([
             'status' => 'success',

@@ -97,6 +97,18 @@ export const infografisService = {
     }
   },
 
+  async recordView(id: number): Promise<number | null> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/infografis/${id}`, { cache: "no-store" });
+      if (!res.ok) return null;
+      const json = await res.json();
+      return Number(json.data?.view_count ?? 0);
+    } catch (error) {
+      console.error("[infografisService] Gagal mencatat tayangan infografis:", error);
+      return null;
+    }
+  },
+
   async getAdminItems(category?: string, search?: string): Promise<InfografisItem[]> {
     try {
       const params = new URLSearchParams();

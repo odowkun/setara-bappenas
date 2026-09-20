@@ -1,18 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
 import {
-  BarChart3,
-  ArrowRight,
   Maximize2,
   X,
   Download,
-  Calendar,
   Eye,
-  Sparkles,
-  ChevronRight,
-  Layers,
 } from "lucide-react";
 import {
   infografisService,
@@ -38,36 +31,26 @@ export const PinnedInfographicsSection: React.FC = () => {
       });
   }, []);
 
+  const handleOpenInfografis = (item: InfografisItem) => {
+    setSelectedInfografis(item);
+    infografisService.recordView(item.id).then((newCount) => {
+      if (newCount !== null) {
+        setItems((prev) =>
+          prev.map((it) => (it.id === item.id ? { ...it, viewCount: newCount } : it))
+        );
+        setSelectedInfografis((prev) =>
+          prev && prev.id === item.id ? { ...prev, viewCount: newCount } : prev
+        );
+      }
+    });
+  };
+
   if (!loading && items.length === 0) {
     return null;
   }
 
   return (
-    <div className="w-full space-y-4 pb-2">
-      {/* Section Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200/80 dark:border-slate-800 pb-3">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-[10px] font-black uppercase tracking-wider border border-blue-200 dark:border-blue-700">
-            <BarChart3 className="w-3.5 h-3.5 text-blue-600" />
-            <span>Infografis Pembangunan Daerah</span>
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
-            Fakta &amp; Visualisasi Data Pembangunan Halut
-          </h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium max-w-2xl leading-relaxed">
-            Paparan visual capaian makro daerah, arah kebijakan RPJPD/RPJMD, pemantauan spasial, dan transparansi anggaran daerah.
-          </p>
-        </div>
-
-        <Link
-          href="/infografis"
-          className="inline-flex items-center gap-2 text-xs font-black text-blue-600 dark:text-blue-400 hover:text-blue-800 transition group self-start sm:self-auto shrink-0 bg-blue-50 dark:bg-slate-800 px-4 py-2 rounded-xl hover:bg-blue-100/80"
-        >
-          <span>Buka Galeri Infografis</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </Link>
-      </div>
-
+    <div className="w-full pb-2">
       {/* 5 Pinned Infographics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {loading
@@ -83,7 +66,7 @@ export const PinnedInfographicsSection: React.FC = () => {
           : items.map((item, idx) => (
               <div
                 key={item.id}
-                onClick={() => setSelectedInfografis(item)}
+                onClick={() => handleOpenInfografis(item)}
                 className="group relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 aspect-[3/4] shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer select-none"
               >
                 {/* Background Image */}
@@ -123,7 +106,7 @@ export const PinnedInfographicsSection: React.FC = () => {
                   <div className="flex items-center justify-between text-[10px] text-slate-300 font-medium pt-1 border-t border-white/10">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3 h-3 text-slate-400" />
-                      {item.viewCount} kali
+                      {item.viewCount} dilihat
                     </span>
                     <span className="text-amber-400 font-bold text-[10px] flex items-center gap-0.5">
                       Perbesar &rarr;
@@ -158,6 +141,10 @@ export const PinnedInfographicsSection: React.FC = () => {
                         year: "numeric",
                       })
                     : "Dipublikasikan resmi"}
+                </span>
+                <span className="flex items-center gap-1 text-xs text-slate-300 font-medium bg-white/10 px-2 py-0.5 rounded-md">
+                  <Eye className="w-3 h-3 text-slate-300" />
+                  {selectedInfografis.viewCount} dilihat
                 </span>
               </div>
               <h3 className="text-sm sm:text-base font-black truncate text-slate-100">
