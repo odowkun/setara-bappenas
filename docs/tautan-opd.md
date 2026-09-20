@@ -47,6 +47,23 @@ melalui halaman Manajemen Pengguna.
 Form dashboard mendukung unggah logo melalui area pilih/tarik berkas, lalu
 menyimpan URL hasil upload ke kolom `logo_url`. Terdapat preview logo responsif serta opsi "Hapus Logo" dan "Ganti Berkas Logo".
 
+### Standardisasi Penyesuaian Lingkaran Logo (`CircularImageCropperModal`)
+1. **Penyelarasan Tampilan Lingkaran Profil**:
+   - Pada grid beranda (`OpdLinksGrid.tsx`), logo OPD ditampilkan di dalam lingkaran penuh (`rounded-full`). Banyak berkas logo asli berbentuk persegi panjang dengan tulisan teks atau logo yang tidak proporsional bila langsung dipotong tanpa penyesuaian.
+   - Komponen interaktif `CircularImageCropperModal` (`frontend/src/components/ui/CircularImageCropperModal.tsx`) secara otomatis memotong dan menyesuaikan logo ke format lingkaran sempurna sebelum diunggah ke server:
+     - **Interaksi Kanvas**: Pengguna dapat menggeser/drag posisi logo dengan mouse atau layar sentuh.
+     - **Skala Zoom**: Slider skala perbesaran (0.4x hingga 3.5x) serta pinch-to-zoom dan wheel zoom.
+     - **Fitur Cepat**:
+       - *Paskan Lingkaran*: Menyesuaikan skala otomatis agar logo berada rapi di dalam 88% diameter lingkaran tanpa terpotong.
+       - *Isi Penuh*: Memperbesar logo hingga mengisi penuh lingkaran.
+       - *Pusatkan*: Mengembalikan koordinat geser ke titik tengah.
+       - *Putar 90°*: Merotasi logo searah jarum jam untuk orientasi berkas yang miring.
+       - *Pilihan Latar Belakang*: Opsi latar putih (`#ffffff`) atau transparan untuk format PNG/SVG.
+     - **Export Berkualitas Tinggi**: Hasil potongan diekspor dalam kanvas beresolusi tinggi 512×512 px PNG berformat lingkaran bersih (`arc clip`).
+     - **Tombol "Sesuaikan Lingkaran"**: Pengguna dapat sewaktu-waktu membuka kembali pemotong untuk logo yang sedang aktif tanpa perlu mengunggah ulang berkas mentah.
+2. **Kesesuaian Kartu Dashboard**:
+   - Kartu daftar tautan OPD di `frontend/src/app/dashboard/tautan-opd/page.tsx` dan pratinjau form kiri kini sama-sama menggunakan format lingkaran (`rounded-full`) untuk menjamin konsistensi visual 1:1 dengan halaman publik.
+
 ### Standar Penyajian Berkas Windows Server:
 1. **Server Routing (`backend/server.php` & `backend/routes/web.php`)**:
    - `backend/server.php` memprioritaskan penanganan prefix `/storage/*` langsung ke kandidat lokasi `storage/app/public` dan `public/storage` sebelum mengembalikan `false`. Hal ini memastikan server bawaan PHP (`php artisan serve`) di Windows tidak mengembalikan status 404 ketika melayani aset gambar upload.

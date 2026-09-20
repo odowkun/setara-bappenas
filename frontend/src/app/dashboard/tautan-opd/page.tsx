@@ -16,6 +16,8 @@ import {
   Search,
   Trash2,
   Upload,
+  Crop,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { showDeleteConfirm, toast } from "@/lib/swal";
@@ -25,6 +27,7 @@ import {
   TautanOpdPayload,
 } from "@/services/tautanOpdService";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
+import CircularImageCropperModal from "@/components/ui/CircularImageCropperModal";
 
 const emptyForm = {
   name: "",
@@ -46,6 +49,11 @@ export default function TautanOpdDashboardPage() {
   const [editingItem, setEditingItem] = useState<TautanOpdItem | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [localPreviewUrl, setLocalPreviewUrl] = useState<string | null>(null);
+
+  // Circular logo cropper modal state
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
+  const [cropFileName, setCropFileName] = useState<string>("logo_opd.png");
 
   const canManage = hasPermission("manage_tautan_opd");
 
@@ -97,37 +105,70 @@ export default function TautanOpdDashboardPage() {
   const uploadLogoFile = async (file?: File) => {
     if (!file) return;
 
-    // Instant local preview in browser
-    try {
-      const objectUrl = URL.createObjectURL(file);
-      setLocalPreviewUrl(objectUrl);
-    } catch {
-      // ignore
-    }
-
     setUploading(true);
     const logoUrl = await tautanOpdService.uploadLogo(file);
     setUploading(false);
 
     if (!logoUrl) {
       toast.error("Logo OPD gagal diunggah.");
-      setLocalPreviewUrl(null);
       return;
     }
 
     setForm((prev) => ({ ...prev, logoUrl }));
-    toast.success("Logo OPD berhasil diunggah.");
+    toast.success("Logo OPD berhasil disesuaikan dan diunggah.");
   };
 
-  const handleLogoUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    await uploadLogoFile(event.target.files?.[0]);
+  const openCropperForFile = (file?: File) => {
+    if (!file) return;
+
+    if (!file.type.startsWith("image/") && !file.name.endsWith(".svg")) {
+      toast.error("Format berkas harus gambar (PNG, JPG, WEBP, atau SVG).");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setCropImageSrc(reader.result);
+        setCropFileName(file.name);
+        setIsCropModalOpen(true);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleLogoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      openCropperForFile(file);
+    }
     event.target.value = "";
   };
 
-  const handleLogoDrop = async (event: React.DragEvent<HTMLLabelElement>) => {
+  const handleLogoDrop = (event: React.DragEvent<HTMLLabelElement>) => {
     event.preventDefault();
     setDragActive(false);
-    await uploadLogoFile(event.dataTransfer.files?.[0]);
+    const file = event.dataTransfer.files?.[0];
+    if (file) {
+      openCropperForFile(file);
+    }
+  };
+
+  const handleCropComplete = async (croppedFile: File, previewUrl: string) => {
+    setLocalPreviewUrl(previewUrl);
+    await uploadLogoFile(croppedFile);
+  };
+
+  const handleReAdjustLogo = () => {
+    const currentSrc =
+      localPreviewUrl ||
+      (form.logoUrl.startsWith("/storage/")
+        ? `${STORAGE_BASE_URL}${form.logoUrl}`
+        : form.logoUrl);
+    if (!currentSrc) return;
+    setCropImageSrc(currentSrc);
+    setCropFileName("logo_opd.png");
+    setIsCropModalOpen(true);
   };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -274,17 +315,28 @@ export default function TautanOpdDashboardPage() {
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black text-slate-700">Logo OPD *</label>
                   {(form.logoUrl || localPreviewUrl) && (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        setForm((prev) => ({ ...prev, logoUrl: "" }));
-                        setLocalPreviewUrl(null);
-                      }}
-                      className="text-[10px] font-bold text-rose-600 hover:underline"
-                    >
-                      Hapus Logo
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleReAdjustLogo}
+                        className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline flex items-center gap-1 cursor-pointer"
+                        title="Buka pemotong untuk mengatur ulang posisi dan ukuran logo di dalam lingkaran"
+                      >
+                        <SlidersHorizontal className="w-3 h-3" />
+                        <span>Sesuaikan Lingkaran</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setForm((prev) => ({ ...prev, logoUrl: "" }));
+                          setLocalPreviewUrl(null);
+                        }}
+                        className="text-[10px] font-bold text-rose-600 hover:underline cursor-pointer"
+                      >
+                        Hapus Logo
+                      </button>
+                    </div>
                   )}
                 </div>
                 <label
@@ -304,7 +356,7 @@ export default function TautanOpdDashboardPage() {
                       : "bg-slate-50 hover:bg-blue-50 border-slate-300 hover:border-blue-400 text-slate-600 hover:text-blue-700"
                   }`}
                 >
-                  <span className="h-14 w-14 sm:h-16 sm:w-16 rounded-xl border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden shrink-0">
+                  <span className="h-16 w-16 rounded-full border-2 border-blue-200 bg-white shadow-xs flex items-center justify-center overflow-hidden shrink-0 ring-4 ring-blue-50/50">
                     {localPreviewUrl || form.logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -315,7 +367,7 @@ export default function TautanOpdDashboardPage() {
                             : form.logoUrl)
                         }
                         alt="Preview logo OPD"
-                        className="w-full h-full object-contain p-1.5"
+                        className="w-full h-full object-contain"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
                         }}
@@ -333,9 +385,17 @@ export default function TautanOpdDashboardPage() {
                       ) : (
                         <Upload className="w-3.5 h-3.5 text-blue-600" />
                       )}
-                      <span>{uploading ? "Mengunggah..." : (localPreviewUrl || form.logoUrl) ? "Ganti Berkas Logo" : "Pilih / Tarik Logo"}</span>
+                      <span>
+                        {uploading
+                          ? "Mengunggah..."
+                          : (localPreviewUrl || form.logoUrl)
+                          ? "Ganti / Sesuaikan Lingkaran Logo"
+                          : "Pilih / Tarik Logo (Sesuaikan Lingkaran)"}
+                      </span>
                     </span>
-                    <p className="text-[10px] font-medium text-slate-400 truncate">JPG, PNG, WEBP, SVG maks 10MB</p>
+                    <p className="text-[10px] font-medium text-slate-400 truncate">
+                      JPG, PNG, WEBP, SVG • Posisikan pas di lingkaran profil
+                    </p>
                   </div>
                   <input type="file" accept="image/*,.svg" onChange={handleLogoUpload} className="hidden" />
                 </label>
@@ -436,7 +496,7 @@ export default function TautanOpdDashboardPage() {
                 <div key={item.id} className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-16 h-16 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
+                      <div className="w-16 h-16 rounded-full border border-slate-200 bg-white shadow-xs flex items-center justify-center overflow-hidden shrink-0">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={
@@ -445,7 +505,7 @@ export default function TautanOpdDashboardPage() {
                               : item.logoUrl
                           }
                           alt={item.name}
-                          className="w-full h-full object-contain p-2"
+                          className="w-full h-full object-contain p-1"
                           onError={(e) => {
                             (e.target as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
                           }}
@@ -496,6 +556,15 @@ export default function TautanOpdDashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Circular Logo Cropper Modal */}
+      <CircularImageCropperModal
+        isOpen={isCropModalOpen}
+        imageSrc={cropImageSrc}
+        fileName={cropFileName}
+        onClose={() => setIsCropModalOpen(false)}
+        onCropComplete={handleCropComplete}
+      />
     </div>
   );
 }
