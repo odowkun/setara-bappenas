@@ -16,6 +16,7 @@ jobs:
       - name: Deploy to Production
         shell: powershell
         run: |
+          $ErrorActionPreference = "Continue"
           Write-Output "=================================================="
           Write-Output "🚀 Memulai Otomasi Deployment BAPPEDA HALUT..."
           Write-Output "=================================================="
@@ -25,43 +26,57 @@ jobs:
             New-Item -ItemType Directory -Path $prodRoot -Force | Out-Null
           }
 
-          # 1. Salin file terbaru dari repo (aman: menjaga .env & storage)
+          # Setup PATH & Environment
+          $env:PATH = "C:\php83;C:\Program Files\nodejs;C:\Users\Administrator\AppData\Roaming\npm;$env:PATH"
+          $env:PM2_HOME = "C:\Users\Administrator\.pm2"
+
+          # 1. Salin file terbaru dari repo menggunakan robocopy (aman: menjaga .env & storage)
           Write-Output "📂 Menyinkronkan file repository ke direktori produksi..."
           if (Test-Path "backend") {
-            Get-ChildItem -Path "backend" -Exclude ".env", "storage" | Copy-Item -Destination "$prodRoot\backend" -Recurse -Force
+            robocopy "backend" "$prodRoot\backend" /E /XD storage /XF .env .env.* | Out-Null
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           }
           if (Test-Path "frontend") {
-            Get-ChildItem -Path "frontend" -Exclude "node_modules", ".next", ".env*" | Copy-Item -Destination "$prodRoot\frontend" -Recurse -Force
+            robocopy "frontend" "$prodRoot\frontend" /E /XD node_modules .next /XF .env .env.* | Out-Null
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           }
           if (Test-Path "scripts") {
-            Copy-Item -Path "scripts" -Destination "$prodRoot\scripts" -Recurse -Force
+            robocopy "scripts" "$prodRoot\scripts" /E | Out-Null
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           }
 
           # 2. Update Backend Laravel
           Write-Output "🐘 Memperbarui Backend Laravel..."
-          cd "$prodRoot\backend"
-          C:\php83\php.exe artisan migrate --force
-          C:\php83\php.exe artisan config:cache
-          C:\php83\php.exe artisan route:cache
-          C:\php83\php.exe artisan view:cache
+          Set-Location "$prodRoot\backend"
+          & "C:\php83\php.exe" artisan migrate --force
+          & "C:\php83\php.exe" artisan config:cache
+          & "C:\php83\php.exe" artisan route:cache
+          & "C:\php83\php.exe" artisan view:cache
 
           # 3. Update & Build Frontend Next.js
           Write-Output "⚛️ Memperbarui Frontend Next.js..."
-          cd "$prodRoot\frontend"
+          Set-Location "$prodRoot\frontend"
           npm install --prefer-offline --no-audit
           npm run build
 
           if (Test-Path "public") {
-            Copy-Item -Path "public" -Destination ".next\standalone\public" -Recurse -Force -ErrorAction SilentlyContinue
+            robocopy "public" ".next\standalone\public" /E | Out-Null
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           }
           if (Test-Path ".next\static") {
-            Copy-Item -Path ".next\static" -Destination ".next\standalone\.next\static" -Recurse -Force -ErrorAction SilentlyContinue
+            robocopy ".next\static" ".next\standalone\.next\static" /E | Out-Null
+            if ($LASTEXITCODE -le 7) { $global:LASTEXITCODE = 0 }
           }
 
           # 4. Reload PM2 Zero-Downtime
           Write-Output "🔄 Mereload layanan PM2 (Zero-Downtime)..."
-          pm2 reload bappeda-api
-          pm2 reload bappeda-fe
+          pm2 reload bappeda-api --update-env 2>$null
+          if ($LASTEXITCODE -ne 0) { pm2 restart bappeda-api }
+
+          pm2 reload bappeda-fe --update-env 2>$null
+          if ($LASTEXITCODE -ne 0) { pm2 restart bappeda-fe }
+
+          pm2 save
 
           Write-Output "=================================================="
           Write-Output "🎉 DEPLOYMENT BERHASIL! Web Bappeda Halut Terupdate!"
