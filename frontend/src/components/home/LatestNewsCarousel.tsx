@@ -78,12 +78,12 @@ export const LatestNewsCarousel: React.FC = () => {
   };
 
   return (
-    <section id="berita" className="py-12 sm:py-20 bg-white font-sans border-t border-slate-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section id="berita" className="py-10 sm:py-16 lg:py-20 bg-white font-sans border-t border-slate-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-10">
         {/* HEADER SECTION WITH CTA BUTTON */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <Newspaper className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>Publikasi &amp; Kabar Pembangunan</span>
             </div>
@@ -97,7 +97,7 @@ export const LatestNewsCarousel: React.FC = () => {
 
           <Link
             href="/berita"
-            className="px-6 py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
+            className="px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
           >
             <span>Selengkapnya di Berita BAPPEDA</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -106,9 +106,9 @@ export const LatestNewsCarousel: React.FC = () => {
 
         {/* CLEAN UNIFORM 4-COLUMN CARDS GRID */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {[1, 2, 3, 4].map((n) => (
-              <div key={n} className="rounded-3xl bg-slate-100 p-4 space-y-3 animate-pulse aspect-[4/5]" />
+              <div key={n} className="rounded-2xl sm:rounded-3xl bg-slate-100 p-4 space-y-3 animate-pulse aspect-[4/5]" />
             ))}
           </div>
         ) : (
@@ -117,13 +117,13 @@ export const LatestNewsCarousel: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
           >
             {newsItems.slice(0, 4).map((item) => (
               <motion.div key={item.id} variants={itemVariants} className="h-full">
                 <Link
                   href={item.link}
-                  className="group flex flex-col justify-between h-full rounded-3xl overflow-hidden bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300"
+                  className="group flex flex-col justify-between h-full rounded-2xl sm:rounded-3xl overflow-hidden bg-white border border-slate-200/90 shadow-xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300"
                 >
                   <div>
                     {/* CARD IMAGE WITH OVERLAY BADGE */}
@@ -148,7 +148,7 @@ export const LatestNewsCarousel: React.FC = () => {
                     </div>
 
                     {/* CARD CONTENT */}
-                    <div className="p-5 space-y-2.5">
+                    <div className="p-4 sm:p-5 space-y-2 sm:space-y-2.5">
                       <div className="flex items-center gap-2 text-[11px] font-bold text-slate-400">
                         <Calendar className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                         <span>{item.date}</span>
@@ -165,7 +165,7 @@ export const LatestNewsCarousel: React.FC = () => {
                   </div>
 
                   {/* CARD FOOTER */}
-                  <div className="px-5 pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-700 transition">
+                  <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-700 transition">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3.5 h-3.5 text-slate-400" />
                       <span>{item.views} views</span>

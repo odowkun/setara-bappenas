@@ -106,12 +106,12 @@ export const GalleryGrid: React.FC = () => {
   };
 
   return (
-    <section className="py-12 sm:py-20 bg-slate-50/50 font-sans border-t border-slate-200/60">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+    <section className="py-10 sm:py-16 lg:py-20 bg-slate-50/50 font-sans border-t border-slate-200/60">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-10">
         {/* SECTION HEADER & CTA HEADER */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+          <div className="space-y-2 sm:space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
               <Camera className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>Dokumentasi Pembangunan Daerah</span>
             </div>
@@ -125,7 +125,7 @@ export const GalleryGrid: React.FC = () => {
 
           <Link
             href="/galeri"
-            className="px-6 py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
+            className="px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
           >
             <span>Buka Seluruh Galeri Foto &amp; Video</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -138,7 +138,7 @@ export const GalleryGrid: React.FC = () => {
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-4 py-2 rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl text-xs font-black transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                 activeCategory === cat.id
                   ? "bg-blue-700 text-white shadow-md shadow-blue-700/20"
                   : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
@@ -151,13 +151,13 @@ export const GalleryGrid: React.FC = () => {
 
         {/* FEATURED GALLERY GRID (MAX 6 ITEMS ON HOMEPAGE) */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {[1, 2, 3, 4, 5, 6].map((n) => (
-              <div key={n} className="rounded-3xl bg-white border border-slate-200 p-4 space-y-3 animate-pulse aspect-[16/11]" />
+              <div key={n} className="rounded-2xl sm:rounded-3xl bg-white border border-slate-200 p-4 space-y-3 animate-pulse aspect-[16/11]" />
             ))}
           </div>
         ) : featuredItems.length === 0 ? (
-          <div className="p-12 text-center text-xs sm:text-sm text-slate-500 font-bold bg-white rounded-3xl border border-slate-200/80 shadow-xs">
+          <div className="p-8 sm:p-12 text-center text-xs sm:text-sm text-slate-500 font-bold bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 shadow-xs">
             Belum ada dokumentasi foto untuk kategori ini. Silakan pilih kategori lain atau buka galeri utama.
           </div>
         ) : (
@@ -166,13 +166,13 @@ export const GalleryGrid: React.FC = () => {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-50px" }}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           >
             {featuredItems.map((item) => (
               <motion.div
                 key={item.id}
                 variants={itemVariants}
-                className="group relative rounded-3xl overflow-hidden shadow-xs hover:shadow-2xl transition-all duration-500 bg-slate-900 aspect-[16/11] cursor-pointer border border-slate-200/80 hover:-translate-y-1.5"
+                className="group relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xs hover:shadow-2xl transition-all duration-500 bg-slate-900 aspect-[16/11] cursor-pointer border border-slate-200/80 hover:-translate-y-1.5"
                 onClick={() => {
                   setActiveMediaList(item.media);
                   setActiveMediaIndex(0);
@@ -198,7 +198,7 @@ export const GalleryGrid: React.FC = () => {
                 </div>
 
                 {/* BOTTOM CONTENT OVERLAY */}
-                <div className="absolute bottom-0 inset-x-0 p-5 space-y-2">
+                <div className="absolute bottom-0 inset-x-0 p-4 sm:p-5 space-y-1.5 sm:space-y-2">
                   <div className="flex items-center gap-1.5 text-[11px] font-bold text-slate-300">
                     <Calendar className="w-3 h-3 text-blue-400" />
                     <span>{item.eventDate}</span>

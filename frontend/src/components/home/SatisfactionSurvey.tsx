@@ -265,12 +265,12 @@ export const SatisfactionSurvey: React.FC = () => {
 
   return (
     <>
-      <section className="py-12 sm:py-20 bg-white font-sans border-t border-slate-200/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+      <section className="py-10 sm:py-16 lg:py-20 bg-white font-sans border-t border-slate-200/60">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-10">
           {/* STANDARD SECTION HEADER WITH CTA BUTTON */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div className="space-y-3 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-xs font-black uppercase tracking-wider">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6">
+            <div className="space-y-2 sm:space-y-3 max-w-2xl">
+              <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
                 <HeartHandshake className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <span>Partisipasi &amp; Pelayanan Publik</span>
               </div>
@@ -284,7 +284,7 @@ export const SatisfactionSurvey: React.FC = () => {
 
             <Link
               href="/survey-kepuasan"
-              className="px-6 py-3.5 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
+              className="px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
             >
               <span>Isi Form Survei Kepuasan</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -292,7 +292,7 @@ export const SatisfactionSurvey: React.FC = () => {
           </div>
 
           {/* Info Banner */}
-          <div className="p-4 rounded-2xl bg-blue-50 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50 border border-blue-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-start gap-3">
               <div className="w-7 h-7 rounded-full bg-blue-700 flex items-center justify-center shrink-0 mt-0.5">
                 <Info className="w-4 h-4 text-white" />
@@ -322,7 +322,7 @@ export const SatisfactionSurvey: React.FC = () => {
                 transition: { staggerChildren: 0.12 },
               },
             }}
-            className="grid grid-cols-1 sm:grid-cols-3 gap-5"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 sm:gap-5"
           >
             {cards.map((card) => {
               const isSelected = selected === card.id;
@@ -340,7 +340,7 @@ export const SatisfactionSurvey: React.FC = () => {
                   onMouseEnter={() => setHoveredCard(card.id)}
                   onMouseLeave={() => setHoveredCard(null)}
                   className={`
-                    relative p-6 sm:p-8 rounded-[24px] border-2 transition-all duration-300 cursor-pointer text-center
+                    relative p-5 sm:p-8 rounded-2xl sm:rounded-[24px] border-2 transition-all duration-300 cursor-pointer text-center
                     flex flex-col items-center justify-center gap-3
                     ${isSelected
                       ? `${card.borderColor} ${card.bgColor} shadow-xl scale-[1.02]`
@@ -386,7 +386,7 @@ export const SatisfactionSurvey: React.FC = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white rounded-[28px] border border-slate-200 shadow-2xl w-full max-w-md p-8 relative animate-in fade-in zoom-in-95 duration-300 overscroll-contain"
+            className="bg-white rounded-2xl sm:rounded-[28px] border border-slate-200 shadow-2xl w-full max-w-md p-5 sm:p-8 relative animate-in fade-in zoom-in-95 duration-300 overscroll-contain"
           >
             {/* Close Button */}
             <button

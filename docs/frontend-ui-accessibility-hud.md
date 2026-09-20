@@ -239,3 +239,47 @@ Status pembaruan: 21 September 2026.
    - Menaikkan z-index ke `z-[70]` sehingga stabil mengambang di atas semua layer halaman tanpa menimpa modal global dialog (`z-[999999]`).
    - Menambahkan padding bawah ekstra pada `Footer.tsx` (`pb-24 sm:pb-28`) agar floating bar tidak menutupi baris hak cipta / tautan footer di bagian paling bawah halaman.
    - Melewatkan *unnecessary observer* saat `isTickerMode` aktif untuk optimasi konsumsi CPU dan render pipeline.
+
+---
+
+## 9. Penyelarasan Standar Spacing, Padding, Margin & Responsivitas Halaman Beranda (Homepage Rhythm)
+
+Status pembaruan: 21 September 2026.
+
+### A. Latar Belakang & Rasionalitas Desain
+Halaman beranda (`/`) memuat 6 komponen seksi utama yang berurutan:
+1. `HeroSection.tsx` (Video Background, Headline, Document Quick Dock, Video Sambutan)
+2. `GeospatialSection.tsx` (Pinned Infografis Carousel/Grid, Pengumuman Renstra, Peta Interaktif Esri GIS & Direktori Proyek)
+3. `OpdLinksGrid.tsx` (Tautan OPD & Aplikasi Terkait)
+4. `LatestNewsCarousel.tsx` (Info Terkini & Berita Resmi BAPPEDA)
+5. `GalleryGrid.tsx` (Galeri Foto & Video Dokumentasi Pembangunan)
+6. `SatisfactionSurvey.tsx` (Indeks Kepuasan Masyarakat / IKM Interaktif)
+
+Sebelumnya, terdapat variasi padding vertikal (`py-12`, `py-20`, dsb.) dan margin antar elemen yang tidak seragam, menyebabkan beberapa seksi terasa terlalu renggang di mobile atau berdesakan di desktop. Untuk menciptakan ritme visual yang konsisten, teratur, dan mewah, diterapkan standarisasi proporsional menyeluruh.
+
+### B. Spesifikasi Standar Spacing & Grid
+
+1. **Vertical Rhythm Seksi (Section Vertical Padding)**:
+   - Seluruh seksi di bawah Hero menerapkan skala seragam:
+     `py-10 sm:py-16 lg:py-20`
+   - Memberikan transisi ketinggian bernafas yang ideal: 40px pada smartphone ringkas, 64px pada tablet, dan 80px pada desktop monitor lebar.
+
+2. **Inner Container Spacing**:
+   - Seluruh container seksi menggunakan:
+     `max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-10`
+   - Penyesuaian `space-y-6` pada mobile memastikan header dan konten grid tidak terpisah terlalu jauh, sementara `sm:space-y-10` mempertahankan keanggunan layout di desktop.
+
+3. **Header Section & CTA Buttons**:
+   - Spacing header teks: `space-y-2 sm:space-y-3 max-w-2xl`
+   - Header badge label: `px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-black uppercase tracking-wider`
+   - Judul seksi: `text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight`
+   - Subjudul: `text-xs sm:text-sm text-slate-500 font-medium leading-relaxed`
+   - Tombol CTA Header: `px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl text-xs font-extrabold`
+   - Gap antara judul dan CTA tombol: `gap-4 sm:gap-6`
+
+4. **Card Padding & Corner Radii**:
+   - Berita (`LatestNewsCarousel`): Kartu menggunakan `rounded-2xl sm:rounded-3xl`, inner padding `p-4 sm:p-5`, footer `px-4 sm:px-5 pb-4 sm:pb-5 pt-3`, grid gap `gap-4 sm:gap-6`.
+   - Galeri (`GalleryGrid`): Kartu menggunakan `rounded-2xl sm:rounded-3xl`, bottom overlay `p-4 sm:p-5 space-y-1.5 sm:space-y-2`, grid gap `gap-4 sm:gap-6`.
+   - Survei IKM (`SatisfactionSurvey`): 3 kartu kepuasan menggunakan `p-5 sm:p-8 rounded-2xl sm:rounded-[24px]`, grid gap `gap-3.5 sm:gap-5`.
+   - Peta GIS (`GeospatialSection`): Kontainer layout 3-kartu menggunakan `gap-4 sm:gap-6`, kartu overview/direktori `rounded-2xl sm:rounded-[28px] p-4 sm:p-5` / `p-4 sm:p-6`, kartu peta interaktif `min-h-[380px] sm:min-h-[480px] rounded-2xl sm:rounded-[28px] p-2`.
+   - Tautan OPD (`OpdLinksGrid`): Kartu berukuran `min-h-36 sm:min-h-44 rounded-2xl p-3.5 sm:p-5`, logo circle `h-16 w-16 sm:h-22 sm:w-22 rounded-2xl`, grid gap `gap-3 sm:gap-5`.

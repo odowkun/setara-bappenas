@@ -350,14 +350,14 @@ export const GeospatialSection: React.FC = () => {
   };
 
   return (
-    <section className="py-8 sm:py-16 bg-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+    <section className="py-10 sm:py-16 lg:py-20 bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 sm:space-y-8">
         
         {/* PINNED INFOGRAPHICS STRIP: 5 Pinned Infographics */}
         <PinnedInfographicsSection />
 
         {/* TOP INDEPENDENT CARD 1: Pengumuman Resmi Perencanaan Daerah */}
-        <div className="p-5 sm:p-10 rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
+        <div className="p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
           <div className="max-w-3xl space-y-3 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black shadow-md border border-amber-300">
               <Bell className="w-3.5 h-3.5 text-blue-950 animate-bounce" />{" "}
@@ -440,11 +440,11 @@ export const GeospatialSection: React.FC = () => {
         </div>
 
         {/* RESPONSIVE LAYOUT CONTAINER */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-stretch">
           
           {/* INDEPENDENT CARD 2: Left Dynamic Details Card (Overview vs Selected Location Detail) */}
           <div
-            className={`lg:col-span-3 bg-blue-50/80 border border-blue-200/80 rounded-[28px] p-5 flex flex-col justify-between space-y-4 shadow-lg text-slate-900 ${
+            className={`lg:col-span-3 bg-blue-50/80 border border-blue-200/80 rounded-2xl sm:rounded-[28px] p-4 sm:p-5 flex flex-col justify-between space-y-4 shadow-lg text-slate-900 ${
               mobileTab !== "overview" ? "hidden lg:flex" : "flex"
             }`}
           >
@@ -662,12 +662,12 @@ export const GeospatialSection: React.FC = () => {
 
           {/* INDEPENDENT CARD 3: Center Interactive Map Card with Esri Leaflet Integration */}
           <div
-            className={`lg:col-span-6 bg-white border border-slate-200 rounded-[28px] p-2 relative overflow-hidden flex-col justify-between min-h-[440px] sm:min-h-[480px] shadow-lg ${
+            className={`lg:col-span-6 bg-white border border-slate-200 rounded-2xl sm:rounded-[28px] p-2 relative overflow-hidden flex-col justify-between min-h-[380px] sm:min-h-[480px] shadow-lg ${
               mobileTab !== "map" ? "hidden lg:flex" : "flex"
             }`}
           >
             {/* Esri Leaflet Live Map Canvas */}
-            <div className="w-full flex-1 rounded-[24px] overflow-hidden relative">
+            <div className="w-full flex-1 rounded-xl sm:rounded-[24px] overflow-hidden relative">
               <EsriLeafletMap
                 locations={locations}
                 selectedId={selectedId}
@@ -748,7 +748,7 @@ export const GeospatialSection: React.FC = () => {
 
           {/* INDEPENDENT CARD 4: Right Directory List Card */}
           <div
-            className={`lg:col-span-3 bg-blue-50/80 border border-blue-200/80 rounded-[28px] p-6 flex flex-col justify-between space-y-4 shadow-lg text-slate-900 ${
+            className={`lg:col-span-3 bg-blue-50/80 border border-blue-200/80 rounded-2xl sm:rounded-[28px] p-4 sm:p-6 flex flex-col justify-between space-y-4 shadow-lg text-slate-900 ${
               mobileTab !== "list" ? "hidden lg:flex" : "flex"
             }`}
           >
