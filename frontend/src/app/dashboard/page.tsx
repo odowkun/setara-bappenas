@@ -8,6 +8,7 @@ import { adminService } from "@/services/adminService";
 import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { AuditLog } from "@/types/auth";
 import { toast } from "@/lib/swal";
+import { getIkmGrade } from "@/services/surveyService";
 import {
   Users,
   FileText,
@@ -333,9 +334,15 @@ export default function DashboardPage() {
           <div>
             <div className="text-2xl font-black text-amber-600 flex items-center gap-2">
               <span>{publicEngagement ? `${publicEngagement.avg_ikm}` : "96.0"}</span>
-              <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800">
-                SANGAT BAIK (A)
-              </span>
+              {(() => {
+                const score = publicEngagement ? Number(publicEngagement.avg_ikm) : 96.0;
+                const grade = getIkmGrade(score);
+                return (
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${grade.badgeClass}`}>
+                    {grade.kategori.toUpperCase()} ({grade.mutu})
+                  </span>
+                );
+              })()}
             </div>
             <p className="text-[11px] text-slate-500 font-medium mt-0.5">
               {publicEngagement ? `${publicEngagement.survey_count} Responden Masuk` : "Survei Kepuasan Online"}

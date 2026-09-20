@@ -32,4 +32,39 @@ class Survey extends Model
             'ikm_score' => 'decimal:2',
         ];
     }
+
+    protected $appends = [
+        'mutu_pelayanan',
+        'kategori',
+    ];
+
+    public function getMutuPelayananAttribute(): string
+    {
+        $score = (float) $this->ikm_score;
+        if ($score >= 88.31) {
+            return 'A';
+        }
+        if ($score >= 76.61) {
+            return 'B';
+        }
+        if ($score >= 65.00) {
+            return 'C';
+        }
+        return 'D';
+    }
+
+    public function getKategoriAttribute(): string
+    {
+        $score = (float) $this->ikm_score;
+        if ($score >= 88.31) {
+            return 'Sangat Baik';
+        }
+        if ($score >= 76.61) {
+            return 'Baik';
+        }
+        if ($score >= 65.00) {
+            return 'Kurang Baik';
+        }
+        return 'Tidak Baik';
+    }
 }

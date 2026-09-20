@@ -42,8 +42,54 @@ export interface SurveyResponseItem {
   u4_produk: number;
   u5_sikap: number;
   ikm_score: number;
+  mutu_pelayanan?: string;
+  kategori?: string;
   saran_masukan?: string;
   created_at: string;
+}
+
+export function getIkmGrade(score: number): {
+  mutu: string;
+  kategori: string;
+  badgeClass: string;
+  cardClass: string;
+  textClass: string;
+} {
+  const num = Number(score) || 0;
+  if (num >= 88.31) {
+    return {
+      mutu: "A",
+      kategori: "Sangat Baik",
+      badgeClass: "bg-emerald-100 text-emerald-900 border-emerald-200",
+      cardClass: "bg-emerald-50 border-emerald-200",
+      textClass: "text-emerald-700",
+    };
+  }
+  if (num >= 76.61) {
+    return {
+      mutu: "B",
+      kategori: "Baik",
+      badgeClass: "bg-blue-100 text-blue-900 border-blue-200",
+      cardClass: "bg-blue-50 border-blue-200",
+      textClass: "text-blue-700",
+    };
+  }
+  if (num >= 65.00) {
+    return {
+      mutu: "C",
+      kategori: "Kurang Baik",
+      badgeClass: "bg-amber-100 text-amber-900 border-amber-200",
+      cardClass: "bg-amber-50 border-amber-200",
+      textClass: "text-amber-700",
+    };
+  }
+  return {
+    mutu: "D",
+    kategori: "Tidak Baik",
+    badgeClass: "bg-rose-100 text-rose-900 border-rose-200",
+    cardClass: "bg-rose-50 border-rose-200",
+    textClass: "text-rose-700",
+  };
 }
 
 export interface SurveySummaryData {

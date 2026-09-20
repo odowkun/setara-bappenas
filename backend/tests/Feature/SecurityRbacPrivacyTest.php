@@ -484,4 +484,23 @@ class SecurityRbacPrivacyTest extends TestCase
         $this->assertStringNotContainsString('budi.santoso@example.com', $content);
         $this->assertStringNotContainsString('081299998888', $content);
     }
+
+    public function test_survey_model_calculates_correct_permenpan_mutu_and_kategori_grade(): void
+    {
+        $surveyD = new \App\Models\Survey(['ikm_score' => 56.00]);
+        $this->assertEquals('D', $surveyD->mutu_pelayanan);
+        $this->assertEquals('Tidak Baik', $surveyD->kategori);
+
+        $surveyC = new \App\Models\Survey(['ikm_score' => 70.00]);
+        $this->assertEquals('C', $surveyC->mutu_pelayanan);
+        $this->assertEquals('Kurang Baik', $surveyC->kategori);
+
+        $surveyB = new \App\Models\Survey(['ikm_score' => 80.00]);
+        $this->assertEquals('B', $surveyB->mutu_pelayanan);
+        $this->assertEquals('Baik', $surveyB->kategori);
+
+        $surveyA = new \App\Models\Survey(['ikm_score' => 92.50]);
+        $this->assertEquals('A', $surveyA->mutu_pelayanan);
+        $this->assertEquals('Sangat Baik', $surveyA->kategori);
+    }
 }

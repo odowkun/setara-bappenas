@@ -38,6 +38,7 @@ import {
   SurveyQuestionItem,
   SurveyServiceItem,
   QuestionType,
+  getIkmGrade,
 } from "@/services/surveyService";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { formatDateWIT } from "@/lib/dateUtils";
@@ -238,9 +239,14 @@ export default function DashboardSurveyPage() {
             NILAI IKM DATABASE
           </span>
           <div className="text-3xl font-black">{summary.ikm_score}</div>
-          <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 border border-emerald-400/40 inline-block">
-            Mutu {summary.mutu_pelayanan} ({summary.kategori})
-          </div>
+          {(() => {
+            const grade = getIkmGrade(summary.ikm_score);
+            return (
+              <div className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-white/20 text-white border border-white/30 inline-block">
+                Mutu {grade.mutu} ({grade.kategori})
+              </div>
+            );
+          })()}
         </div>
 
         <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-1">
@@ -381,14 +387,19 @@ export default function DashboardSurveyPage() {
                           {item.jenis_layanan}
                         </td>
                         <td className="py-4 px-6 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-900 font-black text-xs border border-emerald-200">
-                              {item.ikm_score} / 100
-                            </span>
-                            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                              Sangat Baik (A)
-                            </span>
-                          </div>
+                          {(() => {
+                            const grade = getIkmGrade(item.ikm_score);
+                            return (
+                              <div className="flex items-center gap-2">
+                                <span className={`px-3 py-1 rounded-full font-black text-xs border ${grade.badgeClass}`}>
+                                  {item.ikm_score} / 100
+                                </span>
+                                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${grade.badgeClass}`}>
+                                  {grade.kategori} ({grade.mutu})
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </td>
                         <td className="py-4 px-6 whitespace-nowrap text-slate-500 font-medium text-xs">
                           {formatDateWIT(item.created_at)}
@@ -879,15 +890,22 @@ export default function DashboardSurveyPage() {
               </div>
 
               {/* NILAI IKM SCORE BADGE */}
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
-                <div>
-                  <span className="text-xs font-black uppercase text-emerald-900">Total Skor IKM Responden</span>
-                  <p className="text-[11px] text-emerald-700 font-medium">Mutu Pelayanan: Sangat Baik (A)</p>
-                </div>
-                <div className="text-xl font-black text-emerald-900 bg-emerald-100 px-3.5 py-1.5 rounded-xl border border-emerald-300">
-                  {selectedDetail.ikm_score} <span className="text-xs font-bold text-emerald-700">/ 100</span>
-                </div>
-              </div>
+              {(() => {
+                const grade = getIkmGrade(selectedDetail.ikm_score);
+                return (
+                  <div className={`p-4 rounded-2xl border flex items-center justify-between ${grade.cardClass}`}>
+                    <div>
+                      <span className={`text-xs font-black uppercase ${grade.textClass}`}>Total Skor IKM Responden</span>
+                      <p className={`text-[11px] font-medium ${grade.textClass}`}>
+                        Mutu Pelayanan: {grade.kategori} ({grade.mutu})
+                      </p>
+                    </div>
+                    <div className={`text-xl font-black px-3.5 py-1.5 rounded-xl border ${grade.badgeClass}`}>
+                      {selectedDetail.ikm_score} <span className="text-xs font-bold">/ 100</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* DETAIL SKOR PER ASPEK PENILAIAN */}
               <div className="space-y-2.5">

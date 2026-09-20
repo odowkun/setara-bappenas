@@ -22,3 +22,13 @@ Ketika responden mengisi pertanyaan dengan rating acak (misalnya 1, 2, 3, 4 bint
 
 3. **Kalkulasi Live IKM Realtime**:
    - `currentLiveIKM` menghitung rata-rata hanya dari pertanyaan aktif yang telah dijawab responden pada jenis layanan yang dipilih.
+
+4. **Grading Dinamis Mutu Pelayanan (PermenPAN-RB No. 14 Tahun 2017)**:
+   - Skala konversi nilai IKM (0 - 100):
+     - **88.31 – 100.00**: Mutu **A** (*Sangat Baik*) — Badge Hijau/Emerald
+     - **76.61 – 88.30**: Mutu **B** (*Baik*) — Badge Biru/Blue
+     - **65.00 – 76.60**: Mutu **C** (*Kurang Baik*) — Badge Amber/Kuning
+     - **25.00 – 64.99** (atau < 65): Mutu **D** (*Tidak Baik*) — Badge Rose/Merah
+   - Sebelumnya, tampilan modal detail responden dan tabel admin secara keliru menggunakan teks statis hardcoded `"Mutu Pelayanan: Sangat Baik (A)"`.
+   - Diperbaiki dengan fungsi terpadu `getIkmGrade(score)` di frontend dan accessor model `Survey.php` (`mutu_pelayanan` & `kategori`) di backend, sehingga responden dengan skor 56.00 otomatis menampilkan **Mutu D (Tidak Baik)** lengkap dengan styling badge yang sesuai.
+
