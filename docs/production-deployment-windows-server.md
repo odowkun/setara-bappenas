@@ -103,6 +103,7 @@ Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
 - **Tipe Layanan**: Windows Background Scheduled Task (Auto-Start saat server boot)
 - **Koneksi Jaringan**: Outbound HTTPS (100% tembus Starlink CGNAT tanpa buka port router)
 - **Alur Kerja**: Sinkronisasi kode ➡️ Migrasi database Laravel ➡️ Cache config ➡️ Build frontend ➡️ PM2 Zero-Downtime Reload.
+- **Standar Kompatibilitas PowerShell 5.1**: Server menggunakan Windows Server 2016 (PowerShell 5.1). Script deployment (`scripts/deploy-prod.ps1`) TIDAK BOLEH menggunakan operator `||`/`&&` (fitur PowerShell 7+) dan hindari karakter non-ASCII/emoji di file tanpa BOM untuk mencegah parsing error pada Windows code page (CP1252/ANSI).
 
 #### Perintah Auto-Start Runner (Background 24/7):
 ```powershell
