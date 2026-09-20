@@ -15,6 +15,7 @@ import {
   CheckSquare,
   Square,
   Star,
+  Loader2,
 } from "lucide-react";
 import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
 import { galeriService } from "@/services/galeriService";
@@ -45,6 +46,7 @@ export default function TambahGaleriPage() {
   const [mediaItems, setMediaItems] = useState<MediaUploadItem[]>([]);
   const [coverMediaId, setCoverMediaId] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // File Upload Handlers
@@ -140,7 +142,7 @@ export default function TambahGaleriPage() {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -312,22 +314,74 @@ export default function TambahGaleriPage() {
             )}
           </div>
 
-          {/* FILE UPLOAD DROPZONE */}
-          <label className="p-8 rounded-3xl border-2 border-dashed border-slate-300 hover:border-blue-500 bg-slate-50 hover:bg-blue-50/50 cursor-pointer text-center block transition group">
-            <UploadCloud className="w-10 h-10 text-blue-600 mx-auto group-hover:scale-110 transition" />
-            <div className="mt-2">
-              <p className="font-black text-slate-900 text-sm">
-                {isAlbumMode
-                  ? "Klik atau Seret Berkas (Multiple Upload Foto & Video Album)"
-                  : "Klik atau Seret Berkas Foto / Video"}
-              </p>
-              <p className="text-slate-500 text-xs font-medium mt-0.5">
-                {isAlbumMode
-                  ? "Bisa memilih banyak file sekaligus (JPG, PNG, WEBP, MP4, WEBM)"
-                  : "Pilih 1 file foto (JPG/PNG) atau video (MP4)"}
-              </p>
+          {/* DOKUMEN PERENCANAAN STYLE FILE UPLOAD DROPZONE */}
+          <div
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragOver(true);
+            }}
+            onDragLeave={() => setIsDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragOver(false);
+              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                handleFileUpload(e.dataTransfer.files);
+              }
+            }}
+            onClick={() => {
+              const input = document.getElementById("galeri-file-input") as HTMLInputElement;
+              input?.click();
+            }}
+            className={`p-8 sm:p-10 rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer text-center relative overflow-hidden group shadow-xs ${
+              isDragOver
+                ? "border-blue-600 bg-blue-50/80 scale-[1.01] shadow-lg shadow-blue-500/10"
+                : "border-slate-200 hover:border-blue-500 bg-white hover:bg-slate-50/50"
+            }`}
+          >
+            {/* Subtle Background Glow Accent */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+
+            <div className="relative z-10 space-y-3">
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-700/20 group-hover:scale-110 transition-transform duration-300">
+                <UploadCloud className="w-8 h-8 text-white" />
+              </div>
+
+              <div className="space-y-0.5">
+                <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight group-hover:text-blue-700 transition">
+                  {isAlbumMode
+                    ? "Pilih atau Tarik Berkas Foto & Video Album Di Sini"
+                    : "Pilih atau Tarik Berkas Foto / Video Di Sini"}
+                </h3>
+                <p className="text-slate-500 font-medium text-xs">
+                  {isAlbumMode
+                    ? "Mendukung multi-upload sekaligus (Bisa pilih banyak gambar & video)"
+                    : "Pilih 1 file foto dokumentasi atau video kegiatan"}
+                </p>
+              </div>
+
+              {/* Extension Pills */}
+              <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
+                <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-black text-[10px] border border-purple-200/80 shadow-2xs flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3 text-purple-600" />
+                  <span>JPG</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-indigo-50 text-indigo-700 font-black text-[10px] border border-indigo-200/80 shadow-2xs flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3 text-indigo-600" />
+                  <span>PNG</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200/80 shadow-2xs flex items-center gap-1">
+                  <ImageIcon className="w-3 h-3 text-blue-600" />
+                  <span>WEBP</span>
+                </span>
+                <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-black text-[10px] border border-amber-200/80 shadow-2xs flex items-center gap-1">
+                  <Video className="w-3 h-3 text-amber-600" />
+                  <span>MP4 / WEBM</span>
+                </span>
+              </div>
             </div>
+
             <input
+              id="galeri-file-input"
               type="file"
               multiple={isAlbumMode}
               accept="image/*,video/*"
@@ -336,14 +390,17 @@ export default function TambahGaleriPage() {
               onChange={(e) => {
                 if (e.target.files && e.target.files.length > 0) {
                   handleFileUpload(e.target.files);
+                  e.target.value = "";
                 }
               }}
             />
-          </label>
+          </div>
+
           {uploading && (
-            <p className="text-xs font-bold text-blue-700" role="status">
-              Media sedang diunggah dan disimpan ke server...
-            </p>
+            <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 text-blue-800 flex items-center justify-center gap-2 text-xs font-bold animate-pulse">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              <span>Media sedang diunggah dan disimpan ke server...</span>
+            </div>
           )}
 
           {/* PREVIEW MEDIA ITEMS WITH COVER SELECTION BUTTON */}

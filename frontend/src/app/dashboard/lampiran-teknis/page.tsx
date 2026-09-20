@@ -12,6 +12,7 @@ import { STORAGE_BASE_URL } from "@/lib/apiClient";
 import {
   Paperclip,
   Upload,
+  UploadCloud,
   FileText,
   Image as ImageIcon,
   CheckCircle2,
@@ -423,26 +424,41 @@ export default function LampiranTeknisPage() {
                   className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
                 />
 
-                <div className="flex flex-col items-center justify-center space-y-2 pointer-events-none">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-110 transition shadow-2xs">
+                <div className="flex flex-col items-center justify-center space-y-3 pointer-events-none py-2">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-700/20 group-hover:scale-110 transition-transform duration-300">
                     {isCompressing ? (
-                      <Loader2 className="w-5 h-5 animate-spin text-blue-600" />
+                      <Loader2 className="w-7 h-7 animate-spin text-white" />
                     ) : (
-                      <Upload className="w-5 h-5 text-blue-600" />
+                      <UploadCloud className="w-7 h-7 text-white" />
                     )}
                   </div>
 
-                  <div>
-                    <p className="text-xs font-bold text-slate-800">
+                  <div className="space-y-0.5">
+                    <p className="text-xs sm:text-sm font-black text-slate-900 group-hover:text-blue-700 transition">
                       {isCompressing
                         ? "Mengompresi Gambar Otomatis..."
                         : files.length > 0
                         ? "Klik atau Tarik Tambahan Berkas Lagi Di Sini"
-                        : "Klik atau Geser Banyak Berkas (JPG, PNG, PDF, DED) Sekaligus"}
+                        : "Pilih atau Tarik Berkas Lampiran Teknis Di Sini"}
                     </p>
-                    <p className="text-[10px] text-slate-400 font-medium mt-0.5">
-                      Dapat memilih lebih dari 1 file sekaligus. Kompresi otomatis aktif.
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      Mendukung multi-upload berkas DED, AMDAL, foto lapangan, dan PDF
                     </p>
+                  </div>
+
+                  <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
+                    <span className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 font-black text-[10px] border border-red-200/80 shadow-2xs flex items-center gap-1">
+                      <FileText className="w-3 h-3 text-red-600" />
+                      <span>PDF</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200/80 shadow-2xs flex items-center gap-1">
+                      <FileText className="w-3 h-3 text-blue-600" />
+                      <span>DED / AMDAL</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-black text-[10px] border border-purple-200/80 shadow-2xs flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3 text-purple-600" />
+                      <span>JPG / PNG</span>
+                    </span>
                   </div>
                 </div>
               </div>

@@ -19,6 +19,7 @@ import {
   Video,
   Pin,
   Paperclip,
+  Trash2,
 } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
@@ -49,6 +50,7 @@ export default function TambahPengumumanPage() {
   const [fileUrl, setFileUrl] = useState("");
   const [attachment, setAttachment] = useState<File | null>(null);
   const [fileType, setFileType] = useState<"pdf" | "image" | "video" | "doc" | "none">("none");
+  const [isDragOver, setIsDragOver] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   // Load stored announcement types
@@ -143,7 +145,7 @@ export default function TambahPengumumanPage() {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -304,56 +306,146 @@ export default function TambahPengumumanPage() {
             />
           </div>
 
-          {/* MULTI-FORMAT DOCUMENT / MEDIA ATTACHMENT (PDF, IMAGE, VIDEO) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">
+          {/* DOKUMEN PERENCANAAN STYLE ATTACHMENT DROPZONE */}
+          <div className="space-y-2">
+            <label className="block text-xs font-bold text-slate-700">
               Lampiran Dokumen / Media Resmi (PDF, Foto, atau Video)
             </label>
-            <div className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-              <div className="flex items-center gap-2 overflow-hidden">
-                {fileType === "pdf" && <FileText className="w-4 h-4 text-blue-600 shrink-0" />}
-                {fileType === "image" && <ImageIcon className="w-4 h-4 text-amber-500 shrink-0" />}
-                {fileType === "video" && <Video className="w-4 h-4 text-rose-600 shrink-0" />}
-                {fileType === "none" && <Paperclip className="w-4 h-4 text-slate-400 shrink-0" />}
 
-                {fileUrl ? (
-                  <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-xl text-xs font-bold text-emerald-800 truncate">
-                    <FileCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                    <span className="truncate max-w-xs">{fileUrl}</span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setFileUrl("");
-                        setFileType("none");
-                      }}
-                      className="p-0.5 rounded-full hover:bg-emerald-200 text-emerald-700 transition"
-                      title="Hapus File"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
+            {!fileUrl ? (
+              <div
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(true);
+                }}
+                onDragLeave={() => setIsDragOver(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragOver(false);
+                  if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                    handleFileUpload(e.dataTransfer.files[0]);
+                  }
+                }}
+                onClick={() => {
+                  const input = document.getElementById("pengumuman-file-input") as HTMLInputElement;
+                  input?.click();
+                }}
+                className={`p-6 sm:p-8 rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer text-center relative overflow-hidden group shadow-xs ${
+                  isDragOver
+                    ? "border-blue-600 bg-blue-50/80 scale-[1.01] shadow-lg shadow-blue-500/10"
+                    : "border-slate-200 hover:border-blue-500 bg-white hover:bg-slate-50/50"
+                }`}
+              >
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-blue-500/5 rounded-full blur-2xl group-hover:scale-125 transition-transform duration-500 pointer-events-none" />
+
+                <div className="relative z-10 space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-blue-700/20 group-hover:scale-110 transition-transform duration-300">
+                    <UploadCloud className="w-7 h-7 text-white" />
                   </div>
-                ) : (
-                  <span className="text-xs font-medium text-slate-400">
-                    Belum ada dokumen PDF, foto, atau video terlampir
-                  </span>
-                )}
-              </div>
 
-              <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 text-blue-700 font-bold text-xs transition shrink-0 shadow-2xs">
-                <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
-                <span>{fileUrl ? "Ganti File" : "Unggah Lampiran"}</span>
+                  <div className="space-y-0.5">
+                    <h3 className="font-black text-slate-900 text-xs sm:text-sm tracking-tight group-hover:text-blue-700 transition">
+                      Pilih atau Tarik Berkas Lampiran Pengumuman Di Sini
+                    </h3>
+                    <p className="text-slate-500 font-medium text-[11px]">
+                      Mendukung berkas dokumen PDF, format gambar (JPG/PNG), atau video resmi
+                    </p>
+                  </div>
+
+                  <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
+                    <span className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 font-black text-[10px] border border-red-200/80 shadow-2xs flex items-center gap-1">
+                      <FileText className="w-3 h-3 text-red-600" />
+                      <span>PDF</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-700 font-black text-[10px] border border-blue-200/80 shadow-2xs flex items-center gap-1">
+                      <FileText className="w-3 h-3 text-blue-600" />
+                      <span>DOCX</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-purple-50 text-purple-700 font-black text-[10px] border border-purple-200/80 shadow-2xs flex items-center gap-1">
+                      <ImageIcon className="w-3 h-3 text-purple-600" />
+                      <span>JPG / PNG</span>
+                    </span>
+                    <span className="px-2.5 py-1 rounded-xl bg-amber-50 text-amber-800 font-black text-[10px] border border-amber-200/80 shadow-2xs flex items-center gap-1">
+                      <Video className="w-3 h-3 text-amber-600" />
+                      <span>MP4 / WEBM</span>
+                    </span>
+                  </div>
+                </div>
+
                 <input
+                  id="pengumuman-file-input"
                   type="file"
                   accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4,.webm"
                   className="hidden"
                   onChange={(e) => {
                     if (e.target.files && e.target.files[0]) {
                       handleFileUpload(e.target.files[0]);
+                      e.target.value = "";
                     }
                   }}
                 />
-              </label>
-            </div>
+              </div>
+            ) : (
+              /* Selected File Card View */
+              <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition">
+                <div className="flex items-center gap-3.5 overflow-hidden">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-700 to-indigo-600 text-white flex items-center justify-center font-black shrink-0 shadow-md shadow-blue-700/20">
+                    {fileType === "pdf" && <FileText className="w-6 h-6" />}
+                    {fileType === "image" && <ImageIcon className="w-6 h-6" />}
+                    {fileType === "video" && <Video className="w-6 h-6" />}
+                    {fileType !== "pdf" && fileType !== "image" && fileType !== "video" && (
+                      <Paperclip className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div className="overflow-hidden space-y-1">
+                    <p className="font-extrabold text-slate-900 text-xs sm:text-sm truncate">
+                      {fileUrl}
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 uppercase">
+                        {fileType.toUpperCase()}
+                      </span>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                        <span>Berkas Siap Dilampirkan</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100">
+                  <label className="cursor-pointer px-3.5 py-1.5 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-xs flex items-center gap-1.5 border border-slate-200 hover:border-blue-300 transition shadow-2xs">
+                    <UploadCloud className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Ganti Berkas</span>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.webp,.mp4,.webm"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          handleFileUpload(e.target.files[0]);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAttachment(null);
+                      setFileUrl("");
+                      setFileType("none");
+                    }}
+                    className="px-3 py-1.5 rounded-xl hover:bg-rose-50 text-rose-600 font-bold text-xs flex items-center gap-1.5 border border-transparent hover:border-rose-200 transition cursor-pointer"
+                    title="Hapus Lampiran"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* PINNED CHECKBOX */}
