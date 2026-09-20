@@ -107,7 +107,7 @@ $env:NEXT_TELEMETRY_DISABLED = "1"
 $env:NODE_OPTIONS = "--max-old-space-size=4096"
 
 Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
-& $npmCmd install --legacy-peer-deps --prefer-offline --no-audit
+& $npmCmd install --legacy-peer-deps --no-audit
 $global:LASTEXITCODE = 0
 
 Write-Output "[INFO] Menjalankan Next.js build..."
