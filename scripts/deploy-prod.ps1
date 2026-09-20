@@ -33,9 +33,10 @@ $env:PM2_HOME = "C:\Users\Administrator\.pm2"
 $reloadBat = Join-Path $repoRoot "scripts\reload-pm2.bat"
 $prodReloadBat = Join-Path $prodRoot "scripts\reload-pm2.bat"
 if (Test-Path $reloadBat) {
-    Write-Output "[INFO] Memastikan PM2 aktif segera..."
-    schtasks /Create /TN "Bappeda_PM2_Boot" /TR "$reloadBat" /SC ONCE /ST 00:00 /RU "SYSTEM" /RL HIGHEST /F | Out-Null
+    Write-Output "[INFO] Memastikan PM2 aktif segera (Detached via WMI & Task Scheduler)..."
+    schtasks /Create /TN "Bappeda_PM2_Boot" /TR "$reloadBat" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
     schtasks /Run /TN "Bappeda_PM2_Boot" | Out-Null
+    wmic process call create "$reloadBat" | Out-Null
 }
 
 # 1. Sinkronisasi File Backend (Kecuali .env dan storage)
@@ -95,8 +96,8 @@ if (Test-Path "C:\Program Files\nodejs\npm.cmd") {
     $npmCmd = "C:\Program Files\nodejs\npm.cmd"
 }
 
-Write-Output "[INFO] Menjalankan npm install..."
-& $npmCmd install --no-audit
+Write-Output "[INFO] Memastikan dependensi frontend terpasang..."
+& $npmCmd install @swc/helpers@0.5.15 react-dom@19.0.0 react@19.0.0 --no-audit
 
 Write-Output "[INFO] Menjalankan Next.js build..."
 & $npmCmd run build
@@ -117,13 +118,14 @@ if ($LASTEXITCODE -ne 0) {
     }
 }
 
-# 6. Reload PM2 (Zero-Downtime via Task Scheduler agar terlepas dari Job Object runner)
-Write-Output "[INFO] Mereload layanan PM2 via Task Scheduler (Detached)..."
+# 6. Reload PM2 (Zero-Downtime via WMI & Task Scheduler agar terlepas dari Job Object runner)
+Write-Output "[INFO] Mereload layanan PM2 secara detached..."
 $finalReloadBat = if (Test-Path $prodReloadBat) { $prodReloadBat } else { $reloadBat }
 if (Test-Path $finalReloadBat) {
-    schtasks /Create /TN "Bappeda_PM2_Reload" /TR "$finalReloadBat" /SC ONCE /ST 00:00 /RU "SYSTEM" /RL HIGHEST /F | Out-Null
+    schtasks /Create /TN "Bappeda_PM2_Reload" /TR "$finalReloadBat" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
     schtasks /Run /TN "Bappeda_PM2_Reload" | Out-Null
-    Start-Sleep -Seconds 4
+    wmic process call create "$finalReloadBat" | Out-Null
+    Start-Sleep -Seconds 5
 }
 
 Write-Output "=================================================="
