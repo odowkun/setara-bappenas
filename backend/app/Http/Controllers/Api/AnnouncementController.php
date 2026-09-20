@@ -40,7 +40,7 @@ class AnnouncementController extends Controller
 
         return response()->json([
             'success' => true,
-            'data' => $query->latest()->get(),
+            'data' => $query->orderByDesc('is_important')->latest()->get(),
         ]);
     }
 
@@ -139,22 +139,52 @@ class AnnouncementController extends Controller
         ]);
     }
 
-    public function attachment(Announcement $announcement)
+    public function togglePin(Announcement $announcement)
     {
-        abort_unless(
-            $announcement->is_published
-            && ($announcement->valid_until === null || $announcement->valid_until->isToday() || $announcement->valid_until->isFuture()),
-            404
-        );
+        $announcement->update([
+            'is_important' => !$announcement->is_important,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $announcement->is_important
+                ? 'Pengumuman berhasil disematkan (PIN) sebagai Pengumuman Resmi Daerah.'
+                : 'Sematkan (PIN) pengumuman berhasil dilepas.',
+            'data' => $announcement->load('type'),
+        ]);
+    }
+
+    public function attachment(Request $request, Announcement $announcement)
+    {
+        $user = auth('sanctum')->user();
+        $isAdmin = $user && $user->hasAnyRole(['superadmin', 'admin', 'admin_bidang', 'admin_umum']);
+
+        if (!$isAdmin) {
+            abort_unless(
+                $announcement->is_published
+                && ($announcement->valid_until === null || $announcement->valid_until->isToday() || $announcement->valid_until->isFuture()),
+                404
+            );
+        }
+
         abort_unless(
             $announcement->file_path
             && Storage::disk('local')->exists($announcement->file_path),
             404
         );
 
-        return Storage::disk('local')->download(
+        if ($request->boolean('download')) {
+            return Storage::disk('local')->download(
+                $announcement->file_path,
+                $announcement->original_file_name
+            );
+        }
+
+        return Storage::disk('local')->response(
             $announcement->file_path,
-            $announcement->original_file_name
+            $announcement->original_file_name,
+            [],
+            'inline'
         );
     }
 

@@ -58,7 +58,9 @@ Halaman tambah juga menjadi halaman edit ketika menerima `?edit={id}`. Data edit
 
 ### Agenda dan Pengumuman
 
-Form tambah/edit dapat menyimpan draf. Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Lampiran Pengumuman disimpan pada disk privat; `GET /pengumuman/{id}/attachment` hanya mengirim berkas jika Pengumuman telah terbit dan belum kedaluwarsa.
+Form tambah/edit dapat menyimpan draf. Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Fitur Sematkan / Pin (`PATCH /pengumuman/{id}/pin`) memungkinkan admin memilih Pengumuman Resmi Utama yang langsung tampil di banner Beranda dan Hero Card Pengumuman Publik. 
+
+Lampiran Pengumuman disimpan pada disk privat; `GET /pengumuman/{id}/attachment` mendukung parameter `?download=1` untuk unduhan langsung, dan secara default mengembalikan respons `inline` agar gambar (JPG/PNG/WEBP) dan dokumen PDF dapat dipratinjau secara nyata (real interactive preview) di modal pratinjau publik tanpa memunculkan kop surat atau stempel TTD mockup statis. Hak akses draf tetap terlindungi dan hanya dapat dipratinjau oleh administrator terautentikasi.
 
 ### Galeri
 

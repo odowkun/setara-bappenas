@@ -108,9 +108,9 @@ function mapAnnouncement(item: ApiAnnouncement): AnnouncementItem {
     title: item.title,
     type: item.type?.name || "Tanpa Tipe",
     typeId: item.announcement_type_id,
-    isImportant: item.is_important,
+    isImportant: Boolean(item.is_important),
     validUntil: item.valid_until || "",
-    pdfUrl: item.file_path && item.is_published
+    pdfUrl: item.file_path
       ? `${API_BASE_URL}/pengumuman/${item.id}/attachment`
       : "",
     fileType: item.file_type || "",
@@ -207,6 +207,14 @@ export const officialContentService = {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ is_published: isPublished }),
+    });
+    return mapAnnouncement(json.data);
+  },
+
+  async togglePinAnnouncement(id: string): Promise<AnnouncementItem> {
+    const json = await adminJson(`/pengumuman/${id}/pin`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
     });
     return mapAnnouncement(json.data);
   },

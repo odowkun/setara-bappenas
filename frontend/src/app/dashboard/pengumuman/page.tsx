@@ -17,6 +17,7 @@ import {
   Video,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import {
@@ -79,6 +80,22 @@ export default function PengumumanManagementPage() {
     }
   };
 
+  const handleTogglePin = async (item: AnnouncementItem) => {
+    try {
+      const updated = await officialContentService.togglePinAnnouncement(item.id);
+      setAnnouncements((current) =>
+        current.map((row) => (row.id === item.id ? updated : row))
+      );
+      toast.success(
+        updated.isImportant
+          ? `Pengumuman "${item.title}" berhasil disematkan (PIN) sebagai Pengumuman Resmi Beranda!`
+          : `Sematkan (PIN) pengumuman "${item.title}" dilepas.`
+      );
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengubah status sematan.");
+    }
+  };
+
   const filteredAnnouncements = announcements.filter((a) => {
     const matchesSearch =
       a.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,7 +112,7 @@ export default function PengumumanManagementPage() {
   );
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-0.5">
@@ -184,15 +201,17 @@ export default function PengumumanManagementPage() {
             <div
               key={item.id}
               className={`p-5 rounded-3xl bg-white border shadow-xs transition space-y-3.5 ${
-                item.isImportant ? "border-amber-300 ring-1 ring-amber-200/50" : "border-slate-200"
+                item.isImportant
+                  ? "border-amber-400 ring-2 ring-amber-300/40 bg-amber-50/20"
+                  : "border-slate-200 hover:border-slate-300"
               }`}
             >
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   {item.isImportant && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-2xs whitespace-nowrap shrink-0">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-xs whitespace-nowrap shrink-0">
                       <Pin className="w-3 h-3 fill-current" />
-                      PENTING / PINNED
+                      PENGUMUMAN RESMI (PIN BERANDA)
                     </span>
                   )}
                   <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 whitespace-nowrap shrink-0">
@@ -211,7 +230,20 @@ export default function PengumumanManagementPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <button
+                    type="button"
+                    onClick={() => handleTogglePin(item)}
+                    className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition border cursor-pointer active:scale-95 ${
+                      item.isImportant
+                        ? "bg-amber-100 hover:bg-amber-200 text-amber-900 border-amber-300 shadow-2xs"
+                        : "bg-slate-50 hover:bg-amber-50 text-slate-600 hover:text-amber-800 border-slate-200 hover:border-amber-300"
+                    }`}
+                    title={item.isImportant ? "Lepas sematan Pengumuman Resmi Beranda" : "Sematkan (Pin) sebagai Pengumuman Resmi Beranda"}
+                  >
+                    <Pin className={`w-3.5 h-3.5 ${item.isImportant ? "fill-amber-800 text-amber-800" : "text-slate-500"}`} />
+                    <span>{item.isImportant ? "Lepas Pin" : "Pin ke Beranda"}</span>
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleTogglePublication(item)}
@@ -266,9 +298,10 @@ export default function PengumumanManagementPage() {
                     href={item.pdfUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-black text-blue-600 hover:underline"
+                    className="text-xs font-black text-blue-600 hover:underline flex items-center gap-1"
                   >
-                    Lihat Lampiran Media →
+                    <span>Lihat Lampiran Media</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
               )}

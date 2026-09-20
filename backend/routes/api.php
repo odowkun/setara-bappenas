@@ -297,6 +297,9 @@ Route::prefix('v1')->group(function () {
     Route::patch('/pengumuman/{announcement}/publication', [AnnouncementController::class, 'updatePublication'])
         ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
         ->name('announcements.publication.update');
+    Route::patch('/pengumuman/{announcement}/pin', [AnnouncementController::class, 'togglePin'])
+        ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
+        ->name('announcements.pin');
     Route::delete('/pengumuman/{announcement}', [AnnouncementController::class, 'destroy'])
         ->middleware(['auth:sanctum', 'permission:manage_pengumuman', AuditAdminMutation::class])
         ->name('announcements.destroy');

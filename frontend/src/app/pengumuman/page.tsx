@@ -36,6 +36,56 @@ interface AnnouncementItem extends OfficialAnnouncement {
   nomorSurat?: string;
 }
 
+function formatIndonesianDate(isoString?: string): string {
+  if (!isoString) return "-";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return isoString;
+    return (
+      new Intl.DateTimeFormat("id-ID", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: "Asia/Jayapura", // WIT for Halmahera Utara
+      }).format(d) + " WIT"
+    );
+  } catch {
+    return isoString;
+  }
+}
+
+function formatIndonesianDateOnly(dateString?: string): string {
+  if (!dateString) return "Permanen (Tanpa Batas Waktu)";
+  try {
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return dateString;
+    return new Intl.DateTimeFormat("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(d);
+  } catch {
+    return dateString;
+  }
+}
+
+const isImageFile = (fileType?: string, url?: string) => {
+  const str = `${fileType || ""} ${url || ""}`.toLowerCase();
+  return str.includes("image") || /\.(jpg|jpeg|png|webp|gif|svg)(\?.*)?$/i.test(str);
+};
+
+const isPdfFile = (fileType?: string, url?: string) => {
+  const str = `${fileType || ""} ${url || ""}`.toLowerCase();
+  return str.includes("pdf") || /\.pdf(\?.*)?$/i.test(str);
+};
+
+const isVideoFile = (fileType?: string, url?: string) => {
+  const str = `${fileType || ""} ${url || ""}`.toLowerCase();
+  return str.includes("video") || /\.(mp4|webm|mkv|mov)(\?.*)?$/i.test(str);
+};
+
 export default function PublicPengumumanPage() {
   const [announcements, setAnnouncements] = useState<AnnouncementItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,6 +120,8 @@ export default function PublicPengumumanPage() {
 
     fetchAnnouncementsFromApi();
   }, []);
+
+  const pinnedAnnouncement = announcements.find((a) => a.isImportant);
 
   const filteredAnnouncements = announcements.filter((a) => {
     const matchesSearch =
@@ -111,10 +163,62 @@ export default function PublicPengumumanPage() {
               Pengumuman &amp; Surat Edaran Resmi
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-              Arsip dokumen resmi surat edaran, pengumuman rekrutmen tenaga pendamping, dan informasi lelang Pemerintah Kabupaten Halmahera Utara.
+              Arsip dokumen resmi surat edaran, pengumuman seleksi, serta publikasi regulasi Pemerintah Kabupaten Halmahera Utara.
             </p>
           </div>
         </div>
+
+        {/* TOP PINNED OFFICIAL ANNOUNCEMENT HERO CARD */}
+        {pinnedAnnouncement && !searchTerm && typeFilter === "Semua Dokumen" && (
+          <div className="p-6 sm:p-8 rounded-[32px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/40 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
+            <div className="max-w-3xl space-y-3 relative z-10">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black shadow-md border border-amber-300">
+                <Pin className="w-3.5 h-3.5 fill-current text-blue-950" />
+                <span>PENGUMUMAN RESMI UTAMA (PIN BERANDA)</span>
+              </div>
+              <h2 className="text-xl sm:text-3xl font-black text-white leading-tight">
+                {pinnedAnnouncement.title}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium line-clamp-3">
+                {pinnedAnnouncement.content}
+              </p>
+              <div className="flex items-center gap-3 text-xs text-slate-300 pt-1 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-amber-300 font-bold border border-white/20">
+                  {pinnedAnnouncement.type}
+                </span>
+                <span className="flex items-center gap-1 text-slate-300 font-medium">
+                  <Clock className="w-3.5 h-3.5 text-amber-400" />
+                  {pinnedAnnouncement.validUntil
+                    ? `Berlaku s/d ${formatIndonesianDateOnly(pinnedAnnouncement.validUntil)}`
+                    : "Permanen (Tanpa Batas Waktu)"}
+                </span>
+                <span className="text-slate-400 text-[11px]">
+                  Diterbitkan: {formatIndonesianDate(pinnedAnnouncement.createdAt)}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10 w-full lg:w-auto">
+              <button
+                type="button"
+                onClick={() => setActiveDoc(pinnedAnnouncement)}
+                className="h-12 px-6 rounded-full bg-white hover:bg-slate-100 text-slate-900 font-black text-xs shadow-xl flex items-center justify-center gap-2 transition active:scale-95 whitespace-nowrap cursor-pointer"
+              >
+                <Eye className="w-4 h-4 text-blue-600" /> Pratinjau Dokumen
+              </button>
+              {pinnedAnnouncement.pdfUrl && (
+                <a
+                  href={`${pinnedAnnouncement.pdfUrl}?download=1`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 active:scale-95 whitespace-nowrap cursor-pointer"
+                >
+                  <Download className="w-4 h-4 text-blue-950" /> Unduh Lampiran
+                </a>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* SEARCH & FILTER CONTROLS BAR */}
         <div className="p-4 sm:p-5 rounded-3xl bg-slate-50 border border-slate-200 shadow-2xs space-y-4">
@@ -149,7 +253,7 @@ export default function PublicPengumumanPage() {
                   setTypeFilter(t);
                   setCurrentPage(1);
                 }}
-                className={`px-4 py-2 rounded-2xl font-black text-xs transition whitespace-nowrap shrink-0 ${
+                className={`px-4 py-2 rounded-2xl font-black text-xs transition whitespace-nowrap shrink-0 cursor-pointer ${
                   typeFilter === t
                     ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                     : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
@@ -161,7 +265,7 @@ export default function PublicPengumumanPage() {
           </div>
         </div>
 
-        {/* OFFICIAL DOCUMENT LIST REPOSITORY (RELAYOUT - NO BLOATED BOX CARDS) */}
+        {/* OFFICIAL DOCUMENT LIST REPOSITORY */}
         <div className="space-y-4">
           {loading ? (
             /* SKELETON LOADERS */
@@ -185,102 +289,131 @@ export default function PublicPengumumanPage() {
               Tidak ada dokumen pengumuman yang sesuai dengan kriteria pencarian.
             </div>
           ) : (
-            paginatedAnnouncements.map((item) => (
-              <div
-                key={item.id}
-                className={`p-5 sm:p-6 rounded-3xl bg-white border transition-all duration-300 flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative group ${
-                  item.isImportant
-                    ? "border-amber-300 shadow-md shadow-amber-500/5 ring-1 ring-amber-400/30"
-                    : "border-slate-200 hover:border-blue-300 shadow-2xs hover:shadow-md"
-                }`}
-              >
-                {/* Left Urgent Accent Strip */}
-                {item.isImportant && (
-                  <div className="absolute left-0 top-6 bottom-6 w-1.5 bg-amber-500 rounded-r-full" />
-                )}
+            paginatedAnnouncements.map((item) => {
+              const isImg = isImageFile(item.fileType, item.pdfUrl);
+              const isPdf = isPdfFile(item.fileType, item.pdfUrl);
+              const isVid = isVideoFile(item.fileType, item.pdfUrl);
 
-                {/* MAIN DOCUMENT INFO AREA */}
-                <div className="flex items-center gap-4 flex-1 pl-2">
-                  {/* DOCUMENT FILE ICON BADGE (VERTICALLY CENTERED) */}
-                  <div className="w-12 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex flex-col items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition">
-                    <FileText className="w-6 h-6 text-rose-600" />
-                    <span className="text-[9px] font-black tracking-widest uppercase mt-0.5">
-                      {item.fileType?.toUpperCase() || "PDF"}
-                    </span>
-                  </div>
-
-                  <div className="space-y-2 flex-1">
-                    {/* TOP BADGES & META */}
-                    <div className="flex items-center gap-2 flex-wrap text-xs">
-                      {item.isImportant && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white flex items-center gap-1 shadow-2xs">
-                          <Pin className="w-3 h-3 fill-current" />
-                          PENTING / URGENT
-                        </span>
-                      )}
-
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
-                        {item.type}
-                      </span>
-
-                      {item.nomorSurat && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                          {item.nomorSurat}
-                        </span>
-                      )}
-
-                      <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 ml-auto sm:ml-0">
-                        <Clock className="w-3.5 h-3.5 text-slate-400" />
-                        {item.validUntil ? `Berlaku s/d ${item.validUntil}` : "Permanen (Tanpa Batas Waktu)"}
-                      </span>
-                    </div>
-
-                    {/* TITLE & DESCRIPTION */}
-                    <div>
-                      <h3
-                        onClick={() => setActiveDoc(item)}
-                        className="text-base font-black text-slate-900 group-hover:text-blue-700 cursor-pointer transition leading-snug"
-                      >
-                        {item.title}
-                      </h3>
-                      <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed mt-1">
-                        {item.content}
-                      </p>
-                    </div>
-
-                    <div className="text-[11px] font-bold text-slate-400 pt-0.5">
-                      Diterbitkan: {item.createdAt}
-                    </div>
-                  </div>
-                </div>
-
-                {/* RIGHT ACTION BUTTONS (STACKED TOP & BOTTOM) */}
-                <div className="flex flex-col gap-2 shrink-0 w-full lg:w-44 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-center">
-                  <button
-                    type="button"
-                    onClick={() => setActiveDoc(item)}
-                    className="w-full py-2.5 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-2xs"
-                    title="Baca / Pratinjau Dokumen Pengumuman"
-                  >
-                    <Eye className="w-4 h-4 text-blue-600" />
-                    <span>Pratinjau Dokumen</span>
-                  </button>
-
-                  {item.pdfUrl && (
-                    <a
-                      href={item.pdfUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-2.5 px-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-blue-600/25"
-                      title="Unduh Lampiran PDF Resmi"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Unduh Lampiran</span>
-                    </a>
+              return (
+                <div
+                  key={item.id}
+                  className={`p-5 sm:p-6 rounded-3xl bg-white border transition-all duration-300 flex flex-col lg:flex-row lg:items-center justify-between gap-5 relative group ${
+                    item.isImportant
+                      ? "border-amber-300 shadow-md shadow-amber-500/5 ring-1 ring-amber-400/30"
+                      : "border-slate-200 hover:border-blue-300 shadow-2xs hover:shadow-md"
+                  }`}
+                >
+                  {/* Left Urgent Accent Strip */}
+                  {item.isImportant && (
+                    <div className="absolute left-0 top-6 bottom-6 w-1.5 bg-amber-500 rounded-r-full" />
                   )}
+
+                  {/* MAIN DOCUMENT INFO AREA */}
+                  <div className="flex items-center gap-4 flex-1 pl-2">
+                    {/* DYNAMIC MEDIA ICON BADGE */}
+                    <div
+                      className={`w-12 h-14 rounded-2xl border flex flex-col items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition ${
+                        isImg
+                          ? "bg-purple-50 border-purple-200 text-purple-600"
+                          : isVid
+                          ? "bg-amber-50 border-amber-200 text-amber-600"
+                          : isPdf
+                          ? "bg-rose-50 border-rose-200 text-rose-600"
+                          : "bg-blue-50 border-blue-200 text-blue-600"
+                      }`}
+                    >
+                      {isImg ? (
+                        <ImageIcon className="w-6 h-6" />
+                      ) : isVid ? (
+                        <Video className="w-6 h-6" />
+                      ) : (
+                        <FileText className="w-6 h-6" />
+                      )}
+                      <span className="text-[9px] font-black tracking-widest uppercase mt-0.5">
+                        {isImg ? "IMG" : isVid ? "VID" : isPdf ? "PDF" : "DOC"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 flex-1">
+                      {/* TOP BADGES & META */}
+                      <div className="flex items-center gap-2 flex-wrap text-xs">
+                        {item.isImportant && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gradient-to-r from-amber-500 to-amber-600 text-white flex items-center gap-1 shadow-2xs">
+                            <Pin className="w-3 h-3 fill-current" />
+                            PENGUMUMAN RESMI (PIN)
+                          </span>
+                        )}
+
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-100">
+                          {item.type}
+                        </span>
+
+                        {item.nomorSurat && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                            {item.nomorSurat}
+                          </span>
+                        )}
+
+                        <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 ml-auto sm:ml-0">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          {item.validUntil
+                            ? `Berlaku s/d ${formatIndonesianDateOnly(item.validUntil)}`
+                            : "Permanen"}
+                        </span>
+                      </div>
+
+                      {/* TITLE & DESCRIPTION */}
+                      <div>
+                        <h3
+                          onClick={() => setActiveDoc(item)}
+                          className="text-base font-black text-slate-900 group-hover:text-blue-700 cursor-pointer transition leading-snug"
+                        >
+                          {item.title}
+                        </h3>
+                        <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed mt-1">
+                          {item.content}
+                        </p>
+                      </div>
+
+                      <div className="text-[11px] font-bold text-slate-400 pt-0.5 flex items-center gap-2">
+                        <span>Diterbitkan: {formatIndonesianDate(item.createdAt)}</span>
+                        {item.fileType && (
+                          <span className="px-1.5 py-0.2 bg-slate-100 rounded text-[9px] font-mono text-slate-500">
+                            {item.fileType}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT ACTION BUTTONS */}
+                  <div className="flex flex-col gap-2 shrink-0 w-full lg:w-44 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100 justify-center">
+                    <button
+                      type="button"
+                      onClick={() => setActiveDoc(item)}
+                      className="w-full py-2.5 px-3 rounded-2xl bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-700 font-extrabold text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-2xs cursor-pointer"
+                      title="Pratinjau Dokumen / Berkas Asli"
+                    >
+                      <Eye className="w-4 h-4 text-blue-600" />
+                      <span>Pratinjau Dokumen</span>
+                    </button>
+
+                    {item.pdfUrl && (
+                      <a
+                        href={`${item.pdfUrl}?download=1`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-2.5 px-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center justify-center gap-1.5 transition active:scale-95 shadow-md shadow-blue-600/25 cursor-pointer"
+                        title="Unduh Lampiran Resmi"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Unduh Lampiran</span>
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
 
@@ -318,7 +451,7 @@ export default function PublicPengumumanPage() {
                 type="button"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
@@ -328,7 +461,7 @@ export default function PublicPengumumanPage() {
                   key={p}
                   type="button"
                   onClick={() => setCurrentPage(p)}
-                  className={`w-9 h-9 rounded-2xl font-black transition text-xs ${
+                  className={`w-9 h-9 rounded-2xl font-black transition text-xs cursor-pointer ${
                     currentPage === p
                       ? "bg-blue-600 text-white shadow-md shadow-blue-600/25"
                       : "bg-white hover:bg-slate-100 text-slate-700 border border-slate-200"
@@ -342,7 +475,7 @@ export default function PublicPengumumanPage() {
                 type="button"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="p-2.5 rounded-2xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
@@ -351,16 +484,16 @@ export default function PublicPengumumanPage() {
         )}
       </div>
 
-      {/* OFFICIAL DOCUMENT READER MODAL */}
+      {/* OFFICIAL DOCUMENT READER MODAL WITH REAL MEDIA PREVIEW */}
       {activeDoc && (
-        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in">
-          <div className="w-full max-w-3xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[99999] bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="w-full max-w-4xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* OFFICIAL HEADER KOP SURAT */}
-            <div className="p-6 bg-slate-50 border-b border-slate-200 space-y-3 relative">
+            <div className="p-5 sm:p-6 bg-slate-50 border-b border-slate-200 space-y-3 relative">
               <button
                 type="button"
                 onClick={() => setActiveDoc(null)}
-                className="absolute top-5 right-5 p-2 rounded-2xl bg-white hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition border border-slate-200 shadow-2xs"
+                className="absolute top-5 right-5 p-2 rounded-2xl bg-white hover:bg-slate-200 text-slate-600 hover:text-slate-900 transition border border-slate-200 shadow-2xs cursor-pointer"
                 title="Tutup Pratinjau Dokumen"
               >
                 <X className="w-5 h-5" />
@@ -384,81 +517,178 @@ export default function PublicPengumumanPage() {
               </div>
 
               <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between gap-2 flex-wrap text-xs">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200 uppercase">
-                  {activeDoc.type}
-                </span>
-                {activeDoc.nomorSurat && (
-                  <span className="font-mono font-bold text-slate-700 text-[11px]">
-                    NOMOR: {activeDoc.nomorSurat}
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200 uppercase">
+                    {activeDoc.type}
                   </span>
-                )}
+                  {activeDoc.isImportant && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white flex items-center gap-1 shadow-2xs">
+                      <Pin className="w-3 h-3 fill-current" />
+                      PIN RESMI
+                    </span>
+                  )}
+                  {activeDoc.nomorSurat && (
+                    <span className="font-mono font-bold text-slate-700 text-[11px]">
+                      NOMOR: {activeDoc.nomorSurat}
+                    </span>
+                  )}
+                </div>
+
                 <span className="text-slate-500 font-semibold text-[11px]">
-                  Diterbitkan: {activeDoc.createdAt}
+                  Diterbitkan: {formatIndonesianDate(activeDoc.createdAt)}
                 </span>
               </div>
             </div>
 
             {/* DOCUMENT BODY READER */}
-            <div className="p-6 sm:p-8 flex-1 overflow-y-auto space-y-5 text-slate-800">
+            <div className="p-5 sm:p-7 flex-1 overflow-y-auto space-y-5 text-slate-800">
               <h2 className="text-xl font-black text-slate-900 leading-snug">
                 {activeDoc.title}
               </h2>
 
-              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-100 text-xs font-bold text-blue-900 flex items-center justify-between">
+              <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50/70 border border-blue-100 text-xs font-bold text-blue-900 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <span className="flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-blue-600 shrink-0" />
                   <span>Masa Berlaku Dokumen:</span>
                 </span>
                 <span className="font-extrabold text-blue-800">
-                  {activeDoc.validUntil ? `s/d ${activeDoc.validUntil}` : "Permanen (Tanpa Batas Waktu)"}
+                  {activeDoc.validUntil ? `s/d ${formatIndonesianDateOnly(activeDoc.validUntil)}` : "Permanen (Tanpa Batas Waktu)"}
                 </span>
               </div>
 
-              <div className="prose text-xs sm:text-sm font-medium text-slate-700 leading-relaxed space-y-3 pt-2">
-                <p>{activeDoc.content}</p>
-                <p>
-                  Demikian pengumuman ini disampaikan untuk diketahui dan dilaksanakan sebagaimana mestinya oleh seluruh pihak terkait di Kabupaten Halmahera Utara.
-                </p>
-              </div>
-
-              {/* SIGNATURE STAMP MOCK */}
-              <div className="pt-6 border-t border-slate-100 flex justify-end">
-                <div className="text-center space-y-1">
-                  <p className="text-[11px] font-bold text-slate-500">Tobelo, {activeDoc.createdAt}</p>
-                  <p className="text-xs font-black text-slate-900">Kepala BAPPEDA Halmahera Utara</p>
-                  <div className="h-12 flex items-center justify-center">
-                    <span className="px-3 py-1 rounded-lg bg-emerald-50 text-emerald-800 text-[10px] font-black border border-emerald-200">
-                      ✓ TTD DIGITAL RESMI
-                    </span>
-                  </div>
-                  <p className="text-xs font-black text-slate-900 underline">Dr. ARYANI SYAH, M.Si</p>
-                  <p className="text-[10px] font-mono text-slate-400">NIP. 19780512 200312 2 004</p>
+              {activeDoc.content && (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm font-medium text-slate-700 leading-relaxed space-y-2 whitespace-pre-line">
+                  <p>{activeDoc.content}</p>
                 </div>
-              </div>
+              )}
+
+              {/* REAL ATTACHMENT FILE PREVIEW CONTAINER */}
+              {activeDoc.pdfUrl ? (
+                <div className="space-y-3 pt-2">
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                      <Paperclip className="w-4 h-4 text-blue-600" />
+                      <span>Berkas Dokumen Lampiran Asli</span>
+                      {activeDoc.fileType && (
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-[10px] font-mono font-bold text-slate-600">
+                          {activeDoc.fileType}
+                        </span>
+                      )}
+                    </h3>
+
+                    <a
+                      href={activeDoc.pdfUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 hover:underline"
+                    >
+                      Buka Tab Baru <ExternalLink className="w-3.5 h-3.5" />
+                    </a>
+                  </div>
+
+                  {/* REAL MEDIA RENDER */}
+                  {isImageFile(activeDoc.fileType, activeDoc.pdfUrl) ? (
+                    <div className="p-3 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col items-center justify-center gap-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={activeDoc.pdfUrl}
+                        alt={activeDoc.title}
+                        className="max-h-[62vh] max-w-full rounded-xl object-contain shadow-sm border border-slate-200 bg-white"
+                      />
+                      <p className="text-[11px] font-bold text-slate-500 flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-purple-600" />
+                        <span>Pratinjau Berkas Gambar Resmi BAPPEDA Halmahera Utara</span>
+                      </p>
+                    </div>
+                  ) : isPdfFile(activeDoc.fileType, activeDoc.pdfUrl) ? (
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden shadow-inner bg-slate-100 flex flex-col">
+                      <iframe
+                        src={`${activeDoc.pdfUrl}#toolbar=1`}
+                        title={activeDoc.title}
+                        className="w-full h-[65vh] border-0 bg-white"
+                      />
+                    </div>
+                  ) : isVideoFile(activeDoc.fileType, activeDoc.pdfUrl) ? (
+                    <div className="rounded-2xl border border-slate-200 overflow-hidden bg-black p-2 flex justify-center">
+                      <video
+                        src={activeDoc.pdfUrl}
+                        controls
+                        className="w-full max-h-[60vh] rounded-xl"
+                      />
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center font-black shrink-0">
+                          <FileText className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-900">Dokumen Lampiran Resmi</p>
+                          <p className="text-[11px] text-slate-500 font-medium">Format: {activeDoc.fileType || "Dokumen"}</p>
+                        </div>
+                      </div>
+                      <a
+                        href={`${activeDoc.pdfUrl}?download=1`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-2 shadow-sm transition"
+                      >
+                        <Download className="w-4 h-4" /> Unduh Dokumen
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs font-bold text-slate-400">
+                  Pengumuman ini tidak memiliki berkas lampiran media.
+                </div>
+              )}
             </div>
 
             {/* MODAL FOOTER ACTIONS */}
-            <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => window.print()}
-                className="px-4 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 flex items-center gap-1.5 transition"
-              >
-                <Printer className="w-3.5 h-3.5" />
-                <span>Cetak Dokumen</span>
-              </button>
-
-              {activeDoc.pdfUrl && (
-                <a
-                  href={activeDoc.pdfUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-1.5 transition active:scale-95"
+            <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 flex items-center justify-center gap-1.5 transition cursor-pointer"
                 >
-                  <Download className="w-4 h-4" />
-                  <span>Unduh Lampiran {activeDoc.fileType?.toUpperCase() || "PDF"}</span>
-                </a>
-              )}
+                  <Printer className="w-3.5 h-3.5" />
+                  <span>Cetak Dokumen</span>
+                </button>
+                {activeDoc.pdfUrl && (
+                  <a
+                    href={activeDoc.pdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs border border-slate-200 flex items-center justify-center gap-1.5 transition cursor-pointer"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-blue-600" />
+                    <span>Buka Penuh</span>
+                  </a>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+                {activeDoc.pdfUrl && (
+                  <a
+                    href={`${activeDoc.pdfUrl}?download=1`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-1.5 transition active:scale-95 cursor-pointer"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Unduh Berkas Lampiran</span>
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setActiveDoc(null)}
+                  className="px-4 py-2.5 rounded-2xl bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs transition cursor-pointer"
+                >
+                  Tutup
+                </button>
+              </div>
             </div>
           </div>
         </div>

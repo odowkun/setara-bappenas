@@ -37,6 +37,10 @@ import { toast } from "@/lib/swal";
 import Swal from "sweetalert2";
 
 import { proyekService, ProyekDetail } from "@/services/proyekService";
+import {
+  officialContentService,
+  type AnnouncementItem,
+} from "@/services/officialContentService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
 
@@ -64,13 +68,21 @@ export const GeospatialSection: React.FC = () => {
     initialIndex: 0,
   });
 
+  const [pinnedAnnouncement, setPinnedAnnouncement] = useState<AnnouncementItem | null>(null);
+
   React.useEffect(() => {
     Promise.all([
       proyekService.getProjects(),
       proyekService.getBufferAnalyses(),
-    ]).then(([projects, analyses]) => {
+      officialContentService.getAnnouncements().catch(() => []),
+    ]).then(([projects, analyses, announcements]) => {
       setRawProjects(projects);
       setGeoAnalyses(analyses);
+      const pinned =
+        (Array.isArray(announcements) && announcements.find((a) => a.isImportant)) ||
+        (Array.isArray(announcements) && announcements[0]) ||
+        null;
+      setPinnedAnnouncement(pinned);
     });
   }, []);
 
@@ -300,31 +312,47 @@ export const GeospatialSection: React.FC = () => {
         <div className="p-5 sm:p-10 rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
           <div className="max-w-3xl space-y-3 relative z-10">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black shadow-md border border-amber-300">
-              <Bell className="w-3.5 h-3.5 text-blue-950 animate-bounce" /> Pengumuman Resmi Perencanaan Daerah
+              <Bell className="w-3.5 h-3.5 text-blue-950 animate-bounce" />{" "}
+              {pinnedAnnouncement ? (pinnedAnnouncement.type || "Pengumuman Resmi") : "Pengumuman Resmi Perencanaan Daerah"}
             </div>
             <h3 className="text-lg sm:text-3xl font-extrabold text-white leading-tight">
-              Penyusunan Renstra PD (Perangkat Daerah) Tahun 2025–2029
+              {pinnedAnnouncement ? pinnedAnnouncement.title : "Penyusunan Renstra PD (Perangkat Daerah) Tahun 2025–2029"}
             </h3>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium">
-              Berdasarkan <strong className="text-amber-300 font-bold">PERMENDAGRI 86 Tahun 2017</strong> tentang tata cara perencanaan, pengendalian dan Evaluasi Daerah serta <strong className="text-amber-300 font-bold">INMENDAGRI Nomor 2 Tahun 2025</strong> tentang Pedoman Penyusunan Rencana Strategis Perangkat Daerah Kabupaten Halmahera Utara.
+            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium line-clamp-3">
+              {pinnedAnnouncement ? (
+                pinnedAnnouncement.content
+              ) : (
+                <>
+                  Berdasarkan <strong className="text-amber-300 font-bold">PERMENDAGRI 86 Tahun 2017</strong> tentang tata cara perencanaan, pengendalian dan Evaluasi Daerah serta <strong className="text-amber-300 font-bold">INMENDAGRI Nomor 2 Tahun 2025</strong> tentang Pedoman Penyusunan Rencana Strategis Perangkat Daerah Kabupaten Halmahera Utara.
+                </>
+              )}
             </p>
           </div>
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
-            <a
-              href="/dokumen"
-              className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap"
-            >
-              <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Renstra
-            </a>
-            <a
-              href="#"
-              target="_blank"
-              rel="noreferrer"
+            {pinnedAnnouncement?.pdfUrl ? (
+              <a
+                href={`${pinnedAnnouncement.pdfUrl}?download=1`}
+                target="_blank"
+                rel="noreferrer"
+                className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
+              >
+                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Resmi
+              </a>
+            ) : (
+              <Link
+                href="/pengumuman"
+                className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
+              >
+                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Renstra
+              </Link>
+            )}
+            <Link
+              href="/pengumuman"
               className="w-full sm:w-auto h-12 px-6 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/20 backdrop-blur-md shadow-sm transition whitespace-nowrap"
             >
-              Portal Popeda <ExternalLink className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-            </a>
+              Arsip Pengumuman <ExternalLink className="w-3.5 h-3.5 text-slate-300 shrink-0" />
+            </Link>
           </div>
         </div>
 
