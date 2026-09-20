@@ -101,8 +101,8 @@ export default function SurveyKepuasanPublicPage() {
 
     // Initialize scores map with null (unselected)
     const initialScores: { [key: string]: any } = {};
-    cfg.questions.forEach((q, idx) => {
-      const key = `u${idx + 1}_question_${q.id}`;
+    cfg.questions.forEach((q) => {
+      const key = `question_${q.id}`;
       initialScores[key] = null;
     });
     setScores(initialScores);
@@ -112,12 +112,25 @@ export default function SurveyKepuasanPublicPage() {
     setSummary(publicSummary);
   };
 
+  const getActiveQuestions = () => {
+    return questions
+      .filter((unsur) => {
+        if (!unsur.service_id) return true;
+        const matchedSvc = services.find((s) => s.id === unsur.service_id);
+        return matchedSvc && matchedSvc.name === jenisLayanan;
+      })
+      .sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+  };
+
   const handleScoreChange = (key: string, val: any) => {
     setScores((prev) => ({ ...prev, [key]: val }));
   };
 
   const currentLiveIKM = () => {
-    const vals = Object.values(scores).filter((v): v is number => v !== null);
+    const active = getActiveQuestions();
+    const vals = active
+      .map((q) => scores[`question_${q.id}`])
+      .filter((v): v is number => typeof v === "number" && v >= 1 && v <= 5);
     if (vals.length === 0) return null;
     const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
     return ((avg / 5) * 100).toFixed(1);
@@ -126,16 +139,11 @@ export default function SurveyKepuasanPublicPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check if required dynamic questions are answered
-    const activeQuestions = questions.filter((q) => {
-      if (!q.service_id) return true;
-      const matchedSvc = services.find((s) => s.id === q.service_id);
-      return matchedSvc && matchedSvc.name === jenisLayanan;
-    });
+    const activeQuestions = getActiveQuestions();
 
-    const uncompletedRequired = activeQuestions.filter((q, idx) => {
+    const uncompletedRequired = activeQuestions.filter((q) => {
       if (!q.is_required) return false;
-      const key = `u${idx + 1}_question_${q.id}`;
+      const key = `question_${q.id}`;
       const val = scores[key];
       return val === null || val === undefined || val === "";
     });
@@ -147,18 +155,97 @@ export default function SurveyKepuasanPublicPage() {
 
     setSubmitting(true);
 
-    const valArray = Object.values(scores) as number[];
+    const ratingScores: { [aspect: string]: number } = {};
+    const unmappedRatings: number[] = [];
+    const additionalNotes: string[] = [];
+
+    activeQuestions.forEach((q) => {
+      const val = scores[`question_${q.id}`];
+      if (typeof val === "number" && val >= 1 && val <= 5) {
+        const titleLower = (q.title + " " + (q.description || "")).toLowerCase();
+        if (titleLower.includes("syarat") && !ratingScores.u1) {
+          ratingScores.u1 = val;
+        } else if (
+          (titleLower.includes("prosedur") ||
+            titleLower.includes("alur") ||
+            titleLower.includes("kemudahan") ||
+            titleLower.includes("akses")) &&
+          !ratingScores.u2
+        ) {
+          ratingScores.u2 = val;
+        } else if (
+          (titleLower.includes("cepat") ||
+            titleLower.includes("waktu") ||
+            titleLower.includes("tanggap")) &&
+          !ratingScores.u3
+        ) {
+          ratingScores.u3 = val;
+        } else if (
+          (titleLower.includes("produk") ||
+            titleLower.includes("kualitas") ||
+            titleLower.includes("dokumen") ||
+            titleLower.includes("spasial") ||
+            titleLower.includes("peta")) &&
+          !ratingScores.u4
+        ) {
+          ratingScores.u4 = val;
+        } else if (
+          (titleLower.includes("sikap") ||
+            titleLower.includes("ramah") ||
+            titleLower.includes("petugas") ||
+            titleLower.includes("kompetensi") ||
+            titleLower.includes("front office")) &&
+          !ratingScores.u5
+        ) {
+          ratingScores.u5 = val;
+        } else {
+          unmappedRatings.push(val);
+        }
+      } else if (val !== null && val !== undefined && val !== "") {
+        const textVal = Array.isArray(val) ? val.join(", ") : String(val);
+        additionalNotes.push(`${q.title}: ${textVal}`);
+      }
+    });
+
+    // Fill unassigned aspect slots using unmapped ratings in order
+    const aspectKeys = ["u1", "u2", "u3", "u4", "u5"] as const;
+    aspectKeys.forEach((k) => {
+      if (!ratingScores[k] && unmappedRatings.length > 0) {
+        ratingScores[k] = unmappedRatings.shift()!;
+      }
+    });
+
+    // Calculate baseline average for any remaining empty aspect slots
+    const allAssigned = Object.values(ratingScores);
+    const avgScore =
+      allAssigned.length > 0
+        ? Math.round(allAssigned.reduce((a, b) => a + b, 0) / allAssigned.length)
+        : 5;
+
+    const u1 = ratingScores.u1 ?? avgScore;
+    const u2 = ratingScores.u2 ?? avgScore;
+    const u3 = ratingScores.u3 ?? avgScore;
+    const u4 = ratingScores.u4 ?? avgScore;
+    const u5 = ratingScores.u5 ?? avgScore;
+
+    const combinedSaran = [
+      saran.trim(),
+      additionalNotes.length > 0 ? `[Jawaban Kuesioner]:\n${additionalNotes.join("\n")}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n\n");
+
     const payload = {
       nama_responden: namaResponden.trim() || "Masyarakat Umum",
       email: email.trim() || undefined,
       pekerjaan,
       jenis_layanan: jenisLayanan,
-      u1_persyaratan: valArray[0] || 5,
-      u2_prosedur: valArray[1] || 5,
-      u3_kecepatan: valArray[2] || 5,
-      u4_produk: valArray[3] || 5,
-      u5_sikap: valArray[4] || 5,
-      saran_masukan: saran.trim() || undefined,
+      u1_persyaratan: u1,
+      u2_prosedur: u2,
+      u3_kecepatan: u3,
+      u4_produk: u4,
+      u5_sikap: u5,
+      saran_masukan: combinedSaran || undefined,
     };
 
     const success = await submitSurvey(payload);
@@ -175,6 +262,7 @@ export default function SurveyKepuasanPublicPage() {
   };
 
   const liveScoreDisplay = currentLiveIKM();
+  const activeQuestions = getActiveQuestions();
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
@@ -348,16 +436,9 @@ export default function SurveyKepuasanPublicPage() {
               </div>
 
               <div className="space-y-5">
-                {questions
-                  .filter((unsur) => {
-                    if (!unsur.service_id) return true;
-                    const matchedSvc = services.find((s) => s.id === unsur.service_id);
-                    return matchedSvc && matchedSvc.name === jenisLayanan;
-                  })
-                  .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-                  .map((unsur, idx) => {
-                    const key = `u${idx + 1}_question_${unsur.id}`;
-                    const currentVal = scores[key];
+                {activeQuestions.map((unsur, idx) => {
+                  const key = `question_${unsur.id}`;
+                  const currentVal = scores[key];
                     const qType = unsur.question_type || "rating";
                     const isUnselected = currentVal === null || currentVal === undefined || currentVal === "";
 
