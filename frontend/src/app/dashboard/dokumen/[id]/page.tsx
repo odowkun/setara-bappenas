@@ -241,6 +241,28 @@ export default function DocumentDetailPage() {
     }
   };
 
+  // Handle Delete Master Document (Cascade)
+  const handleDeleteMasterDocument = async () => {
+    if (!documentData) return;
+    const res = await showDeleteConfirm(
+      documentData.title,
+      `PERINGATAN: Dokumen induk "${documentData.title}" akan dihapus permanen beserta seluruh ${projects.length} tagging proyek fisik, data progres monev, lampiran teknis (foto/dokumen), dan sinkronisasi GIS ArcGIS!`
+    );
+    if (!res.isConfirmed) return;
+
+    try {
+      const deleted = await adminService.deleteDocument(docId, true);
+      if (deleted) {
+        toast.success(`Dokumen "${documentData.title}" beserta seluruh proyek terkait berhasil dihapus permanen.`);
+        router.push("/dashboard/dokumen");
+      } else {
+        toast.error(`Dokumen "${documentData.title}" gagal dihapus.`);
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Gagal menghapus dokumen.");
+    }
+  };
+
   // Handle Delete Project
   const handleDeleteProject = async (projectId: string | number, projectName: string) => {
     const res = await showDeleteConfirm(projectName);
@@ -365,6 +387,20 @@ export default function DocumentDetailPage() {
               <Download className="w-4 h-4 text-amber-400" />
               <span>Unduh Berkas</span>
             </a>
+          )}
+
+          {(user?.role === "superadmin" ||
+            user?.role === "admin_umum" ||
+            (user?.role === "admin_bidang" && user.bidang === documentData?.bidang)) && (
+            <button
+              type="button"
+              onClick={handleDeleteMasterDocument}
+              className="px-3.5 py-2.5 rounded-2xl border border-rose-200 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs shadow-xs flex items-center gap-2 transition cursor-pointer"
+              title="Hapus permanen dokumen induk, seluruh tagging proyek fisik, data progres, dan lampiran teknis"
+            >
+              <Trash2 className="w-4 h-4 text-rose-600" />
+              <span>Hapus Dokumen</span>
+            </button>
           )}
         </div>
       </div>

@@ -171,4 +171,40 @@ Status implementasi: 21 September 2026.
 3. **Reset State Pasca-Simpan**:
    - Setelah proyek berhasil disimpan, seluruh field termasuk koordinat, pagu anggaran, nama proyek, kecamatan, dan desa direset secara bersih untuk persiapan entri paket berikutnya.
 
+---
+
+## 10. Standar Cascade Deletion Dokumen Induk & Pembersihan Proyek, Progres, Lampiran, dan ESRI ArcGIS
+
+Status implementasi: 21 September 2026.
+
+### A. Latar Belakang & Persyaratan
+Ketika sebuah dokumen perencanaan induk (RPJPD, RPJMD, RKPD, Renstra, Renja, DIK Sektoral) dihapus secara permanen dari repositori, seluruh entitas turunannya tidak boleh tertinggal (*orphaned records / orphaned files*) baik pada database, sistem berkas lokal/publik, maupun layanan cloud GIS.
+
+### B. Cakupan Cascade Deletion
+Penghapusan permanen (`DELETE /api/v1/documents/{id}?permanent=1`) mengeksekusi pembersihan menyeluruh dalam satu transaksi atomik database (`DB::transaction`):
+
+1. **Tagging Proyek Fisik (`proyek_details`)**:
+   - Seluruh titik geotagging proyek yang terikat dengan `document_id` dokumen induk dihapus dari database.
+2. **Data Progres & Monev Keuangan**:
+   - Pagu anggaran (`pagu_anggaran`), realisasi keuangan (`realisasi_anggaran`), persentase progres (`persentase_progres`), dan status pelaksanaan (`status_progres`) terhapus bersama entitas proyek.
+3. **Lampiran Teknis & Berkas Fisik (`proyek_attachments`)**:
+   - Berkas fisik pada storage (`storage/app/public/proyek_attachments/{proyek_id}/...`) dihapus dari disk penyimpanan fisik.
+   - Folder direktori `proyek_attachments/{proyek_id}` dibersihkan secara rekursif (`deleteDirectory`).
+   - Record lampiran pada tabel `proyek_attachments` dihapus.
+4. **Sinkronisasi Penghapusan Feature ESRI ArcGIS**:
+   - Jika proyek memiliki `esri_objectid`, sistem secara otomatis memanggil `EsriGisService::deleteFeature(objectId)` untuk menghapus feature dari ArcGIS Feature Service, mencegah munculnya titik mati/hantu di ArcGIS Online atau portal WebGIS.
+5. **Analisis Geoprocessing Spasial (`geoprocessing_analyses`)**:
+   - Seluruh buffer zone dan delineasi spasial terkait `proyek_detail_id` dihapus.
+6. **Versi Berkas & Log Dokumen Induk**:
+   - Berkas PDF dokumen utama dan seluruh versinya (`document_versions`) dihapus dari disk privat lokal.
+   - Seluruh riwayat log (`approvalLogs`, `viewLogs`, `accessGrants`, `downloadLogs`) dihapus bersih sebelum penghapusan record dokumen.
+
+### C. Proteksi & Antarmuka UI (SweetAlert2)
+- **Legal Hold**: Jika dokumen berstatus `legal_hold = true`, penghapusan permanen otomatis dibatalkan dan mengembalikan HTTP 422 untuk kepatuhan regulasi audit.
+- **Konfirmasi Dialog**: Terdapat konfirmasi interaktif SweetAlert2 (`showDeleteConfirm`) yang secara eksplisit memperingatkan pengguna bahwa seluruh tagging proyek fisik, data progres monev, lampiran teknis, dan titik GIS akan ikut terhapus permanen.
+- **Dua Aksi Terpisah**:
+  - **Arsipkan** (`Archive` icon): Menarik dokumen dari publikasi tetapi mempertahankan versi, hash sha256, dan riwayat audit.
+  - **Hapus Permanen** (`Trash2` icon): Menghapus total dokumen induk beserta seluruh data turunan proyek dan lampiran.
+
+
 

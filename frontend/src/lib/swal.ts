@@ -29,10 +29,10 @@ export const showConfirm = async (options: {
   });
 };
 
-export const showDeleteConfirm = async (itemTitle: string) => {
+export const showDeleteConfirm = async (itemTitle: string, customText?: string) => {
   return await Swal.fire({
     title: "Apakah Anda Yakin?",
-    text: `Data "${itemTitle}" akan dihapus secara permanen.`,
+    text: customText || `Data "${itemTitle}" akan dihapus secara permanen.`,
     icon: "warning",
     showCancelButton: true,
     confirmButtonText: "Ya, Hapus Data",

@@ -5,9 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\DocumentVersion;
+use App\Models\GeoprocessingAnalysis;
 use App\Services\DocumentAccessService;
 use App\Services\DocumentArchiveService;
 use App\Services\DocumentWatermarkService;
+use App\Services\EsriGisService;
 use App\Services\OfficialPublicationService;
 use Illuminate\Support\Carbon;
 use Illuminate\Http\Request;
@@ -28,7 +30,8 @@ class DocumentController extends Controller
         private readonly DocumentWatermarkService $documentWatermarkService,
         private readonly DocumentAccessService $documentAccessService,
         private readonly DocumentArchiveService $documentArchiveService,
-        private readonly OfficialPublicationService $publicationService
+        private readonly OfficialPublicationService $publicationService,
+        private readonly EsriGisService $esriService
     ) {}
 
     public function index(Request $request)
@@ -336,6 +339,90 @@ class DocumentController extends Controller
             && $document->bidang !== $request->user()->bidang
         ) {
             abort(404);
+        }
+
+        // Mode hapus permanen: bersihkan dokumen induk beserta seluruh tagging proyek, progress, lampiran teknis & ESRI
+        if (
+            $request->boolean('permanent')
+            || $request->boolean('force')
+            || $request->query('permanent') === '1'
+            || $request->query('force') === '1'
+            || $request->input('action') === 'permanent'
+        ) {
+            if ($document->legal_hold) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 422,
+                    'message' => 'Dokumen berstatus legal hold resmi tidak dapat dihapus permanen.',
+                ], 422);
+            }
+
+            DB::transaction(function () use ($document): void {
+                $document->loadMissing(['proyekDetails.attachments', 'versions']);
+
+                // 1. Hapus cascade seluruh geotagging proyek, data progres, lampiran fisik, dan fitur ESRI
+                foreach ($document->proyekDetails as $proyek) {
+                    // Hapus lampiran fisik dan record proyek_attachments
+                    foreach ($proyek->attachments as $attachment) {
+                        $relativeStoragePath = str_replace('/storage/', 'public/', $attachment->file_path);
+                        if (Storage::disk('public')->exists($relativeStoragePath)) {
+                            Storage::disk('public')->delete($relativeStoragePath);
+                        }
+                        if (Storage::exists($relativeStoragePath)) {
+                            Storage::delete($relativeStoragePath);
+                        }
+                        $attachment->delete();
+                    }
+
+                    // Hapus direktori folder lampiran jika ada
+                    if (Storage::disk('public')->exists("proyek_attachments/{$proyek->id}")) {
+                        Storage::disk('public')->deleteDirectory("proyek_attachments/{$proyek->id}");
+                    }
+
+                    // Hapus fitur dari ESRI ArcGIS Service jika ada
+                    if ($proyek->esri_objectid) {
+                        try {
+                            $this->esriService->deleteFeature((int) $proyek->esri_objectid);
+                        } catch (Throwable $e) {
+                            Log::warning("Gagal menghapus fitur ESRI OBJECTID {$proyek->esri_objectid}: {$e->getMessage()}");
+                        }
+                    }
+
+                    // Hapus analisis geoprocessing yang terikat
+                    GeoprocessingAnalysis::where('proyek_detail_id', $proyek->id)->delete();
+
+                    // Hapus data proyek fisik (termasuk pagu, realisasi, progres)
+                    $proyek->delete();
+                }
+
+                // 2. Hapus berkas fisik versi dokumen dan record versinya
+                foreach ($document->versions as $version) {
+                    if ($version->file_path && Storage::disk('local')->exists($version->file_path)) {
+                        Storage::disk('local')->delete($version->file_path);
+                    }
+                    $version->delete();
+                }
+
+                // Hapus berkas file_path induk jika tersimpan terpisah
+                if ($document->file_path && Storage::disk('local')->exists($document->file_path)) {
+                    Storage::disk('local')->delete($document->file_path);
+                }
+
+                // 3. Bersihkan log terkait
+                $document->approvalLogs()->delete();
+                $document->viewLogs()->delete();
+                $document->accessGrants()->delete();
+                $document->downloadLogs()->delete();
+
+                // 4. Hapus record dokumen induk
+                $document->delete();
+            });
+
+            return response()->json([
+                'status' => 'success',
+                'code' => 200,
+                'message' => 'Dokumen induk beserta seluruh tagging proyek, data progres, dan lampiran teknis terkait berhasil dihapus permanen.',
+            ]);
         }
 
         $archived = $this->documentArchiveService->archive(

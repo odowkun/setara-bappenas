@@ -264,8 +264,22 @@ export const adminService = {
     return 0;
   },
 
-  deleteDocument: async (id: string): Promise<boolean> => {
-    const response = await adminService.apiFetch(`/documents/${id}`, { method: "DELETE" });
+  deleteDocument: async (id: string, permanent: boolean = true): Promise<boolean> => {
+    const query = permanent ? "?permanent=1" : "";
+    const response = await adminService.apiFetch(`/documents/${id}${query}`, {
+      method: "DELETE",
+      ...(permanent ? { body: JSON.stringify({ permanent: true }) } : {}),
+    });
+    if (!response) return false;
+
+    return true;
+  },
+
+  archiveDocument: async (id: string, reason?: string): Promise<boolean> => {
+    const response = await adminService.apiFetch(`/documents/${id}`, {
+      method: "DELETE",
+      body: JSON.stringify({ reason: reason || "Diarsipkan melalui dashboard dokumen" }),
+    });
     if (!response) return false;
 
     return true;

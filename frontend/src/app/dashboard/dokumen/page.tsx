@@ -19,8 +19,9 @@ import {
   ExternalLink,
   GitBranch,
   ShieldCheck,
+  Trash2,
 } from "lucide-react";
-import { showConfirm, toast } from "@/lib/swal";
+import { showConfirm, showDeleteConfirm, toast } from "@/lib/swal";
 import { resolveDocumentUrl } from "@/services/documentAnalyticsService";
 
 export default function DocumentManagementPage() {
@@ -36,6 +37,13 @@ export default function DocumentManagementPage() {
     });
   }, [user]);
 
+  const canManageDoc = (doc: AdminDocument) => {
+    if (!user) return false;
+    if (user.role === "superadmin" || user.role === "admin_umum") return true;
+    if (user.role === "admin_bidang" && user.bidang === doc.bidang) return true;
+    return false;
+  };
+
   const handleArchiveDocument = async (id: string, docTitle: string) => {
     const res = await showConfirm({
       title: "Arsipkan Dokumen?",
@@ -44,14 +52,32 @@ export default function DocumentManagementPage() {
       confirmButtonText: "Ya, Arsipkan",
     });
     if (res.isConfirmed) {
-      const deleted = await adminService.deleteDocument(id);
-      if (deleted) {
+      const archived = await adminService.archiveDocument(id, "Diarsipkan melalui dashboard dokumen");
+      if (archived) {
         const activeBidang = user?.role === "admin_bidang" ? user.bidang : undefined;
         const refreshed = await adminService.fetchDocuments(activeBidang, user?.role);
         setDocuments(refreshed);
         toast.success(`Dokumen "${docTitle}" berhasil diarsipkan.`);
       } else {
         toast.error(`Dokumen "${docTitle}" gagal diarsipkan.`);
+      }
+    }
+  };
+
+  const handleDeleteDocument = async (id: string, docTitle: string) => {
+    const res = await showDeleteConfirm(
+      docTitle,
+      `PERINGATAN: Dokumen induk "${docTitle}" akan dihapus permanen beserta seluruh tagging proyek fisik, data progres monev, lampiran teknis (foto/dokumen), dan sinkronisasi titik GIS ArcGIS!`
+    );
+    if (res.isConfirmed) {
+      const deleted = await adminService.deleteDocument(id, true);
+      if (deleted) {
+        const activeBidang = user?.role === "admin_bidang" ? user.bidang : undefined;
+        const refreshed = await adminService.fetchDocuments(activeBidang, user?.role);
+        setDocuments(refreshed);
+        toast.success(`Dokumen "${docTitle}" beserta seluruh tagging proyek dan lampiran berhasil dihapus permanen.`);
+      } else {
+        toast.error(`Gagal menghapus dokumen "${docTitle}".`);
       }
     }
   };
@@ -326,15 +352,25 @@ export default function DocumentManagementPage() {
                       Preview Admin
                     </a>
                   )}
-                  {user?.role !== "admin_bidang" && (
-                    <button
-                      type="button"
-                      onClick={() => handleArchiveDocument(doc.id, doc.title)}
-                      className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100"
-                      title="Arsipkan dokumen tanpa menghapus histori"
-                    >
-                      <Archive className="h-4 w-4" />
-                    </button>
+                  {canManageDoc(doc) && (
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => handleArchiveDocument(doc.id, doc.title)}
+                        className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 transition hover:bg-slate-100 cursor-pointer"
+                        title="Arsipkan dokumen tanpa menghapus histori"
+                      >
+                        <Archive className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteDocument(doc.id, doc.title)}
+                        className="rounded-xl border border-rose-200 bg-rose-50 p-2 text-rose-600 transition hover:bg-rose-100 cursor-pointer"
+                        title="Hapus permanen dokumen induk, tagging proyek, progres, dan lampiran teknis"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
