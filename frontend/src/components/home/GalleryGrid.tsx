@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { Camera, Maximize2, ArrowRight, Calendar, Image as ImageIcon, Sparkles } from "lucide-react";
+import { Camera, Maximize2, ArrowRight, Calendar, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { galeriService } from "@/services/galeriService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
@@ -219,30 +219,6 @@ export const GalleryGrid: React.FC = () => {
             ))}
           </motion.div>
         )}
-
-        {/* BOTTOM CTA BANNER TO GO TO FULL GALERI PAGE */}
-        <div className="p-8 sm:p-10 rounded-3xl bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-950 text-white flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xl shadow-blue-900/20 border border-blue-700/50">
-          <div className="space-y-1 text-center sm:text-left">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-300 text-[10px] font-black uppercase tracking-wider mb-1 backdrop-blur-md">
-              <Sparkles className="w-3 h-3" />
-              <span>Arsip Dokumentasi Penuh</span>
-            </div>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight">
-              Ingin Melihat Lebih Banyak Album Foto &amp; Video?
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium max-w-xl">
-              Jelajahi seluruh album dokumentasi kegiatan pembangunan daerah Kabupaten Halmahera Utara secara lengkap di halaman Galeri.
-            </p>
-          </div>
-
-          <Link
-            href="/galeri"
-            className="px-6 py-3.5 rounded-2xl bg-white text-blue-900 hover:bg-amber-400 hover:text-blue-950 font-black text-xs transition shadow-lg shrink-0 flex items-center gap-2 group cursor-pointer"
-          >
-            <span>Masuk ke Halaman Galeri</span>
-            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-          </Link>
-        </div>
       </div>
 
       {/* FULLSCREEN MEDIA ALBUM MODAL (PORTALED DIRECTLY TO BODY WITH HIGH Z-INDEX) */}

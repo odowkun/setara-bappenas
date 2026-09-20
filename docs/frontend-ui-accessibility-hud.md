@@ -74,6 +74,7 @@ Semua tampilan modal media dokumentasi, foto lapangan, dan album galeri (`Galler
 2. **Elevated Z-Index**: Menggunakan `z-[999999]` dan `backdrop-blur-xl` untuk menjamin overlay menutupi 100% viewport di atas seluruh fixed elements.
 3. **Scroll Lock**: Otomatis mengunci scroll body (`document.body.style.overflow = "hidden"`) saat modal terbuka dan melepaskannya saat tertutup.
 4. **Keyboard & Touch**: Mendukung navigasi panah keyboard (`Escape`, `ArrowLeft`, `ArrowRight`) dan filmstrip thumbnails.
+5. **Tata Letak Beranda Bersih (`GalleryGrid.tsx`)**: Menghilangkan banner CTA ganda di bagian bawah grid galeri untuk menjaga proporsi ruang beranda tetap ramping dan elegan, dengan tombol navigasi utama terpusat di header seksi (`Buka Seluruh Galeri Foto & Video`).
 
 ---
 
