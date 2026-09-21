@@ -200,7 +200,7 @@ class AnnouncementController extends Controller
             'is_important' => 'sometimes|boolean',
             'valid_until' => 'nullable|date',
             'is_published' => 'sometimes|boolean',
-            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,mp4,doc,docx|max:51200',
+            'attachment' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp,mp4,doc,docx|max:512000', // max 500MB
         ]);
     }
 

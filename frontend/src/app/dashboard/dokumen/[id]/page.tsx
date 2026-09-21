@@ -218,6 +218,9 @@ export default function DocumentDetailPage() {
   const handleSaveAttachment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProjectForAttachment || !attachmentFile) return toast.error("File wajib dipilih!");
+    if (attachmentFile.size > 500 * 1024 * 1024) {
+      return toast.error("Ukuran berkas melebihi batas maksimal yang diizinkan (500 MB).");
+    }
     setSubmittingAttachment(true);
 
     try {

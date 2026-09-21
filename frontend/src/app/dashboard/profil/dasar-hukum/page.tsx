@@ -18,7 +18,9 @@ import {
   X,
   ExternalLink,
   Loader2,
+  HardDrive,
 } from "lucide-react";
+import { uploadFileInChunks, ChunkProgressInfo, formatFileSize } from "@/lib/chunkUpload";
 
 const DEFAULT_KATEGORI_REGULASI_OPTIONS: SearchableOption[] = [
   { value: "Undang-Undang", label: "Undang-Undang" },
@@ -53,6 +55,7 @@ export default function DasarHukumEditorPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploadingIndex, setUploadingIndex] = useState<number | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<Record<number, ChunkProgressInfo>>({});
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
 
   // Daftar Regulasi Item
@@ -151,45 +154,45 @@ export default function DasarHukumEditorPage() {
     });
   };
 
-  // Upload handler with official watermark via /documents/upload-chunk
+  // Upload handler with official watermark via /documents/upload-chunk (Chunked with 500MB max)
   const handleFileUpload = async (index: number, file: File) => {
     if (!file.name.toLowerCase().endsWith(".pdf")) {
       toast.error("Format berkas harus PDF (*.pdf) sesuai standar kearsipan resmi.");
       return;
     }
 
+    if (file.size > 500 * 1024 * 1024) {
+      toast.error(
+        `Ukuran berkas (${formatFileSize(file.size)}) melebihi batas maksimal yang diizinkan (500 MB).`
+      );
+      return;
+    }
+
     setUploadingIndex(index);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("chunk", "0");
-      formData.append("chunks", "1");
-
-      const res = await authenticatedFetch("/documents/upload-chunk", {
-        method: "POST",
-        body: formData,
+      const result = await uploadFileInChunks(file, {
+        maxSizeBytes: 500 * 1024 * 1024,
+        maxSizeLabel: "500 MB",
+        acceptedExtensions: [".pdf"],
+        onProgress: (info) => {
+          setUploadProgress((prev) => ({ ...prev, [index]: info }));
+        },
       });
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => null);
-        throw new Error(errJson?.message || "Gagal mengunggah berkas ke server.");
-      }
-
-      const data = await res.json();
-      const rawPath = data.file_path || "";
-      const finalUrl = rawPath.startsWith("/storage/")
-        ? `${STORAGE_BASE_URL}${rawPath}`
-        : rawPath.startsWith("http")
-        ? rawPath
-        : `${STORAGE_BASE_URL}/storage/${rawPath}`;
-
-      handleRegulasiChange(index, "file_url", finalUrl);
-      toast.success(`Dokumen "${file.name}" berhasil diunggah & watermark diterapkan!`);
+      handleRegulasiChange(index, "file_url", result.file_url);
+      toast.success(
+        `Dokumen "${file.name}" (${result.file_size}) berhasil diunggah & watermark diterapkan!`
+      );
     } catch (err: any) {
       console.error("Gagal unggah dokumen regulasi:", err);
       toast.error(err?.message || "Terjadi kesalahan saat mengunggah dokumen.");
     } finally {
       setUploadingIndex(null);
+      setUploadProgress((prev) => {
+        const next = { ...prev };
+        delete next[index];
+        return next;
+      });
     }
   };
 
@@ -385,14 +388,24 @@ export default function DasarHukumEditorPage() {
                     </label>
 
                     {uploadingIndex === idx ? (
-                      <div className="p-8 rounded-3xl border-2 border-dashed border-blue-400 bg-blue-50/60 flex flex-col items-center justify-center space-y-2.5 text-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-                        <div>
-                          <p className="text-xs font-black text-blue-900">
-                            Mengunggah & Menerapkan Watermark BAPPEDA HALUT...
-                          </p>
-                          <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                            Menghubungkan berkas ke repository resmi daerah
+                      <div className="p-8 rounded-3xl border-2 border-dashed border-blue-400 bg-blue-50/60 flex flex-col items-center justify-center space-y-3 text-center">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/20">
+                          <Loader2 className="w-6 h-6 animate-spin text-white" />
+                        </div>
+                        <div className="space-y-1.5 w-full max-w-md">
+                          <div className="flex items-center justify-between text-xs font-black text-blue-900">
+                            <span>Mengunggah Berkas Dokumen (Chunk Dinamis)...</span>
+                            <span className="font-mono">{uploadProgress[idx]?.percent ?? 0}%</span>
+                          </div>
+                          {/* Progress bar */}
+                          <div className="w-full bg-blue-200/70 rounded-full h-2.5 overflow-hidden">
+                            <div
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2.5 rounded-full transition-all duration-300"
+                              style={{ width: `${uploadProgress[idx]?.percent ?? 0}%` }}
+                            />
+                          </div>
+                          <p className="text-[11px] text-slate-600 font-medium">
+                            {uploadProgress[idx]?.statusText || "Menghubungkan berkas ke repository resmi daerah..."}
                           </p>
                         </div>
                       </div>
@@ -438,6 +451,10 @@ export default function DasarHukumEditorPage() {
                           </div>
 
                           <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5">
+                            <span className="px-3 py-1 rounded-xl bg-blue-50 text-blue-800 font-black text-[11px] border border-blue-200 shadow-2xs flex items-center gap-1.5">
+                              <HardDrive className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Maksimal 500 MB (Chunk Dinamis)</span>
+                            </span>
                             <span className="px-3 py-1 rounded-xl bg-red-50 text-red-700 font-extrabold text-[11px] border border-red-200/80 shadow-2xs flex items-center gap-1.5">
                               <FileText className="w-3.5 h-3.5 text-red-600" />
                               <span>Hanya Menerima Dokumen PDF (*.pdf)</span>

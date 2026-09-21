@@ -281,7 +281,7 @@ class ProyekDetailController extends Controller
     public function uploadAttachment(Request $request, $id)
     {
         $request->validate([
-            'file' => 'required|file|mimes:jpeg,jpg,png,pdf,doc,docx|max:20480', // max 20MB
+            'file' => 'required|file|mimes:jpeg,jpg,png,pdf,doc,docx|max:512000', // max 500MB
             'file_type' => 'nullable|string|max:100',
         ]);
 

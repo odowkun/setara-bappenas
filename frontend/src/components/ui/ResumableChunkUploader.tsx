@@ -31,6 +31,7 @@ interface ResumableChunkUploaderProps {
   acceptedTypes?: string;
   chunkSizeMB?: number | "dynamic"; // default "dynamic"
   maxSizeGB?: number; // default 5GB
+  maxSizeMB?: number; // optional, e.g. 500 for 500MB
 }
 
 import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
@@ -50,7 +51,10 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   acceptedTypes = ".pdf",
   chunkSizeMB = "dynamic",
   maxSizeGB = 5,
+  maxSizeMB,
 }) => {
+  const effectiveMaxSizeLabel = maxSizeMB ? `${maxSizeMB} MB` : `${maxSizeGB} GB`;
+  const effectiveMaxSizeBytes = maxSizeMB ? maxSizeMB * 1024 * 1024 : maxSizeGB * 1024 * 1024 * 1024;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -202,11 +206,10 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       return;
     }
 
-    // Validasi batas kapasitas berkas maksimal (misal: 5GB)
-    const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
-    if (file.size > maxSizeBytes) {
+    // Validasi batas kapasitas berkas maksimal (misal: 500MB atau 5GB)
+    if (file.size > effectiveMaxSizeBytes) {
       toast.error(
-        `Ukuran berkas (${formatFileSize(file.size)}) melebihi batas maksimal yang diizinkan (${maxSizeGB} GB).`
+        `Ukuran berkas (${formatFileSize(file.size)}) melebihi batas maksimal yang diizinkan (${effectiveMaxSizeLabel}).`
       );
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -327,7 +330,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
             <div className="pt-2 flex flex-wrap items-center justify-center gap-2 max-w-lg mx-auto">
               <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-900 font-black text-xs border border-blue-200/80 shadow-2xs flex items-center gap-1.5">
                 <HardDrive className="w-4 h-4 text-blue-600 shrink-0" />
-                <span>Maksimal {maxSizeGB} GB</span>
+                <span>Maksimal {effectiveMaxSizeLabel}</span>
               </span>
 
               <span className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-900 font-black text-xs border border-indigo-200/80 shadow-2xs flex items-center gap-1.5">

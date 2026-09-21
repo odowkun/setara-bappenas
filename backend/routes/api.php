@@ -179,7 +179,7 @@ Route::prefix('v1')->group(function () {
         ->middleware(['auth:sanctum', 'permission:manage_dokumen', AuditAdminMutation::class])
         ->name('documents.destroy');
     Route::post('/documents/upload-chunk', [DocumentController::class, 'uploadChunk'])
-        ->middleware(['auth:sanctum', 'permission:manage_dokumen', AuditAdminMutation::class])
+        ->middleware(['auth:sanctum', 'permission:manage_dokumen|manage_profil|manage_pengumuman|manage_spatial|manage_berita|manage_dashboard', AuditAdminMutation::class])
         ->name('documents.chunk.upload');
     Route::post('/media/upload-optimized', [MediaController::class, 'uploadMedia'])
         ->middleware(['auth:sanctum', 'permission:manage_berita|manage_galeri|manage_profil', AuditAdminMutation::class])

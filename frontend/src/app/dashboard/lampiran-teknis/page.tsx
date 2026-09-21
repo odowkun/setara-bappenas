@@ -152,6 +152,11 @@ export default function LampiranTeknisPage() {
     const newPreviewsMap = { ...previews };
 
     for (const rawFile of incoming) {
+      if (rawFile.size > 500 * 1024 * 1024) {
+        toast.error(`Berkas "${rawFile.name}" melebihi batas maksimal yang diizinkan (500 MB).`);
+        continue;
+      }
+
       // Check duplicate by name + size
       if (newFilesList.some((f) => f.name === rawFile.name && f.size === rawFile.size)) {
         continue;
@@ -447,6 +452,9 @@ export default function LampiranTeknisPage() {
                   </div>
 
                   <div className="pt-1 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
+                    <span className="px-2.5 py-1 rounded-xl bg-blue-50 text-blue-800 font-black text-[10px] border border-blue-200 shadow-2xs flex items-center gap-1">
+                      <span>Maks. 500 MB</span>
+                    </span>
                     <span className="px-2.5 py-1 rounded-xl bg-red-50 text-red-700 font-black text-[10px] border border-red-200/80 shadow-2xs flex items-center gap-1">
                       <FileText className="w-3 h-3 text-red-600" />
                       <span>PDF</span>

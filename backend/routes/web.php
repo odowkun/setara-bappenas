@@ -10,6 +10,8 @@ Route::get('/', function () {
 Route::get('/storage/{path}', function (string $path) {
     $candidates = [
         storage_path('app/public/'.$path),
+        storage_path('app/private/'.$path),
+        storage_path('app/'.$path),
         public_path('storage/'.$path),
         public_path($path),
     ];

@@ -101,6 +101,27 @@ Untuk mendukung unggahan dokumen berkapasitas besar hingga **5 GB** pada modul D
 
 ---
 
-## 5. Verifikasi & Build
+## 5. Standarisasi Kapasitas Dokumen (5 GB Dokumen Induk vs 500 MB Dokumen Lainnya)
+
+Sesuai arahan arsitektur sistem penyimpanan:
+1. **Dokumen Induk Perencanaan (`dashboard/dokumen/tambah`)**:
+   - Kapasitas maksimal: **5 GB** (`maxSizeGB={5}`).
+   - Mendukung irisan hingga 40 MB/chunk untuk menangani dokumen master berkapasitas gigabit.
+2. **Dokumen Lainnya (Dasar Hukum, Lampiran Teknis, Pengumuman)**:
+   - Kapasitas maksimal: **500 MB** (`maxSizeBytes = 500 * 1024 * 1024`).
+   - Berkas di atas 500 MB langsung ditolak dengan notifikasi validasi `toast.error`.
+   - **Mekanisme Chunk Upload Aktif (`uploadFileInChunks` via `frontend/src/lib/chunkUpload.ts`)**:
+     - Berkas PDF regulasi/dasar hukum tidak lagi dikirim sekaligus dalam satu payload raksasa, melainkan diiris secara dinamis (`file.slice`) menjadi chunk 1 MB s/d 10 MB.
+     - Dilengkapi bilah kemajuan unggah visual real-time (0% s/d 100%), indikator irisan aktif (`Irisan X/Y (Z MB/chunk)`), dan counter kapasitas terkirim.
+     - Mekanisme auto-retry hingga 4 kali jika terjadi latensi jaringan atau koneksi terputus sesaat.
+3. **Penyelarasan Backend**:
+   - Endpoint `/documents/upload-chunk` di `backend/routes/api.php` memperluas izin middleware ke `manage_dokumen|manage_profil|manage_pengumuman|manage_spatial|manage_berita|manage_dashboard` agar admin profil dapat mengunggah dokumen tanpa halangan hak akses 403.
+   - Konfigurasi `backend/config/chunk-upload.php` disetel ke `session => false, browser => true` untuk menjamin konsistensi penamaan irisan pada API stateless berbasis Bearer token.
+   - Endpoint fallback `/storage/{path}` di `backend/routes/web.php` memeriksa `storage_path('app/private/'.$path)` dan `storage_path('app/'.$path)` sehingga dokumen watermarked dapat diakses/diunduh tanpa 404.
+   - Validasi lampiran proyek dan pengumuman dinaikkan hingga 500 MB (`max:512000` KB).
+
+---
+
+## 6. Verifikasi & Build
 
 - Pengujian kompilasi Next.js produksi: `npm run build` dijalankan dan selesai tanpa error (`Compiled successfully`, 66/66 halaman static/dynamic lulus tanpa warning).
