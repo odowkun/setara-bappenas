@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { createPortal } from "react-dom";
 import {
   Maximize2,
@@ -13,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import {
   infografisService,
@@ -105,7 +107,31 @@ export const PinnedInfographicsSection: React.FC = () => {
   }
 
   return (
-    <div className="w-full pb-2">
+    <div className="w-full pb-6 space-y-6">
+      {/* SECTION HEADER: INFOGRAFIS PEMBANGUNAN DAERAH */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 border-b border-slate-100 pb-5">
+        <div className="space-y-2 sm:space-y-3 max-w-2xl">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+            <span>Media Informasi Visual &amp; Grafis Perencanaan</span>
+          </div>
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            Infografis Pembangunan Daerah
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+            Ringkasan visual capaian indikator makro, program prioritas, dan publikasi data statistik BAPPEDA Kabupaten Halmahera Utara.
+          </p>
+        </div>
+
+        <Link
+          href="/infografis"
+          className="px-4 sm:px-6 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-lg shadow-blue-700/20 flex items-center justify-center gap-2.5 transition active:scale-95 shrink-0 self-start md:self-auto group cursor-pointer"
+        >
+          <span>Lihat Semua Infografis</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+        </Link>
+      </div>
+
       {/* MOBILE CAROUSEL VIEW (< sm) */}
       <div className="block sm:hidden space-y-3">
         {/* Mobile Header: Label & Slide Counter Controls */}

@@ -44,6 +44,7 @@ import {
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
 import { PinnedInfographicsSection } from "@/components/home/PinnedInfographicsSection";
+import { SocialMediaSection } from "@/components/home/SocialMediaSection";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 const EsriLeafletMap = dynamic(
@@ -400,6 +401,9 @@ export const GeospatialSection: React.FC = () => {
         
         {/* PINNED INFOGRAPHICS STRIP: 5 Pinned Infographics */}
         <PinnedInfographicsSection />
+
+        {/* MEDIA SOSIAL RESMI: YOUTUBE & INSTAGRAM SHOWCASE */}
+        <SocialMediaSection />
 
         {/* TOP INDEPENDENT CARD 1: Pengumuman Resmi Perencanaan Daerah */}
         <div className="p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">

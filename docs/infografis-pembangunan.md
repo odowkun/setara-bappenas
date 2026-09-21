@@ -5,8 +5,8 @@ Modul **Infografis Pembangunan** dirancang untuk menyajikan data visual, ringkas
 
 Fitur ini terdiri dari 3 pilar utama:
 1. **Homepage 5 Pinned Infographics (`PinnedInfographicsSection`)**: 
-   - Ditampilkan tepat di atas kartu pengumuman resmi (*pinned announcement card*) pada beranda.
-   - Menampilkan maksimal 5 infografis unggulan yang di-pin oleh admin secara langsung tanpa baris header teks terpisah (tampilan minimalis & elegan).
+   - Ditampilkan dengan **Section Header Resmi**: Badge `Media Informasi Visual & Grafis Perencanaan`, judul `Infografis Pembangunan Daerah`, deskripsi pengantar data indikator makro, serta tombol CTA `Lihat Semua Infografis ➔` langsung menuju `/infografis`.
+   - Menampilkan maksimal 5 infografis unggulan yang di-pin oleh admin secara responsif (Carousel snap di mobile & grid 5 kolom di desktop).
    - Dilengkapi counter impresi dinamis (`{viewCount} dilihat`) yang otomatis bertambah saat pengguna mengklik dan membuka infografis.
    - Dilengkapi fitur interaktif Lightbox (pembesaran gambar resolusi tinggi) & tombol unduh langsung HD.
 2. **Halaman Galeri Publik (`/infografis`)**:
