@@ -186,4 +186,27 @@ export const galeriService = {
       thumbUrl: String(data.thumb_url ?? data.web_url),
     };
   },
+
+  async extractInstagramPost(url: string): Promise<{
+    shortcode: string;
+    author: string;
+    title: string;
+    category: string;
+    date: string;
+    caption: string;
+    images: string[];
+    likesCount: number;
+    postUrl: string;
+  }> {
+    const res = await authenticatedFetch("/instagram/extract-post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.success) {
+      throw new Error(json?.message || "Gagal mengambil data dari URL Instagram.");
+    }
+    return json.data;
+  },
 };

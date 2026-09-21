@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\DocumentGovernanceController;
 use App\Http\Controllers\Api\GaleriController;
 use App\Http\Controllers\Api\GeoSettingController;
 use App\Http\Controllers\Api\InfografisController;
+use App\Http\Controllers\Api\InstagramPostExtractorController;
 use App\Http\Controllers\Api\JenisDokumenController;
 use App\Http\Controllers\Api\KritikController;
 use App\Http\Controllers\Api\MediaController;
@@ -184,6 +185,9 @@ Route::prefix('v1')->group(function () {
     Route::post('/media/upload-optimized', [MediaController::class, 'uploadMedia'])
         ->middleware(['auth:sanctum', 'permission:manage_berita|manage_galeri|manage_profil', AuditAdminMutation::class])
         ->name('media.optimized.upload');
+    Route::post('/instagram/extract-post', [InstagramPostExtractorController::class, 'extract'])
+        ->middleware(['auth:sanctum', 'permission:manage_berita|manage_galeri|manage_profil', AuditAdminMutation::class])
+        ->name('instagram.extract-post');
 
     // Dynamic Jenis Dokumen Management Endpoints
     Route::get('/jenis-dokumen', [JenisDokumenController::class, 'index']);

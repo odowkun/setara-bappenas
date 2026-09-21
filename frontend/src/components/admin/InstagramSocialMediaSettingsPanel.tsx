@@ -92,6 +92,10 @@ export default function InstagramSocialMediaSettingsPanel() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [imageUrlInput, setImageUrlInput] = useState("");
 
+  // Quick extract via Instagram URL state
+  const [extractUrlInput, setExtractUrlInput] = useState("");
+  const [isExtracting, setIsExtracting] = useState(false);
+
   // Load from backend
   useEffect(() => {
     fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
@@ -154,10 +158,42 @@ export default function InstagramSocialMediaSettingsPanel() {
     }
   };
 
+  // Quick auto-extraction handler
+  const handleExtractFromInstagram = async () => {
+    const url = extractUrlInput.trim();
+    if (!url) {
+      toast.error("Silakan masukkan tautan postingan Instagram terlebih dahulu.");
+      return;
+    }
+    if (!url.includes("instagram.com") && !url.includes("instagr.am")) {
+      toast.error("URL tidak valid. Harap gunakan link postingan Instagram (cth: https://www.instagram.com/p/...).");
+      return;
+    }
+
+    setIsExtracting(true);
+    try {
+      const data = await galeriService.extractInstagramPost(url);
+      setFormPostUrl(data.postUrl || url);
+      if (data.title) setFormTitle(data.title);
+      if (data.category) setFormCategory(data.category);
+      if (data.date) setFormDate(data.date);
+      if (data.caption) setFormCaption(data.caption);
+      if (data.likesCount) setFormLikes(data.likesCount);
+      if (Array.isArray(data.images) && data.images.length > 0) {
+        setFormImages(data.images);
+      }
+      toast.success("Berhasil mengambil data foto & narasi postingan Instagram!");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Gagal mengambil data dari Instagram.");
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
   // Open modal for Create
-  const handleOpenCreateForm = () => {
+  const handleOpenCreateForm = (prefillUrl?: string) => {
     if (posts.length >= 2) {
-      toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit postingan yang sudah ada atau hapus salah satu.");
+      toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit salah satu postingan yang sudah ada atau hapus terlebih dahulu.");
       return;
     }
     setEditingPostId(null);
@@ -169,6 +205,7 @@ export default function InstagramSocialMediaSettingsPanel() {
     setFormLikes(150);
     setFormPostUrl(profile.profileUrl || "https://www.instagram.com/bappeda_halut");
     setImageUrlInput("");
+    setExtractUrlInput(prefillUrl || "");
     setIsFormOpen(true);
   };
 
@@ -183,6 +220,7 @@ export default function InstagramSocialMediaSettingsPanel() {
     setFormLikes(post.likesCount || 0);
     setFormPostUrl(post.postUrl || profile.profileUrl);
     setImageUrlInput("");
+    setExtractUrlInput(post.postUrl && post.postUrl.includes("/p/") ? post.postUrl : "");
     setIsFormOpen(true);
   };
 
@@ -464,9 +502,21 @@ export default function InstagramSocialMediaSettingsPanel() {
             </p>
           </div>
 
-          <span className="text-xs font-bold text-slate-500">
-            Tersimpan: <strong className="text-purple-700 font-black">{posts.length} Postingan</strong>
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500">
+              Tersimpan: <strong className="text-purple-700 font-black">{posts.length} / 2 Postingan</strong>
+            </span>
+            {posts.length < 2 && (
+              <button
+                type="button"
+                onClick={() => handleOpenCreateForm()}
+                className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold text-xs inline-flex items-center gap-1.5 hover:opacity-95 shadow-xs cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Tarik dari Link IG</span>
+              </button>
+            )}
+          </div>
         </div>
 
         {posts.length === 0 ? (
@@ -475,7 +525,7 @@ export default function InstagramSocialMediaSettingsPanel() {
             <p className="text-xs font-bold text-slate-500">Belum ada postingan Instagram yang ditambahkan.</p>
             <button
               type="button"
-              onClick={handleOpenCreateForm}
+              onClick={() => handleOpenCreateForm()}
               className="px-4 py-2 rounded-xl bg-purple-600 text-white font-bold text-xs inline-flex items-center gap-2 hover:bg-purple-700"
             >
               <Plus className="w-4 h-4" />
@@ -636,6 +686,74 @@ export default function InstagramSocialMediaSettingsPanel() {
 
             {/* Modal Form Body */}
             <form onSubmit={handleSubmitForm} className="p-5 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              {/* QUICK IMPORT VIA INSTAGRAM URL CARD */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 border border-purple-200/80 shadow-xs space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center text-xs shadow-xs">
+                      <Sparkles className="w-3.5 h-3.5" />
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 tracking-tight">
+                      Ambil Data Otomatis via Link Instagram
+                    </h4>
+                  </div>
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-full">
+                    Fitur Cepat
+                  </span>
+                </div>
+
+                <p className="text-[11px] text-slate-600 leading-relaxed">
+                  Cukup tempel tautan postingan Instagram (misal: <code className="text-purple-700 font-mono bg-white/80 px-1 py-0.5 rounded text-[10px]">https://www.instagram.com/p/...</code>). Foto, judul, narasi, dan tanggal akan terisi otomatis tanpa perlu ketik manual.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="url"
+                      value={extractUrlInput}
+                      onChange={(e) => setExtractUrlInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleExtractFromInstagram();
+                        }
+                      }}
+                      placeholder="https://www.instagram.com/p/..."
+                      disabled={isExtracting}
+                      className="w-full pl-3 pr-8 py-2 rounded-xl bg-white border border-purple-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500 shadow-2xs disabled:opacity-50"
+                    />
+                    {extractUrlInput && (
+                      <button
+                        type="button"
+                        onClick={() => setExtractUrlInput("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleExtractFromInstagram}
+                    disabled={isExtracting || !extractUrlInput.trim()}
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition shrink-0"
+                  >
+                    {isExtracting ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        <span>Mengambil...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-3.5 h-3.5" />
+                        <span>Tarik Data Otomatis</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
               {/* Judul Postingan */}
               <div className="space-y-1">
                 <label className="text-xs font-bold text-slate-700">

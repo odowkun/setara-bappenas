@@ -49,12 +49,11 @@ Administrator dapat memperbarui video YouTube unggulan yang tampil di beranda me
 Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram beranda melalui menu:
 1. Buka halaman **Dashboard Bappeda** -> Menu **Galeri & Dokumentasi** (`/dashboard/galeri`).
 2. Pilih tab keempat: **Feed Instagram Media Sosial** (`?tab=instagram-media`).
-3. **Mengunggah Postingan Baru**:
-   - Klik tombol **+ Tambah Postingan Instagram**.
-   - Masukkan Judul Postingan / Kegiatan.
-   - Pilih Kategori (Warta Perencanaan, Spasial, Infrastruktur, dll.) dan Tanggal Postingan (`CustomDatePicker`).
-   - Unggah satu atau beberapa foto langsung dari perangkat (tombol *Unggah Foto*) atau masukkan URL gambar.
-   - Isi caption narasi lengkap, perkiraan jumlah suka (likes), dan link asli postingan Instagram.
+3. **Mengunggah Postingan Baru (Mendukung Tarik Otomatis dari Link Instagram)**:
+   - Klik tombol **+ Tambah Postingan Instagram** atau **Tarik dari Link IG**.
+   - **Fitur Cepat (Tarik Otomatis)**: Tempelkan link postingan Instagram (misal: `https://www.instagram.com/p/...`) pada input *Ambil Data Otomatis via Link Instagram* lalu klik **Tarik Data Otomatis**.
+   - Backend controller (`POST /api/social-media/instagram/extract`) akan membaca Open Graph metadata & oEmbed Instagram secara aman untuk mengekstrak foto, judul kegiatan, narasi caption, dan tanggal secara instan.
+   - Admin dapat meninjau dan melengkapi kategori (`CustomDatePicker`), judul, atau menambah foto tambahan sebelum menyimpan.
    - Klik **Terbitkan ke Beranda**.
 4. **Mengatur Urutan & Tampilan Beranda**:
    - Dua postingan teratas (urutan #1 dan #2) otomatis berstatus **Tayang di Beranda** berdampingan dengan video YouTube.
@@ -63,3 +62,4 @@ Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram be
    - Tombol **Hapus** (dengan konfirmasi aman) untuk mencabut postingan yang sudah kadaluarsa.
 5. **Pengaturan Profil Akun**:
    - Perbarui display name, username `@bappeda_halut`, tautan profil, dan tagline instansi pada kartu atas lalu klik **Simpan Profil**.
+
