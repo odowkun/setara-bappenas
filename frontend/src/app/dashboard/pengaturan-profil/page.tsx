@@ -50,7 +50,6 @@ export default function PengaturanProfilPage() {
   const [instagram, setInstagram] = useState("https://www.instagram.com/bappedahalut");
   const [facebook, setFacebook] = useState("https://www.facebook.com/bappedahalut");
   const [tiktok, setTiktok] = useState("https://www.tiktok.com/@bappedahalut");
-  const [xTwitter, setXTwitter] = useState("https://x.com/bappedahalut");
   const [existingTentang, setExistingTentang] = useState<any>(null);
   const [savingSocial, setSavingSocial] = useState(false);
 
@@ -76,7 +75,6 @@ export default function PengaturanProfilPage() {
           if (meta.instagram) setInstagram(meta.instagram);
           if (meta.facebook) setFacebook(meta.facebook);
           if (meta.tiktok) setTiktok(meta.tiktok);
-          if (meta.x || meta.x_twitter) setXTwitter(meta.x || meta.x_twitter);
         }
       })
       .catch(() => {});
@@ -100,7 +98,8 @@ export default function PengaturanProfilPage() {
             instagram,
             facebook,
             tiktok,
-            x: xTwitter,
+            x: "",
+            x_twitter: "",
           },
         }),
       });
@@ -472,21 +471,6 @@ export default function PengaturanProfilPage() {
                     value={tiktok}
                     onChange={(e) => setTiktok(e.target.value)}
                     placeholder="https://www.tiktok.com/@bappedahalut"
-                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                {/* X (Twitter) */}
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">𝕏</span>
-                    <span>URL Akun X (Twitter)</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={xTwitter}
-                    onChange={(e) => setXTwitter(e.target.value)}
-                    placeholder="https://x.com/bappedahalut"
                     className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
