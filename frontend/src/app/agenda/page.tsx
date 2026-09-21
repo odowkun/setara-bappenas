@@ -59,6 +59,9 @@ export default function AgendaPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setViewMode("list");
+    }
   }, []);
 
   // Lock body scroll and handle Escape key when agenda modal is active
@@ -167,8 +170,8 @@ export default function AgendaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-8 space-y-6 sm:space-y-10 w-full overflow-hidden">
         {/* HERO TITLE BANNER & BREADCRUMB (DISESUAIKAN DENGAN HALAMAN LAINNYA) */}
         <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
           {/* Breadcrumb */}
@@ -312,8 +315,10 @@ export default function AgendaPage() {
         {/* APPLE CALENDAR MAIN VIEW */}
         {viewMode === "calendar" ? (
           <div className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-            {/* WEEKDAY HEADERS */}
-            <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center">
+            <div className="overflow-x-auto">
+              <div className="min-w-[650px] lg:min-w-0">
+                {/* WEEKDAY HEADERS */}
+                <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center">
               {DAYS_NAME.map((d, i) => (
                 <div
                   key={d}
@@ -488,6 +493,8 @@ export default function AgendaPage() {
                   <span className="w-7 h-7 text-xs font-bold flex items-center justify-center">{d}</span>
                 </div>
               ))}
+                </div>
+              </div>
             </div>
           </div>
         ) : (

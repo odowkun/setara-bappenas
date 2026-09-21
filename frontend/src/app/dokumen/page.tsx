@@ -194,12 +194,12 @@ function DokumenContent() {
   );
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-8 space-y-6 sm:space-y-10 w-full overflow-hidden">
         {/* HERO TITLE BANNER & BREADCRUMB (PEDOMAN SINGLEPAGE PROFIL) */}
-        <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
+        <div className="py-2 space-y-3 sm:space-y-4 text-center flex flex-col items-center justify-center">
           {/* Breadcrumb */}
-          <div className="flex items-center justify-center gap-2 text-xs font-bold text-slate-500">
+          <div className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[11px] sm:text-xs font-bold text-slate-500">
             <Link
               href="/"
               className="hover:text-blue-600 transition flex items-center gap-1"
@@ -214,15 +214,15 @@ function DokumenContent() {
             </span>
           </div>
 
-          <div className="space-y-2.5 max-w-3xl mx-auto flex flex-col items-center">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-[11px] font-black uppercase tracking-wider">
-              <FileText className="w-3.5 h-3.5 text-blue-600" />
+          <div className="space-y-2 max-w-3xl mx-auto flex flex-col items-center px-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-[10px] sm:text-[11px] font-black uppercase tracking-wider text-center">
+              <FileText className="w-3.5 h-3.5 text-blue-600 shrink-0" />
               <span>REPOSITORY DOKUMEN SPASIAL &amp; PERENCANAAN</span>
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight text-center">
               Dokumen Perencanaan Pembangunan Daerah
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed text-center">
+            <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed text-center max-w-2xl">
               Akses publik transparan untuk berkas BAPPEDA Kabupaten Halmahera
               Utara.
             </p>
@@ -233,7 +233,7 @@ function DokumenContent() {
 
         {/* Active Filter Banner */}
         {category !== "ALL" && (
-          <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between text-xs text-blue-900 font-extrabold">
+          <div className="p-3.5 sm:p-4 rounded-2xl bg-blue-50 border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs text-blue-900 font-extrabold">
             <span className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-blue-700 shrink-0" />
               <span>
@@ -243,7 +243,7 @@ function DokumenContent() {
             </span>
             <button
               onClick={resetCategory}
-              className="text-blue-700 hover:underline font-bold text-xs cursor-pointer"
+              className="text-blue-700 hover:underline font-bold text-xs cursor-pointer self-start sm:self-auto"
             >
               Reset ke Semua Dokumen
             </button>

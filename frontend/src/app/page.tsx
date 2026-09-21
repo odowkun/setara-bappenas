@@ -8,7 +8,7 @@ import { ScrollReveal } from "@/components/ui/ScrollReveal";
 
 export default function Home() {
   return (
-    <div className="space-y-0 overflow-hidden">
+    <div className="space-y-0 overflow-x-hidden w-full max-w-full">
       {/* 1. Hero Opening Presentation */}
       <HeroSection />
 

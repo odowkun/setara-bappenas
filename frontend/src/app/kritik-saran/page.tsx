@@ -143,8 +143,8 @@ export default function KritikSaranPublicPage() {
   ).length;
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-12">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-8 space-y-8 sm:space-y-12 w-full overflow-hidden">
         {/* HERO TITLE BANNER & BREADCRUMB */}
         <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
           {/* Breadcrumb */}

@@ -283,3 +283,45 @@ Sebelumnya, terdapat variasi padding vertikal (`py-12`, `py-20`, dsb.) dan margi
    - Survei IKM (`SatisfactionSurvey`): 3 kartu kepuasan menggunakan `p-5 sm:p-8 rounded-2xl sm:rounded-[24px]`, grid gap `gap-3.5 sm:gap-5`.
    - Peta GIS (`GeospatialSection`): Kontainer layout 3-kartu menggunakan `gap-4 sm:gap-6`, kartu overview/direktori `rounded-2xl sm:rounded-[28px] p-4 sm:p-5` / `p-4 sm:p-6`, kartu peta interaktif `min-h-[380px] sm:min-h-[480px] rounded-2xl sm:rounded-[28px] p-2`.
    - Tautan OPD (`OpdLinksGrid`): Kartu berukuran `min-h-36 sm:min-h-44 rounded-2xl p-3.5 sm:p-5`, logo circle `h-16 w-16 sm:h-22 sm:w-22 rounded-2xl`, grid gap `gap-3 sm:gap-5`.
+
+---
+
+## 10. Standar Responsivitas Mobile & Pencegahan Horizontal Overflow (Anti-Overglow)
+
+Status pembaruan: 21 September 2026.
+
+### A. Masalah & Temuan Layout Mobile
+Pada layar smartphone resolusi sempit (≤ 375px), beberapa elemen publik mengalami kerusakan tata letak:
+1. **Repository Dokumen Publik (`PublicDocumentGrid.tsx`)**:
+   - Baris aksi kartu (`[Preview]` dan `[Unduh PDF]`) berdesakan dengan indikator metrik unduhan/tayangan.
+   - Tombol `[Unduh PDF]` melebar keluar batas kartu (overflow 30–40px ke kanan).
+   - Teks metrik patah tidak wajar (misal: "8" di baris pertama, "dilihat" di baris bawahnya).
+2. **Horizontal Overflow / Page "Overglow"**:
+   - Ketiadaan guard `overflow-x: hidden` dan `max-width: 100vw` pada level `html` dan `body` menyebabkan gesture geser horizontal yang tidak diinginkan di mobile.
+   - Elemen kalender bulanan (`agenda/page.tsx`) terpotong jika tidak memiliki pembungkus scroll horizontal terisolasi.
+
+### B. Solusi Desain & Standar Teknis
+
+1. **Global Anti-Overflow Guard (`globals.css`)**:
+   ```css
+   html {
+     overflow-x: hidden;
+     max-width: 100vw;
+   }
+   body {
+     overflow-x: hidden;
+     max-width: 100vw;
+     position: relative;
+   }
+   ```
+
+2. **Card Action Buttons & Metric Badge Standard (`PublicDocumentGrid.tsx`)**:
+   - Card Padding: `p-4 sm:p-6 overflow-hidden`.
+   - Metric Pair: `whitespace-nowrap shrink-0` dengan format horizontal rapi `<Eye className="w-3.5 h-3.5 shrink-0" /> <span>{views} dilihat</span>`.
+   - Action Buttons: `grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto`.
+   - Pada layar mobile (< 640px), tombol `[Preview]` dan `[Unduh PDF]` mengisi 50/50 lebar kartu dengan rapi tanpa overflow.
+   - Skeletons: Disesuaikan dengan `p-4 sm:p-6 overflow-hidden` dan `gap-4 sm:gap-6`.
+
+3. **Public Page Padding & Calendar Viewport (`/agenda`, `/dokumen`, `/berita`, dll.)**:
+   - Root Container: `px-3.5 sm:px-8 space-y-6 sm:space-y-10 w-full overflow-hidden`.
+   - Agenda Calendar: Deteksi `window.innerWidth < 768` saat mount otomatis mengaktifkan tampilan `viewMode: 'list'`, dan tampilan kalender grid dibungkus kontainer scroll terisolasi `<div className="overflow-x-auto"><div className="min-w-[650px] lg:min-w-0">...</div></div>`.

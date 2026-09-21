@@ -103,8 +103,8 @@ export default function PublicInfografisPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32">
-      <div className="max-w-6xl mx-auto px-4 sm:px-8 space-y-10">
+    <div className="min-h-screen bg-white font-sans text-slate-900 pb-20 pt-28 sm:pt-32 overflow-x-hidden">
+      <div className="max-w-6xl mx-auto px-3.5 sm:px-8 space-y-6 sm:space-y-10 w-full overflow-hidden">
         {/* HERO TITLE BANNER & BREADCRUMB (PEDOMAN SINGLEPAGE PROFIL) */}
         <div className="py-2 space-y-4 text-center flex flex-col items-center justify-center">
           {/* Breadcrumb */}
