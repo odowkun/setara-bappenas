@@ -20,10 +20,12 @@ import {
   FolderOpen,
   BadgeCheck,
   CircleDashed,
+  Youtube,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
 import HeroVideoSettingsPanel from "@/components/admin/HeroVideoSettingsPanel";
+import YouTubeSocialMediaSettingsPanel from "@/components/admin/YouTubeSocialMediaSettingsPanel";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function GaleriManagementPage() {
@@ -33,13 +35,16 @@ export default function GaleriManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["Semua"]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"albums" | "hero-video">("albums");
+  const [activeTab, setActiveTab] = useState<"albums" | "hero-video" | "youtube-media">("albums");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      if (params.get("tab") === "video" || params.get("tab") === "hero-video") {
+      const tabParam = params.get("tab");
+      if (tabParam === "video" || tabParam === "hero-video") {
         setActiveTab("hero-video");
+      } else if (tabParam === "youtube" || tabParam === "youtube-media") {
+        setActiveTab("youtube-media");
       }
     }
   }, []);
@@ -176,15 +181,33 @@ export default function GaleriManagementPage() {
           }`}
         >
           <Video className="w-4 h-4 text-amber-600" />
-          <span>Video Sambutan Utama (Beranda)</span>
+          <span>Video Sambutan Utama (Hero)</span>
           <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-amber-100 text-amber-900 font-black uppercase">
             Live
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("youtube-media")}
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "youtube-media"
+              ? "bg-red-600 text-white font-black shadow-sm"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          }`}
+        >
+          <Youtube className="w-4 h-4 text-red-500" />
+          <span>Video YouTube Media Sosial</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-red-100 text-red-800 font-black uppercase">
+            Beranda
           </span>
         </button>
       </div>
 
       {activeTab === "hero-video" ? (
         <HeroVideoSettingsPanel />
+      ) : activeTab === "youtube-media" ? (
+        <YouTubeSocialMediaSettingsPanel />
       ) : (
         <>
           {/* SEARCH BAR & CATEGORY SELECTOR */}

@@ -98,4 +98,43 @@ export const OFFICIAL_INSTAGRAM_POSTS: InstagramPostData[] = [
     likesCount: 215,
     postUrl: "https://www.instagram.com/bappeda_halut",
   },
+  {
+    id: "ig-4",
+    title: "Rakor Pokja Penanggulangan Kemiskinan Ekstrem (TKPKD) Halut",
+    category: "KESEJAHTERAAN SOSIAL",
+    date: "14 September 2026",
+    images: [
+      "/images/bappeda/pokja-pkp.jpg",
+      "/images/bappeda/fgd-keuangan.png",
+    ],
+    caption: `🤝 Percepatan Penanggulangan Kemiskinan Ekstrem Kabupaten Halmahera Utara!\n\nTim Koordinasi Penanggulangan Kemiskinan Daerah (TKPKD) menyelenggarakan konsolidasi terpadu pemutakhiran data Pensasaran Percepatan Penghapusan Kemiskinan Ekstrem (P3KE).\n\nFokus utama diarahkan pada intervensi program bantuan sosial terpadu, peningkatan akses air bersih, dan perbaikan sanitasi lingkungan di desa-desa lokus prioritas.\n\n#TKPKD #PengentasanKemiskinan #BappedaHalut #HalutSejahtera`,
+    likesCount: 168,
+    postUrl: "https://www.instagram.com/bappeda_halut",
+  },
+  {
+    id: "ig-5",
+    title: "Akselerasi Satu Data Perencanaan Terpadu Berbasis WebGIS",
+    category: "TRANSFORMASI DIGITAL",
+    date: "12 September 2026",
+    images: [
+      "/images/bappeda/satu-data.jpg",
+      "/images/bappeda/raker-2024.jpg",
+    ],
+    caption: `📊 Satu Data Pembangunan Halmahera Utara Menuju Pemerintahan Digital Terintegrasi!\n\nBAPPEDA Halut menggelar workshop pemanfaatan portal geoportal WebGIS untuk aparatur perencana OPD. Integrasi data spasial dan data statistik sektoral memudahkan analisis kesesuaian ruang dan monitoring progres fisik proyek strategis daerah.\n\n#SatuDataIndonesia #Geospasial #BappedaHalut #DigitalisasiBappeda`,
+    likesCount: 195,
+    postUrl: "https://www.instagram.com/bappeda_halut",
+  },
+  {
+    id: "ig-6",
+    title: "Uji Petik Lapangan & Validasi Usulan Musrenbang Kecamatan",
+    category: "PARTISIPASI PUBLIK",
+    date: "10 September 2026",
+    images: [
+      "/images/bappeda/penilaian-ppd.jpg",
+      "/images/bappeda/jembatan-garuda.png",
+    ],
+    caption: `🔍 Meninjau Langsung Kebutuhan Riil Masyarakat di Kecamatan!\n\nTim Evaluasi BAPPEDA Halmahera Utara melaksanakan peninjauan lapangan atas usulan pembangunan jembatan gantung dan jalan poros desa yang diajukan dalam Musrenbang Kecamatan Kao dan Malifut.\n\nKroscek lapangan memastikan kesiapan administrasi teknis dan kepemilikan lahan sebelum dialokasikan dalam APBD.\n\n#Musrenbang #AspirasiWarga #BappedaHalut #PembangunanMerata`,
+    likesCount: 231,
+    postUrl: "https://www.instagram.com/bappeda_halut",
+  },
 ];

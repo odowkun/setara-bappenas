@@ -19,17 +19,54 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
+import { API_BASE_URL } from "@/lib/apiClient";
+import { extractYouTubeId } from "@/services/heroVideoService";
 import {
   OFFICIAL_YOUTUBE_VIDEO,
   OFFICIAL_INSTAGRAM_PROFILE,
   OFFICIAL_INSTAGRAM_POSTS,
   type InstagramPostData,
+  type YouTubeVideoData,
 } from "@/data/socialMediaData";
 
 export const SocialMediaSection: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<InstagramPostData | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [youtubeData, setYoutubeData] = useState<YouTubeVideoData>(OFFICIAL_YOUTUBE_VIDEO);
+
+  // Fetch dynamic YouTube video settings from backend if available
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!isMounted || !json?.data?.meta_json) return;
+        const meta = json.data.meta_json;
+        if (meta.youtube_featured_url) {
+          const ytId = extractYouTubeId(meta.youtube_featured_url);
+          if (ytId) {
+            setYoutubeData({
+              id: "yt-dynamic",
+              youtubeId: ytId,
+              videoUrl: meta.youtube_featured_url,
+              title: meta.youtube_featured_title || OFFICIAL_YOUTUBE_VIDEO.title,
+              description: meta.youtube_featured_desc || OFFICIAL_YOUTUBE_VIDEO.description,
+              date: meta.youtube_featured_date || OFFICIAL_YOUTUBE_VIDEO.date,
+              location: meta.youtube_featured_location || OFFICIAL_YOUTUBE_VIDEO.location,
+              badge: meta.youtube_featured_badge || "Siaran Resmi BAPPEDA HALUT",
+              channelTitle: meta.youtube_featured_channel || OFFICIAL_YOUTUBE_VIDEO.channelTitle,
+              channelUrl: meta.youtube || OFFICIAL_YOUTUBE_VIDEO.channelUrl,
+            });
+          }
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Lock body scroll when modal is open
   useEffect(() => {
@@ -97,7 +134,7 @@ export const SocialMediaSection: React.FC = () => {
 
           <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
             <a
-              href={OFFICIAL_YOUTUBE_VIDEO.channelUrl}
+              href={youtubeData.channelUrl}
               target="_blank"
               rel="noopener noreferrer"
               className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/80 font-bold text-xs flex items-center gap-2 transition active:scale-95 shadow-xs"
@@ -117,18 +154,18 @@ export const SocialMediaSection: React.FC = () => {
           </div>
         </div>
 
-        {/* 2-COLUMN SHOWCASE (YOUTUBE ON LEFT + INSTAGRAM ON RIGHT) */}
+        {/* 2-COLUMN SHOWCASE (YOUTUBE ON LEFT + INSTAGRAM ON RIGHT, DESKTOP EQUAL HEIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
           {/* ========================================================================= */}
-          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO PLAYER (7 of 12 Cols) */}
+          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO PLAYER (5 of 12 Cols) */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 xl:col-span-7 flex flex-col justify-between bg-slate-950 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-xl overflow-hidden group">
-            {/* VIDEO PLAYER FRAME (16:9) */}
-            <div className="relative aspect-video w-full overflow-hidden bg-black flex items-center justify-center">
+          <div className="lg:col-span-5 flex flex-col justify-between bg-slate-950 rounded-2xl sm:rounded-3xl border border-slate-800 shadow-xl overflow-hidden group h-full">
+            {/* VIDEO PLAYER FRAME (Stretches on Desktop to Match Instagram Height) */}
+            <div className="relative w-full overflow-hidden bg-black flex items-center justify-center aspect-video lg:aspect-auto lg:flex-1 min-h-[280px] lg:min-h-[360px]">
               {isPlayingVideo ? (
                 <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${OFFICIAL_YOUTUBE_VIDEO.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-                  title={OFFICIAL_YOUTUBE_VIDEO.title}
+                  src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                  title={youtubeData.title}
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
                   className="w-full h-full border-0 absolute inset-0"
@@ -140,8 +177,8 @@ export const SocialMediaSection: React.FC = () => {
                 >
                   {/* Video Poster Thumbnail */}
                   <ProgressiveImage
-                    src={`https://img.youtube.com/vi/${OFFICIAL_YOUTUBE_VIDEO.youtubeId}/maxresdefault.jpg`}
-                    alt={OFFICIAL_YOUTUBE_VIDEO.title}
+                    src={`https://img.youtube.com/vi/${youtubeData.youtubeId}/maxresdefault.jpg`}
+                    alt={youtubeData.title}
                     fallbackSrc="/images/bappeda/fgd-keuangan.png"
                     className="w-full h-full object-cover group-hover/video:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover/video:opacity-100"
                     containerClassName="w-full h-full absolute inset-0"
@@ -156,8 +193,8 @@ export const SocialMediaSection: React.FC = () => {
                       <div className="w-6 h-6 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
                         <Youtube className="w-3.5 h-3.5 fill-white" />
                       </div>
-                      <span className="text-[11px] font-bold text-white tracking-wide truncate max-w-[200px] sm:max-w-xs">
-                        {OFFICIAL_YOUTUBE_VIDEO.channelTitle}
+                      <span className="text-[11px] font-bold text-white tracking-wide truncate max-w-[180px] sm:max-w-xs">
+                        {youtubeData.channelTitle}
                       </span>
                     </div>
 
@@ -188,35 +225,35 @@ export const SocialMediaSection: React.FC = () => {
             </div>
 
             {/* VIDEO METADATA & ACTION */}
-            <div className="p-4 sm:p-6 bg-slate-950 text-white flex flex-col justify-between gap-4">
+            <div className="p-5 sm:p-6 bg-slate-950 text-white flex flex-col justify-between gap-3 sm:gap-4 shrink-0">
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs text-amber-400 font-bold">
                   <Calendar className="w-3.5 h-3.5" />
-                  <span>{OFFICIAL_YOUTUBE_VIDEO.date}</span>
+                  <span>{youtubeData.date}</span>
                   <span className="text-slate-600">•</span>
                   <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-slate-300 truncate">{OFFICIAL_YOUTUBE_VIDEO.location}</span>
+                  <span className="text-slate-300 truncate">{youtubeData.location}</span>
                 </div>
 
                 <h3 className="text-base sm:text-lg font-extrabold text-white leading-snug line-clamp-2">
-                  {OFFICIAL_YOUTUBE_VIDEO.title}
+                  {youtubeData.title}
                 </h3>
 
                 <p className="text-xs sm:text-sm text-slate-300 line-clamp-2 leading-relaxed font-normal">
-                  {OFFICIAL_YOUTUBE_VIDEO.description}
+                  {youtubeData.description}
                 </p>
               </div>
 
               <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
-                <span className="text-[11px] font-bold text-slate-400">
-                  Kanal Resmi: <strong className="text-white">{OFFICIAL_YOUTUBE_VIDEO.channelTitle}</strong>
+                <span className="text-[11px] font-bold text-slate-400 truncate max-w-[200px]">
+                  Kanal: <strong className="text-white">{youtubeData.channelTitle}</strong>
                 </span>
 
                 <a
-                  href={OFFICIAL_YOUTUBE_VIDEO.videoUrl}
+                  href={youtubeData.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs font-black text-red-400 hover:text-red-300 transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-black text-red-400 hover:text-red-300 transition shrink-0"
                 >
                   <span>Tonton di YouTube</span>
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -226,10 +263,10 @@ export const SocialMediaSection: React.FC = () => {
           </div>
 
           {/* ========================================================================= */}
-          {/* RIGHT COLUMN: INSTAGRAM FEED SHOWCASE (5 of 12 Cols) */}
+          {/* RIGHT COLUMN: INSTAGRAM FEED SHOWCASE (7 of 12 Cols, 6 POSTS) */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 xl:col-span-5 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-6 space-y-4">
-            {/* INSTAGRAM HEADER BRANDING (Matching Image 2) */}
+          <div className="lg:col-span-7 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-6 space-y-4 h-full">
+            {/* INSTAGRAM HEADER BRANDING */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow-md">
@@ -261,22 +298,22 @@ export const SocialMediaSection: React.FC = () => {
                 href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition cursor-pointer"
+                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition cursor-pointer"
               >
                 <Instagram className="w-3.5 h-3.5" />
                 <span>Ikuti</span>
               </a>
             </div>
 
-            {/* INSTAGRAM CARDS GRID (3 CARDS MATCHING IMAGE 2) */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
-              {OFFICIAL_INSTAGRAM_POSTS.map((post) => (
+            {/* INSTAGRAM CARDS GRID (6 CARDS MATCHING USER REQUEST) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 flex-1">
+              {OFFICIAL_INSTAGRAM_POSTS.slice(0, 6).map((post) => (
                 <div
                   key={post.id}
                   onClick={() => handleOpenPost(post)}
                   className="group/card flex flex-col justify-between bg-slate-50 hover:bg-white rounded-xl sm:rounded-2xl border border-slate-200/80 hover:border-pink-300 hover:shadow-xl transition-all duration-300 cursor-pointer overflow-hidden p-2.5 space-y-2 select-none"
                 >
-                  {/* Card Header Text (Matching Image 2) */}
+                  {/* Card Header Text */}
                   <div className="space-y-1">
                     <span className="text-[9px] font-black tracking-wider uppercase text-blue-700 line-clamp-1">
                       {post.category}
