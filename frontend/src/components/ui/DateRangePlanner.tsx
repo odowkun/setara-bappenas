@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Calendar, Clock, Check, AlertTriangle } from "lucide-react";
+import { Calendar, Clock, AlertTriangle } from "lucide-react";
 import { CustomDatePicker } from "./CustomDatePicker";
 
 interface DateRangePlannerProps {
@@ -17,7 +17,6 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
 }) => {
   const [start, setStart] = useState(startDate || "2026-01-01");
   const [end, setEnd] = useState(endDate || "2026-12-31");
-  const [activePreset, setActivePreset] = useState<string>("renja");
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const sanitizeAndClampDate = (dateVal: string): string => {
@@ -69,22 +68,6 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
 
     onChange(cleanStart, cleanEnd, yearStr);
   }, [start, end]);
-
-  const handlePresetSelect = (preset: string) => {
-    setActivePreset(preset);
-    const currentYear = new Date().getFullYear();
-
-    if (preset === "renja") {
-      setStart(`${currentYear}-01-01`);
-      setEnd(`${currentYear}-12-31`);
-    } else if (preset === "rpjmd") {
-      setStart(`${currentYear}-01-01`);
-      setEnd(`${currentYear + 5}-12-31`);
-    } else if (preset === "rpjpd") {
-      setStart(`${currentYear}-01-01`);
-      setEnd(`${currentYear + 20}-12-31`);
-    }
-  };
 
   const getDurationText = () => {
     if (!start || !end) return "";
@@ -148,66 +131,6 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
         </div>
       )}
 
-      {/* Quick Preset Pills Row */}
-      <div className="space-y-2">
-        <label className="text-[11px] font-extrabold text-slate-600 uppercase tracking-wider block">
-          Pilih Template Periode Cepat:
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => handlePresetSelect("renja")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
-              activePreset === "renja"
-                ? "bg-blue-700 text-white border-blue-700 shadow-sm"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            {activePreset === "renja" && <Check className="w-3.5 h-3.5 text-white" />}
-            <span>Renja / RKPD (1 Tahun)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect("rpjmd")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
-              activePreset === "rpjmd"
-                ? "bg-blue-700 text-white border-blue-700 shadow-sm"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            {activePreset === "rpjmd" && <Check className="w-3.5 h-3.5 text-white" />}
-            <span>RPJMD (5 Tahun)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handlePresetSelect("rpjpd")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
-              activePreset === "rpjpd"
-                ? "bg-blue-700 text-white border-blue-700 shadow-sm"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            {activePreset === "rpjpd" && <Check className="w-3.5 h-3.5 text-white" />}
-            <span>RPJPD (20 Tahun)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActivePreset("custom")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 border ${
-              activePreset === "custom"
-                ? "bg-blue-700 text-white border-blue-700 shadow-sm"
-                : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
-            }`}
-          >
-            {activePreset === "custom" && <Check className="w-3.5 h-3.5 text-white" />}
-            <span>Kustom Tanggal</span>
-          </button>
-        </div>
-      </div>
-
       {/* Custom Interactive React DatePicker Inputs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center">
         {/* Start Date Custom Picker */}
@@ -221,10 +144,7 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
 
           <CustomDatePicker
             value={start}
-            onChange={(val) => {
-              setStart(val);
-              setActivePreset("custom");
-            }}
+            onChange={(val) => setStart(val)}
             minYear={2020}
             maxYear={2035}
           />
@@ -241,10 +161,7 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
 
           <CustomDatePicker
             value={end}
-            onChange={(val) => {
-              setEnd(val);
-              setActivePreset("custom");
-            }}
+            onChange={(val) => setEnd(val)}
             minYear={2020}
             maxYear={2035}
           />
