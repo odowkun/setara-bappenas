@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronUp, X } from "lucide-react";
+import { ArrowRight, ChevronUp, X } from "lucide-react";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import {
   DOCUMENT_QUICK_CATEGORIES,
@@ -79,10 +79,20 @@ const CATEGORY_META: Record<
     shortLabel: "RPJPD",
     description: "Rencana Pembangunan 20 Tahun",
   },
-  RPJMD: {
+  RPJMN: {
+    icon3d: "/images/3dicons/explorer-dynamic-color.png",
+    shortLabel: "RPJMN",
+    description: "Rencana Pembangunan Jangka Menengah Nasional",
+  },
+  RPJMD_PROV: {
     icon3d: "/images/3dicons/chart-dynamic-color.png",
-    shortLabel: "RPJMD",
-    description: "Rencana Pembangunan 5 Tahun",
+    shortLabel: "RPJMD Prov",
+    description: "Rencana Pembangunan 5 Tahun Provinsi",
+  },
+  RPJMD_KAB: {
+    icon3d: "/images/3dicons/medal-dynamic-color.png",
+    shortLabel: "RPJMD Kab",
+    description: "Rencana Pembangunan 5 Tahun Kabupaten",
   },
   RKPD: {
     icon3d: "/images/3dicons/calender-dynamic-color.png",
@@ -569,56 +579,26 @@ export function DocumentQuickMenu({
                 </div>
               </div>
 
-              {/* Bottom Line (Mobile) / Right Side (Desktop): Kategori Dokumen */}
+              {/* Right Side: Link Teks Dokumen dengan Arrow ke Kanan */}
               <div
-                className={`w-full sm:w-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 flex flex-col sm:flex-row items-center ${
+                className={`w-full sm:w-auto transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] shrink-0 flex items-center justify-end ${
                   categoriesRevealed
-                    ? "max-h-20 sm:max-h-none opacity-100 translate-y-0 sm:translate-x-0 scale-100 pointer-events-auto"
+                    ? "opacity-100 translate-y-0 sm:translate-x-0 scale-100 pointer-events-auto"
                     : "max-h-0 sm:max-h-none sm:max-w-0 opacity-0 translate-y-2 sm:translate-y-0 sm:translate-x-10 scale-95 pointer-events-none"
                 }`}
               >
                 {/* Subtle Divider: Horizontal on mobile, vertical on desktop */}
                 <div className="w-full sm:hidden h-px bg-slate-200/70 my-0.5" />
-                <div className="hidden md:block h-7 w-px bg-slate-200/80 mr-1.5 shrink-0" />
+                <div className="hidden sm:block h-7 w-px bg-slate-200/80 mr-2 shrink-0" />
 
-                {/* Category Pills (4-column grid on mobile, flex on desktop) */}
-                <div className="grid grid-cols-4 gap-1 w-full sm:flex sm:items-center sm:gap-1.5 sm:w-auto overflow-x-auto no-scrollbar py-0.5">
-                  {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) => {
-                    const meta = CATEGORY_META[code] || {
-                      icon3d: "/images/3dicons/file-text-dynamic-color.png",
-                      shortLabel: label,
-                      description: label,
-                    };
-                    return (
-                      <Link
-                        key={code}
-                        href={`/dokumen?jenis=${code}`}
-                        className="group relative flex items-center justify-center gap-1 sm:gap-2.5 h-8.5 sm:h-11 px-1 sm:px-3 rounded-xl sm:rounded-full cursor-pointer outline-none transition-all duration-200 hover:bg-blue-50/80 hover:text-blue-900 text-slate-700 active:scale-95 select-none"
-                        title={meta.description}
-                      >
-                        <span className="flex h-6 w-6 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg sm:rounded-xl bg-blue-50/70 group-hover:bg-blue-100/80 transition-all duration-200 shadow-2xs">
-                          <img
-                            src={meta.icon3d}
-                            alt={label}
-                            width={22}
-                            height={22}
-                            style={{
-                              width: 18,
-                              height: 18,
-                              maxWidth: 22,
-                              maxHeight: 22,
-                            }}
-                            className="h-4 w-4 sm:h-5.5 sm:w-5.5 object-contain drop-shadow-xs transition-transform duration-200 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                        </span>
-                        <span className="whitespace-nowrap font-black tracking-tight text-[11px] sm:text-xs text-slate-700 group-hover:text-blue-950 transition-colors">
-                          {meta.shortLabel}
-                        </span>
-                      </Link>
-                    );
-                  })}
-                </div>
+                <Link
+                  href="/dokumen"
+                  className="group relative inline-flex items-center justify-center gap-1.5 sm:gap-2 h-9 sm:h-10 px-4 sm:px-5 rounded-xl sm:rounded-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs sm:text-sm shadow-md shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/30 transition-all duration-200 active:scale-95 select-none shrink-0"
+                  title="Lihat Semua Dokumen Perencanaan Daerah"
+                >
+                  <span>Dokumen</span>
+                  <ArrowRight className="w-3.5 h-3.5 sm:w-4 sm:h-4 group-hover:translate-x-1 transition-transform duration-200" />
+                </Link>
               </div>
             </nav>
           </div>,
@@ -631,7 +611,7 @@ export function DocumentQuickMenu({
           aria-label="Kategori dokumen publik"
           className={`w-full max-w-4xl mx-auto rounded-2xl sm:rounded-full border border-slate-200/90 bg-white/95 p-1.5 sm:p-2 shadow-xl shadow-blue-950/10 backdrop-blur-xl ${className}`}
         >
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-1.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1 sm:gap-1.5">
             {DOCUMENT_QUICK_CATEGORIES.map(({ code, label }) =>
               renderCategory(code, label)
             )}

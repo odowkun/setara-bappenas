@@ -102,6 +102,9 @@ export const HeroSection: React.FC = () => {
           <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold text-white leading-snug sm:leading-[1.2] tracking-tight drop-shadow-md">
             Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara
           </h1>
+          <p className="mt-2.5 sm:mt-3.5 text-xs sm:text-sm md:text-base font-bold text-amber-300 tracking-wider uppercase drop-shadow-sm">
+            Sinergi Lokal, Solusi Global
+          </p>
         </div>
 
         <DocumentQuickMenu floatingOnScroll showTicker />

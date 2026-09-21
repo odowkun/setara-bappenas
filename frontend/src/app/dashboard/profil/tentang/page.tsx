@@ -22,6 +22,7 @@ import {
   Clock,
   CheckSquare,
   Square,
+  Share2,
 } from "lucide-react";
 
 export default function DashboardTentangEditorPage() {
@@ -45,6 +46,13 @@ export default function DashboardTentangEditorPage() {
   const [alamat, setAlamat] = useState("");
   const [telepon, setTelepon] = useState("");
   const [email, setEmail] = useState("");
+
+  // 4. Media Sosial Resmi State
+  const [youtube, setYoutube] = useState("https://www.youtube.com/@bappedahalut");
+  const [instagram, setInstagram] = useState("https://www.instagram.com/bappedahalut");
+  const [facebook, setFacebook] = useState("https://www.facebook.com/bappedahalut");
+  const [tiktok, setTiktok] = useState("https://www.tiktok.com/@bappedahalut");
+  const [xTwitter, setXTwitter] = useState("https://x.com/bappedahalut");
 
   // Jam Kerja Builder State
   const [seninJumatActive, setSeninJumatActive] = useState(true);
@@ -115,6 +123,11 @@ export default function DashboardTentangEditorPage() {
             if (d.meta_json.alamat) setAlamat(d.meta_json.alamat);
             if (d.meta_json.telepon) setTelepon(d.meta_json.telepon);
             if (d.meta_json.email) setEmail(d.meta_json.email);
+            if (d.meta_json.youtube) setYoutube(d.meta_json.youtube);
+            if (d.meta_json.instagram) setInstagram(d.meta_json.instagram);
+            if (d.meta_json.facebook) setFacebook(d.meta_json.facebook);
+            if (d.meta_json.tiktok) setTiktok(d.meta_json.tiktok);
+            if (d.meta_json.x || d.meta_json.x_twitter) setXTwitter(d.meta_json.x || d.meta_json.x_twitter);
             if (d.meta_json.jam_kerja) {
               setJamKerjaManual(d.meta_json.jam_kerja);
 
@@ -195,6 +208,11 @@ export default function DashboardTentangEditorPage() {
             telepon,
             email,
             jam_kerja: jamKerjaManual,
+            youtube,
+            instagram,
+            facebook,
+            tiktok,
+            x: xTwitter,
           },
         }),
       });
@@ -633,6 +651,95 @@ export default function DashboardTentangEditorPage() {
                     onChange={(e) => setJamKerjaManual(e.target.value)}
                     className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-extrabold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                </div>
+              </div>
+
+              {/* MEDIA SOSIAL RESMI INSTANSI (FOOTER PUBLIK) */}
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
+                  <Share2 className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-xs font-black text-slate-900">Pengaturan Media Sosial Resmi BAPPEDA (Tampil Dinamis di Footer)</h3>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                  Tautan akun media sosial resmi yang akan ditampilkan secara otomatis pada bagian footer portal publik dan halaman informasi.
+                </p>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* YouTube */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-red-600 text-white text-[10px] font-black flex items-center justify-center">▶</span>
+                      <span>URL YouTube Channel</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={youtube}
+                      onChange={(e) => setYoutube(e.target.value)}
+                      placeholder="https://www.youtube.com/@bappedahalut"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Instagram */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-pink-600 text-white text-[10px] font-black flex items-center justify-center">📷</span>
+                      <span>URL Instagram Profile</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={instagram}
+                      onChange={(e) => setInstagram(e.target.value)}
+                      placeholder="https://www.instagram.com/bappedahalut"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* Facebook */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">f</span>
+                      <span>URL Facebook Fanpage</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={facebook}
+                      onChange={(e) => setFacebook(e.target.value)}
+                      placeholder="https://www.facebook.com/bappedahalut"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* TikTok */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">♪</span>
+                      <span>URL TikTok Account</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={tiktok}
+                      onChange={(e) => setTiktok(e.target.value)}
+                      placeholder="https://www.tiktok.com/@bappedahalut"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  {/* X (Twitter) */}
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                      <span className="w-4 h-4 rounded bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">𝕏</span>
+                      <span>URL Akun X (Twitter)</span>
+                    </label>
+                    <input
+                      type="url"
+                      value={xTwitter}
+                      onChange={(e) => setXTwitter(e.target.value)}
+                      placeholder="https://x.com/bappedahalut"
+                      className="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
                 </div>
               </div>
             </div>

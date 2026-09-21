@@ -42,7 +42,15 @@ function DokumenContent() {
   }, []);
 
   useEffect(() => {
-    const formatted = jenisParam?.toUpperCase() ?? "ALL";
+    if (!jenisParam) {
+      setCategory("ALL");
+      return;
+    }
+    const formatted = jenisParam.toUpperCase().replace(/-/g, "_");
+    if (formatted === "RPJMD") {
+      setCategory("RPJMD_KAB");
+      return;
+    }
     const isQuickCategory = DOCUMENT_QUICK_CATEGORIES.some(
       ({ code }) => code === formatted
     );
@@ -180,13 +188,59 @@ function DokumenContent() {
   };
 
   const filteredDocs = docsList.filter((doc) => {
-    const normalizedType = (doc.jenis || "").toUpperCase();
-    const matchCategory =
-      category === "ALL" ||
-      (category === "LAINNYA"
-        ? !isPrimaryDocumentCategory(normalizedType)
-        : normalizedType === category || normalizedType.includes(category));
-    return matchCategory;
+    if (category === "ALL") return true;
+
+    const normalizedType = (doc.jenis || "").toUpperCase().replace(/-/g, "_");
+    const normalizedTitle = (doc.title || "").toUpperCase();
+
+    if (category === "LAINNYA") {
+      return !isPrimaryDocumentCategory(normalizedType);
+    }
+
+    if (category === "RPJMD_PROV") {
+      return (
+        normalizedType === "RPJMD_PROV" ||
+        normalizedType.includes("RPJMD_PROV") ||
+        normalizedType.includes("PROV") ||
+        (normalizedType.includes("RPJMD") && normalizedTitle.includes("PROVINSI"))
+      );
+    }
+
+    if (category === "RPJMD_KAB") {
+      return (
+        normalizedType === "RPJMD_KAB" ||
+        normalizedType === "RPJMD" ||
+        normalizedType.includes("RPJMD_KAB") ||
+        (normalizedType.includes("RPJMD") && !normalizedTitle.includes("PROVINSI"))
+      );
+    }
+
+    if (category === "RPJMN") {
+      return (
+        normalizedType === "RPJMN" ||
+        normalizedType.includes("RPJMN") ||
+        normalizedTitle.includes("RPJMN") ||
+        normalizedTitle.includes("NASIONAL")
+      );
+    }
+
+    if (category === "RPJPD") {
+      return (
+        normalizedType === "RPJPD" ||
+        normalizedType.includes("RPJPD") ||
+        normalizedTitle.includes("RPJPD")
+      );
+    }
+
+    if (category === "RKPD") {
+      return (
+        normalizedType === "RKPD" ||
+        normalizedType.includes("RKPD") ||
+        normalizedTitle.includes("RKPD")
+      );
+    }
+
+    return normalizedType === category || normalizedType.includes(category);
   });
 
   const activeCategoryInfo = DOCUMENT_QUICK_CATEGORIES.find(

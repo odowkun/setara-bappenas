@@ -17,7 +17,10 @@ import {
   Briefcase,
   Layers3,
   Calendar,
+  Share2,
+  Globe,
 } from "lucide-react";
+import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 
 export default function PengaturanProfilPage() {
@@ -42,6 +45,15 @@ export default function PengaturanProfilPage() {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
+  // Social Media States (Footer Portal Publik)
+  const [youtube, setYoutube] = useState("https://www.youtube.com/@bappedahalut");
+  const [instagram, setInstagram] = useState("https://www.instagram.com/bappedahalut");
+  const [facebook, setFacebook] = useState("https://www.facebook.com/bappedahalut");
+  const [tiktok, setTiktok] = useState("https://www.tiktok.com/@bappedahalut");
+  const [xTwitter, setXTwitter] = useState("https://x.com/bappedahalut");
+  const [existingTentang, setExistingTentang] = useState<any>(null);
+  const [savingSocial, setSavingSocial] = useState(false);
+
   useEffect(() => {
     if (user) {
       setName(user.name || "");
@@ -50,6 +62,59 @@ export default function PengaturanProfilPage() {
       setNip(user.nip || "");
     }
   }, [user]);
+
+  // Load existing social media from backend profil API
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!json?.data) return;
+        setExistingTentang(json.data);
+        const meta = json.data.meta_json;
+        if (meta) {
+          if (meta.youtube) setYoutube(meta.youtube);
+          if (meta.instagram) setInstagram(meta.instagram);
+          if (meta.facebook) setFacebook(meta.facebook);
+          if (meta.tiktok) setTiktok(meta.tiktok);
+          if (meta.x || meta.x_twitter) setXTwitter(meta.x || meta.x_twitter);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleSaveSocial = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSocial(true);
+    try {
+      const prevMeta = existingTentang?.meta_json || {};
+      const res = await authenticatedFetch("/profil/tentang", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: existingTentang?.title || "Tentang BAPPEDA Halmahera Utara",
+          subtitle: existingTentang?.subtitle || "Sejarah Pembentukan dan Peran Strategis BAPPEDA Kabupaten Halmahera Utara",
+          content: existingTentang?.content || "",
+          meta_json: {
+            ...prevMeta,
+            youtube,
+            instagram,
+            facebook,
+            tiktok,
+            x: xTwitter,
+          },
+        }),
+      });
+      if (res.ok) {
+        toast.success("Tautan media sosial resmi footer berhasil diperbarui!");
+      } else {
+        toast.error("Gagal menyimpan tautan media sosial.");
+      }
+    } catch {
+      toast.error("Terjadi kendala koneksi saat menyimpan media sosial.");
+    } finally {
+      setSavingSocial(false);
+    }
+  };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -328,6 +393,113 @@ export default function PengaturanProfilPage() {
                 >
                   <Key className="w-4 h-4" />
                   <span>{savingPassword ? "Memperbarui..." : "Perbarui Kata Sandi"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+
+          {/* Card 3: Social Media Settings (Public Footer Links) */}
+          <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-6">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-4">
+              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 text-blue-700 flex items-center justify-center font-bold shrink-0">
+                <Share2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-black text-slate-900 tracking-tight">
+                  Media Sosial Resmi BAPPEDA
+                </h2>
+                <p className="text-xs text-slate-500 font-medium">
+                  Tautan akun resmi (YouTube, Instagram, Facebook, TikTok, X) yang tampil dinamis di footer portal publik.
+                </p>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveSocial} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* YouTube */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded bg-red-600 text-white text-[10px] font-black flex items-center justify-center">▶</span>
+                    <span>YouTube Channel</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={youtube}
+                    onChange={(e) => setYoutube(e.target.value)}
+                    placeholder="https://www.youtube.com/@bappedahalut"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Instagram */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded bg-pink-600 text-white text-[10px] font-black flex items-center justify-center">📷</span>
+                    <span>Instagram Profile</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={instagram}
+                    onChange={(e) => setInstagram(e.target.value)}
+                    placeholder="https://www.instagram.com/bappedahalut"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* Facebook */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded bg-blue-600 text-white text-[10px] font-black flex items-center justify-center">f</span>
+                    <span>Facebook Fanpage</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={facebook}
+                    onChange={(e) => setFacebook(e.target.value)}
+                    placeholder="https://www.facebook.com/bappedahalut"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* TikTok */}
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">♪</span>
+                    <span>TikTok Account</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={tiktok}
+                    onChange={(e) => setTiktok(e.target.value)}
+                    placeholder="https://www.tiktok.com/@bappedahalut"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* X (Twitter) */}
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
+                    <span className="w-4 h-4 rounded bg-slate-900 text-white text-[10px] font-black flex items-center justify-center">𝕏</span>
+                    <span>URL Akun X (Twitter)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={xTwitter}
+                    onChange={(e) => setXTwitter(e.target.value)}
+                    placeholder="https://x.com/bappedahalut"
+                    className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={savingSocial}
+                  className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center gap-2 transition cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{savingSocial ? "Menyimpan..." : "Simpan Tautan Media Sosial"}</span>
                 </button>
               </div>
             </form>

@@ -111,7 +111,11 @@ export default function DocumentManagementPage() {
 
   const filteredDocs = documents.filter((doc) => {
     const matchSearch = doc.title.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchJenis = selectedJenis === "semua" || doc.jenis === selectedJenis;
+    const docJenis = (doc.jenis || "").toLowerCase().replace(/-/g, "_");
+    const matchJenis =
+      selectedJenis === "semua" ||
+      docJenis === selectedJenis ||
+      (selectedJenis === "rpjmd_kab" && docJenis === "rpjmd");
     return matchSearch && matchJenis;
   });
   const pendingReview = documents.filter(
@@ -128,7 +132,9 @@ export default function DocumentManagementPage() {
   const jenisSelectOptions = [
     { value: "semua", label: "Semua Jenis Dokumen" },
     { value: "rpjpd", label: "RPJPD (20 Tahunan)" },
-    { value: "rpjmd", label: "RPJMD (5 Tahunan)" },
+    { value: "rpjmn", label: "RPJMN (Nasional)" },
+    { value: "rpjmd_prov", label: "RPJMD Prov (Provinsi)" },
+    { value: "rpjmd_kab", label: "RPJMD Kab (Kabupaten)" },
     { value: "rkpd", label: "RKPD (Tahunan)" },
     { value: "renstra", label: "Renstra Bidang" },
     { value: "renja", label: "Renja Bidang" },
