@@ -1,9 +1,4 @@
-// ==============================================================================
-// Cloudflare Worker: Bappeda Halut Maintenance & 502/Down Interceptor
-// Menangkap status 502/503/504/521/522/523/530/1033 jika server fisik padam
-// ==============================================================================
-
-const MAINTENANCE_HTML = `<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
   <meta charset="UTF-8">
@@ -108,7 +103,6 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
     }
   </style>
   <script>
-    // Auto refresh otomatis setiap 30 detik untuk memeriksa kembalinya server kantor
     setTimeout(function() {
       window.location.reload();
     }, 30000);
@@ -140,35 +134,4 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
     <span>STATUS: SERVER FISIK OFFLINE (CLOUDFLARE 502/521/523)</span>
   </div>
 </body>
-</html>`;
-
-export default {
-  async fetch(request, env, ctx) {
-    try {
-      const response = await fetch(request);
-
-      // Tangkap kode error saat server fisik mati / tidak bisa dihubungi
-      const serverDownStatuses = [502, 503, 504, 521, 522, 523, 530];
-      if (serverDownStatuses.includes(response.status)) {
-        return new Response(MAINTENANCE_HTML, {
-          status: 503,
-          headers: {
-            "Content-Type": "text/html; charset=utf-8",
-            "Cache-Control": "no-store, no-cache, must-revalidate",
-          },
-        });
-      }
-
-      return response;
-    } catch (err) {
-      // Jika terjadi kegagalan fatal pada network / tunnel terputus
-      return new Response(MAINTENANCE_HTML, {
-        status: 503,
-        headers: {
-          "Content-Type": "text/html; charset=utf-8",
-          "Cache-Control": "no-store, no-cache, must-revalidate",
-        },
-      });
-    }
-  },
-};
+</html>

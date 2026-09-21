@@ -43,9 +43,9 @@ export default function DashboardError({
       <div className="w-16 h-16 rounded-full bg-amber-100 border border-amber-300 text-amber-600 flex items-center justify-center mb-4 shadow-sm">
         <AlertTriangle className="w-8 h-8" />
       </div>
-      <h2 className="text-xl font-extrabold text-slate-900 mb-2">Terjadi Kendala Memuat Halaman</h2>
+      <h2 className="text-xl font-extrabold text-slate-900 mb-2">Terjadi Kendala Memuat Modul Dashboard</h2>
       <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-        Sistem mendeteksi pembaruan data atau koneksi sementara. Silakan tekan tombol di bawah untuk menyegarkan kembali.
+        Sistem mendeteksi pembaruan modul atau kendala rendering data di peramban Anda (Koneksi server utama aktif). Silakan tekan tombol di bawah untuk menyegarkan kembali.
       </p>
       <button
         onClick={handleReload}
