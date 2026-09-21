@@ -27,6 +27,7 @@ import {
   OFFICIAL_INSTAGRAM_PROFILE,
   OFFICIAL_INSTAGRAM_POSTS,
   type InstagramPostData,
+  type InstagramProfileData,
   type YouTubeVideoData,
 } from "@/data/socialMediaData";
 
@@ -36,12 +37,14 @@ export const SocialMediaSection: React.FC = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [youtubeData, setYoutubeData] = useState<YouTubeVideoData>(OFFICIAL_YOUTUBE_VIDEO);
+  const [instagramPosts, setInstagramPosts] = useState<InstagramPostData[]>(OFFICIAL_INSTAGRAM_POSTS);
+  const [instagramProfile, setInstagramProfile] = useState<InstagramProfileData>(OFFICIAL_INSTAGRAM_PROFILE);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Fetch dynamic YouTube video settings from backend if available
+  // Fetch dynamic YouTube video & Instagram settings from backend if available
   useEffect(() => {
     let isMounted = true;
     fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
@@ -65,6 +68,19 @@ export const SocialMediaSection: React.FC = () => {
               channelUrl: meta.youtube || OFFICIAL_YOUTUBE_VIDEO.channelUrl,
             });
           }
+        }
+
+        // Dynamic Instagram posts from dashboard
+        if (Array.isArray(meta.instagram_posts) && meta.instagram_posts.length > 0) {
+          setInstagramPosts(meta.instagram_posts);
+        }
+
+        // Dynamic Instagram profile from dashboard
+        if (meta.instagram_profile) {
+          setInstagramProfile((prev) => ({
+            ...prev,
+            ...meta.instagram_profile,
+          }));
         }
       })
       .catch(() => {});
@@ -140,73 +156,126 @@ export const SocialMediaSection: React.FC = () => {
         {/* 2-COLUMN BALANCED SHOWCASE (YOUTUBE PURE VIDEO ON LEFT + INSTAGRAM FEED ON RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
           {/* ========================================================================= */}
-          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO (PURE 16:9 VIDEO, ZERO WHITE SPACE) */}
+          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO (WITH MATCHING HEADER BRANDING) */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 flex flex-col justify-center">
-            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-3 sm:p-4 group h-full flex flex-col justify-center">
-              {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
-              <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-md border border-slate-200/80 group/video">
-                {isPlayingVideo ? (
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-                    title={youtubeData.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                    className="w-full h-full border-0 absolute inset-0"
-                  />
-                ) : (
-                  <div
-                    onClick={() => setIsPlayingVideo(true)}
-                    className="relative w-full h-full cursor-pointer"
-                  >
-                    {/* Video Poster Thumbnail (True 16:9 aspect ratio, 0% squish or crop) */}
-                    <ProgressiveImage
-                      src={`https://img.youtube.com/vi/${youtubeData.youtubeId}/maxresdefault.jpg`}
-                      alt={youtubeData.title}
-                      fallbackSrc="/images/bappeda/fgd-keuangan.png"
-                      className="w-full h-full object-cover group-hover/video:scale-103 transition-transform duration-700 ease-out opacity-95 group-hover/video:opacity-100"
-                      containerClassName="w-full h-full absolute inset-0"
+          <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full">
+            {/* YOUTUBE HEADER BRANDING (Matching Instagram's Header Exactly) */}
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 shadow-md shrink-0">
+                  <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                    <img
+                      src={instagramProfile.avatarUrl || "/images/bappeda/logo-halut.png"}
+                      alt={youtubeData.channelTitle}
+                      className="w-full h-full object-contain"
                     />
+                  </div>
+                </div>
 
-                    {/* Subtle Dark Vignette for contrast on video overlay elements */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
+                      {youtubeData.channelTitle || "BAPPEDA HALUT OFFICIAL"}
+                    </h3>
+                    <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black" title="Kanal Resmi Terverifikasi">
+                      ✓
+                    </span>
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-500 line-clamp-1">
+                    Kanal Video Dokumentasi &amp; Siaran Resmi BAPPEDA
+                  </p>
+                </div>
+              </div>
 
-                    {/* Top Bar Overlay */}
-                    <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10 pointer-events-none">
-                      <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 shadow-md">
-                        <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                          <Youtube className="w-2.5 h-2.5 fill-white" />
-                        </div>
-                        <span className="text-[10px] font-bold text-white tracking-wide truncate max-w-[160px] sm:max-w-xs">
-                          {youtubeData.channelTitle}
-                        </span>
+              <a
+                href={youtubeData.channelUrl || "https://www.youtube.com/@bappedahalmaherautara"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-red-600/20 active:scale-95 transition cursor-pointer shrink-0"
+              >
+                <Youtube className="w-3.5 h-3.5 fill-white" />
+                <span>Berlangganan</span>
+              </a>
+            </div>
+
+            {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
+            <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-md border border-slate-200/80 group/video flex-1">
+              {isPlayingVideo ? (
+                <iframe
+                  src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                  title={youtubeData.title}
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full h-full border-0 absolute inset-0"
+                />
+              ) : (
+                <div
+                  onClick={() => setIsPlayingVideo(true)}
+                  className="relative w-full h-full cursor-pointer"
+                >
+                  {/* Video Poster Thumbnail (True 16:9 aspect ratio, 0% squish or crop) */}
+                  <ProgressiveImage
+                    src={`https://img.youtube.com/vi/${youtubeData.youtubeId}/maxresdefault.jpg`}
+                    alt={youtubeData.title}
+                    fallbackSrc="/images/bappeda/fgd-keuangan.png"
+                    className="w-full h-full object-cover group-hover/video:scale-103 transition-transform duration-700 ease-out opacity-95 group-hover/video:opacity-100"
+                    containerClassName="w-full h-full absolute inset-0"
+                  />
+
+                  {/* Subtle Dark Vignette for contrast on video overlay elements */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
+
+                  {/* Top Bar Overlay */}
+                  <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10 pointer-events-none">
+                    <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 shadow-md">
+                      <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
+                        <Youtube className="w-2.5 h-2.5 fill-white" />
                       </div>
-
-                      <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black uppercase tracking-wider shadow-md animate-pulse">
-                        HD VIDEO
+                      <span className="text-[10px] font-bold text-white tracking-wide truncate max-w-[160px] sm:max-w-xs">
+                        {youtubeData.channelTitle}
                       </span>
                     </div>
 
-                    {/* Big Play Button in Center */}
-                    <div className="absolute inset-0 flex items-center justify-center z-10">
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/70 group-hover/video:scale-110 group-hover/video:bg-red-500 transition-all duration-300 ring-4 ring-white/25">
-                        <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
-                      </div>
-                    </div>
+                    <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black uppercase tracking-wider shadow-md animate-pulse">
+                      HD VIDEO
+                    </span>
+                  </div>
 
-                    {/* Bottom Status Bar */}
-                    <div className="absolute bottom-3 inset-x-3.5 z-10 flex items-center justify-between pointer-events-none">
-                      <div className="flex items-center gap-1.5 text-white/95 text-[11px] font-semibold drop-shadow-md">
-                        <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                        <span>Putar Video Siaran Resmi</span>
-                      </div>
-                      <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white/90 text-[9px] font-mono border border-white/10">
-                        YouTube Official
-                      </span>
+                  {/* Big Play Button in Center */}
+                  <div className="absolute inset-0 flex items-center justify-center z-10">
+                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/70 group-hover/video:scale-110 group-hover/video:bg-red-500 transition-all duration-300 ring-4 ring-white/25">
+                      <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
                     </div>
                   </div>
-                )}
-              </div>
+
+                  {/* Bottom Status Bar */}
+                  <div className="absolute bottom-3 inset-x-3.5 z-10 flex items-center justify-between pointer-events-none">
+                    <div className="flex items-center gap-1.5 text-white/95 text-[11px] font-semibold drop-shadow-md">
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
+                      <span>Putar Video Siaran Resmi</span>
+                    </div>
+                    <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white/90 text-[9px] font-mono border border-white/10">
+                      YouTube Official
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* YOUTUBE FOOTER LINK (Matching Instagram's Footer Exactly) */}
+            <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
+              <span className="text-[11px] truncate max-w-[200px] sm:max-w-xs">
+                Siaran: <strong className="text-slate-800 font-bold">{youtubeData.title}</strong>
+              </span>
+              <a
+                href={youtubeData.videoUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-red-600 hover:text-red-700 font-bold inline-flex items-center gap-1 text-xs transition shrink-0"
+              >
+                <span>Tonton di YouTube</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
 
@@ -220,8 +289,8 @@ export const SocialMediaSection: React.FC = () => {
                 <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow-md shrink-0">
                   <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
                     <img
-                      src={OFFICIAL_INSTAGRAM_PROFILE.avatarUrl}
-                      alt={OFFICIAL_INSTAGRAM_PROFILE.displayName}
+                      src={instagramProfile.avatarUrl}
+                      alt={instagramProfile.displayName}
                       className="w-full h-full object-contain"
                     />
                   </div>
@@ -230,20 +299,20 @@ export const SocialMediaSection: React.FC = () => {
                 <div>
                   <div className="flex items-center gap-1.5">
                     <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
-                      {OFFICIAL_INSTAGRAM_PROFILE.displayName}
+                      {instagramProfile.displayName}
                     </h3>
                     <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black" title="Akun Resmi Terverifikasi">
                       ✓
                     </span>
                   </div>
                   <p className="text-[11px] font-medium text-slate-500 line-clamp-1">
-                    {OFFICIAL_INSTAGRAM_PROFILE.tagline}
+                    {instagramProfile.tagline}
                   </p>
                 </div>
               </div>
 
               <a
-                href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}
+                href={instagramProfile.profileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition cursor-pointer shrink-0"
@@ -255,7 +324,7 @@ export const SocialMediaSection: React.FC = () => {
 
             {/* INSTAGRAM CARDS GRID (2 BALANCED CARDS IN 2 COLUMNS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-              {OFFICIAL_INSTAGRAM_POSTS.slice(0, 2).map((post) => (
+              {instagramPosts.slice(0, 2).map((post) => (
                 <div
                   key={post.id}
                   onClick={() => handleOpenPost(post)}
@@ -311,10 +380,10 @@ export const SocialMediaSection: React.FC = () => {
             {/* INSTAGRAM FOOTER LINK */}
             <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
               <span className="text-[11px]">
-                Akun: <strong className="text-slate-800 font-bold">{OFFICIAL_INSTAGRAM_PROFILE.handle}</strong>
+                Akun: <strong className="text-slate-800 font-bold">{instagramProfile.handle}</strong>
               </span>
               <a
-                href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}
+                href={instagramProfile.profileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-pink-600 hover:text-pink-700 font-bold inline-flex items-center gap-1 text-xs transition"
@@ -431,8 +500,8 @@ export const SocialMediaSection: React.FC = () => {
                           <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shrink-0">
                             <div className="w-full h-full rounded-full bg-slate-900 p-0.5 flex items-center justify-center overflow-hidden">
                               <img
-                                src={OFFICIAL_INSTAGRAM_PROFILE.avatarUrl}
-                                alt={OFFICIAL_INSTAGRAM_PROFILE.displayName}
+                                src={instagramProfile.avatarUrl}
+                                alt={instagramProfile.displayName}
                                 className="w-full h-full object-contain"
                               />
                             </div>
@@ -440,7 +509,7 @@ export const SocialMediaSection: React.FC = () => {
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="font-extrabold text-sm text-white">
-                                {OFFICIAL_INSTAGRAM_PROFILE.handle}
+                                {instagramProfile.handle}
                               </span>
                               <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">
                                 ✓

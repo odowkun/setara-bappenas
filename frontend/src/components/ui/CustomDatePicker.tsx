@@ -318,3 +318,5 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     </div>
   );
 };
+
+export default CustomDatePicker;

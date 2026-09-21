@@ -26,9 +26,10 @@ Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmaher
 | Berkas | Peran |
 | :--- | :--- |
 | `frontend/src/data/socialMediaData.ts` | Data default untuk video YouTube resmi dan 6 postingan feed Instagram (judul, gambar, narasi, URL). |
-| `frontend/src/components/home/SocialMediaSection.tsx` | Komponen presentasi UI beranda: video player (equal-height), grid 6 kartu Instagram, dan dialog modal popup 2 kolom. |
+| `frontend/src/components/home/SocialMediaSection.tsx` | Komponen presentasi UI beranda: video player murni 16:9, grid postingan Instagram, dan dialog modal popup 2 kolom ter-portal. |
 | `frontend/src/components/admin/YouTubeSocialMediaSettingsPanel.tsx` | Panel dashboard untuk mengelola link YouTube unggulan, judul, tanggal, lokasi, dan deskripsi dengan validasi ID otomatis dan live preview. |
-| `frontend/src/app/dashboard/galeri/page.tsx` | Halaman dashboard galeri dengan tab khusus `"youtube-media"` (*Video YouTube Media Sosial*). |
+| `frontend/src/components/admin/InstagramSocialMediaSettingsPanel.tsx` | Panel dashboard untuk mengelola feed Instagram: unggah foto multi-slide, edit caption, tanggal, likes, kategori, urutan, serta profil resmi. |
+| `frontend/src/app/dashboard/galeri/page.tsx` | Halaman dashboard galeri dengan tab khusus `"youtube-media"` dan `"instagram-media"`. |
 | `frontend/src/components/home/GeospatialSection.tsx` | Tempat integrasi komponen di beranda (tepat di bawah `PinnedInfographicsSection`). |
 
 ---
@@ -41,3 +42,24 @@ Administrator dapat memperbarui video YouTube unggulan yang tampil di beranda me
 4. Lengkapi judul siaran, tanggal rilis, lokasi agenda, dan ringkasan siaran.
 5. Tinjau tampilan pada kotak **Preview Kartu Beranda (Live)** di sebelah kanan formulir.
 6. Klik tombol **Simpan Konfigurasi YouTube**. Perubahan langsung tersimpan ke backend `/profil/tentang` (`meta_json.youtube_featured_*`) dan langsung tayang di beranda.
+
+---
+
+## 4. Panduan Pengelolaan & Unggah Feed Instagram via Dashboard Admin
+Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram beranda melalui menu:
+1. Buka halaman **Dashboard Bappeda** -> Menu **Galeri & Dokumentasi** (`/dashboard/galeri`).
+2. Pilih tab keempat: **Feed Instagram Media Sosial** (`?tab=instagram-media`).
+3. **Mengunggah Postingan Baru**:
+   - Klik tombol **+ Tambah Postingan Instagram**.
+   - Masukkan Judul Postingan / Kegiatan.
+   - Pilih Kategori (Warta Perencanaan, Spasial, Infrastruktur, dll.) dan Tanggal Postingan (`CustomDatePicker`).
+   - Unggah satu atau beberapa foto langsung dari perangkat (tombol *Unggah Foto*) atau masukkan URL gambar.
+   - Isi caption narasi lengkap, perkiraan jumlah suka (likes), dan link asli postingan Instagram.
+   - Klik **Terbitkan ke Beranda**.
+4. **Mengatur Urutan & Tampilan Beranda**:
+   - Dua postingan teratas (urutan #1 dan #2) otomatis berstatus **Tayang di Beranda** berdampingan dengan video YouTube.
+   - Gunakan tombol panah **Naik / Turun** pada setiap kartu untuk mengatur postingan mana yang diprioritaskan tampil di beranda utama.
+   - Tombol **Edit** memungkinkan revisi caption, judul, dan foto kapan saja.
+   - Tombol **Hapus** (dengan konfirmasi aman) untuk mencabut postingan yang sudah kadaluarsa.
+5. **Pengaturan Profil Akun**:
+   - Perbarui display name, username `@bappeda_halut`, tautan profil, dan tagline instansi pada kartu atas lalu klik **Simpan Profil**.

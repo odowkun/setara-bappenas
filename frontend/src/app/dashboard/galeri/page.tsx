@@ -21,11 +21,13 @@ import {
   BadgeCheck,
   CircleDashed,
   Youtube,
+  Instagram,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
 import HeroVideoSettingsPanel from "@/components/admin/HeroVideoSettingsPanel";
 import YouTubeSocialMediaSettingsPanel from "@/components/admin/YouTubeSocialMediaSettingsPanel";
+import InstagramSocialMediaSettingsPanel from "@/components/admin/InstagramSocialMediaSettingsPanel";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function GaleriManagementPage() {
@@ -35,7 +37,7 @@ export default function GaleriManagementPage() {
   const [selectedCategory, setSelectedCategory] = useState("Semua");
   const [categoryOptions, setCategoryOptions] = useState<string[]>(["Semua"]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"albums" | "hero-video" | "youtube-media">("albums");
+  const [activeTab, setActiveTab] = useState<"albums" | "hero-video" | "youtube-media" | "instagram-media">("albums");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -45,6 +47,8 @@ export default function GaleriManagementPage() {
         setActiveTab("hero-video");
       } else if (tabParam === "youtube" || tabParam === "youtube-media") {
         setActiveTab("youtube-media");
+      } else if (tabParam === "instagram" || tabParam === "instagram-media") {
+        setActiveTab("instagram-media");
       }
     }
   }, []);
@@ -202,12 +206,30 @@ export default function GaleriManagementPage() {
             Beranda
           </span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("instagram-media")}
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            activeTab === "instagram-media"
+              ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white font-black shadow-sm"
+              : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+          }`}
+        >
+          <Instagram className="w-4 h-4 text-pink-500" />
+          <span>Feed Instagram Media Sosial</span>
+          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-pink-100 text-pink-800 font-black uppercase">
+            Beranda
+          </span>
+        </button>
       </div>
 
       {activeTab === "hero-video" ? (
         <HeroVideoSettingsPanel />
       ) : activeTab === "youtube-media" ? (
         <YouTubeSocialMediaSettingsPanel />
+      ) : activeTab === "instagram-media" ? (
+        <InstagramSocialMediaSettingsPanel />
       ) : (
         <>
           {/* SEARCH BAR & CATEGORY SELECTOR */}
