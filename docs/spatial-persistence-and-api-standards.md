@@ -265,3 +265,26 @@ Status implementasi: 21 September 2026.
    - `update-progres/page.tsx`: Meneruskan `err?.message` langsung ke SweetAlert2 dan toast notification.
 3. **Automated Feature Test**:
    - Menambahkan test komprehensif pada `backend/tests/Feature/ProyekDetailProgressTest.php` mencakup pembaruan progres oleh Superadmin, mutasi database `proyek_details`, otorisasi admin bidang, serta isolasi pemblokiran lintas bidang (HTTP 403). Seluruh test lulus 100%.
+
+---
+
+## 13. Standarisasi Direktori Lokasi Proyek & Filter Kategori Dinamis (`GeospatialSection.tsx`)
+
+Status implementasi: 21 September 2026.
+
+### A. Latar Belakang & Persoalan
+Pada komponen beranda `GeospatialSection`:
+- Filter kategori sebelumnya selalu menginisialisasi pill `[{ name: "Semua", ... }]` secara statis, sehingga ketika database belum memiliki lokasi proyek fisik berstatus selesai (100%), tombol pill "Semua" tetap muncul sendirian di atas kotak kosong.
+- Pesan status saat data kosong bersifat generik ("Tidak ada lokasi proyek yang sesuai"), tidak membedakan antara kondisi memang belum ada proyek selesai vs kondisi filter pencarian tidak menemukan hasil.
+
+### B. Solusi & Perbaikan Tampilan
+1. **Peniadaan Label Kategori Saat Data Kosong**:
+   - Jika `locations.length === 0`, fungsi memoization `categories` mengembalikan array kosong `[]`.
+   - Wadah pill kategori tidak dirender sama sekali di antarmuka jika tidak ada data proyek yang tersedia.
+   - Bilah pencarian (search bar) disembunyikan saat data kosong agar antarmuka tetap bersih dan rapi.
+2. **Pelabelan Kategori Informatif (Count Badge)**:
+   - Jika terdapat lebih dari 1 kategori data, label menampilkan jumlah item secara transparan, misal: `Semua (5)`, `Infrastruktur (3)`, `Pemerintahan (2)`.
+   - Tombol `Semua` hanya disertakan jika terdapat lebih dari 1 kategori unik yang terdata.
+3. **Penyempurnaan Empty State Box**:
+   - **Kondisi Belum Ada Proyek Selesai**: Menampilkan ikon peta interaktif dengan teks deskriptif: *"Belum Ada Proyek Selesai - Lokasi proyek fisik pembangunan dengan progres 100% (selesai) akan terdata otomatis pada daftar ini."*
+   - **Kondisi Pencarian / Filter Tidak Cocok**: Menampilkan ikon pencarian dengan pesan spesifik *"Lokasi Tidak Ditemukan - Tidak ada proyek yang sesuai dengan pencarian [keyword] pada kategori [kategori]"* beserta tombol *Reset Pencarian*.

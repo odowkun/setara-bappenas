@@ -218,22 +218,61 @@ export const GeospatialSection: React.FC = () => {
 
   // Compute categories dynamically based ONLY on existing projects
   const categories = React.useMemo(() => {
-    const presentCats = Array.from(new Set(locations.map((loc) => loc.category)));
-    const catList = [{ name: "Semua", icon: ListFilter, color: "bg-slate-700" }];
+    if (locations.length === 0) return [];
 
-    presentCats.forEach((catName) => {
-      const match = locations.find((l) => l.category === catName);
-      if (match) {
-        catList.push({
-          name: catName,
-          icon: match.icon,
-          color: match.badgeColor || "bg-blue-600",
+    const catMap = new Map<string, { count: number; icon: any; color: string }>();
+    locations.forEach((loc) => {
+      const prev = catMap.get(loc.category);
+      if (prev) {
+        prev.count += 1;
+      } else {
+        catMap.set(loc.category, {
+          count: 1,
+          icon: loc.icon,
+          color: loc.badgeColor || "bg-blue-600",
         });
       }
     });
 
+    const catList: {
+      name: string;
+      label: string;
+      count: number;
+      icon: any;
+      color: string;
+    }[] = [];
+
+    // Tampilkan label 'Semua' hanya jika ada lebih dari 1 kategori
+    if (catMap.size > 1) {
+      catList.push({
+        name: "Semua",
+        label: `Semua (${locations.length})`,
+        count: locations.length,
+        icon: ListFilter,
+        color: "bg-slate-700",
+      });
+    }
+
+    catMap.forEach((val, key) => {
+      catList.push({
+        name: key,
+        label: `${key} (${val.count})`,
+        count: val.count,
+        icon: val.icon,
+        color: val.color,
+      });
+    });
+
     return catList;
   }, [locations]);
+
+  React.useEffect(() => {
+    if (categories.length === 0) {
+      setActiveCategory("Semua");
+    } else if (activeCategory !== "Semua" && !categories.some((c) => c.name === activeCategory)) {
+      setActiveCategory(categories[0].name);
+    }
+  }, [categories, activeCategory]);
 
   const selectedLoc = selectedId !== null ? locations.find((l) => l.id === selectedId) || null : null;
 
@@ -246,13 +285,18 @@ export const GeospatialSection: React.FC = () => {
     ) || null;
   }, [selectedLoc, geoAnalyses]);
 
-  const filteredLocations = locations.filter((loc) => {
-    const matchesCat = activeCategory === "Semua" || loc.category === activeCategory;
-    const matchesSearch =
-      loc.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      loc.kecamatan.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCat && matchesSearch;
-  });
+  const filteredLocations = React.useMemo(() => {
+    if (locations.length === 0) return [];
+    return locations.filter((loc) => {
+      const matchesCat = activeCategory === "Semua" || loc.category === activeCategory;
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !query ||
+        loc.name.toLowerCase().includes(query) ||
+        loc.kecamatan.toLowerCase().includes(query);
+      return matchesCat && matchesSearch;
+    });
+  }, [locations, activeCategory, searchQuery]);
 
   const handleOpenAlbum = (loc: any, startIndex = 0) => {
     if (!loc) return;
@@ -754,49 +798,101 @@ export const GeospatialSection: React.FC = () => {
           >
             <div className="space-y-3">
               <div>
-                <h4 className="text-sm font-extrabold text-blue-950">Lokasi Proyek Halut</h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-extrabold text-blue-950">Lokasi Proyek Halut</h4>
+                  {locations.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 text-[10px] font-extrabold font-mono">
+                      {locations.length} Lokasi
+                    </span>
+                  )}
+                </div>
                 <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                  Klik lokasi pada daftar atau marker di peta untuk melihat foto & realisasi fisik.
+                  {locations.length > 0
+                    ? "Klik lokasi pada daftar atau marker di peta untuk melihat foto & realisasi fisik."
+                    : "Peta direktori pemantauan proyek fisik & infrastruktur Kabupaten Halmahera Utara."}
                 </p>
               </div>
 
-              {/* Search Bar Input */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder="Cari wilayah atau lokasi..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm transition font-medium"
-                />
-              </div>
+              {/* Search Bar Input (Hanya tampilkan jika ada data proyek) */}
+              {locations.length > 0 && (
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Cari wilayah atau nama proyek..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:border-blue-500 shadow-sm transition font-medium"
+                  />
+                </div>
+              )}
 
-              {/* Category Filter Pills */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.name}
-                    onClick={() => setActiveCategory(activeCategory === cat.name ? "Semua" : cat.name)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition ${
-                      activeCategory === cat.name
-                        ? "bg-blue-700 text-white shadow-sm"
-                        : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-blue-50"
-                    }`}
-                  >
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
+              {/* Category Filter Pills (Hanya tampil jika ada kategori data) */}
+              {categories.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  {categories.map((cat) => {
+                    const isSelected = activeCategory === cat.name;
+                    return (
+                      <button
+                        key={cat.name}
+                        onClick={() =>
+                          setActiveCategory(
+                            isSelected && categories.some((c) => c.name === "Semua")
+                              ? "Semua"
+                              : cat.name
+                          )
+                        }
+                        className={`px-2.5 py-1 rounded-full text-[10px] font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                          isSelected
+                            ? "bg-blue-700 text-white shadow-sm"
+                            : "bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-blue-50"
+                        }`}
+                      >
+                        <span>{cat.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Location Item List - Isolated Scroll Container */}
               <div
                 className="space-y-2 h-[340px] max-h-[340px] overflow-y-auto pr-1 text-left custom-scrollbar"
                 style={{ overscrollBehavior: "contain" }}
               >
-                {filteredLocations.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400 font-medium bg-white rounded-xl border border-dashed border-slate-200">
-                    Tidak ada lokasi proyek yang sesuai.
+                {locations.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-500 font-medium bg-white rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2.5 h-[260px]">
+                    <div className="w-10 h-10 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600">
+                      <MapPin className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-extrabold text-slate-800 text-xs">Belum Ada Proyek Selesai</p>
+                      <p className="text-[11px] text-slate-400 max-w-[210px] leading-relaxed mx-auto">
+                        Lokasi proyek fisik pembangunan dengan progres 100% (selesai) akan terdata otomatis pada daftar ini.
+                      </p>
+                    </div>
+                  </div>
+                ) : filteredLocations.length === 0 ? (
+                  <div className="p-6 text-center text-xs text-slate-500 font-medium bg-white rounded-2xl border border-dashed border-slate-200 flex flex-col items-center justify-center gap-2.5 h-[260px]">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+                      <Search className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <p className="font-extrabold text-slate-800 text-xs">Lokasi Tidak Ditemukan</p>
+                      <p className="text-[11px] text-slate-400 max-w-[210px] leading-relaxed mx-auto">
+                        Tidak ada proyek yang sesuai dengan pencarian &quot;{searchQuery}&quot;{activeCategory !== "Semua" ? ` pada kategori ${activeCategory}` : ""}.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery("");
+                        setActiveCategory("Semua");
+                      }}
+                      className="text-[11px] text-blue-700 font-extrabold hover:underline pt-1 cursor-pointer"
+                    >
+                      Reset Pencarian
+                    </button>
                   </div>
                 ) : (
                   filteredLocations.map((loc) => {
