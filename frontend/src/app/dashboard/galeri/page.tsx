@@ -186,9 +186,6 @@ export default function GaleriManagementPage() {
         >
           <Video className="w-4 h-4 text-amber-600" />
           <span>Video Sambutan Utama (Hero)</span>
-          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-amber-100 text-amber-900 font-black uppercase">
-            Live
-          </span>
         </button>
 
         <button
@@ -202,9 +199,6 @@ export default function GaleriManagementPage() {
         >
           <Youtube className="w-4 h-4 text-red-500" />
           <span>Video YouTube Media Sosial</span>
-          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-red-100 text-red-800 font-black uppercase">
-            Beranda
-          </span>
         </button>
 
         <button
@@ -218,9 +212,6 @@ export default function GaleriManagementPage() {
         >
           <Instagram className="w-4 h-4 text-pink-500" />
           <span>Feed Instagram Media Sosial</span>
-          <span className="px-1.5 py-0.5 rounded-md text-[9px] bg-pink-100 text-pink-800 font-black uppercase">
-            Beranda
-          </span>
         </button>
       </div>
 

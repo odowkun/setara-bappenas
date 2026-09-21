@@ -70,9 +70,9 @@ export const SocialMediaSection: React.FC = () => {
           }
         }
 
-        // Dynamic Instagram posts from dashboard
+        // Dynamic Instagram posts from dashboard (Exactly 2 posts)
         if (Array.isArray(meta.instagram_posts) && meta.instagram_posts.length > 0) {
-          setInstagramPosts(meta.instagram_posts);
+          setInstagramPosts(meta.instagram_posts.slice(0, 2));
         }
 
         // Dynamic Instagram profile from dashboard

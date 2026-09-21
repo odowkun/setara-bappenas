@@ -54,8 +54,8 @@ export default function InstagramSocialMediaSettingsPanel() {
   // Profile states
   const [profile, setProfile] = useState<InstagramProfileData>(OFFICIAL_INSTAGRAM_PROFILE);
 
-  // Posts list state
-  const [posts, setPosts] = useState<InstagramPostData[]>(OFFICIAL_INSTAGRAM_POSTS);
+  // Posts list state (Exact 2 posts for home grid)
+  const [posts, setPosts] = useState<InstagramPostData[]>(OFFICIAL_INSTAGRAM_POSTS.slice(0, 2));
 
   // Edit / Add modal state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -85,7 +85,9 @@ export default function InstagramSocialMediaSettingsPanel() {
         const meta = json.data.meta_json;
         if (meta) {
           if (Array.isArray(meta.instagram_posts) && meta.instagram_posts.length > 0) {
-            setPosts(meta.instagram_posts);
+            setPosts(meta.instagram_posts.slice(0, 2));
+          } else {
+            setPosts(OFFICIAL_INSTAGRAM_POSTS.slice(0, 2));
           }
           if (meta.instagram_profile) {
             setProfile((prev) => ({
@@ -104,6 +106,7 @@ export default function InstagramSocialMediaSettingsPanel() {
     setSaving(true);
     try {
       const prevMeta = existingTentang?.meta_json || {};
+      const postsToSave = newPosts.slice(0, 2);
       const res = await authenticatedFetch("/profil/tentang", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -116,13 +119,13 @@ export default function InstagramSocialMediaSettingsPanel() {
           meta_json: {
             ...prevMeta,
             instagram_profile: newProfile,
-            instagram_posts: newPosts,
+            instagram_posts: postsToSave,
           },
         }),
       });
 
       if (res.ok) {
-        toast.success("Feed Instagram berhasil disimpan dan langsung tayang di Beranda!");
+        toast.success("Feed Instagram berhasil disimpan!");
       } else {
         const errorData = await res.json().catch(() => null);
         throw new Error(errorData?.message || "Gagal menyimpan feed Instagram.");
@@ -136,6 +139,10 @@ export default function InstagramSocialMediaSettingsPanel() {
 
   // Open modal for Create
   const handleOpenCreateForm = () => {
+    if (posts.length >= 2) {
+      toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit postingan yang sudah ada atau hapus salah satu.");
+      return;
+    }
     setEditingPostId(null);
     setFormTitle("");
     setFormCategory(CATEGORY_OPTIONS[0]);
@@ -229,6 +236,10 @@ export default function InstagramSocialMediaSettingsPanel() {
           : p
       );
     } else {
+      if (posts.length >= 2) {
+        toast.error("Maksimal 2 postingan feed Instagram. Silakan edit postingan yang ada.");
+        return;
+      }
       const newPost: InstagramPostData = {
         id: `ig-${Date.now()}`,
         title: formTitle.trim(),
@@ -239,7 +250,7 @@ export default function InstagramSocialMediaSettingsPanel() {
         likesCount: Number(formLikes) || 0,
         postUrl: formPostUrl.trim() || profile.profileUrl,
       };
-      updatedPosts = [newPost, ...posts];
+      updatedPosts = [...posts, newPost].slice(0, 2);
     }
 
     setPosts(updatedPosts);
@@ -280,16 +291,17 @@ export default function InstagramSocialMediaSettingsPanel() {
   // Reset to default
   const handleResetToDefault = async () => {
     const res = await showConfirm(
-      "Reset ke Postingan Bawaan?",
-      "Seluruh postingan Instagram akan dikembalikan ke data default resmi.",
+      "Reset ke 2 Postingan Bawaan?",
+      "Dua postingan Instagram akan dikembalikan ke data default resmi template BAPPEDA.",
       "Ya, Reset Sekarang"
     );
     if (!res.isConfirmed) return;
 
-    setPosts(OFFICIAL_INSTAGRAM_POSTS);
+    const defaultPosts = OFFICIAL_INSTAGRAM_POSTS.slice(0, 2);
+    setPosts(defaultPosts);
     setProfile(OFFICIAL_INSTAGRAM_PROFILE);
-    await handleSaveToBackend(OFFICIAL_INSTAGRAM_POSTS, OFFICIAL_INSTAGRAM_PROFILE);
-    toast.success("Postingan Instagram berhasil di-reset ke default.");
+    await handleSaveToBackend(defaultPosts, OFFICIAL_INSTAGRAM_PROFILE);
+    toast.success("Postingan Instagram berhasil di-reset ke 2 postingan default.");
   };
 
   if (loading) {
@@ -306,15 +318,15 @@ export default function InstagramSocialMediaSettingsPanel() {
       {/* HEADER SECTION */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gradient-to-r from-purple-50 to-pink-50 border border-purple-200/80 text-purple-800 text-[10px] font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-[10px] font-black uppercase tracking-wider">
             <Instagram className="w-3.5 h-3.5 text-pink-600 shrink-0" />
-            <span>Feed Instagram — Beranda Publik</span>
+            <span>Feed Instagram Resmi</span>
           </div>
           <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
             Manajemen Postingan Instagram Media Sosial
           </h2>
           <p className="text-xs text-slate-500 font-medium max-w-3xl leading-relaxed">
-            Kelola postingan Instagram resmi yang tampil pada kolom kanan kartu media sosial beranda portal. Dua postingan teratas akan langsung tayang berdampingan secara presisi dengan pemutar video YouTube siaran resmi.
+            Kelola 2 postingan Instagram resmi yang tampil pada kolom kanan kartu media sosial beranda (Slot 1: Kiri, Slot 2: Kanan).
           </p>
         </div>
 
@@ -332,11 +344,15 @@ export default function InstagramSocialMediaSettingsPanel() {
           <button
             type="button"
             onClick={handleOpenCreateForm}
-            disabled={saving}
-            className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-pink-500/25 transition cursor-pointer active:scale-95 disabled:opacity-50"
+            disabled={saving || posts.length >= 2}
+            className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer active:scale-95 disabled:opacity-50 ${
+              posts.length >= 2
+                ? "bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed"
+                : "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-md shadow-pink-500/25"
+            }`}
           >
             <Plus className="w-4 h-4" />
-            <span>Tambah Postingan Instagram</span>
+            <span>{posts.length >= 2 ? "Slot Postingan Penuh (2/2)" : "Tambah Postingan Instagram"}</span>
           </button>
         </div>
       </div>
@@ -420,10 +436,10 @@ export default function InstagramSocialMediaSettingsPanel() {
           <div>
             <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
               <Layers className="w-4 h-4 text-purple-600" />
-              <span>Daftar Postingan Instagram ({posts.length})</span>
+              <span>Daftar Postingan Instagram ({posts.length} dari 2 Slot)</span>
             </h3>
             <p className="text-[11px] text-slate-400 font-medium">
-              *Catatan: <strong>2 Postingan Pertama</strong> akan tampil di Beranda Publik berdampingan dengan video YouTube siaran resmi.
+              *Tepat 2 postingan yang tampil berdampingan dengan video YouTube siaran resmi.
             </p>
           </div>
 
@@ -448,15 +464,10 @@ export default function InstagramSocialMediaSettingsPanel() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {posts.map((post, idx) => {
-              const isLiveOnHome = idx < 2;
               return (
                 <div
                   key={post.id}
-                  className={`p-4 rounded-2xl border transition-all space-y-3 relative flex flex-col justify-between ${
-                    isLiveOnHome
-                      ? "bg-purple-50/40 border-purple-200/90 shadow-sm ring-1 ring-purple-300/40"
-                      : "bg-slate-50/70 border-slate-200 hover:bg-white hover:shadow-xs"
-                  }`}
+                  className="p-4 rounded-2xl border transition-all space-y-3 relative flex flex-col justify-between bg-white border-slate-200 hover:shadow-xs"
                 >
                   <div className="space-y-3">
                     {/* Top status bar */}
@@ -465,12 +476,9 @@ export default function InstagramSocialMediaSettingsPanel() {
                         <span className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 text-xs font-black flex items-center justify-center shrink-0">
                           #{idx + 1}
                         </span>
-                        {isLiveOnHome && (
-                          <span className="px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[9px] font-black uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                            Tayang di Beranda
-                          </span>
-                        )}
+                        <span className="px-2.5 py-0.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white text-[10px] font-black uppercase tracking-wider shadow-xs">
+                          {idx === 0 ? "Slot 1 (Kiri)" : "Slot 2 (Kanan)"}
+                        </span>
                         <span className="text-[10px] font-black tracking-wider uppercase text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
                           {post.category}
                         </span>

@@ -132,9 +132,9 @@ export default function YouTubeSocialMediaSettingsPanel() {
       {/* Header Info */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-50 border border-red-200/80 text-red-700 text-[10px] font-black uppercase tracking-wider">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-wider">
             <Youtube className="w-3.5 h-3.5 text-red-600" />
-            <span>Kanal Media Sosial — Beranda Publik</span>
+            <span>Kanal YouTube Siaran Resmi</span>
           </div>
           <h2 className="text-xl font-black text-slate-900 tracking-tight">
             Pengaturan Video YouTube Siaran Resmi
@@ -305,7 +305,7 @@ export default function YouTubeSocialMediaSettingsPanel() {
         <div className="lg:col-span-5 space-y-4 sticky top-6">
           <div className="flex items-center justify-between px-1">
             <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
-              Live Preview Card (Sama Persis di Beranda)
+              Preview Tampilan Kartu YouTube
             </span>
             <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
               Responsif
