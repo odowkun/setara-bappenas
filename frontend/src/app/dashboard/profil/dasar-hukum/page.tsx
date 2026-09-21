@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
-import SearchableSelect from "@/components/ui/SearchableSelect";
+import SearchableSelect, { SearchableOption } from "@/components/ui/SearchableSelect";
 import { toast } from "@/lib/swal";
 import {
   Scale,
@@ -20,15 +20,22 @@ import {
   Loader2,
 } from "lucide-react";
 
-const KATEGORI_REGULASI_OPTIONS = [
+const DEFAULT_KATEGORI_REGULASI_OPTIONS: SearchableOption[] = [
   { value: "Undang-Undang", label: "Undang-Undang" },
   { value: "Peraturan Pemerintah", label: "Peraturan Pemerintah" },
   { value: "Peraturan Presiden", label: "Peraturan Presiden" },
   { value: "Peraturan Menteri", label: "Peraturan Menteri" },
+  { value: "Instruksi Menteri", label: "Instruksi Menteri" },
+  { value: "Keputusan Menteri", label: "Keputusan Menteri" },
+  { value: "Surat Edaran Menteri", label: "Surat Edaran Menteri" },
   { value: "Peraturan Daerah", label: "Peraturan Daerah" },
+  { value: "Peraturan Gubernur", label: "Peraturan Gubernur" },
+  { value: "Keputusan Gubernur", label: "Keputusan Gubernur" },
+  { value: "Instruksi Gubernur", label: "Instruksi Gubernur" },
   { value: "Peraturan Bupati", label: "Peraturan Bupati" },
   { value: "Keputusan Bupati", label: "Keputusan Bupati" },
   { value: "Instruksi Bupati", label: "Instruksi Bupati" },
+  { value: "Surat Edaran Bupati", label: "Surat Edaran Bupati" },
 ];
 
 interface RegulasiItem {
@@ -51,6 +58,23 @@ export default function DasarHukumEditorPage() {
   // Daftar Regulasi Item
   const [regulasiList, setRegulasiList] = useState<RegulasiItem[]>([]);
 
+  // Opsi Kategori Regulasi Dinamis (bisa ditambah opsi baru dari select creatable)
+  const [kategoriOptions, setKategoriOptions] = useState<SearchableOption[]>(
+    DEFAULT_KATEGORI_REGULASI_OPTIONS
+  );
+
+  const handleAddNewKategori = (newKategori: string) => {
+    const trimmed = newKategori.trim();
+    if (!trimmed) return;
+    setKategoriOptions((prev) => {
+      if (prev.some((opt) => String(opt.value).toLowerCase() === trimmed.toLowerCase())) {
+        return prev;
+      }
+      return [...prev, { value: trimmed, label: trimmed }];
+    });
+    toast.success(`Kategori regulasi "${trimmed}" berhasil ditambahkan ke pilihan!`);
+  };
+
   // Load data from API
   const fetchDasarHukumData = async () => {
     setLoading(true);
@@ -62,6 +86,24 @@ export default function DasarHukumEditorPage() {
           const d = json.data;
           if (d.meta_json && Array.isArray(d.meta_json.regulasi)) {
             setRegulasiList(d.meta_json.regulasi);
+
+            // Kumpulkan kategori kustom yang sudah ada di database agar masuk ke opsi pilihan
+            const existingCategories = d.meta_json.regulasi
+              .map((r: RegulasiItem) => r.kategori)
+              .filter((k: string) => Boolean(k && k.trim()));
+
+            if (existingCategories.length > 0) {
+              setKategoriOptions((prev) => {
+                const map = new Map(prev.map((o) => [String(o.value).toLowerCase(), o]));
+                for (const cat of existingCategories) {
+                  const key = cat.trim().toLowerCase();
+                  if (!map.has(key)) {
+                    map.set(key, { value: cat.trim(), label: cat.trim() });
+                  }
+                }
+                return Array.from(map.values());
+              });
+            }
           }
         }
       }
@@ -301,15 +343,23 @@ export default function DasarHukumEditorPage() {
                     </div>
 
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Kategori Regulasi
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[11px] font-bold text-slate-700">
+                          Kategori Regulasi *
+                        </label>
+                        <span className="text-[10px] text-blue-600 font-extrabold">
+                          + Bisa tambah baru
+                        </span>
+                      </div>
                       <SearchableSelect
-                        options={KATEGORI_REGULASI_OPTIONS}
+                        options={kategoriOptions}
                         value={item.kategori}
                         onChange={(val) => handleRegulasiChange(idx, "kategori", String(val))}
                         placeholder="Pilih Kategori Regulasi"
-                        searchPlaceholder="Cari kategori regulasi..."
+                        searchPlaceholder="Cari atau ketik kategori baru..."
+                        creatable={true}
+                        createLabelPrefix="Tambah kategori baru:"
+                        onCreateOption={handleAddNewKategori}
                       />
                     </div>
                   </div>

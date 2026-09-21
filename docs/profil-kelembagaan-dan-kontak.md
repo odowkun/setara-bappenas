@@ -64,3 +64,18 @@ Untuk mencegah tag HTML (seperti `<p>`, `</p>`, `<ul>`, dll.) terlihat secara me
      const cleanText = rawContent ? rawContent.replace(/<[^>]*>/g, "").trim() : "";
      ```
    - Berlaku pada: `/profil/tentang` (kutipan Visi), `/profil/tugas-fungsi` (daftar fungsi), `/pengumuman` (ringkasan kartu & headline), `/berita` (ringkasan artikel & carousel beranda).
+
+## Standarisasi Pengelolaan Dasar Hukum & Kategori Regulasi Dinamis
+
+Pada halaman Editor Dasar Hukum (`/dashboard/profil/dasar-hukum`), dropdown pemilihan kategori regulasi dikonfigurasi secara adaptif:
+
+1. **Kelengkapan Hierarki Kategori Regulasi**:
+   - **Tingkat Pusat / Nasional**: Undang-Undang, Peraturan Pemerintah, Peraturan Presiden, Peraturan Menteri, **Instruksi Menteri**, **Keputusan Menteri**, **Surat Edaran Menteri**.
+   - **Tingkat Daerah Provinsi**: Peraturan Daerah, Peraturan Gubernur, Keputusan Gubernur, Instruksi Gubernur.
+   - **Tingkat Daerah Kabupaten**: Peraturan Bupati, Keputusan Bupati, **Instruksi Bupati**, **Surat Edaran Bupati**.
+
+2. **Dukungan Kategori Kustom (Creatable SearchableSelect)**:
+   - Komponen `SearchableSelect` diaktifkan dengan `creatable={true}` dan `createLabelPrefix="Tambah kategori baru:"`.
+   - Admin dapat langsung mengetik kategori baru di bilah pencarian jika nama kategori khusus belum tersedia di opsi default.
+   - Kategori kustom yang baru ditambahkan secara otomatis disimpan ke state `kategoriOptions` dan dirender langsung di badge halaman publik `/profil/dasar-hukum`.
+   - Data kategori kustom tersimpan persisten di database Laravel melalui kolom JSON `meta_json.regulasi` pada tabel `profils`.

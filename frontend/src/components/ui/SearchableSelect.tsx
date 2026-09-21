@@ -131,10 +131,10 @@ export default function SearchableSelect({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (creatable && trimmedSearch && !exactMatch) {
-        handleCreate(trimmedSearch);
-      } else if (filteredOptions.length > 0) {
+      if (filteredOptions.length > 0) {
         handleSelect(filteredOptions[0].value);
+      } else if (creatable && trimmedSearch && !exactMatch) {
+        handleCreate(trimmedSearch);
       }
     } else if (e.key === "Escape") {
       setIsOpen(false);
