@@ -207,14 +207,6 @@ export const SocialMediaSection: React.FC = () => {
               {/* RIGHT: BROADCAST DETAILS & METADATA (5 Cols on LG, 4 on XL - LIGHT THEME) */}
               <div className="lg:col-span-5 xl:col-span-4 flex flex-col justify-between space-y-4 sm:space-y-5">
                 <div className="space-y-3">
-                  {/* Badge & Date/Location */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-50 text-red-700 border border-red-200/80 text-[10px] font-black uppercase tracking-wider">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                      {youtubeData.badge}
-                    </span>
-                  </div>
-
                   <div className="flex items-center gap-2 text-xs font-bold text-slate-500 flex-wrap">
                     <div className="flex items-center gap-1.5 text-slate-700">
                       <Calendar className="w-3.5 h-3.5 text-slate-400" />
@@ -238,39 +230,18 @@ export const SocialMediaSection: React.FC = () => {
                   </p>
                 </div>
 
-                {/* Channel Box & Action Buttons */}
-                <div className="pt-4 border-t border-slate-100 space-y-3">
-                  <div className="flex items-center gap-2.5 text-xs text-slate-500">
-                    <div className="w-7 h-7 rounded-full bg-red-50 border border-red-200/80 flex items-center justify-center text-red-600 shrink-0">
-                      <Youtube className="w-3.5 h-3.5 fill-red-600" />
-                    </div>
-                    <span className="truncate">
-                      Kanal: <strong className="text-slate-800 font-bold">{youtubeData.channelTitle}</strong>
-                    </span>
-                  </div>
-
-                  <div className="flex items-center gap-3 pt-1">
-                    <a
-                      href={youtubeData.videoUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex-1 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs inline-flex items-center justify-center gap-2 shadow-md shadow-red-500/20 transition active:scale-95 cursor-pointer"
-                    >
-                      <Play className="w-3.5 h-3.5 fill-white" />
-                      <span>Tonton di YouTube</span>
-                      <ExternalLink className="w-3 h-3 ml-0.5" />
-                    </a>
-
-                    <a
-                      href={youtubeData.channelUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-4 py-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 hover:text-slate-900 font-bold text-xs inline-flex items-center gap-2 transition active:scale-95 cursor-pointer"
-                    >
-                      <span>Kanal</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
+                {/* Action Button */}
+                <div className="pt-4 border-t border-slate-100">
+                  <a
+                    href={youtubeData.videoUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs inline-flex items-center justify-center gap-2 shadow-md shadow-red-500/20 transition active:scale-95 cursor-pointer"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-white" />
+                    <span>Tonton di YouTube</span>
+                    <ExternalLink className="w-3 h-3 ml-0.5" />
+                  </a>
                 </div>
               </div>
             </div>

@@ -10,7 +10,7 @@ Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmaher
    - **Rasio Layar Lebar 16:9 Alami (`aspect-video`)**: Thumbnail dan pemutar video menggunakan rasio asli 16:9 tanpa pemotongan teks maupun kompresi gambar vertikal ("anti-gepeng").
    - **Tata Letak Internal 2 Kolom**:
      - **Sisi Kiri (7 Kolom LG / 8 Kolom XL)**: Frame video widescreen 16:9 dengan badge *HD VIDEO*, animasi play button, indikator siaran resmi, dan pemutaran inline iframe (`youtube-nocookie.com`).
-     - **Sisi Kanan (5 Kolom LG / 4 Kolom XL)**: Panel metadata lengkap berisi badge status siaran, tanggal rilis, lokasi agenda, judul siaran, deskripsi lengkap, serta tombol aksi *"Tonton di YouTube"* dan *"Kanal Resmi"*.
+     - **Sisi Kanan (5 Kolom LG / 4 Kolom XL)**: Panel konten ringkas dan bersih berisi tanggal rilis, lokasi agenda, judul video tebal, deskripsi lengkap, serta tombol aksi tunggal *"Tonton di YouTube"*.
    - **Dukungan Manajemen Dinamis di Dashboard**: Administrator dapat mengganti link YouTube, judul, tanggal, lokasi, dan deskripsi secara langsung dari dashboard (`/dashboard/galeri?tab=youtube-media`).
 2. **Blok Bawah: Feed Postingan Instagram Interaktif (Grid 6 Postingan Proporsional)**:
    - Header profil Instagram resmi `@bappeda_halut` dengan foto avatar berbingkai gradien, centang terverifikasi, tagline *"Sinergi Lokal, Solusi Global"*, dan tombol aksi `Ikuti di Instagram`.
