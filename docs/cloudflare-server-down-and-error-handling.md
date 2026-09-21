@@ -13,7 +13,7 @@ Dokumen ini menjelaskan arsitektur pemisahan dan standardisasi visual tampilan k
 | **Status Kode HTTP** | `502 Bad Gateway`, `503 Service Unavailable`, `504 Gateway Timeout`, `521 Web Server Down`, `522 Connection Timed Out`, `523 Origin Unreachable`. | Status client `200 OK` (namun React melempar exception saat render) atau chunk load timeout. |
 | **Judul Layar** | **"Server Utama Sedang Tidak Terhubung"** | **"Terjadi Kendala Memuat Aplikasi"** |
 | **Isi Pesan** | *"Koneksi ke server on-premise BAPPEDA sedang terputus, padam, atau dalam pemeliharaan jaringan/daya. Halaman akan otomatis memuat ulang saat server aktif kembali."* | *"Sistem mendeteksi pembaruan versi aplikasi atau kendala rendering data di peramban Anda (Koneksi server utama aktif). Silakan tekan tombol di bawah untuk menyegarkan kembali."* |
-| **Badge Khusus** | `STATUS: SERVER FISIK OFFLINE (CLOUDFLARE 502/521/523)` | Tanpa badge server offline. |
+| **Badge Khusus** | `Server on-premise BAPPEDA sedang terputus dan dalam pemeliharaan jaringan dan daya` | Tanpa badge server offline. |
 | **Tombol Tindakan** | `Periksa Koneksi Server` | `Segarkan Halaman` |
 | **Auto-Retry** | Otomatis reload setiap 30 detik untuk mendeteksi hidupnya server kantor. | Otomatis deteksi chunk reload 1x jika terjadi `ChunkLoadError`. |
 

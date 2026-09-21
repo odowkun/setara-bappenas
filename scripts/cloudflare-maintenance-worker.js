@@ -85,15 +85,14 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
       margin-top: 28px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
+      gap: 8px;
+      padding: 6px 16px;
       border-radius: 9999px;
       background-color: #f1f5f9;
       border: 1px solid #e2e8f0;
-      font-size: 11px;
-      font-weight: 700;
+      font-size: 12px;
+      font-weight: 600;
       color: #64748b;
-      font-family: monospace;
     }
     .status-dot {
       width: 6px;
@@ -124,7 +123,7 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
   </div>
   <h1>Server Utama Sedang Tidak Terhubung</h1>
   <p>
-    Koneksi ke server on-premise BAPPEDA sedang terputus, padam, atau dalam pemeliharaan jaringan/daya. Halaman akan otomatis memuat ulang saat server aktif kembali.
+    Koneksi ke server kantor saat ini tidak dapat dijangkau. Halaman akan otomatis memuat ulang saat koneksi kembali pulih.
   </p>
   <button class="btn-refresh" onclick="window.location.reload()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -137,7 +136,7 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
   </button>
   <div class="status-badge">
     <span class="status-dot"></span>
-    <span>STATUS: SERVER FISIK OFFLINE (CLOUDFLARE 502/521/523)</span>
+    <span>Server on-premise BAPPEDA sedang terputus dan dalam pemeliharaan jaringan dan daya</span>
   </div>
 </body>
 </html>`;
