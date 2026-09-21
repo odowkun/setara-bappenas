@@ -91,9 +91,9 @@ Route::prefix('v1')->group(function () {
     // Hero Video Settings Endpoints
     Route::get('/hero-video', [GaleriController::class, 'getHeroVideo']);
     Route::get('/admin/hero-video', [GaleriController::class, 'getAdminHeroVideo'])
-        ->middleware(['auth:sanctum', 'permission:manage_galeri']);
+        ->middleware(['auth:sanctum', 'permission:manage_galeri|manage_dashboard']);
     Route::put('/admin/hero-video', [GaleriController::class, 'updateHeroVideo'])
-        ->middleware(['auth:sanctum', 'permission:manage_galeri', AuditAdminMutation::class])
+        ->middleware(['auth:sanctum', 'permission:manage_galeri|manage_dashboard', AuditAdminMutation::class])
         ->name('hero-video.update');
 
     // Tautan OPD Endpoints

@@ -156,7 +156,39 @@ Jika frontend harus di-rollback sendiri, backend baru tetap kompatibel untuk pem
 ## Penjaga regresi
 
 - `OfficialPublicationWorkflowTest` menguji draf, publish, unpublish, filter publik, route edit nyata, lampiran privat, dokumen, proyek tanpa default palsu, pola mock frontend, serta URL root-relative upload media dan normalisasi gambar di model `News`.
+- `HeroVideoTest` menguji pengambilan video publik (`GET /api/v1/hero-video`), pengambilan konfigurasi admin (`GET /api/v1/admin/hero-video`), serta pembaharuan konfigurasi admin dengan tautan YouTube dan berkas video lokal (`PUT /api/v1/admin/hero-video`).
 - `DatabaseSourceOfTruthTest` dan `OfficialDatabaseSourceTest` menjaga agar frontend tidak kembali memakai record browser/mock.
 - `npm run build` memvalidasi route dan TypeScript seluruh halaman.
+
+---
+
+## Standar Video Sambutan Utama Beranda & Dukungan Multi-Format (YouTube + Direct MP4)
+
+Status implementasi: 21 September 2026.
+
+### 1. Masalah & Temuan
+1. Ketika admin memasukkan tautan YouTube (misal: `https://youtu.be/ABs7uaqojsY?si=mocXO85Nkj6MABIK`) ke form pengaturan video sambutan:
+   - Tag HTML5 `<video><source src="..." type="video/mp4" /></video>` pada Live Preview dan Beranda (`HeroSection.tsx`) gagal memutar URL YouTube karena format YouTube bukan file MP4 langsung.
+   - Hal ini menyebabkan video tidak pernah terputar/terganti saat tombol Play ditekan (hanya diam di poster gambar).
+2. Ketika admin mengganti dengan berkas video MP4/WebM baru:
+   - Tag `<video>` tanpa atribut `key` dinamis atau `src` langsung mengabaikan perubahan elemen anak `<source>` setelah inisialisasi awal DOM (spesifikasi standar browser HTML5).
+
+### 2. Solusi & Standar Teknis
+1. **Helper Parser YouTube (`heroVideoService.ts`)**:
+   - `extractYouTubeId(url)`: Mendukung seluruh format YouTube (`youtu.be/ID`, `youtube.com/watch?v=ID`, `youtube.com/embed/ID`, `youtube.com/shorts/ID`, query params `?si=...`, dsb.).
+   - `getYouTubeEmbedUrl(videoId, autoplay)`: Menghasilkan URL embed `https://www.youtube-nocookie.com/embed/${videoId}` yang aman, tanpa cookie pelacak, dan responsif.
+   - `getYouTubeThumbnailUrl(videoId, quality)`: Menghasilkan URL thumbnail resolusi tinggi YouTube secara instan.
+2. **Interactive Live Preview di Dashboard Admin (`HeroVideoSettingsPanel.tsx`)**:
+   - Deteksi real-time input URL YouTube dengan indikator visual dan tombol 1-klik `Pasang Thumbnail YouTube Otomatis`.
+   - Pratinjau langsung memutar iframe YouTube saat admin menekan tombol Play, dengan kontrol `Tutup Pratinjau`.
+   - Menjaga sinkronisasi state saat penyimpanan berhasil (`setVideoUrl`, `setPosterUrl`, dll.).
+3. **Penyajian Responsif di Halaman Depan Publik (`HeroSection.tsx`)**:
+   - Menggunakan `isYouTube` untuk membedakan mode rendering:
+     - Jika YouTube: menampilkan poster cover kustom/YouTube thumbnail, badge judul, dan tombol 3D Play. Saat diputar, iframe YouTube aktif dengan tombol `Tutup Video` untuk kembali ke cover poster.
+     - Jika Berkas Video Langsung: `<video key={currentVideoUrl} src={currentVideoUrl}>` memastikan browser langsung memuat video baru setiap kali setting diperbarui.
+4. **Backend API & Hak Akses (`routes/api.php` & `GaleriController.php`)**:
+   - Route `PUT /admin/hero-video` mendukung permission `manage_galeri|manage_dashboard` dan diaudit oleh `AuditAdminMutation`.
+   - Validasi dan pembersihan data (`trim`, handling nullable poster dengan benar).
+
 
 

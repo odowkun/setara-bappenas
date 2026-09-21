@@ -19,12 +19,16 @@ import {
   RotateCcw,
   Eye,
   EyeOff,
+  X,
 } from "lucide-react";
 import { toast } from "@/lib/swal";
 import {
   heroVideoService,
   HeroVideoSetting,
   HeroVideoPayload,
+  extractYouTubeId,
+  getYouTubeEmbedUrl,
+  getYouTubeThumbnailUrl,
 } from "@/services/heroVideoService";
 
 export default function HeroVideoSettingsPanel() {
@@ -46,6 +50,13 @@ export default function HeroVideoSettingsPanel() {
   const [lastUpdatedBy, setLastUpdatedBy] = useState<string | null>(null);
   const [lastUpdatedAt, setLastUpdatedAt] = useState<string | null>(null);
 
+  // Computed YouTube detection
+  const youtubeId = extractYouTubeId(videoUrl);
+  const isYouTube = Boolean(youtubeId);
+  const effectivePreviewPoster =
+    posterUrl ||
+    (youtubeId ? getYouTubeThumbnailUrl(youtubeId, "maxres") : "/images/bappeda/fgd-keuangan.png");
+
   // Preview video state
   const previewVideoRef = useRef<HTMLVideoElement>(null);
   const [previewPlaying, setPreviewPlaying] = useState(false);
@@ -54,6 +65,12 @@ export default function HeroVideoSettingsPanel() {
   // File input refs
   const videoFileInputRef = useRef<HTMLInputElement>(null);
   const posterFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Auto reset preview playback state when videoUrl changes
+  useEffect(() => {
+    setPreviewPlaying(false);
+  }, [videoUrl]);
+
 
   const fetchSettings = async () => {
     setLoading(true);
@@ -149,6 +166,10 @@ export default function HeroVideoSettingsPanel() {
     if (res.success) {
       toast.success(res.message || "Pengaturan video berhasil disimpan!");
       if (res.data) {
+        setVideoUrl(res.data.video_url);
+        if (res.data.poster_url !== undefined) {
+          setPosterUrl(res.data.poster_url || "");
+        }
         setLastUpdatedBy(res.data.updated_by || null);
         setLastUpdatedAt(res.data.updated_at || null);
       }
@@ -158,6 +179,11 @@ export default function HeroVideoSettingsPanel() {
   };
 
   const togglePreviewPlay = async () => {
+    if (isYouTube) {
+      setPreviewPlaying(!previewPlaying);
+      return;
+    }
+
     if (!previewVideoRef.current) return;
     if (previewPlaying) {
       previewVideoRef.current.pause();
@@ -280,8 +306,30 @@ export default function HeroVideoSettingsPanel() {
                   )}
                 </button>
               </div>
-              <p className="text-[11px] text-slate-400">
-                Mendukung file MP4, MOV hingga 100MB yang tersimpan di server lokal atau tautan video langsung.
+
+              {youtubeId && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-red-600 animate-pulse shrink-0" />
+                    <span className="font-bold">Video YouTube Terdeteksi (ID: {youtubeId})</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const thumb = getYouTubeThumbnailUrl(youtubeId, "maxres");
+                      setPosterUrl(thumb);
+                      toast.success("Cover poster diisi dari thumbnail YouTube!");
+                    }}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-extrabold text-[11px] transition shadow-xs cursor-pointer w-fit"
+                  >
+                    <Sparkles className="w-3 h-3" />
+                    Pasang Thumbnail YouTube Otomatis
+                  </button>
+                </div>
+              )}
+
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Mendukung tautan YouTube (<strong>https://youtu.be/...</strong> atau <strong>https://youtube.com/watch?v=...</strong>) serta file MP4, MOV, WebM hingga 100MB yang tersimpan di server lokal.
               </p>
             </div>
 
@@ -445,25 +493,48 @@ export default function HeroVideoSettingsPanel() {
 
             {/* Exact Replica of Hero Video Card */}
             <div className="relative rounded-[28px] overflow-hidden border-2 border-white/80 shadow-2xl bg-slate-950 aspect-video group">
-              <video
-                ref={previewVideoRef}
-                poster={posterUrl || "/images/bappeda/fgd-keuangan.png"}
-                playsInline
-                loop
-                muted={previewMuted}
-                onPlay={() => setPreviewPlaying(true)}
-                onPause={() => setPreviewPlaying(false)}
-                className="w-full h-full object-cover"
-                key={videoUrl}
-              >
-                <source src={videoUrl} type="video/mp4" />
-              </video>
+              {isYouTube ? (
+                /* YouTube Live Preview Embed */
+                previewPlaying ? (
+                  <div className="absolute inset-0 z-20 bg-black">
+                    <iframe
+                      src={getYouTubeEmbedUrl(youtubeId!, true)}
+                      title="Preview Video Sambutan"
+                      className="w-full h-full border-0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setPreviewPlaying(false)}
+                      className="absolute top-3 right-3 z-30 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900/80 hover:bg-slate-900 text-white text-[10px] font-bold backdrop-blur-md border border-white/20 shadow-xl cursor-pointer transition active:scale-95"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                      <span>Tutup Pratinjau</span>
+                    </button>
+                  </div>
+                ) : null
+              ) : (
+                /* Direct Video HTML5 Player */
+                <video
+                  ref={previewVideoRef}
+                  src={videoUrl}
+                  poster={effectivePreviewPoster}
+                  playsInline
+                  loop
+                  muted={previewMuted}
+                  onPlay={() => setPreviewPlaying(true)}
+                  onPause={() => setPreviewPlaying(false)}
+                  className="w-full h-full object-cover"
+                  key={videoUrl}
+                />
+              )}
 
               {/* Poster Skeleton Fallback if not playing */}
               {!previewPlaying && (
                 <div className="absolute inset-0 pointer-events-none">
                   <img
-                    src={posterUrl || "/images/bappeda/fgd-keuangan.png"}
+                    src={effectivePreviewPoster}
                     alt="Video Cover"
                     className="w-full h-full object-cover opacity-90"
                   />
@@ -472,61 +543,65 @@ export default function HeroVideoSettingsPanel() {
               )}
 
               {/* Header Badges */}
-              <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold shadow-sm">
-                  <Sparkles className="w-3 h-3 text-amber-400" />
-                  <span>{badgeTitle || "VIDEO SAMBUTAN"}</span>
-                </div>
-
-                {badgeSubtitle && (
-                  <div className="flex items-center gap-1 text-[10px] font-bold text-blue-950 bg-amber-400 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm border border-amber-300">
-                    {badgeSubtitle}
+              {!previewPlaying && (
+                <div className="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-900/80 backdrop-blur-md border border-white/20 text-white text-[10px] font-bold shadow-sm">
+                    <Sparkles className="w-3 h-3 text-amber-400" />
+                    <span>{badgeTitle || "VIDEO SAMBUTAN"}</span>
                   </div>
-                )}
-              </div>
+
+                  {badgeSubtitle && (
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-blue-950 bg-amber-400 backdrop-blur-md px-2.5 py-1 rounded-full shadow-sm border border-amber-300">
+                      {badgeSubtitle}
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Big Center Play Button */}
-              <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
-                <button
-                  type="button"
-                  onClick={togglePreviewPlay}
-                  className="pointer-events-auto w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 backdrop-blur-xl flex items-center justify-center shadow-xl border-2 border-white/80 transform hover:scale-105 active:scale-95 transition"
-                  aria-label={previewPlaying ? "Pause Video" : "Play Video"}
-                >
-                  {previewPlaying ? (
-                    <Pause className="w-6 h-6 text-blue-950 fill-blue-950" />
-                  ) : (
-                    <Play className="w-6 h-6 text-blue-950 fill-blue-950 ml-0.5" />
-                  )}
-                </button>
-              </div>
-
-              {/* Footer Metadata & Controls */}
-              <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex items-end justify-between gap-3">
-                <div className="space-y-1 max-w-[75%]">
-                  <h4 className="text-sm font-black text-white leading-snug line-clamp-1 drop-shadow-sm">
-                    {title || "Sambutan & Arah Kebijakan"}
-                  </h4>
-                  <p className="text-[10px] text-slate-300 font-medium line-clamp-2 leading-relaxed">
-                    {subtitle || "Paparan strategi sinkronisasi perencanaan daerah..."}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1.5 shrink-0">
+              {!previewPlaying && (
+                <div className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none">
                   <button
                     type="button"
-                    onClick={togglePreviewMute}
-                    className="p-2 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30"
-                    title={previewMuted ? "Unmute" : "Mute"}
+                    onClick={togglePreviewPlay}
+                    className="pointer-events-auto w-14 h-14 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 backdrop-blur-xl flex items-center justify-center shadow-xl border-2 border-white/80 transform hover:scale-105 active:scale-95 transition cursor-pointer"
+                    aria-label="Play Video"
                   >
-                    {previewMuted ? (
-                      <VolumeX className="w-3.5 h-3.5" />
-                    ) : (
-                      <Volume2 className="w-3.5 h-3.5" />
-                    )}
+                    <Play className="w-6 h-6 text-blue-950 fill-blue-950 ml-0.5" />
                   </button>
                 </div>
-              </div>
+              )}
+
+              {/* Footer Metadata & Controls */}
+              {!previewPlaying && (
+                <div className="absolute bottom-0 inset-x-0 z-20 p-4 bg-gradient-to-t from-slate-950 via-slate-950/80 to-transparent flex items-end justify-between gap-3">
+                  <div className="space-y-1 max-w-[75%]">
+                    <h4 className="text-sm font-black text-white leading-snug line-clamp-1 drop-shadow-sm">
+                      {title || "Sambutan & Arah Kebijakan"}
+                    </h4>
+                    <p className="text-[10px] text-slate-300 font-medium line-clamp-2 leading-relaxed">
+                      {subtitle || "Paparan strategi sinkronisasi perencanaan daerah..."}
+                    </p>
+                  </div>
+
+                  {!isYouTube && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={togglePreviewMute}
+                        className="p-2 rounded-full bg-white/20 hover:bg-white text-white hover:text-slate-900 backdrop-blur-md transition border border-white/30 cursor-pointer"
+                        title={previewMuted ? "Unmute" : "Mute"}
+                      >
+                        {previewMuted ? (
+                          <VolumeX className="w-3.5 h-3.5" />
+                        ) : (
+                          <Volume2 className="w-3.5 h-3.5" />
+                        )}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             <p className="text-[11px] text-slate-400 text-center leading-relaxed">

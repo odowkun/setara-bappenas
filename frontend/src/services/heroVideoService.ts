@@ -23,6 +23,41 @@ export interface HeroVideoPayload {
   is_active?: boolean;
 }
 
+/**
+ * Ekstraksi YouTube Video ID dari berbagai format URL (youtu.be, watch?v=, embed/, shorts/, dll.)
+ */
+export function extractYouTubeId(url?: string | null): string | null {
+  if (!url) return null;
+  const trimmed = url.trim();
+  const match = trimmed.match(
+    /(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=|shorts\/|live\/))([a-zA-Z0-9_-]{11})/i
+  );
+  if (match && match[1]) {
+    return match[1];
+  }
+  if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) {
+    return trimmed;
+  }
+  return null;
+}
+
+/**
+ * Buat URL embed YouTube no-cookie yang aman dan responsif
+ */
+export function getYouTubeEmbedUrl(videoId: string, autoplay = true): string {
+  return `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=${autoplay ? 1 : 0}&rel=0&modestbranding=1&playsinline=1&enablejsapi=1`;
+}
+
+/**
+ * Dapatkan URL thumbnail YouTube resolusi tinggi / standar
+ */
+export function getYouTubeThumbnailUrl(videoId: string, quality: "maxres" | "hq" = "maxres"): string {
+  return quality === "maxres"
+    ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+    : `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}
+
+
 export const heroVideoService = {
   async getHeroVideo(): Promise<HeroVideoSetting | null> {
     try {

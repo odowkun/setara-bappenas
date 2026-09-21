@@ -231,12 +231,12 @@ class GaleriController extends Controller
 
         $setting = HeroVideoSetting::getActiveSetting();
         $setting->update([
-            'video_url' => $validated['video_url'],
-            'poster_url' => $validated['poster_url'] ?? $setting->poster_url,
-            'badge_title' => $validated['badge_title'] ?? $setting->badge_title,
-            'badge_subtitle' => $validated['badge_subtitle'] ?? $setting->badge_subtitle,
-            'title' => $validated['title'],
-            'subtitle' => $validated['subtitle'] ?? null,
+            'video_url' => trim($validated['video_url']),
+            'poster_url' => !empty($validated['poster_url']) ? trim($validated['poster_url']) : null,
+            'badge_title' => !empty($validated['badge_title']) ? trim($validated['badge_title']) : null,
+            'badge_subtitle' => !empty($validated['badge_subtitle']) ? trim($validated['badge_subtitle']) : null,
+            'title' => trim($validated['title']),
+            'subtitle' => !empty($validated['subtitle']) ? trim($validated['subtitle']) : null,
             'is_active' => isset($validated['is_active']) ? (bool) $validated['is_active'] : $setting->is_active,
             'updated_by' => $request->user()?->name ?? 'Admin',
         ]);
