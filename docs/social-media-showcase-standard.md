@@ -77,3 +77,20 @@ Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram be
      - Angka acak/fiktif (`rand()`) ditiadakan sepenuhnya. Jumlah suka hanya diambil jika secara faktual tertera pada data embed publik Instagram (`likeCountClick`).
      - Jika postingan menyembunyikan jumlah suka atau tidak tersedia secara publik, sistem otomatis menetapkan `likesCount: null` sehingga kartu tampil bersih (*"Tanpa Likes"*).
      - Administrator pada dashboard dapat langsung mengklik tombol **Hapus Likes** pada kartu postingan untuk mengosongkan indikator suka secara instan.
+
+## 5. Standar Tampilan Carousel Multi-Slide & Preservasi Dimensi Asli (Uncropped)
+
+Untuk menjaga konsistensi visual dan memastikan seluruh konten grafis (seperti kop instansi di atas dan footer media sosial di bawah) tidak terpotong:
+1. **Preservasi Resolusi Asli Tanpa Cropping (`Uncropped`)**:
+   - Ekstraksi backend memfilter dan membersihkan parameter crop Instagram (`stp=c0.xxx.xxx.xxxa_`), memastikan gambar yang diunduh beresolusi portrait asli penuh (`1440x1920` / rasio 3:4 atau 4:5).
+   - Komponen `ProgressiveImage` menerapkan `object-contain` dengan pembungkus kontras tinggi `bg-slate-950` pada modal, sehingga seluruh slide tampil utuh dari ujung atas hingga ujung bawah.
+2. **Dukungan Carousel Multi-Slide Penuh**:
+   - Backend mengekstrak seluruh `display_url` carousel dari payload Instagram (misalnya 8 slide berturut-turut) dan menyimpannya secara lokal (`ig_{shortcode}_slide_{1..N}.jpg`).
+   - **Navigasi Carousel Modern**:
+     - Badge indikator jumlah slide di pojok kiri atas modal (`Layers` + `{current + 1} / {total}`).
+     - Tombol navigasi panah sirkular putih ala Instagram di sisi kiri dan kanan gambar.
+     - Titik paginasi (*dots indicator*) di bagian bawah slide.
+     - Navigasi keyboard penuh (`ArrowLeft` & `ArrowRight`).
+   - **Badge Multi-Slide pada Beranda & Dashboard**:
+     - Kartu beranda menampilkan badge transparan `1/N` dengan ikon `Layers`.
+     - Panel dashboard menampilkan strip pratinjau seluruh slide (*thumbnail strip*) agar administrator dapat memverifikasi kelengkapan slide sebelum disimpan.

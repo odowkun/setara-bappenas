@@ -17,6 +17,7 @@ import {
   Sparkles,
   Heart,
   MessageCircle,
+  Layers,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
@@ -344,7 +345,7 @@ export const SocialMediaSection: React.FC = () => {
                   </div>
 
                   {/* Card Bottom Thumbnail Image */}
-                  <div className="relative aspect-[16/10] rounded-lg overflow-hidden bg-slate-200 shadow-inner">
+                  <div className="relative aspect-[4/3] rounded-lg overflow-hidden bg-slate-900 shadow-inner">
                     <ProgressiveImage
                       src={post.images[0]}
                       alt={post.title}
@@ -362,8 +363,9 @@ export const SocialMediaSection: React.FC = () => {
 
                     {/* Multiple Photos Badge */}
                     {post.images.length > 1 && (
-                      <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/65 backdrop-blur-xs text-white text-[9px] font-bold">
-                        1/{post.images.length}
+                      <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-xs text-white text-[10px] font-black flex items-center gap-1 shadow-md border border-white/10">
+                        <Layers className="w-3 h-3 text-pink-400" />
+                        <span>1/{post.images.length}</span>
                       </span>
                     )}
                   </div>
@@ -428,66 +430,79 @@ export const SocialMediaSection: React.FC = () => {
                     exit={{ opacity: 0, scale: 0.95, y: 15 }}
                     transition={{ type: "spring", duration: 0.35, bounce: 0.1 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="relative w-full max-w-5xl my-auto text-left bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col md:flex-row max-h-[85vh] md:h-[560px] lg:h-[600px]"
+                    className="relative w-full max-w-5xl my-auto text-left bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col md:flex-row max-h-[90vh] md:h-[600px] lg:h-[640px]"
                   >
                     {/* Close Button Top Right */}
                     <button
                       onClick={() => setSelectedPost(null)}
                       aria-label="Tutup Modal"
-                      className="absolute top-3.5 right-3.5 z-30 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white border border-white/20 flex items-center justify-center shadow-lg transition active:scale-95 cursor-pointer"
+                      className="absolute top-3.5 right-3.5 z-40 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white border border-white/20 flex items-center justify-center shadow-lg transition active:scale-95 cursor-pointer"
                     >
                       <X className="w-5 h-5" />
                     </button>
 
                     {/* MODAL LEFT: PHOTO CAROUSEL */}
-                    <div className="relative md:w-7/12 bg-black flex items-center justify-center overflow-hidden aspect-square md:aspect-auto md:h-full">
-                      <ProgressiveImage
-                        key={currentImageIndex}
-                        src={selectedPost.images[currentImageIndex]}
-                        alt={selectedPost.title}
-                        fallbackSrc="/images/bappeda/default-news-cover.jpg"
-                        className="w-full h-full object-contain"
-                        containerClassName="w-full h-full flex items-center justify-center"
-                      />
+                    <div className="relative md:w-7/12 bg-slate-950 flex items-center justify-center overflow-hidden aspect-[4/5] sm:aspect-square md:aspect-auto md:h-full select-none group/modalimg">
+                      {/* Slide Counter Badge Top Left */}
+                      {selectedPost.images.length > 1 && (
+                        <div className="absolute top-3.5 left-3.5 z-30 px-2.5 py-1 rounded-full bg-black/70 backdrop-blur-md text-white text-[11px] font-bold tracking-wide flex items-center gap-1.5 shadow-lg border border-white/10">
+                          <Layers className="w-3.5 h-3.5 text-pink-400" />
+                          <span>{currentImageIndex + 1} / {selectedPost.images.length}</span>
+                        </div>
+                      )}
 
-                      {/* Left/Right Carousel Arrows */}
+                      {/* Progressive Image with 100% Uncropped Contain */}
+                      <div className="w-full h-full flex items-center justify-center p-2 sm:p-4">
+                        <ProgressiveImage
+                          key={currentImageIndex}
+                          src={selectedPost.images[currentImageIndex]}
+                          alt={`${selectedPost.title} - Slide ${currentImageIndex + 1}`}
+                          fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                          className="w-full h-full max-h-full max-w-full object-contain"
+                          containerClassName="relative w-full h-full flex items-center justify-center"
+                        />
+                      </div>
+
+                      {/* Left/Right Carousel Arrows (Instagram Style) */}
                       {selectedPost.images.length > 1 && (
                         <>
                           <button
                             onClick={handlePrevImage}
-                            aria-label="Foto Sebelumnya"
-                            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+                            aria-label="Slide Sebelumnya"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center shadow-xl transition-all duration-150 active:scale-90 hover:scale-105 cursor-pointer z-30"
                           >
-                            <ChevronLeft className="w-5 h-5" />
+                            <ChevronLeft className="w-5 h-5 stroke-[2.5]" />
                           </button>
                           <button
                             onClick={handleNextImage}
-                            aria-label="Foto Selanjutnya"
-                            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+                            aria-label="Slide Selanjutnya"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-white/90 hover:bg-white text-slate-800 flex items-center justify-center shadow-xl transition-all duration-150 active:scale-90 hover:scale-105 cursor-pointer z-30"
                           >
-                            <ChevronRight className="w-5 h-5" />
+                            <ChevronRight className="w-5 h-5 stroke-[2.5]" />
                           </button>
 
-                          {/* Pagination Dots at Bottom */}
-                          <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 z-20">
-                            {selectedPost.images.map((_, idx) => (
-                              <button
-                                key={idx}
-                                onClick={() => setCurrentImageIndex(idx)}
-                                aria-label={`Slide ${idx + 1}`}
-                                className={`h-2 rounded-full transition-all cursor-pointer ${
-                                  currentImageIndex === idx
-                                    ? "w-6 bg-white shadow-md"
-                                    : "w-2 bg-white/40 hover:bg-white/70"
-                                }`}
-                              />
-                            ))}
+                          {/* Instagram-style Carousel Dots */}
+                          <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 z-30 pointer-events-none">
+                            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-xs border border-white/10 pointer-events-auto">
+                              {selectedPost.images.map((_, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => setCurrentImageIndex(idx)}
+                                  aria-label={`Slide ${idx + 1}`}
+                                  className={`h-1.5 rounded-full transition-all duration-200 cursor-pointer ${
+                                    currentImageIndex === idx
+                                      ? "w-5 bg-white shadow-xs"
+                                      : "w-1.5 bg-white/40 hover:bg-white/70"
+                                  }`}
+                                />
+                              ))}
+                            </div>
                           </div>
                         </>
                       )}
 
                       {/* Subtle Brand Watermark at Bottom Left */}
-                      <div className="absolute bottom-3 left-3 z-10 hidden sm:flex items-center gap-1 text-[10px] text-white/60 bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+                      <div className="absolute bottom-3 left-3 z-20 hidden sm:flex items-center gap-1 text-[10px] text-white/70 bg-black/50 backdrop-blur-xs px-2 py-0.5 rounded border border-white/10">
                         <span>bappeda.halmaherautarakab.go.id</span>
                       </div>
                     </div>

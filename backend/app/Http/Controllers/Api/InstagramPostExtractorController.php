@@ -160,34 +160,65 @@ class InstagramPostExtractorController extends Controller
                 }
             }
 
-            // 5. Extract Media Image URL
-            $mediaUrl = null;
-            if (preg_match('/EmbeddedMediaImage[^\"]*\"[^>]*src=\"([^\"]+)\"/i', $html, $mMedia)) {
-                $mediaUrl = html_entity_decode($mMedia[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
-            } elseif (preg_match('/<img[^>]+src=[\"\'](https:\/\/[^\"\']+(?:cdninstagram|fbcdn)[^\"\']+)[\"\']/i', $html, $mMediaFallback)) {
-                $mediaUrl = html_entity_decode($mMediaFallback[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+            // 5. Extract Media Image URLs (Support multi-slide carousel and uncropped portrait resolution)
+            $candidateUrls = [];
+            $offset = 0;
+            // Search all display_urls in the embed payload for full carousel slides
+            while (($pos = strpos($html, 'display_url', $offset)) !== false) {
+                $sub = substr($html, $pos, 800);
+                if (preg_match('/(https:[^\"\x27\s]+)/', $sub, $found)) {
+                    $u = str_replace(["\\/", "\\", "&amp;"], ["/", "", "&"], $found[1]);
+                    // Strip Instagram server crop parameters (c0.xxx.xxx.xxxa_) to get full original dimensions
+                    $u = preg_replace('/stp=c\d+\.\d+\.\d+\.\d+a_/', 'stp=', $u);
+                    $candidateUrls[] = $u;
+                }
+                $offset = $pos + 11;
+            }
+            $candidateUrls = array_values(array_unique($candidateUrls));
+
+            // Fallback to single image from EmbeddedMediaImage or img tag
+            if (empty($candidateUrls)) {
+                if (preg_match('/EmbeddedMediaImage[^\"]*\"[^>]*src=\"([^\"]+)\"/i', $html, $mMedia)) {
+                    $u = html_entity_decode($mMedia[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $u = preg_replace('/stp=c\d+\.\d+\.\d+\.\d+a_/', 'stp=', $u);
+                    $candidateUrls[] = $u;
+                } elseif (preg_match('/<img[^>]+src=[\"\'](https:\/\/[^\"\']+(?:cdninstagram|fbcdn)[^\"\']+)[\"\']/i', $html, $mMediaFallback)) {
+                    $u = html_entity_decode($mMediaFallback[1], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                    $u = preg_replace('/stp=c\d+\.\d+\.\d+\.\d+a_/', 'stp=', $u);
+                    $candidateUrls[] = $u;
+                }
             }
 
-            // 6. Download & Permanently Store Media Image locally (avoid Meta CDN expiration)
+            // 6. Download & Permanently Store All Media Images locally (avoid Meta CDN expiration)
             $storedImages = [];
-            if (!empty($mediaUrl)) {
+            $dir = 'instagram';
+            if (!Storage::disk('public')->exists($dir)) {
+                Storage::disk('public')->makeDirectory($dir);
+            }
+
+            $totalCandidates = count($candidateUrls);
+            foreach ($candidateUrls as $index => $cUrl) {
                 try {
-                    $imageBinary = $this->requestGet($mediaUrl, 15);
+                    $imageBinary = $this->requestGet($cUrl, 15);
 
                     if ($imageBinary && strlen($imageBinary) > 1000) {
-                        $dir = 'instagram';
-                        if (!Storage::disk('public')->exists($dir)) {
-                            Storage::disk('public')->makeDirectory($dir);
-                        }
-                        $fileName = 'ig_' . $shortcode . '_' . time() . '.jpg';
+                        $slideSuffix = $totalCandidates > 1 ? '_slide_' . ($index + 1) : '_' . time();
+                        $fileName = 'ig_' . $shortcode . $slideSuffix . '.jpg';
                         Storage::disk('public')->put($dir . '/' . $fileName, $imageBinary);
+
+                        // Also mirror to frontend/public/storage/instagram if directory exists locally
+                        $frontendDir = base_path('../frontend/public/storage/instagram');
+                        if (is_dir($frontendDir)) {
+                            @file_put_contents($frontendDir . '/' . $fileName, $imageBinary);
+                        }
+
                         $storedImages[] = '/storage/instagram/' . $fileName;
                     } else {
-                        $storedImages[] = $mediaUrl;
+                        $storedImages[] = $cUrl;
                     }
                 } catch (\Throwable $imgErr) {
-                    Log::warning("Gagal mengunduh gambar Instagram {$shortcode}: " . $imgErr->getMessage());
-                    $storedImages[] = $mediaUrl;
+                    Log::warning("Gagal mengunduh gambar slide " . ($index + 1) . " Instagram {$shortcode}: " . $imgErr->getMessage());
+                    $storedImages[] = $cUrl;
                 }
             }
 

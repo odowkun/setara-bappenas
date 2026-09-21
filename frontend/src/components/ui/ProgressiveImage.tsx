@@ -107,7 +107,9 @@ export const ProgressiveImage: React.FC<ProgressiveImageProps> = ({
           loading={priority ? "eager" : "lazy"}
           onLoad={handleLoad}
           onError={handleError}
-          className={`w-full h-full object-cover transition-all duration-700 ease-out ${
+          className={`w-full h-full ${
+            className.includes("object-") ? "" : "object-cover"
+          } transition-all duration-700 ease-out ${
             isLoaded
               ? "opacity-100 blur-0 scale-100"
               : "opacity-0 blur-xs scale-102"

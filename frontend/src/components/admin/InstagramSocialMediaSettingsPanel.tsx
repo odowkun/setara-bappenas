@@ -496,7 +496,7 @@ export default function InstagramSocialMediaSettingsPanel() {
                     {/* Card Content Row */}
                     <div className="flex gap-3.5">
                       {/* Thumbnail Preview */}
-                      <div className="relative w-24 h-20 rounded-xl overflow-hidden bg-slate-200 shrink-0 border border-slate-200/80 shadow-inner">
+                      <div className="relative w-24 h-20 rounded-xl overflow-hidden bg-slate-900 shrink-0 border border-slate-200/80 shadow-inner">
                         <ProgressiveImage
                           src={post.images[0]}
                           alt={post.title}
@@ -505,8 +505,9 @@ export default function InstagramSocialMediaSettingsPanel() {
                           containerClassName="w-full h-full absolute inset-0"
                         />
                         {post.images.length > 1 && (
-                          <span className="absolute bottom-1 right-1 px-1 py-0.5 rounded bg-black/70 text-white text-[8px] font-bold">
-                            1/{post.images.length}
+                          <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[8px] font-black flex items-center gap-0.5 shadow-xs">
+                            <Layers className="w-2.5 h-2.5 text-pink-400" />
+                            <span>{post.images.length} Slide</span>
                           </span>
                         )}
                       </div>
@@ -711,51 +712,91 @@ export default function InstagramSocialMediaSettingsPanel() {
                     </span>
                   </div>
 
-                  <div className="flex gap-4 p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
-                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-100">
-                      <ProgressiveImage
-                        src={extractedPreview.images?.[0] || "/images/bappeda/default-news-cover.jpg"}
-                        alt={extractedPreview.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
-                          {extractedPreview.category}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          {extractedPreview.date}
-                        </span>
-                        {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 ? (
-                          <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5">
-                            <Heart className="w-2.5 h-2.5 fill-rose-500" />
-                            {extractedPreview.likesCount} suka
-                          </span>
-                        ) : (
-                          <span className="text-[10px] text-slate-400 font-medium italic">
-                            (Tanpa likes)
+                  <div className="flex flex-col gap-3 p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="flex gap-4">
+                      <div className="relative w-24 h-24 rounded-lg overflow-hidden bg-slate-950 shrink-0 border border-slate-200">
+                        <ProgressiveImage
+                          src={extractedPreview.images?.[0] || "/images/bappeda/default-news-cover.jpg"}
+                          alt={extractedPreview.title}
+                          className="w-full h-full object-contain"
+                        />
+                        {extractedPreview.images?.length > 1 && (
+                          <span className="absolute bottom-1 right-1 px-1.5 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[8px] font-black flex items-center gap-0.5 shadow-xs">
+                            <Layers className="w-2.5 h-2.5 text-pink-400" />
+                            <span>{extractedPreview.images.length}</span>
                           </span>
                         )}
                       </div>
-                      <h5 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
-                        {extractedPreview.title}
-                      </h5>
-                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-                        {extractedPreview.caption}
-                      </p>
-                      {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 && (
-                        <div className="pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => setExtractedPreview({ ...extractedPreview, likesCount: null })}
-                            className="text-[10px] text-rose-600 hover:text-rose-700 font-bold underline inline-flex items-center gap-1 cursor-pointer"
-                          >
-                            <span>Hapus Indikator Likes (Jadikan Tanpa Likes)</span>
-                          </button>
+                      <div className="flex-1 min-w-0 space-y-1.5">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                            {extractedPreview.category}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-medium">
+                            {extractedPreview.date}
+                          </span>
+                          {extractedPreview.images?.length > 1 && (
+                            <span className="text-[10px] font-extrabold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100 flex items-center gap-1">
+                              <Layers className="w-3 h-3 text-blue-600" />
+                              <span>{extractedPreview.images.length} Slide Carousel</span>
+                            </span>
+                          )}
+                          {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 ? (
+                            <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5">
+                              <Heart className="w-2.5 h-2.5 fill-rose-500" />
+                              {extractedPreview.likesCount} suka
+                            </span>
+                          ) : (
+                            <span className="text-[10px] text-slate-400 font-medium italic">
+                              (Tanpa likes)
+                            </span>
+                          )}
                         </div>
-                      )}
+                        <h5 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
+                          {extractedPreview.title}
+                        </h5>
+                        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                          {extractedPreview.caption}
+                        </p>
+                        {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 && (
+                          <div className="pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setExtractedPreview({ ...extractedPreview, likesCount: null })}
+                              className="text-[10px] text-rose-600 hover:text-rose-700 font-bold underline inline-flex items-center gap-1 cursor-pointer"
+                            >
+                              <span>Hapus Indikator Likes (Jadikan Tanpa Likes)</span>
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Thumbnail strip if multiple slides */}
+                    {extractedPreview.images?.length > 1 && (
+                      <div className="pt-2 border-t border-slate-100 space-y-1.5">
+                        <span className="text-[10px] font-bold text-slate-500">
+                          Pratinjau Seluruh Slide ({extractedPreview.images.length} Slide Terdeteksi &amp; Siap Ditampilkan):
+                        </span>
+                        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                          {extractedPreview.images.map((imgSrc, sIdx) => (
+                            <div
+                              key={sIdx}
+                              className="relative w-12 h-16 rounded-md overflow-hidden bg-slate-900 border border-slate-200 shrink-0"
+                            >
+                              <ProgressiveImage
+                                src={imgSrc}
+                                alt={`Slide ${sIdx + 1}`}
+                                className="w-full h-full object-contain"
+                              />
+                              <span className="absolute bottom-0 inset-x-0 bg-black/75 text-[7px] text-white text-center font-bold">
+                                #{sIdx + 1}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
