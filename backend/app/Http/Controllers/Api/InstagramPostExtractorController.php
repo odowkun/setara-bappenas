@@ -250,8 +250,23 @@ class InstagramPostExtractorController extends Controller
                 $category = 'PEMERINTAHAN';
             }
 
-            // 10. Likes Count estimate or extracted
-            $likesCount = rand(140, 260);
+            // 10. Extract real dynamic likes count (no fake / random numbers)
+            $likesCount = null;
+            if (preg_match('/data-log-event=[\"\']likeCountClick[\"\'][^>]*>([\d.,\s]+(?:k|m|rb|jt)?)\s*(?:likes|suka)/i', $html, $mLikes)) {
+                $rawLikes = strtolower(trim($mLikes[1]));
+                if (strpos($rawLikes, 'k') !== false || strpos($rawLikes, 'rb') !== false) {
+                    $num = (float)str_replace(['k', 'rb', ' '], '', str_replace(',', '.', $rawLikes));
+                    $likesCount = (int)($num * 1000);
+                } elseif (strpos($rawLikes, 'm') !== false || strpos($rawLikes, 'jt') !== false) {
+                    $num = (float)str_replace(['m', 'jt', ' '], '', str_replace(',', '.', $rawLikes));
+                    $likesCount = (int)($num * 1000000);
+                } else {
+                    $clean = preg_replace('/[^\d]/', '', $rawLikes);
+                    if (is_numeric($clean) && (int)$clean > 0) {
+                        $likesCount = (int)$clean;
+                    }
+                }
+            }
 
             return response()->json([
                 'success' => true,

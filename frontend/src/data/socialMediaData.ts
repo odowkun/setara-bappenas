@@ -18,7 +18,7 @@ export interface InstagramPostData {
   date: string;
   images: string[];
   caption: string;
-  likesCount: number;
+  likesCount?: number | null;
   postUrl: string;
 }
 
@@ -69,7 +69,7 @@ export const OFFICIAL_INSTAGRAM_POSTS: InstagramPostData[] = [
       "/images/bappeda/raker-2024.jpg",
     ],
     caption: `✨ Apresiasi untuk Kinerja, Semangat untuk Terus Berbenah!\n\nKepala BAPPEDA Kabupaten Halmahera Utara beserta jajaran menghadiri Rapat Koordinasi dan Evaluasi Capaian Indikator Kinerja Utama Perencanaan Pembangunan Daerah Tahun 2026.\n\nApresiasi diberikan atas dedikasi seluruh Tim Pokja dalam mengawal konsistensi target RPJMD dan RKPD Kabupaten Halmahera Utara, khususnya dalam percepatan penanggulangan kemiskinan ekstrem, pemerataan infrastruktur, dan digitalisasi satu data perencanaan.\n\nMari terus memperkuat sinergi lintas perangkat daerah demi mewujudkan Halmahera Utara yang maju, sejahtera, dan berdaya saing tinggi! 🏛️🇲🇨\n\n#BappedaHalut #HalmaheraUtara #PerencanaanDaerah #Tobelo #SinergiPembangunan`,
-    likesCount: 184,
+    likesCount: null,
     postUrl: "https://www.instagram.com/bappeda_halut",
   },
   {
@@ -82,7 +82,7 @@ export const OFFICIAL_INSTAGRAM_POSTS: InstagramPostData[] = [
       "/images/bappeda/pokja-pkp.jpg",
     ],
     caption: `🌿 Integrasi Tata Ruang Spasial dengan Rencana Pembangunan Berkelanjutan!\n\nBAPPEDA Kabupaten Halmahera Utara menggelar Focus Group Discussion (FGD) bersama Dinas Kehutanan, Dinas Lingkungan Hidup, dan stakeholder terkait dalam rangka harmonisasi revisi RTRW dan penetapan kawasan lindung.\n\nLangkah strategis ini memastikan pembangunan infrastruktur wilayah berjalan selaras dengan pelestarian ekosistem hutan dan mitigasi potensi bencana geologis di Halut.\n\n#TataRuang #GeospasialHalut #BappedaHalut #KonservasiLingkungan #PembangunanHijau`,
-    likesCount: 142,
+    likesCount: null,
     postUrl: "https://www.instagram.com/bappeda_halut",
   },
 ];

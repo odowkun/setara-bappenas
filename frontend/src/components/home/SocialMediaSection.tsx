@@ -541,10 +541,16 @@ export const SocialMediaSection: React.FC = () => {
 
                       {/* Footer Action Bar */}
                       <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between shrink-0">
-                        <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400">
-                          <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                          <span>{selectedPost.likesCount} suka</span>
-                        </div>
+                        {selectedPost.likesCount != null && selectedPost.likesCount > 0 ? (
+                          <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400">
+                            <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                            <span>{selectedPost.likesCount} suka</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                            <span>{selectedPost.date}</span>
+                          </div>
+                        )}
 
                         <a
                           href={selectedPost.postUrl}

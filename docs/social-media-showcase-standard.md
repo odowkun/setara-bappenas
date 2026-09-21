@@ -73,3 +73,7 @@ Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram be
    - Menggunakan User-Agent SSR teroptimasi (`Mozilla/5.0 (Windows NT 10.0; Win64; x64)`) agar Instagram menyajikan markup embed berisi `EmbeddedMediaImage` dan naskah `Caption` lengkap.
    - Gambar postingan secara otomatis diunduh dan disimpan permanen pada storage lokal (`/storage/instagram/ig_*.jpg`) guna menghindari masa kedaluwarsa URL CDN Meta Facebook.
    - Tanggal rilis postingan diekstrak secara akurat menggunakan algoritma Instagram Snowflake Media ID dan pencocokan teks tanggal bahasa Indonesia.
+   - **Standar Integritas Data Likes (Anti Angka Fiktif)**:
+     - Angka acak/fiktif (`rand()`) ditiadakan sepenuhnya. Jumlah suka hanya diambil jika secara faktual tertera pada data embed publik Instagram (`likeCountClick`).
+     - Jika postingan menyembunyikan jumlah suka atau tidak tersedia secara publik, sistem otomatis menetapkan `likesCount: null` sehingga kartu tampil bersih (*"Tanpa Likes"*).
+     - Administrator pada dashboard dapat langsung mengklik tombol **Hapus Likes** pada kartu postingan untuk mengosongkan indikator suka secara instan.

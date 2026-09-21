@@ -195,7 +195,7 @@ export const galeriService = {
     date: string;
     caption: string;
     images: string[];
-    likesCount: number;
+    likesCount?: number | null;
     postUrl: string;
   }> {
     const res = await authenticatedFetch("/instagram/extract-post", {

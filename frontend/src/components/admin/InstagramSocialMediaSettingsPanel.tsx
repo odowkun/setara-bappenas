@@ -158,7 +158,7 @@ export default function InstagramSocialMediaSettingsPanel() {
         date: finalDate,
         images: Array.isArray(data.images) && data.images.length > 0 ? data.images : ["/images/bappeda/default-news-cover.jpg"],
         caption: data.caption || "",
-        likesCount: data.likesCount || 150,
+        likesCount: typeof data.likesCount === "number" && data.likesCount > 0 ? data.likesCount : null,
         postUrl: data.postUrl || url,
       };
 
@@ -512,11 +512,20 @@ export default function InstagramSocialMediaSettingsPanel() {
                         </h4>
                         <div className="flex items-center gap-2 text-[10px] text-slate-400 font-medium">
                           <span>{post.date}</span>
-                          <span>•</span>
-                          <span className="flex items-center gap-0.5 text-rose-500 font-bold">
-                            <Heart className="w-3 h-3 fill-rose-500" />
-                            {post.likesCount}
-                          </span>
+                          {post.likesCount != null && post.likesCount > 0 ? (
+                            <>
+                              <span>•</span>
+                              <span className="flex items-center gap-0.5 text-rose-500 font-bold">
+                                <Heart className="w-3 h-3 fill-rose-500" />
+                                {post.likesCount}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span>•</span>
+                              <span className="text-slate-400 italic">Tanpa likes</span>
+                            </>
+                          )}
                         </div>
                         <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                           {post.caption}
@@ -538,6 +547,22 @@ export default function InstagramSocialMediaSettingsPanel() {
                     </a>
 
                     <div className="flex items-center gap-2">
+                      {post.likesCount != null && post.likesCount > 0 && (
+                        <button
+                          type="button"
+                          onClick={async () => {
+                            const updated = posts.map((p) => (p.id === post.id ? { ...p, likesCount: null } : p));
+                            setPosts(updated);
+                            await handleSaveToBackend(updated, profile);
+                            toast.success("Indikator likes dihapus (tanpa likes).");
+                          }}
+                          className="px-2 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-[10px] flex items-center gap-1 transition cursor-pointer"
+                          title="Hapus tampilan likes pada postingan ini"
+                        >
+                          <span>Hapus Likes</span>
+                        </button>
+                      )}
+
                       <button
                         type="button"
                         onClick={() => handleOpenEditForm(post)}
@@ -689,13 +714,23 @@ export default function InstagramSocialMediaSettingsPanel() {
                       />
                     </div>
                     <div className="flex-1 min-w-0 space-y-1.5">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
                           {extractedPreview.category}
                         </span>
                         <span className="text-[10px] text-slate-400 font-medium">
                           {extractedPreview.date}
                         </span>
+                        {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 ? (
+                          <span className="text-[10px] text-rose-500 font-bold flex items-center gap-0.5">
+                            <Heart className="w-2.5 h-2.5 fill-rose-500" />
+                            {extractedPreview.likesCount} suka
+                          </span>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-medium italic">
+                            (Tanpa likes)
+                          </span>
+                        )}
                       </div>
                       <h5 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
                         {extractedPreview.title}
@@ -703,6 +738,17 @@ export default function InstagramSocialMediaSettingsPanel() {
                       <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
                         {extractedPreview.caption}
                       </p>
+                      {extractedPreview.likesCount != null && extractedPreview.likesCount > 0 && (
+                        <div className="pt-0.5">
+                          <button
+                            type="button"
+                            onClick={() => setExtractedPreview({ ...extractedPreview, likesCount: null })}
+                            className="text-[10px] text-rose-600 hover:text-rose-700 font-bold underline inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>Hapus Indikator Likes (Jadikan Tanpa Likes)</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
