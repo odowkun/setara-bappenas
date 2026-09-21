@@ -131,15 +131,15 @@ export const SocialMediaSection: React.FC = () => {
           </p>
         </div>
 
-        {/* 2-COLUMN BALANCED SHOWCASE (YOUTUBE ON LEFT + INSTAGRAM ON RIGHT, EQUAL HEIGHT) */}
+        {/* 2-COLUMN BALANCED SHOWCASE (YOUTUBE PURE VIDEO ON LEFT + INSTAGRAM FEED ON RIGHT) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
           {/* ========================================================================= */}
-          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO PLAYER (6 of 12 Cols) */}
+          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO (PURE 16:9 VIDEO, ZERO WHITE SPACE) */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-5 sm:p-6 space-y-4 h-full group">
-            <div className="space-y-4">
+          <div className="lg:col-span-6 flex flex-col justify-center">
+            <div className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-3 sm:p-4 group h-full flex flex-col justify-center">
               {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
-              <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-md border border-slate-200/80 group/video shrink-0">
+              <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-md border border-slate-200/80 group/video">
                 {isPlayingVideo ? (
                   <iframe
                     src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
@@ -166,7 +166,7 @@ export const SocialMediaSection: React.FC = () => {
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
 
                     {/* Top Bar Overlay */}
-                    <div className="absolute top-3 inset-x-3 flex items-center justify-between z-10 pointer-events-none">
+                    <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10 pointer-events-none">
                       <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 shadow-md">
                         <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
                           <Youtube className="w-2.5 h-2.5 fill-white" />
@@ -189,7 +189,7 @@ export const SocialMediaSection: React.FC = () => {
                     </div>
 
                     {/* Bottom Status Bar */}
-                    <div className="absolute bottom-2.5 inset-x-3 z-10 flex items-center justify-between pointer-events-none">
+                    <div className="absolute bottom-3 inset-x-3.5 z-10 flex items-center justify-between pointer-events-none">
                       <div className="flex items-center gap-1.5 text-white/95 text-[11px] font-semibold drop-shadow-md">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
                         <span>Putar Video Siaran Resmi</span>
@@ -201,54 +201,17 @@ export const SocialMediaSection: React.FC = () => {
                   </div>
                 )}
               </div>
-
-              {/* Video Details */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-xs font-bold text-slate-500 flex-wrap">
-                  <div className="flex items-center gap-1 text-slate-700">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{youtubeData.date}</span>
-                  </div>
-                  <span className="text-slate-300">•</span>
-                  <div className="flex items-center gap-1 text-slate-600">
-                    <MapPin className="w-3.5 h-3.5 text-slate-400" />
-                    <span className="truncate max-w-[220px]">{youtubeData.location}</span>
-                  </div>
-                </div>
-
-                <h3 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
-                  {youtubeData.title}
-                </h3>
-
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-normal line-clamp-3">
-                  {youtubeData.description}
-                </p>
-              </div>
-            </div>
-
-            {/* Action Button */}
-            <div className="pt-3 border-t border-slate-100">
-              <a
-                href={youtubeData.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-black text-xs inline-flex items-center justify-center gap-2 shadow-md shadow-red-500/20 transition active:scale-95 cursor-pointer"
-              >
-                <Play className="w-3.5 h-3.5 fill-white" />
-                <span>Tonton di YouTube</span>
-                <ExternalLink className="w-3 h-3 ml-0.5" />
-              </a>
             </div>
           </div>
 
           {/* ========================================================================= */}
-          {/* RIGHT COLUMN: INSTAGRAM FEED (6 of 12 Cols, 4 BALANCED CARDS IN 2x2) */}
+          {/* RIGHT COLUMN: INSTAGRAM FEED (2 BALANCED CARDS IN 2-COLS, EQUAL HEIGHT) */}
           {/* ========================================================================= */}
-          <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-5 sm:p-6 space-y-4 h-full">
+          <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full">
             {/* INSTAGRAM HEADER BRANDING */}
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow-md shrink-0">
+                <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow-md shrink-0">
                   <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
                     <img
                       src={OFFICIAL_INSTAGRAM_PROFILE.avatarUrl}
@@ -277,16 +240,16 @@ export const SocialMediaSection: React.FC = () => {
                 href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-3.5 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition cursor-pointer shrink-0"
+                className="px-3 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-pink-500/20 active:scale-95 transition cursor-pointer shrink-0"
               >
                 <Instagram className="w-3.5 h-3.5" />
                 <span>Ikuti</span>
               </a>
             </div>
 
-            {/* INSTAGRAM CARDS GRID (4 BALANCED CARDS IN 2x2 GRID) */}
+            {/* INSTAGRAM CARDS GRID (2 BALANCED CARDS IN 2 COLUMNS) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 flex-1">
-              {OFFICIAL_INSTAGRAM_POSTS.slice(0, 4).map((post) => (
+              {OFFICIAL_INSTAGRAM_POSTS.slice(0, 2).map((post) => (
                 <div
                   key={post.id}
                   onClick={() => handleOpenPost(post)}
@@ -340,9 +303,9 @@ export const SocialMediaSection: React.FC = () => {
             </div>
 
             {/* INSTAGRAM FOOTER LINK */}
-            <div className="pt-2.5 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
+            <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
               <span className="text-[11px]">
-                Akun Resmi: <strong className="text-slate-800 font-bold">{OFFICIAL_INSTAGRAM_PROFILE.handle}</strong>
+                Akun: <strong className="text-slate-800 font-bold">{OFFICIAL_INSTAGRAM_PROFILE.handle}</strong>
               </span>
               <a
                 href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}

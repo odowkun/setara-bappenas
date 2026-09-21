@@ -5,13 +5,12 @@ Seksi **Media Sosial BAPPEDA** (`SocialMediaSection.tsx`) dirancang untuk menyaj
 
 Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmahera Utara dengan tata letak berdampingan (side-by-side) seimbang dan proporsional:
 - **Header Standar Konsisten**: Menggunakan badge biru selaras tema utama (`bg-blue-50 border-blue-200/80 text-blue-700`) bertuliskan *"Publikasi Multimedia & Media Sosial"* dengan deskripsi ringkas tanpa tombol duplikat di header agar fokus pandangan langsung tertuju ke card utama.
-1. **Sisi Kiri: Sorotan Video YouTube Resmi (6 Kolom Desktop / 16:9 Widescreen Asli)**:
-   - **Tampilan Terang Bersih & Elegan**: Menggunakan card berlatar putih (`bg-white border-slate-200/90 shadow-lg p-5 sm:p-6`) dengan tipografi gelap kontras (`text-slate-900`) selaras tema portal.
+1. **Sisi Kiri: Pemutar Video YouTube Murni (6 Kolom Desktop / 16:9 Widescreen Asli)**:
+   - **Tampilan Bersih & Nol White Space**: Frame pemutar video berdiri mandiri tanpa teks penjelasan/deskripsi di bawahnya (`bg-white rounded-3xl border border-slate-200/90 shadow-lg p-3 sm:p-4`), menghilangkan seluruh area kosong/whitespace.
    - **Rasio Layar Lebar 16:9 Alami (`aspect-video`)**: Pemutar video dikunci pada rasio murni 16:9 (`aspect-video w-full`) sehingga thumbnail resolusi tinggi (`maxresdefault`) dan pemutar video tidak pernah terpotong (*uncropped*) ataupun terkompresi vertikal ("anti-gepeng").
-   - **Detail & Aksi**: Dilengkapi tanggal rilis, lokasi agenda, judul video, deskripsi ringkas, dan tombol aksi merah *"Tonton di YouTube ↗"*.
-   - **Dukungan Manajemen Dinamis di Dashboard**: Administrator dapat mengganti link YouTube, judul, tanggal, lokasi, dan deskripsi secara langsung dari dashboard (`/dashboard/galeri?tab=youtube-media`).
-2. **Sisi Kanan: Feed Postingan Instagram Interaktif (6 Kolom Desktop / 4 Postingan Seimbang 2x2)**:
-   - **Tinggi Selaras & Seimbang**: Menggunakan grid 4 postingan dalam formasi 2 kolom x 2 baris (`grid-cols-2 gap-3.5`) dengan cover foto rasio 16:10 sehingga total tinggi card Instagram sejajar presisi dengan card YouTube di sebelah kiri.
+   - **Interaktif & Siap Putar**: Dilengkapi overlay status siaran resmi, badge HD Video, animasi tombol play di tengah, dan dukungan pemutaran inline iframe (`youtube-nocookie.com`).
+2. **Sisi Kanan: Feed Postingan Instagram Interaktif (6 Kolom Desktop / 2 Postingan Seimbang)**:
+   - **Tinggi Selaras & Seimbang Presisi**: Menggunakan formasi 2 postingan berdampingan (`grid-cols-1 sm:grid-cols-2 gap-3`) sehingga total tinggi card Instagram sejajar presisi dengan tinggi pemutar video YouTube 16:9 di sebelah kiri (~340px).
    - **Branding Akun Resmi**: Header profil Instagram resmi `@bappeda_halut` dengan avatar berbingkai gradien, centang terverifikasi, tagline *"Sinergi Lokal, Solusi Global"*, dan tombol aksi `Ikuti`.
    - **Modal Popup Interaktif Ala Instagram**:
      - Saat salah satu kartu postingan diklik, muncul dialog modal 2 kolom ala Instagram.
