@@ -42,6 +42,32 @@ class DocumentWatermarkServiceTest extends TestCase
         unlink($sourcePath);
     }
 
+    public function test_it_safely_bypasses_in_memory_watermarking_for_large_documents_up_to_5gb(): void
+    {
+        Storage::fake('local');
+        config()->set('document-watermark.max_file_size_bytes', 1024); // Set low limit for testing threshold
+
+        $sourcePath = $this->createTwoPagePdf();
+        $uploadedFile = new UploadedFile(
+            $sourcePath,
+            'Dokumen Induk RPJMD 5GB.pdf',
+            'application/pdf',
+            null,
+            true
+        );
+
+        $result = app(DocumentWatermarkService::class)->process(
+            $uploadedFile,
+            'documents/testing'
+        );
+
+        Storage::disk('local')->assertExists($result['relative_path']);
+        $this->assertStringEndsWith('_watermarked.pdf', $result['file_name']);
+        $this->assertGreaterThan(0, $result['file_size_bytes']);
+
+        unlink($sourcePath);
+    }
+
     public function test_it_rejects_an_unsupported_document_format(): void
     {
         Storage::fake('local');

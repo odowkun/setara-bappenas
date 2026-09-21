@@ -308,6 +308,7 @@ class DocumentController extends Controller
 
         $save = $receiver->receive();
         if ($save->isFinished()) {
+            @set_time_limit(300);
             return $this->saveFile($save->getFile());
         }
 
@@ -544,7 +545,11 @@ class DocumentController extends Controller
 
     private function formatFileSize(int $bytes): string
     {
-        return number_format($bytes / 1024 / 1024, 2).' MB';
+        if ($bytes >= 1024 * 1024 * 1024) {
+            return number_format($bytes / (1024 * 1024 * 1024), 2).' GB';
+        }
+
+        return number_format($bytes / (1024 * 1024), 2).' MB';
     }
 
     private function retentionUntil(

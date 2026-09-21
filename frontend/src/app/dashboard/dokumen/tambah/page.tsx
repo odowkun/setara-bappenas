@@ -442,16 +442,22 @@ export default function TambahDokumenPage() {
 
           {/* Resumable Chunked File Uploader Component */}
           <div>
-            <label className="block text-xs font-extrabold text-slate-700 mb-2">
-              Unggah Berkas Dokumen Perencanaan (Wajib PDF) *
-            </label>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <label className="block text-xs font-extrabold text-slate-700">
+                Unggah Berkas Dokumen Induk Perencanaan (Wajib PDF, Maksimal 5 GB) *
+              </label>
+              <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200 text-[10px] font-black flex items-center gap-1">
+                <span>Dukungan Dokumen Induk s/d 5 GB</span>
+              </span>
+            </div>
             <p className="mb-3 text-[11px] font-medium text-blue-800">
-              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
+              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> untuk keandalan transfer jaringan. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
             </p>
             <ResumableChunkUploader
               acceptedTypes=".pdf"
               onUploadSuccess={handleUploadSuccess}
               chunkSizeMB={5}
+              maxSizeGB={5}
             />
           </div>
 

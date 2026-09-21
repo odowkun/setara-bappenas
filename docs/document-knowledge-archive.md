@@ -120,9 +120,9 @@ Versi yang ditolak dapat diperbaiki dan diajukan ulang. Approval revisi menggant
 ### Dokumen baru
 
 ```text
-Upload PDF resmi (.pdf)
+Upload PDF resmi (.pdf) s/d 5 GB via Resumable Chunked Uploader (chunk 5MB)
         ↓
-Watermark BAPPEDA HALUT (FPDI + FPDF murni)
+Watermark & Validasi Integritas (FPDI in-memory untuk berkas ≤150MB, direct stream copy untuk berkas >150MB s/d 5GB)
         ↓
 berkas *_watermarked.pdf pada disk privat
         ↓

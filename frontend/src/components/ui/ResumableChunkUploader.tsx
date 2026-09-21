@@ -9,12 +9,14 @@ import {
   FileText,
   RefreshCw,
   Image as ImageIcon,
+  HardDrive,
 } from "lucide-react";
 
 interface ResumableChunkUploaderProps {
   onUploadSuccess: (fileUrl: string, fileSizeStr: string, fileName?: string) => void;
   acceptedTypes?: string;
   chunkSizeMB?: number; // default 5MB
+  maxSizeGB?: number; // default 5GB
 }
 
 import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
@@ -22,10 +24,18 @@ import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 const STORAGE_KEY_PREFIX = "bappeda_chunk_upload_";
 const BACKEND_BASE_URL = STORAGE_BASE_URL;
 
+const formatFileSize = (bytes: number): string => {
+  if (bytes >= 1024 * 1024 * 1024) {
+    return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
+  }
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   onUploadSuccess,
   acceptedTypes = ".pdf",
   chunkSizeMB = 5,
+  maxSizeGB = 5,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -67,7 +77,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
       while (!chunkUploaded && retries < 5 && !isAbortedRef.current) {
         try {
-          setStatusText(`Mengunggah berkas (${(end / 1024 / 1024).toFixed(1)}MB / ${(file.size / 1024 / 1024).toFixed(1)}MB)...`);
+          setStatusText(`Mengunggah berkas (${formatFileSize(end)} / ${formatFileSize(file.size)})...`);
 
           const res = await authenticatedFetch(`${API_BASE_URL}/documents/upload-chunk`, {
             method: "POST",
@@ -90,9 +100,9 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
                 ? `${BACKEND_BASE_URL}${rawPath}`
                 : rawPath;
 
-              const sizeStr = data.file_size || `${(file.size / 1024 / 1024).toFixed(1)} MB`;
+              const sizeStr = data.file_size || formatFileSize(file.size);
               setCompletedUrl(finalUrl);
-              setStatusText("✅ Watermark BAPPEDA HALUT berhasil diterapkan!");
+              setStatusText("✅ Berkas dokumen resmi berhasil tersimpan aman di server!");
               localStorage.removeItem(fileKey);
               onUploadSuccess(finalUrl, sizeStr, file.name);
               setUploading(false);
@@ -169,13 +179,25 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       return;
     }
 
+    // Validasi batas kapasitas berkas maksimal (misal: 5GB)
+    const maxSizeBytes = maxSizeGB * 1024 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      toast.error(
+        `Ukuran berkas (${formatFileSize(file.size)}) melebihi batas maksimal yang diizinkan (${maxSizeGB} GB).`
+      );
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      return;
+    }
+
     setSelectedFile(file);
     const chunks = Math.ceil(file.size / CHUNK_SIZE);
     setProgress(0);
     setCurrentChunk(0);
     setCompletedUrl(null);
     setNetworkError(false);
-    setStatusText(`Berkas dipilih: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)} MB)`);
+    setStatusText(`Berkas dipilih: ${file.name} (${formatFileSize(file.size)})`);
 
     const fileKey = `${STORAGE_KEY_PREFIX}${file.name}_${file.size}`;
     const savedProgress = localStorage.getItem(fileKey);
@@ -267,16 +289,21 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
               </h3>
               <p className="text-slate-500 font-medium text-xs">
                 {isPdfOnly
-                  ? "Format resmi kearsipan BAPPEDA HALUT (Wajib berkas *.pdf)"
-                  : "Unggah berkas resmi perencanaan daerah Halmahera Utara"}
+                  ? `Format resmi kearsipan BAPPEDA HALUT (Wajib berkas *.pdf, kapasitas hingga ${maxSizeGB} GB)`
+                  : `Unggah berkas resmi perencanaan daerah Halmahera Utara (kapasitas hingga ${maxSizeGB} GB)`}
               </p>
             </div>
 
-            {/* Allowed Document Format Extension Pills */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto">
+            {/* Allowed Document Format & Capacity Extension Pills */}
+            <div className="pt-2 flex flex-wrap items-center justify-center gap-2 max-w-lg mx-auto">
+              <span className="px-3.5 py-1.5 rounded-xl bg-blue-50 text-blue-900 font-black text-xs border border-blue-200/80 shadow-2xs flex items-center gap-1.5">
+                <HardDrive className="w-4 h-4 text-blue-600 shrink-0" />
+                <span>Maksimal {maxSizeGB} GB</span>
+              </span>
+
               {isPdfOnly ? (
-                <span className="px-3.5 py-1.5 rounded-xl bg-red-50 text-red-700 font-extrabold text-xs border border-red-200/80 shadow-2xs flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-red-600" />
+                <span className="px-3.5 py-1.5 rounded-xl bg-red-50 text-red-700 font-extrabold text-xs border border-red-200/80 shadow-2xs flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-red-600 shrink-0" />
                   <span>Hanya Menerima Dokumen PDF (*.pdf)</span>
                 </span>
               ) : (
@@ -318,7 +345,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
                 <p className="font-extrabold text-slate-900 text-sm truncate">{selectedFile.name}</p>
                 <div className="flex items-center gap-2 mt-0.5">
                   <span className="text-[11px] font-mono font-bold text-slate-500">
-                    {(selectedFile.size / 1024 / 1024).toFixed(1)} MB
+                    {formatFileSize(selectedFile.size)}
                   </span>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 uppercase">
                     {selectedFile.name.split(".").pop() || "FILE"}

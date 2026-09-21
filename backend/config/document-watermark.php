@@ -8,6 +8,7 @@ return [
     'rows' => (int) env('DOCUMENT_WATERMARK_ROWS', 4),
     'libreoffice_binary' => env('LIBREOFFICE_BINARY'),
     'conversion_timeout' => (int) env('DOCUMENT_CONVERSION_TIMEOUT', 120),
+    'max_file_size_bytes' => (int) env('DOCUMENT_WATERMARK_MAX_BYTES', 150 * 1024 * 1024),
     'supported_extensions' => [
         'pdf',
         'doc',

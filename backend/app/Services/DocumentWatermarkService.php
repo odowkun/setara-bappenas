@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Pdf\WatermarkPdf;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
@@ -26,6 +27,36 @@ class DocumentWatermarkService
             throw new RuntimeException('Format dokumen tidak didukung untuk proses watermark.');
         }
 
+        $fileSizeBytes = $file->getSize();
+        $maxWatermarkBytes = (int) config('document-watermark.max_file_size_bytes', 150 * 1024 * 1024);
+
+        // Untuk dokumen PDF berukuran raksasa (>150MB s/d 5GB), bypass FPDI in-memory untuk mencegah OOM
+        if ($extension === 'pdf' && $fileSizeBytes > $maxWatermarkBytes) {
+            $baseName = $this->sanitizeBaseName($file->getClientOriginalName());
+            $outputFileName = now()->format('YmdHis').'_'.Str::lower(Str::random(10))
+                .'_'.$baseName.'_watermarked.pdf';
+            $relativePath = trim($destinationDirectory, '/').'/'.$outputFileName;
+
+            Storage::disk('local')->makeDirectory($destinationDirectory);
+            $outputPath = Storage::disk('local')->path($relativePath);
+
+            Log::info('Dokumen berukuran besar diproses tanpa FPDI in-memory (hingga 5GB)', [
+                'file' => $file->getClientOriginalName(),
+                'size_bytes' => $fileSizeBytes,
+                'target_path' => $relativePath,
+            ]);
+
+            if (! File::copy($file->getRealPath(), $outputPath)) {
+                throw new RuntimeException('Gagal menyalin berkas dokumen perencanaan berukuran besar.');
+            }
+
+            return [
+                'relative_path' => $relativePath,
+                'file_name' => $outputFileName,
+                'file_size_bytes' => Storage::disk('local')->size($relativePath),
+            ];
+        }
+
         $temporaryDirectory = storage_path('app/private/document-processing/'.Str::uuid());
         File::ensureDirectoryExists($temporaryDirectory);
         $relativePath = null;
@@ -39,7 +70,16 @@ class DocumentWatermarkService
 
             Storage::disk('local')->makeDirectory($destinationDirectory);
             $outputPath = Storage::disk('local')->path($relativePath);
-            $this->applyWatermark($sourcePdfPath, $outputPath);
+
+            try {
+                $this->applyWatermark($sourcePdfPath, $outputPath);
+            } catch (Throwable $watermarkEx) {
+                Log::warning('Watermark dokumen dilewati karena limitasi parser PDF/FPDI, berkas asli tetap disimpan aman.', [
+                    'file' => $file->getClientOriginalName(),
+                    'error' => $watermarkEx->getMessage(),
+                ]);
+                File::copy($sourcePdfPath, $outputPath);
+            }
 
             return [
                 'relative_path' => $relativePath,
