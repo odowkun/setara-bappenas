@@ -81,3 +81,47 @@ Berikut daftar modul dashboard yang telah diselaraskan 100% mengikuti standar di
     - Diselaraskan ke White Card Header dengan badge fungsional masing-masing.
 13. **Geospasial & Pemetaan** (`/dashboard/geotagging-proyek`, `geoprocessing-analisis`, `update-progres`):
     - Diselaraskan ke White Card Header dengan badge GIS & Geoprocessing.
+
+---
+
+## 4. Standar Portaling Modal & Pop-up (Pencegahan Celah Bocor Header)
+
+### Akar Masalah Stacking Context
+Pada arsitektur `DashboardLayout`, `<AdminHeader>` berada di luar `<main>` dengan `sticky top-0 z-40`, sedangkan konten halaman dirender di dalam `<main className="flex-1 ... overflow-y-auto relative">`.
+
+Jika sebuah pop-up/modal dirender langsung di dalam hierarki komponen halaman tanpa React Portal, modal tersebut terperangkap (*trapped*) di dalam konteks penumpukan (*stacking context*) `<main>`. Akibatnya, `AdminHeader` setinggi 64px tetap muncul di atas backdrop modal tanpa tertutup gelap (*dimmed*), menciptakan celah bocor visual di bagian atas layar.
+
+### Standar Implementasi Wajib
+Setiap pop-up, dialog, atau lightbox di seluruh dashboard WAJIB mematuhi arsitektur berikut:
+1. **React Portal ke `document.body`**:
+   ```tsx
+   import { createPortal } from "react-dom";
+
+   const [mounted, setMounted] = useState(false);
+   useEffect(() => { setMounted(true); }, []);
+
+   {mounted && isModalOpen && typeof document !== "undefined" && createPortal(
+     <div className="fixed inset-0 z-[999999] bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-4">
+       {/* Modal Dialog Box */}
+     </div>,
+     document.body
+   )}
+   ```
+2. **Tingkat Lapisan (Z-Index Hierarchy)**:
+   - `AdminHeader`: `z-40`
+   - Standard Dashboard Modals / Lightboxes: `z-[999999]` (menutup 100% viewport dari koordinat `(0,0)` hingga tepi terluar).
+   - SweetAlert2 Dialogs: `z-index: 10000000 !important` (diatur secara global di `globals.css` agar selalu berada di lapisan teratas bahkan ketika dipanggil dari dalam modal).
+3. **Daftar Seluruh Modal Terproteksi (100% Zero Leak)**:
+   - `InstagramSocialMediaSettingsPanel` (Modal Pengaturan Akun Instagram)
+   - `galeri/page.tsx` (Lightbox Galeri Foto & Video)
+   - `infografis/page.tsx` (Formulir CRUD Infografis & Lightbox Detail Publik)
+   - `running-text/page.tsx` (Modal Form Teks Berjalan)
+   - `survey-kepuasan/page.tsx` (Modal Detail Hasil Survei Responden IKM)
+   - `dokumen/[id]/page.tsx` (Modal Geotagging Proyek, Progres Sektoral, Lampiran Teknis)
+   - `dokumen/jenis-dokumen/page.tsx` (Modal Kelola Jenis Dokumen)
+   - `profil/struktur/page.tsx` & `StrukturOrganisasiChart` (Modal Anggota & Fullscreen Bagan)
+   - `agenda/page.tsx` & `kritik-saran/page.tsx` (Modal Detail Kegiatan & Respon Aspirasi)
+   - `dashboard/page.tsx` (Modal Kelola Nilai APBD & Sektoral)
+   - `AdminSidebar.tsx` (Mobile Drawer Sidebar)
+   - `CircularImageCropperModal.tsx` & `MediaAlbumModal.tsx` (Modal Utility UI)
+   - `GlobalSearchModal.tsx`, `DocumentPreviewModal.tsx`, `DocumentDownloadModal.tsx`

@@ -217,7 +217,7 @@ export default function PublicNewsDetailPage() {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between"
+          className="fixed inset-0 z-[999999] bg-slate-950/95 backdrop-blur-xl flex flex-col justify-between"
           onClick={() => setIsLightboxOpen(false)}
         >
           {/* Top Bar */}

@@ -500,8 +500,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       </aside>
 
       {/* MOBILE DRAWER */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-[9999] md:hidden">
+      {mobileOpen && mounted && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[999999] md:hidden">
           <div
             className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
             onClick={onMobileClose}
@@ -509,7 +509,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           <aside className="fixed inset-y-0 left-0 w-72 max-w-[85vw] bg-white text-slate-700 flex flex-col justify-between h-full overflow-y-auto shadow-2xl font-sans z-10 animate-in slide-in-from-left duration-250">
             {renderContent(true)}
           </aside>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );

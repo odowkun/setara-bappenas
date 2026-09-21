@@ -107,7 +107,7 @@ export const GlobalSearchModal: React.FC = () => {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in duration-200 overscroll-contain"
+      className="fixed inset-0 z-[999999] bg-slate-950/60 backdrop-blur-md flex items-start justify-center pt-16 sm:pt-24 px-4 animate-in fade-in duration-200 overscroll-contain"
       onClick={() => setIsSearchOpen(false)}
     >
       <div

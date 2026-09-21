@@ -329,3 +329,8 @@ body.dyslexia-font {
   -webkit-mask-image: linear-gradient(to right, transparent, black 20px, black calc(100% - 20px), transparent);
 }
 
+/* SweetAlert2 Highest Stacking Context Guarantee */
+.swal2-container {
+  z-index: 10000000 !important;
+}
+

@@ -316,7 +316,7 @@ export const StrukturOrganisasiChart: React.FC<{
           {/* Render inside React Portal on document.body when in Fullscreen mode */}
           {isFullscreen && mounted ? (
             createPortal(
-              <div className="fixed inset-0 z-[99999] bg-slate-100 p-2 sm:p-6 flex flex-col w-screen h-[100dvh] overflow-hidden animate-in fade-in duration-150 font-sans">
+              <div className="fixed inset-0 z-[999999] bg-slate-100 p-2 sm:p-6 flex flex-col w-screen h-[100dvh] overflow-hidden animate-in fade-in duration-150 font-sans">
                 {canvasComponent}
               </div>,
               document.body

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   BarChart3,
@@ -53,6 +54,12 @@ export default function PublicInfografisPage() {
     setPagination(res.pagination);
     setLoading(false);
   };
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetchData(currentPage, selectedCategory, searchTerm);
@@ -268,7 +275,7 @@ export default function PublicInfografisPage() {
       </div>
 
       {/* Lightbox Modal */}
-      {selectedInfografis && (
+      {mounted && selectedInfografis && typeof document !== "undefined" && createPortal(
         <div
           onClick={() => {
             setSelectedInfografis(null);
@@ -392,7 +399,8 @@ export default function PublicInfografisPage() {
               title={zoomScale > 1 ? "Klik untuk mengembalikan ukuran normal" : "Klik untuk memperbesar (Zoom)"}
             />
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

@@ -521,7 +521,7 @@ export default function UpdateProgresPage() {
               setEditingProject(null);
             }
           }}
-          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans animate-in fade-in duration-200 overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 font-sans animate-in fade-in duration-200 overscroll-contain"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -574,7 +574,7 @@ export default function UpdateProgresPage() {
                     { value: "selesai", label: "Selesai 100%" },
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
-                  value={progresForm.status_progres === "belum_mulai" ? "dalam_proses" : progresForm.status_progres}
+                  value={progresForm.status_progres}
                   onChange={(val) => setProgresForm({ ...progresForm, status_progres: (val as any) || "dalam_proses" })}
                   placeholder="Pilih status pembangunan"
                 />

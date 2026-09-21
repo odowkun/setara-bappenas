@@ -591,7 +591,7 @@ export default function AgendaPage() {
               setSelectedEvent(null);
             }
           }}
-          className="fixed inset-0 z-[99999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in overscroll-contain"
         >
           <div
             onClick={(e) => e.stopPropagation()}

@@ -729,7 +729,7 @@ export default function DashboardPage() {
 
       {/* 6. MODAL KELOLA DATA APBD & PROGRAM SEKTOAL (PORTAL) */}
       {mounted && isEditModalOpen && createPortal(
-        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
           <div
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150"
             onClick={() => !savingCharts && setIsEditModalOpen(false)}

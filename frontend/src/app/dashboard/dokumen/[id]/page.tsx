@@ -653,7 +653,7 @@ export default function DocumentDetailPage() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsGeotagModalOpen(false);
           }}
-          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -782,8 +782,8 @@ export default function DocumentDetailPage() {
                   </div>
 
                   <GeotaggingMapPicker
-                    initialLat={newProjectForm.latitude}
-                    initialLng={newProjectForm.longitude}
+                    selectedLat={newProjectForm.latitude}
+                    selectedLng={newProjectForm.longitude}
                     onLocationSelect={(lat, lng) => {
                       setNewProjectForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
                       setHasSelectedGeotagLocation(true);
@@ -826,7 +826,7 @@ export default function DocumentDetailPage() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedProjectForUpdate(null);
           }}
-          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
         >
           <div
             onClick={(e) => e.stopPropagation()}
@@ -873,7 +873,7 @@ export default function DocumentDetailPage() {
                     { value: "selesai", label: "Selesai 100%" },
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
-                  value={updateProgresForm.status_progres === "belum_mulai" ? "dalam_proses" : updateProgresForm.status_progres}
+                  value={updateProgresForm.status_progres}
                   onChange={(val) => setUpdateProgresForm({ ...updateProgresForm, status_progres: (val as any) || "dalam_proses" })}
                   placeholder="Pilih status progres"
                 />
@@ -919,7 +919,7 @@ export default function DocumentDetailPage() {
           onClick={(e) => {
             if (e.target === e.currentTarget) setSelectedProjectForAttachment(null);
           }}
-          className="fixed inset-0 z-[5000] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/70 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
         >
           <div
             onClick={(e) => e.stopPropagation()}

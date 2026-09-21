@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Instagram,
   Plus,
@@ -51,9 +52,14 @@ const formatDateToIndonesian = (dateStr: string) => {
 };
 
 export default function InstagramSocialMediaSettingsPanel() {
+  const [mounted, setMounted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [existingTentang, setExistingTentang] = useState<any>(null);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Profile states
   const [profile, setProfile] = useState<InstagramProfileData>(OFFICIAL_INSTAGRAM_PROFILE);
@@ -589,8 +595,8 @@ export default function InstagramSocialMediaSettingsPanel() {
         )}
       </div>
 
-      {/* CREATE / EDIT POST MODAL */}
-      {isFormOpen && (
+      {/* CREATE / EDIT POST MODAL (PORTALED TO DOCUMENT.BODY TO PREVENT HEADER LEAKS) */}
+      {mounted && isFormOpen && createPortal(
         <div className="fixed inset-0 z-[999999] overflow-y-auto bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
@@ -791,7 +797,8 @@ export default function InstagramSocialMediaSettingsPanel() {
               </div>
             </form>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

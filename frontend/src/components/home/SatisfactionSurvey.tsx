@@ -381,7 +381,7 @@ export const SatisfactionSurvey: React.FC = () => {
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
+          className="fixed inset-0 z-[999999] bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain"
           onClick={() => setShowModal(false)}
         >
           <div

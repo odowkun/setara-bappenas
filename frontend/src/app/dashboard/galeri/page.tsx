@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -32,6 +33,7 @@ import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function GaleriManagementPage() {
   const { hasRole } = useAuth();
+  const [mounted, setMounted] = useState(false);
   const [albums, setAlbums] = useState<AlbumItem[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("Semua");
@@ -40,6 +42,7 @@ export default function GaleriManagementPage() {
   const [activeTab, setActiveTab] = useState<"albums" | "hero-video" | "youtube-media" | "instagram-media">("albums");
 
   useEffect(() => {
+    setMounted(true);
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get("tab");
@@ -420,9 +423,9 @@ export default function GaleriManagementPage() {
         </>
       )}
 
-      {/* LIGHTBOX MODAL */}
-      {activeAlbum && activeAlbum.media && activeAlbum.media.length > 0 && (
-        <div className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in">
+      {/* LIGHTBOX MODAL (PORTALED TO DOCUMENT.BODY) */}
+      {mounted && activeAlbum && activeAlbum.media && activeAlbum.media.length > 0 && createPortal(
+        <div className="fixed inset-0 z-[999999] bg-slate-950/90 backdrop-blur-md flex flex-col justify-between p-4 sm:p-6 animate-in fade-in">
           {/* Modal Header */}
           <div className="flex items-center justify-between text-white border-b border-white/10 pb-4">
             <div>
@@ -494,7 +497,8 @@ export default function GaleriManagementPage() {
               </button>
             ))}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

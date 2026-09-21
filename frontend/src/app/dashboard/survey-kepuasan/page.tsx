@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   HeartHandshake,
@@ -82,7 +83,10 @@ export default function DashboardSurveyPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
+  const [mounted, setMounted] = useState(false);
+
   useEffect(() => {
+    setMounted(true);
     loadData();
   }, []);
 
@@ -865,8 +869,8 @@ export default function DashboardSurveyPage() {
       </div>
 
       {/* MODAL DETAIL HASIL SURVEI RESPONDEN */}
-      {selectedDetail && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
+      {mounted && selectedDetail && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4 sm:p-6 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
             {/* MODAL HEADER */}
             <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
@@ -996,7 +1000,8 @@ export default function DashboardSurveyPage() {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
