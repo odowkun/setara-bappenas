@@ -106,3 +106,36 @@ Controller: `App\Http\Controllers\Api\InfografisController`
    - **Halaman Katalog (`/infografis`)**:
      - Ditata menjadi 2 kolom rapi di mobile (`grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 sm:gap-6`) dengan badge dan tombol perbesar yang proporsional.
 
+---
+
+## 6. Resolusi Kesalahan Payload Unggah Gambar Infografis (`Dual-Variant Optimization URL Mapping`)
+
+Status pembaruan: 21 September 2026.
+
+### A. Akar Penyebab Masalah (Root Cause)
+1. **Ketidaksesuaian Kontrak JSON Response**:
+   - Endpoint `POST /api/v1/media/upload-optimized` mengembalikan payload dengan kunci `data.web_url`, `data.master_url`, dan `data.thumb_url` sebagai bagian dari pipeline Dual-Variant Optimization (Master HD + WebP/AVIF Web).
+   - Pada `frontend/src/services/infografisService.ts` method `uploadImage` dan `heroVideoService.ts` method `uploadFile`, pengecekan dilakukan secara restriktif menggunakan kondisi:
+     ```typescript
+     if (res.ok && json.data?.url)
+     ```
+   - Karena kunci `url` tidak ada di tingkat pertama `data` (hanya ada `web_url` dan `master_url`), ekspresi kondisi bernilai `false`.
+2. **Efek Paradoks Pesan Sukses Ditampilkan sebagai Error**:
+   - Fungsi service menganggap unggahan gagal dan mengembalikan `{ success: false, message: json.message }`.
+   - `json.message` berisi teks sukses resmi dari server: `"Media berhasil diunggah dengan Dual-Variant Optimization (Master HD + WebP/AVIF Web)"`.
+   - Halaman `dashboard/infografis/page.tsx` memanggil `toast.error(res.message)`, sehingga memunculkan toast merah berlambang tanda silang (X) yang menampilkan teks pesan sukses unggahan, dan mencegah URL gambar terisi ke dalam form.
+
+### B. Solusi Teknis & Resolusi Menyeluruh
+1. **Penyelarasan Backend (`MediaController.php`)**:
+   - Menambahkan field `'url' => $webUrl ?: $masterUrl` ke dalam array response `data` untuk menjamin kompatibilitas backward dengan klien yang mengekspektasikan kunci generik `url`.
+2. **Penyelarasan Frontend Client (`infografisService.ts` & `heroVideoService.ts`)**:
+   - Mengambil URL gambar dengan fallback berjenjang:
+     ```typescript
+     const fileUrl = json.data?.web_url || json.data?.url || json.data?.master_url;
+     if (res.ok && fileUrl) {
+       return { success: true, url: fileUrl };
+     }
+     ```
+   - Memastikan form dashboard menerima URL WebP teroptimasi dan menampilkan toast sukses hijau (`toast.success("Gambar infografis berhasil diunggah!")`).
+3. **Automated Feature Test**:
+   - Menambahkan unit/feature test `backend/tests/Feature/MediaAndInfografisTest.php` untuk memvalidasi endpoint `/media/upload-optimized`, `POST /admin/infografis`, dan `PUT /admin/infografis/{id}`. Seluruh test lulus 100%.

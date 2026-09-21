@@ -81,11 +81,13 @@ export const heroVideoService = {
       });
 
       const json = await res.json().catch(() => ({}));
-      if (res.ok && json.data?.url) {
+      const fileUrl = json.data?.web_url || json.data?.url || json.data?.master_url;
+
+      if (res.ok && fileUrl) {
         return {
           success: true,
-          url: json.data.url,
-          type: json.data.type,
+          url: fileUrl,
+          type: json.data?.type || (file.type.startsWith("video/") ? "video" : "image"),
         };
       }
 

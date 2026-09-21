@@ -79,6 +79,7 @@ class MediaController extends Controller
             'code' => 200,
             'message' => 'Media berhasil diunggah dengan Dual-Variant Optimization (Master HD + WebP/AVIF Web)',
             'data' => [
+                'url' => $webUrl ?: $masterUrl,
                 'master_url' => $masterUrl,
                 'web_url' => $webUrl,
                 'thumb_url' => $thumbUrl,
