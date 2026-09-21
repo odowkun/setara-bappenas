@@ -258,11 +258,11 @@ export default function InstagramSocialMediaSettingsPanel() {
 
   // Reset to default
   const handleResetToDefault = async () => {
-    const res = await showConfirm(
-      "Reset ke 2 Postingan Bawaan?",
-      "Dua postingan Instagram akan dikembalikan ke data default resmi template BAPPEDA.",
-      "Ya, Reset Sekarang"
-    );
+    const res = await showConfirm({
+      title: "Reset ke 2 Postingan Bawaan?",
+      text: "Dua postingan Instagram akan dikembalikan ke data default resmi template BAPPEDA.",
+      confirmButtonText: "Ya, Reset Sekarang",
+    });
     if (!res.isConfirmed) return;
 
     const defaultPosts = OFFICIAL_INSTAGRAM_POSTS.slice(0, 2);
@@ -311,7 +311,7 @@ export default function InstagramSocialMediaSettingsPanel() {
 
           <button
             type="button"
-            onClick={handleOpenCreateForm}
+            onClick={() => handleOpenCreateForm()}
             disabled={saving || posts.length >= 2}
             className={`px-4 py-2.5 rounded-2xl text-xs font-black flex items-center gap-2 transition cursor-pointer active:scale-95 disabled:opacity-50 ${
               posts.length >= 2

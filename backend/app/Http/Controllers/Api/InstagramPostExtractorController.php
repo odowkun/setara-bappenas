@@ -12,6 +12,84 @@ use Illuminate\Support\Facades\Storage;
 class InstagramPostExtractorController extends Controller
 {
     /**
+     * Helper to perform SSL-agnostic HTTP GET request with multiple robust fallbacks.
+     * Guaranteed to work in environments without local CA bundles (e.g. Windows Server, Herd).
+     */
+    protected function requestGet(string $url, int $timeout = 15): ?string
+    {
+        $userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)';
+
+        // 1. Try Laravel Http Client (Guzzle) with SSL verification explicitly disabled
+        try {
+            $response = Http::withoutVerifying()
+                ->withOptions([
+                    'verify' => false,
+                    'curl' => [
+                        CURLOPT_SSL_VERIFYPEER => false,
+                        CURLOPT_SSL_VERIFYHOST => false,
+                    ],
+                ])
+                ->withHeaders([
+                    'User-Agent' => $userAgent,
+                ])
+                ->timeout($timeout)
+                ->get($url);
+
+            if ($response->successful()) {
+                return $response->body();
+            }
+        } catch (\Throwable $guzzleErr) {
+            Log::warning("Guzzle requestGet failed for {$url}: " . $guzzleErr->getMessage() . " - trying native cURL fallback");
+        }
+
+        // 2. Native cURL fallback with SSL verification disabled
+        if (function_exists('curl_init')) {
+            try {
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, $url);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+                curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
+                curl_setopt($ch, CURLOPT_USERAGENT, $userAgent);
+
+                $body = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($body !== false && $httpCode >= 200 && $httpCode < 400) {
+                    return $body;
+                }
+            } catch (\Throwable $curlErr) {
+                Log::warning("Native cURL fallback failed for {$url}: " . $curlErr->getMessage());
+            }
+        }
+
+        // 3. Stream context fallback
+        try {
+            $ctx = stream_context_create([
+                'ssl' => [
+                    'verify_peer' => false,
+                    'verify_peer_name' => false,
+                ],
+                'http' => [
+                    'timeout' => $timeout,
+                    'user_agent' => $userAgent,
+                ],
+            ]);
+            $body = @file_get_contents($url, false, $ctx);
+            if ($body !== false) {
+                return $body;
+            }
+        } catch (\Throwable $streamErr) {
+            Log::warning("Stream context fallback failed for {$url}: " . $streamErr->getMessage());
+        }
+
+        return null;
+    }
+
+    /**
      * Extract metadata (image, caption, title, date, category) from public Instagram post URL.
      */
     public function extract(Request $request): JsonResponse
@@ -39,21 +117,16 @@ class InstagramPostExtractorController extends Controller
         $canonicalUrl = "https://www.instagram.com/p/{$shortcode}/";
 
         try {
-            // 2. Fetch public embed HTML
+            // 2. Fetch public embed HTML using SSL-agnostic request
             $embedUrl = "https://www.instagram.com/p/{$shortcode}/embed/captioned/";
-            $response = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept-Language' => 'id,en;q=0.9',
-            ])->timeout(12)->get($embedUrl);
+            $html = $this->requestGet($embedUrl, 15);
 
-            if (!$response->successful()) {
+            if (!$html) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Gagal menghubungi server Instagram. Pastikan akun tidak diprivat dan link postingan aktif.',
+                    'message' => 'Gagal menghubungi server Instagram. Pastikan server memiliki akses internet dan link postingan aktif.',
                 ], 422);
             }
-
-            $html = $response->body();
 
             // Check if returned valid embed or login wall
             if (strpos($html, 'EmbeddedMediaImage') === false && strpos($html, 'CaptionUsername') === false) {
@@ -99,14 +172,15 @@ class InstagramPostExtractorController extends Controller
             $storedImages = [];
             if (!empty($mediaUrl)) {
                 try {
-                    $imgRes = Http::timeout(10)->get($mediaUrl);
-                    if ($imgRes->successful() && strlen($imgRes->body()) > 1000) {
+                    $imageBinary = $this->requestGet($mediaUrl, 15);
+
+                    if ($imageBinary && strlen($imageBinary) > 1000) {
                         $dir = 'instagram';
                         if (!Storage::disk('public')->exists($dir)) {
                             Storage::disk('public')->makeDirectory($dir);
                         }
                         $fileName = 'ig_' . $shortcode . '_' . time() . '.jpg';
-                        Storage::disk('public')->put($dir . '/' . $fileName, $imgRes->body());
+                        Storage::disk('public')->put($dir . '/' . $fileName, $imageBinary);
                         $storedImages[] = '/storage/instagram/' . $fileName;
                     } else {
                         $storedImages[] = $mediaUrl;
@@ -119,6 +193,15 @@ class InstagramPostExtractorController extends Controller
 
             // 7. Extract or Invert Date
             $postDate = date('Y-m-d');
+            // Check Instagram media ID snowflake formula
+            if (preg_match('/media\?id=(\d+)/', $html, $mMediaId)) {
+                $timeMs = (int)(intdiv((int)$mMediaId[1], 1 << 23));
+                $epochTime = (int)($timeMs / 1000) + 1314220021;
+                if ($epochTime > 1500000000 && $epochTime <= time()) {
+                    $postDate = date('Y-m-d', $epochTime);
+                }
+            }
+
             // Try Indonesian date matching e.g. "17 September 2026"
             $monthMap = [
                 'januari' => '01', 'jan' => '01', 'februari' => '02', 'feb' => '02',

@@ -65,4 +65,11 @@ Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram be
    - Tombol **Hapus** (dengan konfirmasi SweetAlert2) untuk mencabut postingan.
 5. **Pengaturan Profil Akun**:
    - Perbarui display name, username `@bappeda_halut`, tautan profil, dan tagline instansi pada kartu atas lalu klik **Simpan Profil**.
-
+6. **Standar Ekstraksi Otomatis SSL-Agnostik & Ketahanan Jaringan (Anti cURL Error 60)**:
+   - Backend `InstagramPostExtractorController` dilengkapi arsitektur pemanggilan bertingkat (*multi-layer fallback*):
+     1. **Laravel HTTP Client (Guzzle)** dengan verifikasi SSL dinonaktifkan (`withoutVerifying()`), opsi cURL `CURLOPT_SSL_VERIFYPEER => false`, dan `CURLOPT_SSL_VERIFYHOST => false` untuk mencegah cURL error 60 di lingkungan server tanpa bundle CA lokal (seperti Windows Server / Local Herd).
+     2. **Native PHP cURL Fallback**: Jika Guzzle menemui kendala, sistem beralih ke native cURL dengan penanganan header dan opsi SSL mandiri.
+     3. **Stream Context Fallback**: Lapisan cadangan akhir menggunakan `file_get_contents` dan stream context tanpa verifikasi peer SSL.
+   - Menggunakan User-Agent SSR teroptimasi (`Mozilla/5.0 (Windows NT 10.0; Win64; x64)`) agar Instagram menyajikan markup embed berisi `EmbeddedMediaImage` dan naskah `Caption` lengkap.
+   - Gambar postingan secara otomatis diunduh dan disimpan permanen pada storage lokal (`/storage/instagram/ig_*.jpg`) guna menghindari masa kedaluwarsa URL CDN Meta Facebook.
+   - Tanggal rilis postingan diekstrak secara akurat menggunakan algoritma Instagram Snowflake Media ID dan pencocokan teks tanggal bahasa Indonesia.
