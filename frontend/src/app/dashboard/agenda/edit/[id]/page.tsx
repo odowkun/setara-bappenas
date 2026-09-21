@@ -562,17 +562,17 @@ export default function EditAgendaPage() {
         </div>
 
         {/* SUBMIT BUTTONS */}
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-slate-100">
           <Link
             href="/dashboard/agenda"
-            className="px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition text-center justify-center flex items-center"
           >
             Batal
           </Link>
           <button
             type="button"
             onClick={() => handleSave(false)}
-            className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs flex items-center gap-2 border border-slate-300 transition cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs flex items-center justify-center gap-2 border border-slate-300 transition cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>Simpan sebagai Draf</span>
@@ -580,10 +580,10 @@ export default function EditAgendaPage() {
           <button
             type="button"
             onClick={() => handleSave(true)}
-            className="px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95 cursor-pointer"
           >
             <Edit className="w-4 h-4" />
-            <span>{isPublished ? "Simpan Tetap Tayang" : "Simpan & Terbitkan"}</span>
+            <span>{isPublished ? "Simpan Perubahan" : "Simpan & Terbitkan"}</span>
           </button>
         </div>
       </form>

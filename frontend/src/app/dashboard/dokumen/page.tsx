@@ -147,17 +147,17 @@ export default function DocumentManagementPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
           <Link
             href="/dashboard/dokumen/riwayat-unduhan"
-            className="px-4 py-2.5 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-800 transition flex items-center justify-center gap-2 shrink-0"
+            className="w-full sm:w-auto px-4 py-2.5 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-800 transition flex items-center justify-center gap-2 shrink-0"
           >
             <History className="h-4 w-4" />
             <span>Riwayat Pengunduh</span>
           </Link>
           <Link
             href="/dashboard/dokumen/tambah"
-            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <FileUp className="w-4 h-4" />
             <span>Unggah Dokumen Baru</span>
@@ -322,7 +322,7 @@ export default function DocumentManagementPage() {
               </div>
 
               {/* Bottom Actions Row */}
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs">
                 <span className="text-[10px] text-slate-400 font-medium truncate max-w-[170px]">
                   Oleh: {doc.uploadedBy}
                 </span>

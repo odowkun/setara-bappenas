@@ -221,10 +221,10 @@ export default function DashboardAgendaPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Link
             href="/dashboard/agenda/tambah"
-            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Agenda Baru</span>
@@ -269,7 +269,7 @@ export default function DashboardAgendaPage() {
           </div>
 
           {/* SEARCH & VIEW MODE SWITCHER */}
-          <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
             <div className="relative flex-1 md:w-64">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
@@ -282,11 +282,11 @@ export default function DashboardAgendaPage() {
             </div>
 
             {/* SWITCHER BUTTONS */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl shrink-0 font-black text-xs">
+            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-2xl shrink-0 font-black text-xs w-full sm:w-auto justify-center">
               <button
                 type="button"
                 onClick={() => setViewMode("calendar")}
-                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 transition ${
                   viewMode === "calendar"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-200"
@@ -298,7 +298,7 @@ export default function DashboardAgendaPage() {
               <button
                 type="button"
                 onClick={() => setViewMode("table")}
-                className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition ${
+                className={`flex-1 sm:flex-initial px-3 py-1.5 rounded-xl flex items-center justify-center gap-1.5 transition ${
                   viewMode === "table"
                     ? "bg-blue-600 text-white shadow-xs"
                     : "text-slate-600 hover:bg-slate-200"
@@ -349,7 +349,9 @@ export default function DashboardAgendaPage() {
       {/* APPLE CALENDAR GRID VIEW */}
       {viewMode === "calendar" ? (
         <div className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden">
-          {/* WEEKDAY HEADERS */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[720px]">
+              {/* WEEKDAY HEADERS */}
           <div className="grid grid-cols-7 border-b border-slate-200 bg-slate-50 text-center">
             {DAYS_NAME.map((d, i) => (
               <div
@@ -537,13 +539,15 @@ export default function DashboardAgendaPage() {
                 <span className="w-7 h-7 text-xs font-bold flex items-center justify-center">{d}</span>
               </div>
             ))}
+              </div>
+            </div>
           </div>
         </div>
       ) : (
         /* TABLE VIEW */
         <div className="rounded-3xl bg-white border border-slate-200 shadow-xs overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <table className="w-full text-left text-xs border-collapse min-w-[700px]">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 font-black text-slate-700 uppercase tracking-wider">
                   <th className="py-4 px-6">Rentang Tanggal &amp; Waktu</th>

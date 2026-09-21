@@ -158,7 +158,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMobileMenuToggle }) 
 
           {/* DROPDOWN NOTIFICATION POPOVER */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-sm sm:w-96 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150">
               {/* Dropdown Header */}
               <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
                 <div className="flex items-center gap-2">
@@ -259,7 +259,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMobileMenuToggle }) 
 
           {/* USER POPOVER DROPDOWN PANEL */}
           {isUserMenuOpen && (
-            <div className="absolute right-0 mt-2 w-72 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 font-sans">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] max-w-xs sm:w-72 rounded-3xl bg-white border border-slate-200 shadow-2xl overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-150 font-sans">
               {/* Profile Card Header */}
               <div className="p-4 bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white space-y-2">
                 <div className="flex items-center gap-3">

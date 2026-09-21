@@ -82,7 +82,7 @@ export default function AuditLogsPage() {
       {/* Audit Log Table */}
       <div className="rounded-3xl bg-white border border-slate-200 overflow-hidden shadow-sm">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs min-w-[700px]">
             <thead className="bg-slate-50 text-slate-600 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3.5">Waktu / Timestamp</th>

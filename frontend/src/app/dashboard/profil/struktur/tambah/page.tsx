@@ -336,18 +336,18 @@ export default function TambahStrukturPage() {
         </div>
 
         {/* Submit Actions */}
-        <div className="flex items-center justify-end gap-3 pt-2">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
           <button
             type="button"
             onClick={() => router.push("/dashboard/profil/struktur")}
-            className="px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition"
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition text-center justify-center flex items-center cursor-pointer"
           >
             Batal
           </button>
           <button
             type="submit"
             disabled={saving}
-            className="px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/25 flex items-center gap-2 transition disabled:opacity-50"
+            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-lg shadow-blue-600/25 flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>{saving ? "Menyimpan Data..." : "Simpan Data Posisi & Pejabat"}</span>

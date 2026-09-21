@@ -772,18 +772,18 @@ export default function DocumentDetailPage() {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsGeotagModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer text-center justify-center flex items-center"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingGeotag}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 shadow-xs disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 shadow-xs disabled:opacity-50 cursor-pointer text-center justify-center flex items-center"
                 >
                   {submittingGeotag ? "Menyimpan..." : "Simpan Lokasi Proyek"}
                 </button>
@@ -865,18 +865,18 @@ export default function DocumentDetailPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedProjectForUpdate(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer text-center justify-center flex items-center"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingProgres}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 disabled:opacity-50 cursor-pointer text-center justify-center flex items-center"
                 >
                   {submittingProgres ? "Menyimpan..." : "Simpan Progres"}
                 </button>
@@ -944,18 +944,18 @@ export default function DocumentDetailPage() {
                 />
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setSelectedProjectForAttachment(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer"
+                  className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-100 text-slate-600 font-bold text-xs cursor-pointer text-center justify-center flex items-center"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingAttachment}
-                  className="px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 shadow-xs disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-5 py-2 rounded-xl bg-blue-600 text-white font-bold text-xs hover:bg-blue-700 shadow-xs disabled:opacity-50 cursor-pointer text-center justify-center flex items-center"
                 >
                   {submittingAttachment ? "Uploading..." : "Unggah Berkas"}
                 </button>

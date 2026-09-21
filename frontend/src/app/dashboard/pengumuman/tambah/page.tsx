@@ -477,10 +477,10 @@ export default function TambahPengumumanPage() {
         </div>
 
         {/* Submit Buttons */}
-        <div className="flex items-center justify-end gap-3 pt-1">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-1">
           <Link
             href="/dashboard/pengumuman"
-            className="px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition text-center justify-center flex items-center"
           >
             Batal
           </Link>
@@ -488,7 +488,7 @@ export default function TambahPengumumanPage() {
           <button
             type="button"
             onClick={() => handleSave(false)}
-            className="px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs border border-slate-300 flex items-center gap-2 transition cursor-pointer"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-black text-xs border border-slate-300 flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>Simpan Draf</span>
@@ -496,7 +496,7 @@ export default function TambahPengumumanPage() {
           <button
             type="button"
             onClick={() => handleSave(true)}
-            className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95"
+            className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>Terbitkan Pengumuman</span>

@@ -234,11 +234,11 @@ export default function DashboardSurveyPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Link
             href="/survey-kepuasan"
             target="_blank"
-            className="px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <Eye className="w-4 h-4" />
             <span>Lihat Form Publik</span>
@@ -363,7 +363,7 @@ export default function DashboardSurveyPage() {
         {/* TAB 1: HASIL SURVEI RESPONDEN */}
         {activeTab === "ikm" && (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[650px]">
               <thead className="bg-slate-50 text-slate-500 font-extrabold uppercase border-b border-slate-200">
                 <tr>
                   <th className="py-4 px-6">Responden</th>

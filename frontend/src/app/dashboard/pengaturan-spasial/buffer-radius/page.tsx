@@ -230,7 +230,7 @@ export default function BufferRadiusSettingPage() {
               type="button"
               onClick={handleSubmit}
               disabled={saving}
-              className="px-8 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md shadow-purple-600/20 transition flex items-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
+              className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-purple-600 hover:bg-purple-700 text-white font-black text-xs shadow-md shadow-purple-600/20 transition flex items-center justify-center gap-2 cursor-pointer active:scale-98 disabled:opacity-50"
             >
               {saving ? <RefreshCw className="w-4 h-4 animate-spin text-white" /> : <Save className="w-4 h-4 text-white" />}
               <span>{saving ? "Menyimpan..." : "Simpan Radius Buffer"}</span>

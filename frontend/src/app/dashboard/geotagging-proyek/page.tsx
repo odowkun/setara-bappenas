@@ -530,11 +530,11 @@ export default function GeotaggingProyekPage() {
                   <MapPin className="w-3.5 h-3.5 text-rose-500" />
                   <span>Koordinat Tertangkap Peta (Leaflet Pin):</span>
                 </span>
-                <div className="flex justify-between items-center text-xs font-mono font-bold">
-                  <span className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs">
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 text-xs font-mono font-bold">
+                  <span className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs text-center sm:text-left">
                     LAT (Y): <code className="text-blue-700 font-extrabold">{form.latitude}</code>
                   </span>
-                  <span className="px-2.5 py-1 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs">
+                  <span className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs text-center sm:text-left">
                     LNG (X): <code className="text-blue-700 font-extrabold">{form.longitude}</code>
                   </span>
                 </div>

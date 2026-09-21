@@ -289,11 +289,12 @@ export default function InfografisDashboardPage() {
           <div className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600">
             Tersemat: <span className="text-blue-600 font-extrabold">{pinnedCount}</span> / 5 Beranda
           </div>
-
+        </div>
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <button
             onClick={handleOpenAdd}
             disabled={!canManage}
-            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>Tambah Infografis Baru</span>
@@ -304,7 +305,7 @@ export default function InfografisDashboardPage() {
       {/* Filter and Search Bar */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 p-4 sm:p-5 shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
+          <div className="relative flex-1 w-full md:max-w-md">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <input
               type="text"
@@ -315,9 +316,9 @@ export default function InfografisDashboardPage() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 w-full md:w-auto">
             {/* Category Select */}
-            <div className="w-52">
+            <div className="w-full sm:w-52">
               <SearchableSelect
                 options={filterCategoryOptions}
                 value={filterCategory}
@@ -328,7 +329,7 @@ export default function InfografisDashboardPage() {
             </div>
 
             {/* Status Pills */}
-            <div className="inline-flex rounded-2xl bg-slate-100 dark:bg-slate-800 p-1">
+            <div className="flex flex-wrap sm:inline-flex rounded-2xl bg-slate-100 dark:bg-slate-800 p-1 w-full sm:w-auto">
               <button
                 onClick={() => setFilterStatus("all")}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
@@ -387,7 +388,7 @@ export default function InfografisDashboardPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm">
+            <table className="w-full text-left border-collapse text-sm min-w-[760px]">
               <thead>
                 <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   <th className="py-4 px-4 sm:px-6 w-20 text-center">Gambar</th>

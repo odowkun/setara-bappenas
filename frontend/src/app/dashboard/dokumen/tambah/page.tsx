@@ -478,10 +478,10 @@ export default function TambahDokumenPage() {
         </div>
 
         {/* Buttons */}
-        <div className="flex items-center justify-end gap-3">
+        <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-2">
           <Link
             href="/dashboard/dokumen"
-            className="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition text-center justify-center flex items-center"
           >
             Batal
           </Link>
@@ -490,7 +490,7 @@ export default function TambahDokumenPage() {
             type="button"
             onClick={() => handleSave(false)}
             disabled={!fileUrl}
-            className="px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-extrabold text-xs border border-slate-300 flex items-center gap-2 transition cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-white hover:bg-slate-50 disabled:opacity-50 text-slate-700 font-extrabold text-xs border border-slate-300 flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <Save className="w-4 h-4" />
             <span>Simpan Draf</span>
@@ -499,7 +499,7 @@ export default function TambahDokumenPage() {
             type="button"
             onClick={() => handleSave(true)}
             disabled={!fileUrl}
-            className="px-6 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-md shadow-blue-700/20 flex items-center gap-2 transition cursor-pointer"
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 disabled:bg-slate-300 disabled:shadow-none disabled:cursor-not-allowed text-white font-extrabold text-xs shadow-md shadow-blue-700/20 flex items-center justify-center gap-2 transition cursor-pointer"
           >
             <CheckCircle2 className="w-4 h-4" />
             <span>

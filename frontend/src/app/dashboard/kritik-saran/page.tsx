@@ -201,11 +201,11 @@ export default function DashboardKritikSaranPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Link
             href="/kritik-saran"
             target="_blank"
-            className="px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <Eye className="w-4 h-4" />
             <span>Lihat Form Publik</span>
@@ -214,11 +214,11 @@ export default function DashboardKritikSaranPage() {
       </div>
 
       {/* TAB NAVIGATION */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200 w-fit">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 rounded-2xl bg-slate-100/80 border border-slate-200 w-full sm:w-fit">
         <button
           type="button"
           onClick={() => setActiveTab("pesan")}
-          className={`px-5 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
             activeTab === "pesan"
               ? "bg-white text-blue-600 shadow-xs border border-slate-200/60"
               : "text-slate-600 hover:text-slate-900"
@@ -231,7 +231,7 @@ export default function DashboardKritikSaranPage() {
         <button
           type="button"
           onClick={() => setActiveTab("unit_tujuan")}
-          className={`px-5 py-2 rounded-xl text-xs font-black transition flex items-center gap-2 ${
+          className={`px-5 py-2.5 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 cursor-pointer ${
             activeTab === "unit_tujuan"
               ? "bg-white text-blue-600 shadow-xs border border-slate-200/60"
               : "text-slate-600 hover:text-slate-900"
@@ -306,7 +306,7 @@ export default function DashboardKritikSaranPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs min-w-[650px]">
                 <thead className="bg-slate-50 text-slate-500 font-extrabold uppercase border-b border-slate-200">
                   <tr>
                     <th className="py-4 px-6">Pengirim</th>
@@ -426,7 +426,7 @@ export default function DashboardKritikSaranPage() {
 
           {/* TABEL DAFTAR OPSI */}
           <div className="overflow-x-auto border border-slate-200 rounded-2xl">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[500px]">
               <thead className="bg-slate-50 text-slate-500 font-extrabold uppercase border-b border-slate-200">
                 <tr>
                   <th className="py-3.5 px-6">ID System</th>

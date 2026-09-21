@@ -556,7 +556,7 @@ export default function DasarHukumEditorPage() {
             <button
               type="submit"
               disabled={saving}
-              className="px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center gap-2 transition active:scale-95 disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               <Save className="w-4 h-4" />
               <span>{saving ? "Menyimpan Data..." : "Simpan Dasar Hukum"}</span>

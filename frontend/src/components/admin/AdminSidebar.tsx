@@ -42,6 +42,7 @@ import {
   Printer,
   ScrollText,
   BarChart3,
+  X,
 } from "lucide-react";
 
 interface SubMenuItem {
@@ -242,6 +243,32 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
 
     return (
       <div>
+        {/* MOBILE DRAWER HEADER BAR WITH CLOSE BUTTON */}
+        {isMobile && (
+          <div className="p-3.5 border-b border-slate-100 flex items-center justify-between bg-slate-50/90 sticky top-0 z-20 backdrop-blur-xs">
+            <div className="flex items-center gap-2.5">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/bappeda/logo-halut.png"
+                alt="BAPPEDA Halut"
+                className="h-8 w-auto object-contain"
+              />
+              <div>
+                <h3 className="text-xs font-black text-slate-900 leading-none">BAPPEDA HALUT</h3>
+                <p className="text-[9px] font-bold text-slate-400 mt-0.5">Dashboard SPBE</p>
+              </div>
+            </div>
+            <button
+              onClick={onMobileClose}
+              type="button"
+              className="p-1.5 rounded-xl text-slate-500 hover:text-slate-900 hover:bg-slate-200/80 transition cursor-pointer"
+              aria-label="Tutup Menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         {/* PREMIUM EXECUTIVE USER PROFILE CARD */}
         <div className="p-3">
           <Link

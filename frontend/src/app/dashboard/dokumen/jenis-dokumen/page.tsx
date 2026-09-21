@@ -157,7 +157,7 @@ export default function ManajemenJenisDokumenPage() {
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
+          className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Jenis Dokumen Baru</span>
@@ -173,7 +173,7 @@ export default function ManajemenJenisDokumenPage() {
       )}
 
       {/* FILTER & SEARCH BAR */}
-      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
           <input
@@ -185,9 +185,9 @@ export default function ManajemenJenisDokumenPage() {
           />
         </div>
 
-        <div className="flex items-center gap-3 w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
           <span className="text-xs font-bold text-slate-600 whitespace-nowrap">Filter Scope Role:</span>
-          <div className="w-64">
+          <div className="w-full sm:w-64">
             <SearchableSelect
               options={[
                 { value: "semua", label: "Semua Role" },
@@ -204,21 +204,21 @@ export default function ManajemenJenisDokumenPage() {
       </div>
 
       {/* TABLE LIST JENIS DOKUMEN */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+      <div className="p-4 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-4 gap-2">
           <div className="flex items-center gap-2">
             <Tag className="w-5 h-5 text-blue-700" />
             <h2 className="text-base font-black text-slate-900">
               Daftar Kategori dan Jenis Dokumen Database
             </h2>
           </div>
-          <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-100 font-mono">
+          <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-100 font-mono w-fit">
             Total: {filteredItems.length} Jenis Dokumen
           </span>
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse min-w-[650px]">
             <thead>
               <tr className="border-b border-slate-100 text-[11px] font-black uppercase text-slate-400 tracking-wider">
                 <th className="py-3 px-4">No</th>

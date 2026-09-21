@@ -257,7 +257,7 @@ export default function DashboardPage() {
           <button
             type="button"
             onClick={() => setIsEditModalOpen(true)}
-            className="px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-extrabold shadow-xs transition active:scale-95 flex items-center justify-center gap-2 shrink-0"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-extrabold shadow-xs transition active:scale-95 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
           >
             <SlidersHorizontal className="w-4 h-4 text-blue-600" />
             <span>Kelola Data APBD &amp; Target</span>
@@ -883,12 +883,12 @@ export default function DashboardPage() {
             </div>
 
             {/* Footer Actions */}
-            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-3 shrink-0">
+            <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 shrink-0">
               <button
                 type="button"
                 disabled={savingCharts}
                 onClick={() => setIsEditModalOpen(false)}
-                className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition text-center justify-center flex items-center cursor-pointer"
               >
                 Batal
               </button>
@@ -896,7 +896,7 @@ export default function DashboardPage() {
                 type="button"
                 disabled={savingCharts}
                 onClick={handleSaveCharts}
-                className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center gap-2"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
                 {savingCharts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 <span>{savingCharts ? "Menyimpan..." : "Simpan Perubahan Data"}</span>

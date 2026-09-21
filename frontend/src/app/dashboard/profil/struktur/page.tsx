@@ -250,38 +250,38 @@ export default function StrukturEditorPage() {
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
 
         {/* Tab Selector: Step 1 vs Step 2 */}
-        <div className="flex rounded-2xl bg-slate-100 p-1.5 text-xs font-extrabold">
+        <div className="flex flex-col sm:flex-row rounded-2xl bg-slate-100 p-1.5 text-xs font-extrabold gap-1.5">
           <button
             type="button"
             onClick={() => setMgmtTab("step1-structure")}
-            className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition ${
+            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
               mgmtTab === "step1-structure"
                 ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <Building2 className="w-4 h-4 text-blue-600" />
+            <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
             <span>Langkah 1 — Susun Daftar Posisi Jabatan</span>
           </button>
 
           <button
             type="button"
             onClick={() => setMgmtTab("step2-pejabat")}
-            className={`flex-1 py-3 rounded-xl flex items-center justify-center gap-2 transition ${
+            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
               mgmtTab === "step2-pejabat"
                 ? "bg-white text-blue-700 shadow-sm"
                 : "text-slate-600 hover:text-slate-900"
             }`}
           >
-            <UserCheck className="w-4 h-4 text-blue-600" />
-            <span>Langkah 2 — Penugasan Pejabat & NIP ({officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/{officials.length} Terisi)</span>
+            <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Langkah 2 — Penugasan Pejabat &amp; NIP ({officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/{officials.length} Terisi)</span>
           </button>
         </div>
 
         {/* TAB 1: Step 1 — Clean Hierarchical List of Positions */}
         {mgmtTab === "step1-structure" && (
           <div className="space-y-4 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-2xl text-xs text-blue-900 font-medium">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-2xl text-xs text-blue-900 font-medium gap-3">
               <div>
                 <p className="font-extrabold text-blue-950">🏛️ Daftar Hirarki Posisi Jabatan</p>
                 <p className="mt-0.5 text-blue-800">
@@ -295,7 +295,7 @@ export default function StrukturEditorPage() {
                   setModalError(null);
                   setShowAddModal(true);
                 }}
-                className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 flex items-center gap-2 transition shrink-0 ml-4"
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition shrink-0 ml-0 sm:ml-4 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Posisi Jabatan</span>
@@ -315,8 +315,8 @@ export default function StrukturEditorPage() {
                   return (
                     <div
                       key={item.id}
-                      style={{ paddingLeft: `${Math.max(16, depth * 32 + 16)}px` }}
-                      className="py-4 pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition"
+                      style={{ paddingLeft: `${Math.max(12, Math.min(depth * 18 + 12, 48))}px` }}
+                      className="py-4 pr-4 sm:pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition"
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {depth > 0 && (

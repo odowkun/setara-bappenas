@@ -130,13 +130,13 @@ export default function GaleriManagementPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
           <button
             type="button"
             onClick={() => setActiveTab(activeTab === "hero-video" ? "albums" : "hero-video")}
-            className={`px-5 py-3 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0 border cursor-pointer ${
+            className={`w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer border ${
               activeTab === "hero-video"
-                ? "bg-slate-100 text-slate-800 border-slate-300 hover:bg-slate-200"
+                ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
                 : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
             }`}
           >
@@ -147,7 +147,7 @@ export default function GaleriManagementPage() {
           {hasRole(["superadmin", "admin_umum", "admin_bidang"]) && (
             <Link
               href="/dashboard/galeri/tambah"
-              className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+              className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
             >
               <FolderPlus className="w-4 h-4" />
               <span>Buat Album Galeri Baru</span>
@@ -157,11 +157,11 @@ export default function GaleriManagementPage() {
       </div>
 
       {/* TABS NAVIGATION */}
-      <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-2xs w-fit">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-2xs w-full sm:w-fit">
         <button
           type="button"
           onClick={() => setActiveTab("albums")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "albums"
               ? "bg-blue-600 text-white shadow-sm"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
@@ -174,7 +174,7 @@ export default function GaleriManagementPage() {
         <button
           type="button"
           onClick={() => setActiveTab("hero-video")}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+          className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
             activeTab === "hero-video"
               ? "bg-amber-500 text-blue-950 font-black shadow-sm"
               : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"

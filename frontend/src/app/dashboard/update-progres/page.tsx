@@ -368,7 +368,7 @@ export default function UpdateProgresPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-sans">
+          <table className="w-full text-left text-xs font-sans min-w-[850px]">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[10px] font-extrabold tracking-wider">
                 <th className="p-3">Ref OBJECTID</th>
