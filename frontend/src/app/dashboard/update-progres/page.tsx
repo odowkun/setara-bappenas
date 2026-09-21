@@ -52,7 +52,7 @@ export default function UpdateProgresPage() {
   const [editingProject, setEditingProject] = useState<ProyekDetail | null>(null);
   const [progresForm, setProgresForm] = useState({
     persentase_progres: 0,
-    status_progres: "dalam_proses" as "belum_mulai" | "dalam_proses" | "selesai" | "terkendala",
+    status_progres: "dalam_proses" as "dalam_proses" | "selesai" | "terkendala",
     realisasi_anggaran: 0,
   });
   const [submitting, setSubmitting] = useState(false);
@@ -112,7 +112,7 @@ export default function UpdateProgresPage() {
     setEditingProject(prj);
     setProgresForm({
       persentase_progres: prj.persentase_progres,
-      status_progres: prj.status_progres,
+      status_progres: (prj.status_progres === "belum_mulai" || !prj.status_progres ? "dalam_proses" : prj.status_progres) as "dalam_proses" | "selesai" | "terkendala",
       realisasi_anggaran: prj.realisasi_anggaran,
     });
   };
@@ -545,13 +545,12 @@ export default function UpdateProgresPage() {
                 <label className="font-bold text-slate-700 block mb-1">Status Pembangunan</label>
                 <SearchableSelect
                   options={[
-                    { value: "belum_mulai", label: "Belum Mulai" },
                     { value: "dalam_proses", label: "Dalam Proses" },
                     { value: "selesai", label: "Selesai 100%" },
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
-                  value={progresForm.status_progres}
-                  onChange={(val) => setProgresForm({ ...progresForm, status_progres: val as any })}
+                  value={progresForm.status_progres === "belum_mulai" ? "dalam_proses" : progresForm.status_progres}
+                  onChange={(val) => setProgresForm({ ...progresForm, status_progres: (val as any) || "dalam_proses" })}
                   placeholder="Pilih status pembangunan"
                 />
               </div>

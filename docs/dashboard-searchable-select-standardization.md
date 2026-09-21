@@ -37,7 +37,23 @@ Audit menyeluruh memeriksa seluruh file di bawah direktori `frontend/src/app/das
 
 ---
 
-## 3. Status Verifikasi
+## 3. Penyempurnaan Logika Status Progres Pembangunan
+
+Sesuai kebutuhan operasional pelaporan dan pembaruan progres:
+- **Penghapusan Opsi "Belum Mulai"**:
+  - Pada modal **Update Progres** di `dashboard/dokumen/[id]/page.tsx` dan `dashboard/update-progres/page.tsx`, opsi status `"Belum Mulai"` (`belum_mulai`) dihapus dari pilihan `SearchableSelect`.
+  - **Rasional**: Saat admin membuka dan mengedit progres proyek, kegiatan tersebut telah memasuki tahap pelaksanaan (tidak lagi "belum mulai").
+- **Default Status Progres**:
+  - Nilai default status saat mengedit diatur ke `"Dalam Proses"` (`dalam_proses`).
+  - Apabila data proyek awal di database masih bernilai `belum_mulai`, modal secara otomatis mengonversi nilainya ke `dalam_proses` saat dibuka.
+  - Opsi status yang tersedia:
+    1. `dalam_proses` ("Dalam Proses")
+    2. `selesai` ("Selesai 100%")
+    3. `terkendala` ("Terkendala / Restrukturisasi")
+
+---
+
+## 4. Status Verifikasi
 
 - **Pencarian Kode Sumber**: `grep_search` memastikan `0` native `<select>` tersisa di seluruh direktori `frontend/src/app/dashboard`.
 - **Kompilasi Next.js**: `npm run build` dijalankan dan sukses 100% tanpa error TypeScript maupun linting pada seluruh route halaman.

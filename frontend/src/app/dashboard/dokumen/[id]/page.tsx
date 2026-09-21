@@ -69,7 +69,7 @@ export default function DocumentDetailPage() {
   const [selectedProjectForUpdate, setSelectedProjectForUpdate] = useState<ProyekDetail | null>(null);
   const [updateProgresForm, setUpdateProgresForm] = useState({
     persentase_progres: 0,
-    status_progres: "dalam_proses" as "belum_mulai" | "dalam_proses" | "selesai" | "terkendala",
+    status_progres: "dalam_proses" as "dalam_proses" | "selesai" | "terkendala",
     realisasi_anggaran: 0,
   });
   const [submittingProgres, setSubmittingProgres] = useState(false);
@@ -584,7 +584,7 @@ export default function DocumentDetailPage() {
                         setSelectedProjectForUpdate(prj);
                         setUpdateProgresForm({
                           persentase_progres: prj.persentase_progres,
-                          status_progres: prj.status_progres,
+                          status_progres: (prj.status_progres === "belum_mulai" || !prj.status_progres ? "dalam_proses" : prj.status_progres) as "dalam_proses" | "selesai" | "terkendala",
                           realisasi_anggaran: prj.realisasi_anggaran,
                         });
                       }}
@@ -842,13 +842,12 @@ export default function DocumentDetailPage() {
                 <label className="text-xs font-bold text-slate-700 block mb-1">Status Progres Pembangunan</label>
                 <SearchableSelect
                   options={[
-                    { value: "belum_mulai", label: "Belum Mulai" },
                     { value: "dalam_proses", label: "Dalam Proses" },
                     { value: "selesai", label: "Selesai 100%" },
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
-                  value={updateProgresForm.status_progres}
-                  onChange={(val) => setUpdateProgresForm({ ...updateProgresForm, status_progres: val as any })}
+                  value={updateProgresForm.status_progres === "belum_mulai" ? "dalam_proses" : updateProgresForm.status_progres}
+                  onChange={(val) => setUpdateProgresForm({ ...updateProgresForm, status_progres: (val as any) || "dalam_proses" })}
                   placeholder="Pilih status progres"
                 />
               </div>
