@@ -153,7 +153,7 @@ export default function PublicTentangPage() {
                   <span>Visi Utama</span>
                 </div>
                 <p className="text-base sm:text-xl font-black text-slate-900 leading-snug italic">
-                  "{visiMisiData?.content || "Data visi belum tersedia."}"
+                  &ldquo;{visiMisiData?.content ? visiMisiData.content.replace(/<[^>]*>/g, "").trim() : "Data visi belum tersedia."}&rdquo;
                 </p>
               </div>
 
@@ -174,9 +174,12 @@ export default function PublicTentangPage() {
                         {idx + 1}
                       </div>
                       <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-slate-900 leading-relaxed">
-                          {misiText}
-                        </p>
+                        <div
+                          className="text-xs font-bold text-slate-900 leading-relaxed [&_p]:my-0"
+                          dangerouslySetInnerHTML={{
+                            __html: misiText,
+                          }}
+                        />
                       </div>
                     </div>
                   ))}

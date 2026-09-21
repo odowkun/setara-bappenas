@@ -64,9 +64,11 @@ export default function PublicNewsPage() {
               author: item.author || "Belum tersedia",
               date: item.date || item.created_at?.split("T")[0] || "",
               views: Number(item.views) || 0,
-              featuredImage: normalizeMediaUrl(item.image),
-              summary: item.summary || "",
-              readTime: "3 mnt baca",
+              summary: item.summary
+                ? item.summary.replace(/<[^>]*>/g, "")
+                : item.content
+                ? item.content.replace(/<[^>]*>/g, "").substring(0, 160) + "..."
+                : "",
             }));
             setNewsList(mapped);
           }

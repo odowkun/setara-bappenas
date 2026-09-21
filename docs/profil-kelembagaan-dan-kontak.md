@@ -49,3 +49,18 @@ Bagan Struktur Organisasi (`/profil/struktur` dan `/dashboard/profil/struktur`) 
    - **Skala Zoom Otomatis**: Pada viewport kecil (< 640px), tingkat zoom default disetel ke 60% agar struktur kelembagaan langsung muat dan terbaca di layar ponsel.
    - **Touch Pan & Mobile Gestures**: Kontainer kanvas mengaktifkan `touch-pan-x touch-pan-y` untuk navigasi usap (swipe) yang mulus serta dukungan drag sentuh (`onTouchStart`, `onTouchMove`, `onTouchEnd`). Dilengkapi pill petunjuk navigasi mobile: *"↔ Geser layar untuk menjelajah bagan"*.
    - **Bagan Vertikal Mobile-Friendly**: Indentasi hierarki berjenjang (`RenderVerticalNode`) disesuaikan menjadi `pl-3.5 ml-3 sm:pl-8 sm:ml-8` untuk mencegah pemotongan kartu pada smartphone berlayar sempit.
+
+## Standar Rendering Teks Kaya (Rich Text & Sanitasi Tag HTML)
+
+Untuk mencegah tag HTML (seperti `<p>`, `</p>`, `<ul>`, dll.) terlihat secara mentah (raw string) di halaman publik:
+
+1. **Konten Utama / Detail**:
+   - Konten yang dikelola melalui TipTap/WYSIWYG Rich Text Editor (`profil`, `tugas-fungsi`, `tentang`, `pengumuman`, `berita`) WAJIB dirender menggunakan `dangerouslySetInnerHTML={{ __html: content }}` dengan pembungkus styling typography Tailwind (`prose prose-slate max-w-none text-slate-800 leading-relaxed`).
+   - Dilarang merender variabel HTML sebagai text node langsung (misal: `{data?.content}`) karena React akan melakukan HTML entity escaping yang menyebabkan tag HTML tampil sebagai teks biasa.
+
+2. **Ringkasan / Kartu Pratinjau / Excerpt**:
+   - Komponen daftar, kartu ringkasan, atau modal pendek yang menggunakan `line-clamp` WAJIB membersihkan tag HTML terlebih dahulu menggunakan pembersih ekspresi reguler:
+     ```ts
+     const cleanText = rawContent ? rawContent.replace(/<[^>]*>/g, "").trim() : "";
+     ```
+   - Berlaku pada: `/profil/tentang` (kutipan Visi), `/profil/tugas-fungsi` (daftar fungsi), `/pengumuman` (ringkasan kartu & headline), `/berita` (ringkasan artikel & carousel beranda).

@@ -87,9 +87,12 @@ export default function PublicTugasFungsiPage() {
               </div>
 
               <div className="p-6 sm:p-8 rounded-2xl bg-white border border-blue-100/60 shadow-sm">
-                <p className="text-xs sm:text-sm font-bold text-slate-800 leading-relaxed">
-                  {data?.content || "Data tugas pokok belum tersedia."}
-                </p>
+                <div
+                  className="prose prose-slate max-w-none text-xs sm:text-sm font-medium text-slate-800 leading-relaxed [&_p]:leading-relaxed [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                  dangerouslySetInnerHTML={{
+                    __html: data?.content || "<p>Data tugas pokok belum tersedia.</p>",
+                  }}
+                />
               </div>
             </div>
 
@@ -119,9 +122,12 @@ export default function PublicTugasFungsiPage() {
                         <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
                         <span>Fungsi Ke-{idx + 1}</span>
                       </div>
-                      <p className="text-xs font-bold text-slate-900 leading-relaxed">
-                        {fungsiText}
-                      </p>
+                      <div
+                        className="text-xs font-bold text-slate-900 leading-relaxed [&_p]:my-0"
+                        dangerouslySetInnerHTML={{
+                          __html: fungsiText,
+                        }}
+                      />
                     </div>
                   </div>
                 ))}

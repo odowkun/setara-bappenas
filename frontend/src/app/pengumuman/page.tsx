@@ -223,7 +223,7 @@ export default function PublicPengumumanPage() {
                 {pinnedAnnouncement.title}
               </h2>
               <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium line-clamp-3">
-                {pinnedAnnouncement.content}
+                {pinnedAnnouncement.content ? pinnedAnnouncement.content.replace(/<[^>]*>/g, "") : ""}
               </p>
               <div className="flex items-center gap-3 text-xs text-slate-300 pt-1 flex-wrap">
                 <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-amber-300 font-bold border border-white/20">
@@ -426,7 +426,7 @@ export default function PublicPengumumanPage() {
                           {item.title}
                         </h3>
                         <p className="text-xs text-slate-600 font-medium line-clamp-2 leading-relaxed mt-1">
-                          {item.content}
+                          {item.content ? item.content.replace(/<[^>]*>/g, "") : ""}
                         </p>
                       </div>
 
@@ -628,9 +628,10 @@ export default function PublicPengumumanPage() {
               </div>
 
               {activeDoc.content && (
-                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm font-medium text-slate-700 leading-relaxed space-y-2 whitespace-pre-line">
-                  <p>{activeDoc.content}</p>
-                </div>
+                <div
+                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm font-medium text-slate-700 leading-relaxed prose prose-slate max-w-none [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                  dangerouslySetInnerHTML={{ __html: activeDoc.content }}
+                />
               )}
 
               {/* REAL ATTACHMENT FILE PREVIEW CONTAINER */}

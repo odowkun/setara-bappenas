@@ -39,9 +39,11 @@ export const LatestNewsCarousel: React.FC = () => {
               title: item.title,
               category: item.category || "Belum dikategorikan",
               author: item.author || "Belum tersedia",
-              views: item.views || 0,
-              desc: item.summary || (item.content ? item.content.replace(/<[^>]*>?/gm, "").substring(0, 140) + "..." : item.title),
-              image: normalizeMediaUrl(item.image || item.image_url),
+              desc: item.summary
+                ? item.summary.replace(/<[^>]*>/g, "")
+                : item.content
+                ? item.content.replace(/<[^>]*>/g, "").substring(0, 140) + "..."
+                : item.title,
               link: `/berita/${item.slug || item.id}`,
             }));
             setNewsItems(mapped);

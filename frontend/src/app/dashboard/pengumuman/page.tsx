@@ -292,7 +292,7 @@ export default function PengumumanManagementPage() {
                   {item.title}
                 </h3>
                 <p className="text-xs text-slate-600 font-medium mt-1 leading-relaxed">
-                  {item.content}
+                  {item.content ? item.content.replace(/<[^>]*>/g, "") : ""}
                 </p>
               </div>
 
