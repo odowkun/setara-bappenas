@@ -6,6 +6,7 @@ import { Newspaper, Calendar, Eye, User, ArrowRight, ChevronRight, Sparkles } fr
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { normalizeMediaUrl } from "@/services/adminService";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 interface NewsCardItem {
   id: string;
@@ -132,19 +133,14 @@ export const LatestNewsCarousel: React.FC = () => {
                   <div>
                     {/* CARD IMAGE WITH OVERLAY BADGE */}
                     <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <ProgressiveImage
                         src={item.image || "/images/bappeda/default-news-cover.jpg"}
                         alt={item.title}
-                        onError={(e) => {
-                          const target = e.currentTarget;
-                          if (!target.src.includes("default-news-cover.jpg")) {
-                            target.src = "/images/bappeda/default-news-cover.jpg";
-                          }
-                        }}
-                        className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                        fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                        className="group-hover:scale-108 transition-transform duration-500 ease-out"
+                        containerClassName="relative w-full h-full overflow-hidden bg-slate-100"
                       />
-                      <div className="absolute top-3 left-3">
+                      <div className="absolute top-3 left-3 z-20">
                         <span className="px-2.5 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider bg-blue-600/90 text-white backdrop-blur-md border border-white/20">
                           {item.category}
                         </span>

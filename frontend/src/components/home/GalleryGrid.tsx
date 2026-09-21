@@ -6,6 +6,7 @@ import { Camera, Maximize2, ArrowRight, Calendar, Image as ImageIcon } from "luc
 import { motion } from "framer-motion";
 import { galeriService } from "@/services/galeriService";
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 interface GalleryPhotoItem {
   id: string;
@@ -178,13 +179,14 @@ export const GalleryGrid: React.FC = () => {
                   setActiveMediaIndex(0);
                 }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <ProgressiveImage
                   src={item.image}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
+                  fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                  className="group-hover:scale-108 transition-transform duration-700 ease-out"
+                  containerClassName="absolute inset-0 w-full h-full overflow-hidden bg-slate-900"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-black/10 opacity-90 group-hover:opacity-95 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/30 to-black/10 opacity-90 group-hover:opacity-95 transition-opacity pointer-events-none" />
 
                 {/* MEDIA COUNT & CATEGORY BADGES */}
                 <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2">

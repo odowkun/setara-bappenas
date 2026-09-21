@@ -44,6 +44,7 @@ import {
 import { MediaAlbumModal, MediaItem } from "@/components/ui/MediaAlbumModal";
 import { STORAGE_BASE_URL } from "@/lib/apiClient";
 import { PinnedInfographicsSection } from "@/components/home/PinnedInfographicsSection";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 const EsriLeafletMap = dynamic(
   () => import("@/components/gis/EsriLeafletMap"),
@@ -507,16 +508,14 @@ export const GeospatialSection: React.FC = () => {
                 {/* Construction Photo Showcase Image */}
                 {selectedLoc.image && (
                   <div className="relative w-full h-36 rounded-2xl overflow-hidden border border-slate-200 shadow-md group">
-                    <img
+                    <ProgressiveImage
                       src={selectedLoc.image}
                       alt={selectedLoc.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).onerror = null;
-                        (e.target as HTMLImageElement).src = DEFAULT_BAPPEDA_PROYEK_SVG;
-                      }}
+                      fallbackSrc={DEFAULT_BAPPEDA_PROYEK_SVG}
+                      className="group-hover:scale-105 transition duration-500"
+                      containerClassName="relative w-full h-full overflow-hidden bg-slate-100"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-2.5">
+                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent flex items-end p-2.5 pointer-events-none">
                       <span className="text-[10px] font-bold text-white flex items-center gap-1">
                         <Camera className="w-3 h-3 text-amber-400" /> Foto Lapangan Realisasi Fisik
                       </span>
@@ -749,7 +748,12 @@ export const GeospatialSection: React.FC = () => {
                     <div className="flex items-center gap-3">
                       {selectedLoc.image && (
                         <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-slate-200 shadow-sm">
-                          <img src={selectedLoc.image} alt={selectedLoc.name} className="w-full h-full object-cover" />
+                          <ProgressiveImage
+                            src={selectedLoc.image}
+                            alt={selectedLoc.name}
+                            fallbackSrc={DEFAULT_BAPPEDA_PROYEK_SVG}
+                            containerClassName="relative w-full h-full overflow-hidden bg-slate-100"
+                          />
                         </div>
                       )}
                       <div className="min-w-0 flex-1">

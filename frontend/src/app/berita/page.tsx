@@ -20,6 +20,7 @@ import { API_BASE_URL } from "@/lib/apiClient";
 import { officialContentService } from "@/services/officialContentService";
 import { normalizeMediaUrl } from "@/services/adminService";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 interface NewsItem {
   id: string;
@@ -138,17 +139,13 @@ export default function PublicNewsPage() {
           <div className="relative rounded-3xl overflow-hidden bg-white border border-slate-200 shadow-xl shadow-slate-200/50 group">
             <div className="grid grid-cols-1 lg:grid-cols-12 items-center">
               <div className="lg:col-span-7 relative aspect-[16/9] lg:aspect-auto lg:h-[420px] overflow-hidden bg-slate-100">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <ProgressiveImage
                   src={headlineNews.featuredImage || "/images/bappeda/default-news-cover.jpg"}
                   alt={headlineNews.title}
-                  onError={(e) => {
-                    const target = e.currentTarget;
-                    if (!target.src.includes("default-news-cover.jpg")) {
-                      target.src = "/images/bappeda/default-news-cover.jpg";
-                    }
-                  }}
-                  className="w-full h-full object-cover group-hover:scale-105 transition duration-700"
+                  priority={true}
+                  fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                  className="group-hover:scale-105 transition duration-700"
+                  containerClassName="relative w-full h-full overflow-hidden bg-slate-100"
                 />
               </div>
 
@@ -269,19 +266,14 @@ export default function PublicNewsPage() {
                 <div>
                   {/* COVER THUMBNAIL */}
                   <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <ProgressiveImage
                       src={item.featuredImage || "/images/bappeda/default-news-cover.jpg"}
                       alt={item.title}
-                      onError={(e) => {
-                        const target = e.currentTarget;
-                        if (!target.src.includes("default-news-cover.jpg")) {
-                          target.src = "/images/bappeda/default-news-cover.jpg";
-                        }
-                      }}
-                      className="w-full h-full object-cover object-center group-hover:scale-105 transition duration-500"
+                      fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                      className="group-hover:scale-105 transition duration-500"
+                      containerClassName="relative w-full h-full overflow-hidden bg-slate-100"
                     />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-xl text-[10px] font-black bg-blue-900/90 text-white backdrop-blur-md border border-white/20">
+                    <span className="absolute top-3 left-3 z-20 px-3 py-1 rounded-xl text-[10px] font-black bg-blue-900/90 text-white backdrop-blur-md border border-white/20">
                       {item.category}
                     </span>
                   </div>

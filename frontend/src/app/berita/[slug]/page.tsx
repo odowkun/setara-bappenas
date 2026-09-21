@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { normalizeMediaUrl } from "@/services/adminService";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 export default function PublicNewsDetailPage() {
   const params = useParams();
@@ -142,20 +143,17 @@ export default function PublicNewsDetailPage() {
         </div>
 
         {/* FEATURED COVER IMAGE */}
-        {displayData.image && <div className="relative aspect-[16/9] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-lg">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={displayData.image}
-            alt={displayData.title}
-            onError={(e) => {
-              const target = e.currentTarget;
-              if (!target.src.includes("default-news-cover.jpg")) {
-                target.src = "/images/bappeda/default-news-cover.jpg";
-              }
-            }}
-            className="w-full h-full object-cover"
-          />
-        </div>}
+        {displayData.image && (
+          <div className="relative aspect-[16/9] rounded-3xl overflow-hidden bg-slate-900 border border-slate-200 shadow-lg">
+            <ProgressiveImage
+              src={displayData.image}
+              alt={displayData.title}
+              priority={true}
+              fallbackSrc="/images/bappeda/default-news-cover.jpg"
+              containerClassName="relative w-full h-full overflow-hidden bg-slate-900"
+            />
+          </div>
+        )}
 
         {/* ARTICLE BODY READER */}
         <div className="p-6 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xs prose max-w-none text-slate-800">

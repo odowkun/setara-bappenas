@@ -23,6 +23,7 @@ import { showDeleteConfirm, toast } from "@/lib/swal";
 import { adminService } from "@/services/adminService";
 import { officialContentService } from "@/services/officialContentService";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 interface NewsItem {
   id: string;
@@ -266,17 +267,12 @@ export default function BeritaManagementPage() {
                 className="py-4 first:pt-0 last:pb-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group"
               >
                 <div className="flex items-center gap-4 overflow-hidden">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <ProgressiveImage
                     src={item.featuredImage || "/images/bappeda/default-news-cover.jpg"}
                     alt={item.title}
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (!target.src.includes("default-news-cover.jpg")) {
-                        target.src = "/images/bappeda/default-news-cover.jpg";
-                      }
-                    }}
-                    className="w-20 h-20 rounded-2xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition"
+                    fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                    className="group-hover:scale-105 transition"
+                    containerClassName="relative w-20 h-20 rounded-2xl overflow-hidden border border-slate-200 shrink-0 bg-slate-100"
                   />
                   <div className="space-y-1 overflow-hidden">
                     <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { galeriService, AlbumItem } from "@/services/galeriService";
 import { MediaAlbumModal } from "@/components/ui/MediaAlbumModal";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 export default function PublicGaleriPage() {
   const [albums, setAlbums] = useState<AlbumItem[]>([]);
@@ -173,13 +174,14 @@ export default function PublicGaleriPage() {
                       }}
                       className="relative aspect-[16/10] overflow-hidden bg-slate-900 cursor-pointer"
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      <ProgressiveImage
                         src={alb.coverImage}
                         alt={alb.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                        fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                        className="group-hover:scale-105 transition duration-500"
+                        containerClassName="relative w-full h-full overflow-hidden bg-slate-900"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/20 pointer-events-none" />
 
                       {/* Dynamic Media Count Badges */}
                       <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">

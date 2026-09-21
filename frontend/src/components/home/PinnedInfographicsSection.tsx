@@ -18,6 +18,7 @@ import {
   infografisService,
   InfografisItem,
 } from "@/services/infografisService";
+import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 export const PinnedInfographicsSection: React.FC = () => {
   const [items, setItems] = useState<InfografisItem[]>([]);
@@ -165,12 +166,11 @@ export const PinnedInfographicsSection: React.FC = () => {
                     activeSlide === idx ? "ring-2 ring-blue-500/40 shadow-xl" : "opacity-90"
                   }`}
                 >
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <ProgressiveImage
                     src={item.imageUrl}
                     alt={item.title}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
+                    fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                    containerClassName="absolute inset-0 w-full h-full overflow-hidden bg-slate-950"
                   />
 
                   {/* Gradient Overlay */}
@@ -237,12 +237,12 @@ export const PinnedInfographicsSection: React.FC = () => {
                 className="group relative rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-950 aspect-[3/4] shadow-md hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 cursor-pointer select-none"
               >
                 {/* Background Image */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <ProgressiveImage
                   src={item.imageUrl}
                   alt={item.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100"
-                  loading="lazy"
+                  fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                  className="group-hover:scale-105 transition-transform duration-500 opacity-95 group-hover:opacity-100"
+                  containerClassName="absolute inset-0 w-full h-full overflow-hidden bg-slate-950"
                 />
 
                 {/* Subtle Hover Overlay */}
