@@ -225,8 +225,6 @@ export default function TambahGaleriPage() {
                   <CustomDatePicker
                     value={eventDate}
                     onChange={(val) => setEventDate(val)}
-                    minYear={2020}
-                    maxYear={2035}
                   />
                 </div>
 
@@ -268,8 +266,6 @@ export default function TambahGaleriPage() {
                 <CustomDatePicker
                   value={eventDate}
                   onChange={(val) => setEventDate(val)}
-                  minYear={2020}
-                  maxYear={2035}
                 />
               </div>
             </div>

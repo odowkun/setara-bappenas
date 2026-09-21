@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Check } from "lucide-react";
+import SearchableSelect, { SearchableOption } from "./SearchableSelect";
 
 interface CustomDatePickerProps {
   value: string; // YYYY-MM-DD
@@ -33,8 +34,8 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   value,
   onChange,
   label,
-  minYear = 2020,
-  maxYear = 2035,
+  minYear = 1945,
+  maxYear = 2099,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
@@ -66,9 +67,9 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   const handleOpenPopover = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
-      const popoverWidth = 320;
+      const popoverWidth = 330;
       let left = rect.left;
-      if (left + popoverWidth > window.innerWidth) {
+      if (left + popoverWidth > window.innerWidth - 16) {
         left = window.innerWidth - popoverWidth - 16;
       }
       setPopoverPos({
@@ -148,10 +149,18 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     );
   };
 
-  // Generate Year Options
-  const yearOptions = [];
-  for (let y = minYear; y <= maxYear; y++) {
-    yearOptions.push(y);
+  // Generate Year Options without artificial limits
+  const currentActualYear = new Date().getFullYear();
+  const effectiveMinYear = Math.min(minYear, viewYear - 10, 1945);
+  const effectiveMaxYear = Math.max(maxYear, viewYear + 25, 2099);
+
+  const yearOptions: SearchableOption[] = [];
+  for (let y = effectiveMaxYear; y >= effectiveMinYear; y--) {
+    yearOptions.push({
+      value: y,
+      label: String(y),
+      sublabel: y === currentActualYear ? "Tahun Ini" : undefined,
+    });
   }
 
   return (
@@ -191,37 +200,42 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
             className="z-[999999] rounded-3xl bg-white p-4 shadow-2xl border border-slate-200 space-y-3 font-sans animate-in fade-in zoom-in-95 duration-150"
           >
             {/* Header: Month & Year Selector */}
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 gap-1.5">
               <button
                 type="button"
                 onClick={prevMonth}
-                className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center justify-center"
+                className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center justify-center shrink-0 cursor-pointer"
+                title="Bulan Sebelumnya"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <div className="flex items-center gap-1">
-                <span className="font-black text-slate-900 text-xs">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="font-black text-slate-900 text-xs shrink-0">
                   {MONTH_NAMES_ID[viewMonth]}
                 </span>
 
-                <select
-                  value={viewYear}
-                  onChange={(e) => setViewYear(parseInt(e.target.value, 10))}
-                  className="px-2 py-0.5 rounded-lg bg-slate-100 text-slate-900 text-xs font-black border-none focus:outline-none cursor-pointer"
-                >
-                  {yearOptions.map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
+                <div className="w-24 sm:w-28 shrink-0">
+                  <SearchableSelect
+                    options={yearOptions}
+                    value={viewYear}
+                    onChange={(val) => setViewYear(Number(val))}
+                    placeholder="Tahun"
+                    searchPlaceholder="Cari / ketik tahun..."
+                    size="sm"
+                    creatable={true}
+                    createLabelPrefix="Tahun:"
+                    className="w-full"
+                    buttonClassName="font-black !py-1 !px-2 bg-slate-100 border-slate-200"
+                  />
+                </div>
               </div>
 
               <button
                 type="button"
                 onClick={nextMonth}
-                className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center justify-center"
+                className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition flex items-center justify-center shrink-0 cursor-pointer"
+                title="Bulan Berikutnya"
               >
                 <ChevronRight className="w-4 h-4" />
               </button>

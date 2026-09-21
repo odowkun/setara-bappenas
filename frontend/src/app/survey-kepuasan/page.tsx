@@ -612,8 +612,6 @@ export default function SurveyKepuasanPublicPage() {
                             <CustomDatePicker
                               value={(currentVal as string) || ""}
                               onChange={(val) => handleScoreChange(key, val)}
-                              minYear={2020}
-                              maxYear={2035}
                             />
                           </div>
                         )}

@@ -145,15 +145,11 @@ export function ArchiveMetadataForm({
             label="Tanggal Berlaku"
             value={effectiveAt}
             onChange={setEffectiveAt}
-            minYear={2000}
-            maxYear={2100}
           />
           <CustomDatePicker
             label="Tanggal Berakhir"
             value={expiresAt}
             onChange={setExpiresAt}
-            minYear={2000}
-            maxYear={2100}
           />
           <div>
             <span className="mb-1.5 block text-xs font-extrabold text-slate-700">
@@ -178,8 +174,6 @@ export function ArchiveMetadataForm({
               label="Retensi Sampai"
               value={retentionUntil}
               onChange={setRetentionUntil}
-              minYear={2026}
-              maxYear={2100}
             />
           )}
         </div>

@@ -145,8 +145,6 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
           <CustomDatePicker
             value={start}
             onChange={(val) => setStart(val)}
-            minYear={2020}
-            maxYear={2035}
           />
         </div>
 
@@ -162,8 +160,6 @@ export const DateRangePlanner: React.FC<DateRangePlannerProps> = ({
           <CustomDatePicker
             value={end}
             onChange={(val) => setEnd(val)}
-            minYear={2020}
-            maxYear={2035}
           />
         </div>
       </div>

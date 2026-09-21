@@ -17,6 +17,8 @@ interface SearchableSelectProps {
   placeholder?: string;
   searchPlaceholder?: string;
   className?: string;
+  buttonClassName?: string;
+  size?: "sm" | "md";
   disabled?: boolean;
   required?: boolean;
   creatable?: boolean;
@@ -31,6 +33,8 @@ export default function SearchableSelect({
   placeholder = "-- Pilih Opsi --",
   searchPlaceholder = "Cari pilihan...",
   className = "",
+  buttonClassName = "",
+  size = "md",
   disabled = false,
   required = false,
   creatable = false,
@@ -73,10 +77,15 @@ export default function SearchableSelect({
   const updatePosition = () => {
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      const popoverWidth = Math.max(rect.width, size === "sm" ? 220 : 280);
+      let left = rect.left + window.scrollX;
+      if (left + popoverWidth > window.innerWidth - 16) {
+        left = Math.max(16, window.innerWidth - popoverWidth - 16);
+      }
       setPopoverPos({
         top: rect.bottom + window.scrollY + 6,
-        left: rect.left + window.scrollX,
-        width: Math.max(rect.width, 280),
+        left,
+        width: popoverWidth,
       });
     }
   };
@@ -102,7 +111,7 @@ export default function SearchableSelect({
       window.removeEventListener("scroll", handleScrollOrResize, true);
       window.removeEventListener("resize", handleScrollOrResize);
     };
-  }, [isOpen]);
+  }, [isOpen, size]);
 
   useEffect(() => {
     if (isOpen && searchInputRef.current) {
@@ -122,8 +131,9 @@ export default function SearchableSelect({
     if (!newVal) return;
     if (onCreateOption) {
       onCreateOption(newVal);
+    } else {
+      onChange(newVal);
     }
-    onChange(newVal);
     setIsOpen(false);
     setSearchTerm("");
   };
@@ -133,7 +143,7 @@ export default function SearchableSelect({
       e.preventDefault();
       if (filteredOptions.length > 0) {
         handleSelect(filteredOptions[0].value);
-      } else if (creatable && trimmedSearch && !exactMatch) {
+      } else if (creatable && trimmedSearch) {
         handleCreate(trimmedSearch);
       }
     } else if (e.key === "Escape") {
@@ -149,11 +159,15 @@ export default function SearchableSelect({
         type="button"
         disabled={disabled}
         onClick={toggleDropdown}
-        className={`w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-900 border transition flex items-center justify-between text-left text-xs font-bold ${
+        className={`w-full ${
+          size === "sm"
+            ? "px-2.5 py-1.5 rounded-xl text-xs"
+            : "px-4 py-3 rounded-2xl text-xs font-bold"
+        } bg-white dark:bg-slate-900 border transition flex items-center justify-between text-left ${
           isOpen
             ? "border-blue-600 ring-2 ring-blue-600/20 shadow-md"
             : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 shadow-2xs"
-        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-800" : "cursor-pointer"}`}
+        } ${disabled ? "opacity-60 cursor-not-allowed bg-slate-50 dark:bg-slate-800" : "cursor-pointer"} ${buttonClassName}`}
       >
         <span
           className={
@@ -165,7 +179,7 @@ export default function SearchableSelect({
           {displayLabel}
         </span>
         <ChevronDown
-          className={`w-4 h-4 text-slate-400 shrink-0 transition-transform ${
+          className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${
             isOpen ? "rotate-180 text-blue-600" : ""
           }`}
         />
@@ -178,7 +192,7 @@ export default function SearchableSelect({
           <>
             {/* BACKDROP TO CLOSE DROPDOWN */}
             <div
-              className="fixed inset-0 z-[999998]"
+              className="fixed inset-0 z-[10000000]"
               onClick={() => setIsOpen(false)}
             />
 
@@ -190,7 +204,7 @@ export default function SearchableSelect({
                 left: `${popoverPos.left}px`,
                 width: `${popoverPos.width}px`,
               }}
-              className="z-[999999] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden font-sans animate-in fade-in slide-in-from-top-2 duration-150"
+              className="z-[10000001] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-2xl overflow-hidden font-sans animate-in fade-in slide-in-from-top-2 duration-150"
             >
               {/* SEARCH INPUT */}
               <div className="p-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/90 flex items-center gap-2">

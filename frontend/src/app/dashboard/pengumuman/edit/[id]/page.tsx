@@ -330,8 +330,6 @@ export default function EditPengumumanPage() {
                 <CustomDatePicker
                   value={validUntil}
                   onChange={(val) => setValidUntil(val)}
-                  minYear={2020}
-                  maxYear={2035}
                 />
               ) : (
                 <input

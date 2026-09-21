@@ -53,7 +53,27 @@ Sesuai kebutuhan operasional pelaporan dan pembaruan progres:
 
 ---
 
-## 4. Status Verifikasi
+## 4. Migrasi Pemilih Tahun pada CustomDatePicker & Penghapusan Batas Tahun (No Limit)
 
-- **Pencarian Kode Sumber**: `grep_search` memastikan `0` native `<select>` tersisa di seluruh direktori `frontend/src/app/dashboard`.
-- **Kompilasi Next.js**: `npm run build` dijalankan dan sukses 100% tanpa error TypeScript maupun linting pada seluruh route halaman.
+Sebagai bagian dari eliminasi total elemen native `<select>` di seluruh basis kode:
+- **`frontend/src/components/ui/CustomDatePicker.tsx`**:
+  - Dropdown pemilih tahun (sebelumnya elemen native `<select>` dengan batas 2020–2035) diganti menjadi **`SearchableSelect`** dengan ukuran ringkas (`size="sm"`).
+  - **Dukungan Pencarian & Ketik Bebas (`creatable={true}`)**: Pengguna dapat mencari tahun secara instan atau mengetik tahun berapa saja tanpa batasan buatan.
+  - **Rentang Dinamis Luas**: Rentang tahun bawaan diperluas dari `1945` hingga `2099+`, dan secara otomatis memperluas opsi jika nilai tahun dokumen berada di luar rentang tersebut (misal arsip historis atau perencanaan jangka panjang RPJMD/Indonesia Emas).
+  - **Stacking Context & Z-Index**: Popover portal `SearchableSelect` ditingkatkan ke `z-[10000001]` di atas portal kalender `CustomDatePicker` (`z-[999999]`), menjamin interaksi dan klik dropdown tahun bebas tumpang tindih.
+- **Pembersihan Pembatas Tahun di Formulir**:
+  - Atribut pembatas sempit `minYear={2020}` dan `maxYear={2035}` telah dihapus dari seluruh pemanggil:
+    - `frontend/src/app/survey-kepuasan/page.tsx`
+    - `frontend/src/components/ui/DateRangePlanner.tsx`
+    - `frontend/src/components/documents/archive/ArchiveMetadataForm.tsx`
+    - `frontend/src/app/dashboard/galeri/tambah/page.tsx`
+    - `frontend/src/app/dashboard/galeri/edit/[id]/page.tsx`
+    - `frontend/src/app/dashboard/pengumuman/tambah/page.tsx`
+    - `frontend/src/app/dashboard/pengumuman/edit/[id]/page.tsx`
+
+---
+
+## 5. Status Verifikasi
+
+- **Pencarian Kode Sumber**: `grep_search` memastikan `0` native `<select>` dan `0` pembatas `minYear={2020}` / `maxYear={2035}` tersisa di seluruh direktori `frontend/src`.
+- **Kompilasi Next.js**: `npm run build` dijalankan dan sukses 100% tanpa error TypeScript maupun linting pada seluruh 66 route halaman.
