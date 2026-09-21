@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Instagram,
   Plus,
@@ -10,24 +10,21 @@ import {
   RotateCcw,
   MoveUp,
   MoveDown,
-  Image as ImageIcon,
   ExternalLink,
   Heart,
   Check,
   X,
   Sparkles,
   Loader2,
-  Upload,
   Calendar,
   Layers,
   ChevronRight,
   Eye,
+  CheckCircle2,
 } from "lucide-react";
 import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { toast, showDeleteConfirm, showConfirm } from "@/lib/swal";
 import { galeriService } from "@/services/galeriService";
-import { CustomDatePicker } from "@/components/ui/CustomDatePicker";
-import SearchableSelect from "@/components/ui/SearchableSelect";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 import {
   OFFICIAL_INSTAGRAM_PROFILE,
@@ -35,16 +32,6 @@ import {
   type InstagramPostData,
   type InstagramProfileData,
 } from "@/data/socialMediaData";
-
-const CATEGORY_OPTIONS = [
-  { value: "WARTA PERENCANAAN", label: "WARTA PERENCANAAN" },
-  { value: "SPASIAL & LINGKUNGAN", label: "SPASIAL & LINGKUNGAN" },
-  { value: "INFRASTRUKTUR", label: "INFRASTRUKTUR" },
-  { value: "KESEJAHTERAAN SOSIAL", label: "KESEJAHTERAAN SOSIAL" },
-  { value: "AGENDA DAERAH", label: "AGENDA DAERAH" },
-  { value: "PEMERINTAHAN", label: "PEMERINTAHAN" },
-  { value: "UMUM", label: "UMUM" },
-];
 
 const formatDateToIndonesian = (dateStr: string) => {
   if (!dateStr) return "";
@@ -74,27 +61,14 @@ export default function InstagramSocialMediaSettingsPanel() {
   // Posts list state (Exact 2 posts for home grid)
   const [posts, setPosts] = useState<InstagramPostData[]>(OFFICIAL_INSTAGRAM_POSTS.slice(0, 2));
 
-  // Edit / Add modal state
+  // Edit / Add modal state (100% automatic via URL)
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPostId, setEditingPostId] = useState<string | null>(null);
-
-  // Form fields
-  const [formTitle, setFormTitle] = useState("");
-  const [formCategory, setFormCategory] = useState(CATEGORY_OPTIONS[0].value);
-  const [formDate, setFormDate] = useState("");
-  const [formImages, setFormImages] = useState<string[]>([]);
-  const [formCaption, setFormCaption] = useState("");
-  const [formLikes, setFormLikes] = useState(150);
-  const [formPostUrl, setFormPostUrl] = useState("https://www.instagram.com/bappeda_halut");
-
-  // File upload state
-  const [isUploading, setIsUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [imageUrlInput, setImageUrlInput] = useState("");
 
   // Quick extract via Instagram URL state
   const [extractUrlInput, setExtractUrlInput] = useState("");
   const [isExtracting, setIsExtracting] = useState(false);
+  const [extractedPreview, setExtractedPreview] = useState<InstagramPostData | null>(null);
 
   // Load from backend
   useEffect(() => {
@@ -159,32 +133,41 @@ export default function InstagramSocialMediaSettingsPanel() {
   };
 
   // Quick auto-extraction handler
-  const handleExtractFromInstagram = async () => {
-    const url = extractUrlInput.trim();
+  const handleExtractFromInstagram = async (urlToExtract?: string) => {
+    const url = (urlToExtract || extractUrlInput).trim();
     if (!url) {
       toast.error("Silakan masukkan tautan postingan Instagram terlebih dahulu.");
-      return;
+      return null;
     }
     if (!url.includes("instagram.com") && !url.includes("instagr.am")) {
       toast.error("URL tidak valid. Harap gunakan link postingan Instagram (cth: https://www.instagram.com/p/...).");
-      return;
+      return null;
     }
 
     setIsExtracting(true);
     try {
       const data = await galeriService.extractInstagramPost(url);
-      setFormPostUrl(data.postUrl || url);
-      if (data.title) setFormTitle(data.title);
-      if (data.category) setFormCategory(data.category);
-      if (data.date) setFormDate(data.date);
-      if (data.caption) setFormCaption(data.caption);
-      if (data.likesCount) setFormLikes(data.likesCount);
-      if (Array.isArray(data.images) && data.images.length > 0) {
-        setFormImages(data.images);
-      }
+      const finalDate = data.date
+        ? (formatDateToIndonesian(data.date) || data.date)
+        : new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
+      const newPostData: InstagramPostData = {
+        id: editingPostId || `ig-${Date.now()}`,
+        title: data.title || "Postingan Instagram BAPPEDA",
+        category: data.category || "WARTA PERENCANAAN",
+        date: finalDate,
+        images: Array.isArray(data.images) && data.images.length > 0 ? data.images : ["/images/bappeda/default-news-cover.jpg"],
+        caption: data.caption || "",
+        likesCount: data.likesCount || 150,
+        postUrl: data.postUrl || url,
+      };
+
+      setExtractedPreview(newPostData);
       toast.success("Berhasil mengambil data foto & narasi postingan Instagram!");
+      return newPostData;
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Gagal mengambil data dari Instagram.");
+      return null;
     } finally {
       setIsExtracting(false);
     }
@@ -193,123 +176,49 @@ export default function InstagramSocialMediaSettingsPanel() {
   // Open modal for Create
   const handleOpenCreateForm = (prefillUrl?: string) => {
     if (posts.length >= 2) {
-      toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit salah satu postingan yang sudah ada atau hapus terlebih dahulu.");
+      toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit atau hapus postingan yang sudah ada.");
       return;
     }
     setEditingPostId(null);
-    setFormTitle("");
-    setFormCategory(CATEGORY_OPTIONS[0].value);
-    setFormDate(new Date().toISOString().split("T")[0]);
-    setFormImages([]);
-    setFormCaption("");
-    setFormLikes(150);
-    setFormPostUrl(profile.profileUrl || "https://www.instagram.com/bappeda_halut");
-    setImageUrlInput("");
     setExtractUrlInput(prefillUrl || "");
+    setExtractedPreview(null);
     setIsFormOpen(true);
   };
 
-  // Open modal for Edit
+  // Open modal for Edit / Ganti via Link
   const handleOpenEditForm = (post: InstagramPostData) => {
     setEditingPostId(post.id);
-    setFormTitle(post.title);
-    setFormCategory(post.category || CATEGORY_OPTIONS[0].value);
-    setFormDate(post.date);
-    setFormImages(post.images && post.images.length > 0 ? [...post.images] : []);
-    setFormCaption(post.caption);
-    setFormLikes(post.likesCount || 0);
-    setFormPostUrl(post.postUrl || profile.profileUrl);
-    setImageUrlInput("");
-    setExtractUrlInput(post.postUrl && post.postUrl.includes("/p/") ? post.postUrl : "");
+    setExtractUrlInput(post.postUrl || "");
+    setExtractedPreview(post);
     setIsFormOpen(true);
   };
 
-  // Upload file via galeriService
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    setIsUploading(true);
-    try {
-      const uploadedUrls: string[] = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const res = await galeriService.uploadMedia(file);
-        if (res.webUrl) {
-          uploadedUrls.push(res.webUrl);
-        }
-      }
-      setFormImages((prev) => [...prev, ...uploadedUrls]);
-      toast.success(`${uploadedUrls.length} foto berhasil diunggah!`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Gagal mengunggah foto.");
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = "";
-    }
-  };
-
-  // Add image from URL input
-  const handleAddImageUrl = () => {
-    const trimmed = imageUrlInput.trim();
-    if (!trimmed) return;
-    setFormImages((prev) => [...prev, trimmed]);
-    setImageUrlInput("");
-  };
-
-  // Remove image from form
-  const handleRemoveImage = (index: number) => {
-    setFormImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Submit Form (Create / Edit)
-  const handleSubmitForm = async (e: React.FormEvent) => {
+  // Submit Modal Form (100% Automatic)
+  const handleSubmitModal = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formTitle.trim()) {
-      toast.error("Judul postingan Instagram wajib diisi.");
-      return;
-    }
-    if (formImages.length === 0) {
-      toast.error("Harap unggah minimal 1 foto untuk postingan Instagram.");
-      return;
-    }
 
-    const finalDate =
-      formatDateToIndonesian(formDate.trim()) ||
-      new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+    let postToSave = extractedPreview;
+
+    // If user hasn't clicked "Tarik Data Otomatis" yet, extract first from input
+    if (!postToSave) {
+      const trimmed = extractUrlInput.trim();
+      if (!trimmed) {
+        toast.error("Silakan masukkan tautan postingan Instagram.");
+        return;
+      }
+      postToSave = await handleExtractFromInstagram(trimmed);
+      if (!postToSave) return;
+    }
 
     let updatedPosts: InstagramPostData[];
     if (editingPostId) {
-      updatedPosts = posts.map((p) =>
-        p.id === editingPostId
-          ? {
-              ...p,
-              title: formTitle.trim(),
-              category: formCategory,
-              date: finalDate,
-              images: formImages,
-              caption: formCaption.trim(),
-              likesCount: Number(formLikes) || 0,
-              postUrl: formPostUrl.trim(),
-            }
-          : p
-      );
+      updatedPosts = posts.map((p) => (p.id === editingPostId ? postToSave! : p));
     } else {
       if (posts.length >= 2) {
-        toast.error("Maksimal 2 postingan feed Instagram. Silakan edit postingan yang ada.");
+        toast.error("Maksimal 2 postingan feed Instagram (Slot 1 & Slot 2). Silakan edit postingan yang ada.");
         return;
       }
-      const newPost: InstagramPostData = {
-        id: `ig-${Date.now()}`,
-        title: formTitle.trim(),
-        category: formCategory,
-        date: finalDate,
-        images: formImages,
-        caption: formCaption.trim(),
-        likesCount: Number(formLikes) || 0,
-        postUrl: formPostUrl.trim() || profile.profileUrl,
-      };
-      updatedPosts = [...posts, newPost].slice(0, 2);
+      updatedPosts = [...posts, postToSave].slice(0, 2);
     }
 
     setPosts(updatedPosts);
@@ -667,10 +576,10 @@ export default function InstagramSocialMediaSettingsPanel() {
                 </div>
                 <div>
                   <h3 className="text-base font-black text-slate-900">
-                    {editingPostId ? "Edit Postingan Instagram" : "Tambah Postingan Instagram Baru"}
+                    {editingPostId ? "Ganti Postingan Instagram via Link" : "Tambah Postingan Instagram via Link"}
                   </h3>
                   <p className="text-xs text-slate-500 font-medium">
-                    Lengkapi data postingan untuk tayang di beranda portal
+                    Cukup masukkan tautan postingan Instagram resmi, data ditarik otomatis
                   </p>
                 </div>
               </div>
@@ -685,31 +594,32 @@ export default function InstagramSocialMediaSettingsPanel() {
             </div>
 
             {/* Modal Form Body */}
-            <form onSubmit={handleSubmitForm} className="p-5 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-              {/* QUICK IMPORT VIA INSTAGRAM URL CARD */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 border border-purple-200/80 shadow-xs space-y-2.5">
+            <form onSubmit={handleSubmitModal} className="p-5 sm:p-6 space-y-5 max-h-[80vh] overflow-y-auto">
+              {/* INSTAGRAM LINK INPUT */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-amber-500/10 border border-purple-200/80 shadow-xs space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="w-6 h-6 rounded-lg bg-gradient-to-tr from-purple-600 to-pink-600 text-white flex items-center justify-center text-xs shadow-xs">
                       <Sparkles className="w-3.5 h-3.5" />
                     </div>
                     <h4 className="text-xs font-black text-slate-900 tracking-tight">
-                      Ambil Data Otomatis via Link Instagram
+                      Tautan Postingan Instagram Resmi
                     </h4>
                   </div>
-                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/80 px-2 py-0.5 rounded-full">
-                    Fitur Cepat
+                  <span className="text-[10px] font-bold text-purple-700 bg-purple-100/90 px-2.5 py-0.5 rounded-full">
+                    100% Otomatis
                   </span>
                 </div>
 
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  Cukup tempel tautan postingan Instagram (misal: <code className="text-purple-700 font-mono bg-white/80 px-1 py-0.5 rounded text-[10px]">https://www.instagram.com/p/...</code>). Foto, judul, narasi, dan tanggal akan terisi otomatis tanpa perlu ketik manual.
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Cukup tempel link postingan Instagram BAPPEDA (misal: <code className="text-purple-700 font-mono bg-white/90 px-1.5 py-0.5 rounded text-[11px] font-bold">https://www.instagram.com/p/...</code>). Sistem akan otomatis mendeteksi foto, judul kegiatan, narasi, dan tanggal tanpa perlu input manual.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-2">
+                <div className="flex flex-col sm:flex-row gap-2 pt-1">
                   <div className="relative flex-1">
                     <input
                       type="url"
+                      required
                       value={extractUrlInput}
                       onChange={(e) => setExtractUrlInput(e.target.value)}
                       onKeyDown={(e) => {
@@ -720,13 +630,16 @@ export default function InstagramSocialMediaSettingsPanel() {
                       }}
                       placeholder="https://www.instagram.com/p/..."
                       disabled={isExtracting}
-                      className="w-full pl-3 pr-8 py-2 rounded-xl bg-white border border-purple-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500 shadow-2xs disabled:opacity-50"
+                      className="w-full pl-3.5 pr-8 py-2.5 rounded-xl bg-white border border-purple-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:ring-2 focus:ring-purple-500 shadow-2xs disabled:opacity-50"
                     />
                     {extractUrlInput && (
                       <button
                         type="button"
-                        onClick={() => setExtractUrlInput("")}
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                        onClick={() => {
+                          setExtractUrlInput("");
+                          setExtractedPreview(null);
+                        }}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
                       >
                         <X className="w-3.5 h-3.5" />
                       </button>
@@ -735,14 +648,14 @@ export default function InstagramSocialMediaSettingsPanel() {
 
                   <button
                     type="button"
-                    onClick={handleExtractFromInstagram}
+                    onClick={() => handleExtractFromInstagram()}
                     disabled={isExtracting || !extractUrlInput.trim()}
-                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition shrink-0"
+                    className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white font-bold text-xs flex items-center justify-center gap-1.5 hover:opacity-90 disabled:opacity-50 cursor-pointer shadow-xs transition shrink-0 active:scale-95"
                   >
                     {isExtracting ? (
                       <>
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                        <span>Mengambil...</span>
+                        <span>Mengambil Data...</span>
                       </>
                     ) : (
                       <>
@@ -754,168 +667,61 @@ export default function InstagramSocialMediaSettingsPanel() {
                 </div>
               </div>
 
-              {/* Judul Postingan */}
-              <div className="space-y-1">
-                <label className="text-xs font-bold text-slate-700">
-                  Judul Postingan / Kegiatan <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                  placeholder="cth: Apresiasi Kinerja Perencanaan Pembangunan Daerah 2026"
-                />
-              </div>
-
-              {/* Kategori & Tanggal */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Kategori <span className="text-red-500">*</span></label>
-                  <SearchableSelect
-                    options={CATEGORY_OPTIONS}
-                    value={formCategory}
-                    onChange={(val) => setFormCategory(String(val))}
-                    placeholder="Pilih Kategori"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Tanggal Postingan <span className="text-red-500">*</span></label>
-                  <CustomDatePicker
-                    value={formDate}
-                    onChange={(val) => setFormDate(val)}
-                    placeholder="Pilih Tanggal"
-                  />
-                </div>
-              </div>
-
-              {/* Upload Foto / Gambar Postingan */}
-              <div className="space-y-2 pt-2 border-t border-slate-100">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-purple-600" />
-                    <span>Foto / Dokumentasi Postingan <span className="text-red-500">*</span></span>
-                  </label>
-                  <span className="text-[11px] text-slate-400 font-medium">
-                    {formImages.length} foto terpilih
-                  </span>
-                </div>
-
-                {/* Upload Button & Direct URL */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    multiple
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={isUploading}
-                    className="px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer active:scale-95 disabled:opacity-50"
-                  >
-                    {isUploading ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : (
-                      <Upload className="w-4 h-4" />
-                    )}
-                    <span>{isUploading ? "Mengunggah..." : "Unggah Foto dari Perangkat"}</span>
-                  </button>
-
-                  <div className="flex-1 flex gap-2">
-                    <input
-                      type="text"
-                      value={imageUrlInput}
-                      onChange={(e) => setImageUrlInput(e.target.value)}
-                      placeholder="Atau tempel URL gambar (/images/...)"
-                      className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-hidden focus:bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddImageUrl}
-                      className="px-3 py-2 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-bold shrink-0 transition"
-                    >
-                      + Tambah
-                    </button>
+              {/* LIVE EXTRACTED PREVIEW CARD */}
+              {extractedPreview ? (
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span className="text-xs font-bold text-slate-800">Preview Data Terdeteksi</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/90 px-2 py-0.5 rounded-full">
+                      Siap Dipasang
+                    </span>
                   </div>
-                </div>
 
-                {/* Preview Gallery of Uploaded Images */}
-                {formImages.length > 0 && (
-                  <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5 pt-2">
-                    {formImages.map((img, idx) => (
-                      <div
-                        key={idx}
-                        className="relative aspect-square rounded-xl overflow-hidden bg-slate-100 border border-slate-200 group"
-                      >
-                        <img
-                          src={img}
-                          alt={`Foto ${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveImage(idx)}
-                          className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-xs"
-                          title="Hapus foto ini"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="absolute bottom-1 left-1 px-1.5 py-0.5 rounded bg-black/60 text-white text-[9px] font-bold">
-                          #{idx + 1}
+                  <div className="flex gap-4 p-3 rounded-xl bg-white border border-slate-200/90 shadow-2xs">
+                    <div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-100 shrink-0 border border-slate-100">
+                      <ProgressiveImage
+                        src={extractedPreview.images?.[0] || "/images/bappeda/default-news-cover.jpg"}
+                        alt={extractedPreview.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="flex-1 min-w-0 space-y-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                          {extractedPreview.category}
+                        </span>
+                        <span className="text-[10px] text-slate-400 font-medium">
+                          {extractedPreview.date}
                         </span>
                       </div>
-                    ))}
+                      <h5 className="text-xs font-bold text-slate-900 line-clamp-2 leading-snug">
+                        {extractedPreview.title}
+                      </h5>
+                      <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                        {extractedPreview.caption}
+                      </p>
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Caption / Narasi Lengkap */}
-              <div className="space-y-1 pt-2 border-t border-slate-100">
-                <label className="text-xs font-bold text-slate-700">
-                  Caption / Narasi Lengkap Postingan
-                </label>
-                <textarea
-                  rows={4}
-                  value={formCaption}
-                  onChange={(e) => setFormCaption(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-900 leading-relaxed focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                  placeholder="Tuliskan narasi lengkap postingan Instagram, kegiatan, ucapan, dan tagar..."
-                />
-              </div>
-
-              {/* Likes & Link Postingan */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Jumlah Suka (Likes)</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={formLikes}
-                    onChange={(e) => setFormLikes(Number(e.target.value))}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                  />
                 </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700">Link URL Postingan Asli</label>
-                  <input
-                    type="url"
-                    value={formPostUrl}
-                    onChange={(e) => setFormPostUrl(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-900 focus:outline-hidden focus:ring-2 focus:ring-purple-500 focus:bg-white"
-                    placeholder="https://www.instagram.com/p/..."
-                  />
+              ) : (
+                <div className="p-6 rounded-2xl border-2 border-dashed border-slate-200 text-center space-y-2">
+                  <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                    <Instagram className="w-5 h-5" />
+                  </div>
+                  <p className="text-xs font-semibold text-slate-600">
+                    Belum ada data postingan diambil
+                  </p>
+                  <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
+                    Masukkan URL di atas dan klik tombol "Tarik Data Otomatis" atau langsung klik simpan.
+                  </p>
                 </div>
-              </div>
+              )}
 
               {/* Form Buttons */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setIsFormOpen(false)}
@@ -926,11 +732,15 @@ export default function InstagramSocialMediaSettingsPanel() {
 
                 <button
                   type="submit"
-                  disabled={saving || isUploading}
+                  disabled={saving || isExtracting}
                   className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-black text-xs inline-flex items-center gap-2 shadow-md shadow-pink-500/25 transition cursor-pointer active:scale-95 disabled:opacity-50"
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  <span>{editingPostId ? "Simpan Perubahan Postingan" : "Terbitkan ke Beranda"}</span>
+                  {saving || isExtracting ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  <span>{editingPostId ? "Simpan Perubahan Postingan" : "Pasang Postingan ke Beranda"}</span>
                 </button>
               </div>
             </form>

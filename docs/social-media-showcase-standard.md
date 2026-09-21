@@ -49,17 +49,20 @@ Administrator dapat memperbarui video YouTube unggulan yang tampil di beranda me
 Administrator dapat mengunggah postingan baru maupun mengelola feed Instagram beranda melalui menu:
 1. Buka halaman **Dashboard Bappeda** -> Menu **Galeri & Dokumentasi** (`/dashboard/galeri`).
 2. Pilih tab keempat: **Feed Instagram Media Sosial** (`?tab=instagram-media`).
-3. **Mengunggah Postingan Baru (Mendukung Tarik Otomatis dari Link Instagram)**:
-   - Klik tombol **+ Tambah Postingan Instagram** atau **Tarik dari Link IG**.
-   - **Fitur Cepat (Tarik Otomatis)**: Tempelkan link postingan Instagram (misal: `https://www.instagram.com/p/...`) pada input *Ambil Data Otomatis via Link Instagram* lalu klik **Tarik Data Otomatis**.
-   - Backend controller (`POST /api/social-media/instagram/extract`) akan membaca Open Graph metadata & oEmbed Instagram secara aman untuk mengekstrak foto, judul kegiatan, narasi caption, dan tanggal secara instan.
-   - Admin dapat meninjau dan melengkapi kategori (`CustomDatePicker`), judul, atau menambah foto tambahan sebelum menyimpan.
-   - Klik **Terbitkan ke Beranda**.
+3. **Mengunggah Postingan Baru (Mendukung Tarik Otomatis via Link Instagram)**:
+   - Klik tombol **+ Tambah Postingan via Link** (atau tombol *Tarik dari Link IG*).
+   - Di dalam formulir modal, terdapat input utama bertanda khusus: **Tautan Postingan Instagram**.
+   - Masukkan URL postingan Instagram resmi (contoh: `https://www.instagram.com/p/DFxyz.../` atau `https://www.instagram.com/reel/...`).
+   - Klik tombol **Tarik Data Otomatis**:
+     - Sistem backend (`POST /api/social-media/instagram/extract`) akan membaca data publik Instagram (Open Graph & oEmbed).
+     - Gambar sampul, judul kegiatan, narasi caption lengkap, dan tanggal postingan otomatis terisi ke form formulir tanpa perlu input manual.
+   - Admin dapat memeriksa preview foto dan menyesuaikan judul, kategori, atau tanggal jika diinginkan.
+   - Klik tombol **Simpan Postingan** untuk menerbitkan ke sistem.
 4. **Mengatur Urutan & Tampilan Beranda**:
    - Dua postingan teratas (urutan #1 dan #2) otomatis berstatus **Tayang di Beranda** berdampingan dengan video YouTube.
    - Gunakan tombol panah **Naik / Turun** pada setiap kartu untuk mengatur postingan mana yang diprioritaskan tampil di beranda utama.
-   - Tombol **Edit** memungkinkan revisi caption, judul, dan foto kapan saja.
-   - Tombol **Hapus** (dengan konfirmasi aman) untuk mencabut postingan yang sudah kadaluarsa.
+   - Tombol **Ganti via Link** / **Edit** memungkinkan penggantian link atau revisi data kapan saja.
+   - Tombol **Hapus** (dengan konfirmasi SweetAlert2) untuk mencabut postingan.
 5. **Pengaturan Profil Akun**:
    - Perbarui display name, username `@bappeda_halut`, tautan profil, dan tagline instansi pada kartu atas lalu klik **Simpan Profil**.
 
