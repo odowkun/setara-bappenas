@@ -102,8 +102,8 @@ export const HeroSection: React.FC = () => {
           <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold text-white leading-snug sm:leading-[1.2] tracking-tight drop-shadow-md">
             Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara
           </h1>
-          <p className="mt-2.5 sm:mt-3.5 text-xs sm:text-sm md:text-base font-bold text-amber-300 tracking-wider uppercase drop-shadow-sm">
-            Sinergi Lokal, Solusi Global
+          <p className="mt-3 sm:mt-4 text-sm sm:text-lg md:text-xl lg:text-2xl font-extrabold text-amber-300 tracking-wider sm:tracking-widest uppercase drop-shadow-md">
+            &ldquo;Sinergi Lokal, Solusi Global&rdquo;
           </p>
         </div>
 
