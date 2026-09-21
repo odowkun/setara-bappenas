@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { RefreshCw, AlertTriangle } from "lucide-react";
 
-export default function Error({
+export default function DashboardError({
   error,
   reset,
 }: {
@@ -11,9 +11,8 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("App Error Boundary caught error:", error);
+    console.error("Dashboard Error Boundary caught error:", error);
 
-    // If chunk load error occurs due to new deployment, reload to fetch latest assets
     const isChunkError =
       error?.name === "ChunkLoadError" ||
       error?.message?.includes("Loading chunk") ||
@@ -40,7 +39,7 @@ export default function Error({
   };
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex-1 w-full flex flex-col items-center justify-center p-6 text-center font-sans">
+    <div className="min-h-[calc(100vh-10rem)] min-h-[calc(100dvh-10rem)] flex-1 w-full flex flex-col items-center justify-center p-6 text-center font-sans my-auto">
       <div className="w-16 h-16 rounded-full bg-amber-100 border border-amber-300 text-amber-600 flex items-center justify-center mb-4 shadow-sm">
         <AlertTriangle className="w-8 h-8" />
       </div>
