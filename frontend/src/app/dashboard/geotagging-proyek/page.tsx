@@ -58,8 +58,6 @@ export default function GeotaggingProyekPage() {
         setDocuments(docs);
         if (paramDocId && docs.some((d) => String(d.id) === String(paramDocId))) {
           setSelectedDocId(paramDocId);
-        } else if (docs.length > 0) {
-          setSelectedDocId((current) => current || docs[0].id);
         }
       });
   }, [user, paramDocId]);

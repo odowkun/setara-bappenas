@@ -258,12 +258,7 @@ export default function RunningTextDashboardPage() {
 
       {/* Main Table Card */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <p className="text-sm font-medium">Memuat data teks berjalan...</p>
-          </div>
-        ) : filteredItems.length === 0 ? (
+        {!loading && filteredItems.length === 0 ? (
           <div className="py-20 px-6 text-center space-y-3">
             <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 mx-auto flex items-center justify-center">
               <ScrollText className="w-7 h-7" />
@@ -291,7 +286,32 @@ export default function RunningTextDashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredItems.map((item) => (
+                {loading ? (
+                  [1, 2, 3, 4].map((idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      <td className="py-4 px-4 sm:px-6 text-center">
+                        <div className="w-7 h-7 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-lg" />
+                      </td>
+                      <td className="py-4 px-4 space-y-1.5">
+                        <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                        <div className="h-3 w-1/3 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                      </td>
+                      <td className="py-4 px-4">
+                        <div className="h-4 w-28 bg-slate-200 dark:bg-slate-800 rounded" />
+                      </td>
+                      <td className="py-4 px-4 text-center">
+                        <div className="h-6 w-16 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
+                      </td>
+                      <td className="py-4 px-4 sm:px-6 text-center">
+                        <div className="h-7 w-16 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  filteredItems.map((item) => (
                   <tr
                     key={item.id}
                     className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
@@ -374,7 +394,7 @@ export default function RunningTextDashboardPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                )))}
               </tbody>
             </table>
           </div>

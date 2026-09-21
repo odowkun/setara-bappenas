@@ -377,108 +377,135 @@ export default function UpdateProgresPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredProjects.map((prj) => (
-                <tr key={prj.id} className="hover:bg-slate-50/80 transition">
-                  <td className="p-3 font-mono font-bold text-blue-700">
-                    #{prj.esri_objectid || "None"}
-                  </td>
-                  <td className="p-3">
-                    {prj.esri_sync_status === "synced" && (
-                      <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                        <span>Synced</span>
-                      </span>
-                    )}
-                    {(!prj.esri_sync_status || prj.esri_sync_status === "pending") && (
-                      <span className="text-[9.5px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
-                        <span>Pending</span>
-                      </span>
-                    )}
-                    {prj.esri_sync_status === "failed" && (
-                      <span className="text-[9.5px] font-extrabold text-rose-800 bg-rose-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1" title={prj.esri_last_error || "Sync ESRI Gagal"}>
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
-                        <span>Failed</span>
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <div className="font-extrabold text-slate-900">{prj.nama_proyek}</div>
-                    <div className="text-[10px] text-slate-400 font-mono">{prj.kode_proyek}</div>
-                  </td>
-                  <td className="p-3 uppercase font-bold text-slate-600">{prj.bidang}</td>
-                  <td className="p-3 font-bold text-slate-800">
-                    Rp {Number(prj.pagu_anggaran).toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3 font-bold text-emerald-700">
-                    Rp {Number(prj.realisasi_anggaran).toLocaleString("id-ID")}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden">
-                        <div className="h-full bg-blue-600 rounded-full" style={{ width: `${prj.persentase_progres}%` }} />
-                      </div>
-                      <span className="font-extrabold text-slate-900">{prj.persentase_progres}%</span>
-                    </div>
-                  </td>
-                  <td className="p-3">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-2xs ${
-                        prj.status_progres === "selesai"
-                          ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                          : prj.status_progres === "terkendala"
-                          ? "bg-rose-50 text-rose-700 border-rose-200"
-                          : prj.status_progres === "dalam_proses"
-                          ? "bg-blue-50 text-blue-700 border-blue-200"
-                          : "bg-slate-100 text-slate-700 border-slate-200"
-                      }`}
-                    >
-                      <span
-                        className={`w-1.5 h-1.5 rounded-full ${
-                          prj.status_progres === "selesai"
-                            ? "bg-emerald-500"
-                            : prj.status_progres === "terkendala"
-                            ? "bg-rose-500"
-                            : prj.status_progres === "dalam_proses"
-                            ? "bg-blue-500"
-                            : "bg-slate-400"
-                        }`}
-                      />
-                      <span>{formatStatusLabel(prj.status_progres)}</span>
-                    </span>
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {(prj.esri_sync_status === "failed" || !prj.esri_objectid) && (
-                        <button
-                          type="button"
-                          onClick={() => handleResyncEsri(prj.id)}
-                          className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition border border-amber-200 flex items-center gap-1 cursor-pointer"
-                          title="Coba Lagi Sinkronisasi ESRI"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5 text-amber-700" />
-                          <span>Re-sync</span>
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleOpenEdit(prj)}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
-                      >
-                        <Edit2 className="w-3.5 h-3.5" />
-                        <span>Edit Progres</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteProject(prj.id, prj.nama_proyek)}
-                        className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 transition cursor-pointer shrink-0"
-                        title={`Hapus Proyek ${prj.nama_proyek}`}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+              {loading ? (
+                [1, 2, 3, 4, 5].map((idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="p-3"><div className="h-4 w-14 bg-slate-200 rounded"></div></td>
+                    <td className="p-3"><div className="h-5 w-16 bg-slate-200 rounded-full"></div></td>
+                    <td className="p-3 space-y-1.5">
+                      <div className="h-4 w-44 bg-slate-200 rounded"></div>
+                      <div className="h-3 w-24 bg-slate-100 rounded"></div>
+                    </td>
+                    <td className="p-3"><div className="h-4 w-16 bg-slate-200 rounded"></div></td>
+                    <td className="p-3"><div className="h-4 w-24 bg-slate-200 rounded"></div></td>
+                    <td className="p-3"><div className="h-4 w-24 bg-slate-200 rounded"></div></td>
+                    <td className="p-3"><div className="h-4 w-24 bg-slate-200 rounded"></div></td>
+                    <td className="p-3"><div className="h-5 w-20 bg-slate-200 rounded-full"></div></td>
+                    <td className="p-3 text-right">
+                      <div className="h-7 w-24 bg-slate-200 rounded-xl ml-auto"></div>
+                    </td>
+                  </tr>
+                ))
+              ) : filteredProjects.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="p-12 text-center text-slate-400 font-medium">
+                    Tidak ada data proyek yang ditemukan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredProjects.map((prj) => (
+                  <tr key={prj.id} className="hover:bg-slate-50/80 transition">
+                    <td className="p-3 font-mono font-bold text-blue-700">
+                      #{prj.esri_objectid || "None"}
+                    </td>
+                    <td className="p-3">
+                      {prj.esri_sync_status === "synced" && (
+                        <span className="text-[9.5px] font-extrabold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                          <span>Synced</span>
+                        </span>
+                      )}
+                      {(!prj.esri_sync_status || prj.esri_sync_status === "pending") && (
+                        <span className="text-[9.5px] font-extrabold text-amber-800 bg-amber-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-ping"></span>
+                          <span>Pending</span>
+                        </span>
+                      )}
+                      {prj.esri_sync_status === "failed" && (
+                        <span className="text-[9.5px] font-extrabold text-rose-800 bg-rose-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1" title={prj.esri_last_error || "Sync ESRI Gagal"}>
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                          <span>Failed</span>
+                        </span>
+                      )}
+                    </td>
+                    <td className="p-3">
+                      <div className="font-extrabold text-slate-900">{prj.nama_proyek}</div>
+                      <div className="text-[10px] text-slate-400 font-mono">{prj.kode_proyek}</div>
+                    </td>
+                    <td className="p-3 uppercase font-bold text-slate-600">{prj.bidang}</td>
+                    <td className="p-3 font-bold text-slate-800">
+                      Rp {Number(prj.pagu_anggaran).toLocaleString("id-ID")}
+                    </td>
+                    <td className="p-3 font-bold text-emerald-700">
+                      Rp {Number(prj.realisasi_anggaran).toLocaleString("id-ID")}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-16 h-2 rounded-full bg-slate-100 overflow-hidden">
+                          <div className="h-full bg-blue-600 rounded-full" style={{ width: `${prj.persentase_progres}%` }} />
+                        </div>
+                        <span className="font-extrabold text-slate-900">{prj.persentase_progres}%</span>
+                      </div>
+                    </td>
+                    <td className="p-3">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-2xs ${
+                          prj.status_progres === "selesai"
+                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                            : prj.status_progres === "terkendala"
+                            ? "bg-rose-50 text-rose-700 border-rose-200"
+                            : prj.status_progres === "dalam_proses"
+                            ? "bg-blue-50 text-blue-700 border-blue-200"
+                            : "bg-slate-100 text-slate-700 border-slate-200"
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            prj.status_progres === "selesai"
+                              ? "bg-emerald-500"
+                              : prj.status_progres === "terkendala"
+                              ? "bg-rose-500"
+                              : prj.status_progres === "dalam_proses"
+                              ? "bg-blue-500"
+                              : "bg-slate-400"
+                          }`}
+                        />
+                        <span>{formatStatusLabel(prj.status_progres)}</span>
+                      </span>
+                    </td>
+                    <td className="p-3 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {(prj.esri_sync_status === "failed" || !prj.esri_objectid) && (
+                          <button
+                            type="button"
+                            onClick={() => handleResyncEsri(prj.id)}
+                            className="px-2.5 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold text-xs transition border border-amber-200 flex items-center gap-1 cursor-pointer"
+                            title="Coba Lagi Sinkronisasi ESRI"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5 text-amber-700" />
+                            <span>Re-sync</span>
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleOpenEdit(prj)}
+                          className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition shadow-sm cursor-pointer whitespace-nowrap"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                          <span>Edit Progres</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProject(prj.id, prj.nama_proyek)}
+                          className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 transition cursor-pointer shrink-0"
+                          title={`Hapus Proyek ${prj.nama_proyek}`}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

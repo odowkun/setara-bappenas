@@ -311,7 +311,23 @@ export default function DashboardKritikSaranPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                  {paginatedItems.length === 0 ? (
+                  {loading ? (
+                    [1, 2, 3, 4, 5].map((idx) => (
+                      <tr key={idx} className="animate-pulse">
+                        <td className="py-4 px-6 space-y-1.5">
+                          <div className="h-4 w-28 bg-slate-200 rounded" />
+                          <div className="h-3 w-36 bg-slate-100 rounded" />
+                        </td>
+                        <td className="py-4 px-6"><div className="h-4 w-32 bg-slate-200 rounded" /></td>
+                        <td className="py-4 px-6 space-y-1.5">
+                          <div className="h-4 w-48 bg-slate-200 rounded" />
+                          <div className="h-3 w-64 bg-slate-100 rounded" />
+                        </td>
+                        <td className="py-4 px-6"><div className="h-5 w-24 bg-slate-200 rounded-full" /></td>
+                        <td className="py-4 px-6 text-right"><div className="h-7 w-20 bg-slate-200 rounded-xl ml-auto" /></td>
+                      </tr>
+                    ))
+                  ) : paginatedItems.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-400 font-bold">
                         Belum ada pesan kritik &amp; saran dari publik.

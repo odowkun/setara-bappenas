@@ -10,11 +10,21 @@ import { formatDateWIT } from "@/lib/dateUtils";
 export default function AuditLogsPage() {
   const { hasRole } = useAuth();
   const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const isSuperAdmin = hasRole(["superadmin"]);
 
   useEffect(() => {
-    adminService.fetchLogs().then(setLogs);
+    setLoading(true);
+    adminService.fetchLogs()
+      .then(setLogs)
+      .catch((err) => {
+        console.error("Gagal memuat audit logs:", err);
+        setLogs([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   }, []);
 
   const filteredLogs = logs.filter(
@@ -87,34 +97,55 @@ export default function AuditLogsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {filteredLogs.map((log) => (
-                <tr key={log.id} className="hover:bg-slate-50/80 transition">
-                  <td className="px-5 py-4 font-mono text-slate-500 whitespace-nowrap font-bold text-xs">
-                    {formatDateWIT(log.timestamp)}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <p className="font-bold text-slate-900">{log.userName}</p>
-                    <span className="text-[10px] text-amber-900 font-bold uppercase font-mono">
-                      {log.userRole}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 font-mono">
-                      {log.action}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-slate-700 font-medium">
-                    {log.details}
-                  </td>
-
-                  <td className="px-5 py-4 font-mono text-slate-500 font-bold">
-                    {log.ipAddress}
+              {loading ? (
+                [1, 2, 3, 4, 5].map((idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="px-5 py-4"><div className="h-4 w-28 bg-slate-200 rounded"></div></td>
+                    <td className="px-5 py-4 space-y-1.5">
+                      <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                      <div className="h-3 w-16 bg-slate-100 rounded"></div>
+                    </td>
+                    <td className="px-5 py-4"><div className="h-5 w-24 bg-slate-200 rounded-full"></div></td>
+                    <td className="px-5 py-4"><div className="h-4 w-64 bg-slate-200 rounded"></div></td>
+                    <td className="px-5 py-4"><div className="h-4 w-24 bg-slate-200 rounded"></div></td>
+                  </tr>
+                ))
+              ) : filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-400 font-bold">
+                    Tidak ada aktivitas audit log ditemukan.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredLogs.map((log) => (
+                  <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                    <td className="px-5 py-4 font-mono text-slate-500 whitespace-nowrap font-bold text-xs">
+                      {formatDateWIT(log.timestamp)}
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <p className="font-bold text-slate-900">{log.userName}</p>
+                      <span className="text-[10px] text-amber-900 font-bold uppercase font-mono">
+                        {log.userRole}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4">
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 font-mono">
+                        {log.action}
+                      </span>
+                    </td>
+
+                    <td className="px-5 py-4 text-slate-700 font-medium">
+                      {log.details}
+                    </td>
+
+                    <td className="px-5 py-4 font-mono text-slate-500 font-bold">
+                      {log.ipAddress}
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

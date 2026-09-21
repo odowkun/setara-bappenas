@@ -30,6 +30,7 @@ export default function ManajemenJenisDokumenPage() {
   }, []);
 
   const [jenisList, setJenisList] = useState<JenisDokumenItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [filterRole, setFilterRole] = useState<string>("semua");
@@ -44,6 +45,7 @@ export default function ManajemenJenisDokumenPage() {
   // Fetch real list from Laravel Backend API
   useEffect(() => {
     const fetchJenisList = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`${API_BASE_URL}/jenis-dokumen`, { cache: "no-store" });
         if (res.ok) {
@@ -53,6 +55,8 @@ export default function ManajemenJenisDokumenPage() {
       } catch (err) {
         console.error("Jenis dokumen resmi gagal dimuat:", err);
         setJenisList([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -224,7 +228,18 @@ export default function ManajemenJenisDokumenPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs font-bold text-slate-700">
-              {filteredItems.length === 0 ? (
+              {loading ? (
+                [1, 2, 3, 4, 5].map((idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-3.5 px-4"><div className="h-4 w-4 bg-slate-200 rounded"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-4 w-48 bg-slate-200 rounded"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-5 w-24 bg-slate-200 rounded-md"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-5 w-24 bg-slate-200 rounded-full"></div></td>
+                    <td className="py-3.5 px-4"><div className="h-5 w-28 bg-slate-200 rounded-full"></div></td>
+                    <td className="py-3.5 px-4 text-right"><div className="h-6 w-16 bg-slate-200 rounded-xl ml-auto"></div></td>
+                  </tr>
+                ))
+              ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-8 text-center text-slate-400 font-medium">
                     Tidak ditemukan jenis dokumen sesuai pencarian.

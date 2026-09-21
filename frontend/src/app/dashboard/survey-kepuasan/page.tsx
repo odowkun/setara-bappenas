@@ -368,7 +368,25 @@ export default function DashboardSurveyPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
-                {filteredSurveys.length === 0 ? (
+                {loading ? (
+                  [1, 2, 3, 4, 5].map((idx) => (
+                    <tr key={idx} className="animate-pulse">
+                      <td className="py-4 px-6">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 shrink-0" />
+                          <div className="space-y-1">
+                            <div className="h-3.5 w-28 bg-slate-200 rounded" />
+                            <div className="h-2.5 w-20 bg-slate-100 rounded" />
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-4 px-6"><div className="h-4 w-36 bg-slate-200 rounded" /></td>
+                      <td className="py-4 px-6"><div className="h-6 w-24 bg-slate-200 rounded-full" /></td>
+                      <td className="py-4 px-6"><div className="h-4 w-28 bg-slate-200 rounded" /></td>
+                      <td className="py-4 px-6 text-right"><div className="h-7 w-20 bg-slate-200 rounded-xl ml-auto" /></td>
+                    </tr>
+                  ))
+                ) : filteredSurveys.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="py-12 text-center text-slate-400 font-bold">
                       Belum ada data responden survei kepuasan.

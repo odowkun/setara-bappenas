@@ -44,6 +44,7 @@ const ALL_SPATIE_PERMISSIONS = [
 export default function UserManagementPage() {
   const { user: currentUser, hasRole } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const isSuperAdmin = hasRole(["superadmin"]);
   const [expandedUserIds, setExpandedUserIds] = useState<Record<string, boolean>>({});
@@ -51,9 +52,18 @@ export default function UserManagementPage() {
   const [successMsg, setSuccessMsg] = useState("");
 
   const refreshUsers = () => {
-    adminService.fetchUsers().then((res) => {
-      setUsers(res || []);
-    });
+    setLoading(true);
+    adminService.fetchUsers()
+      .then((res) => {
+        setUsers(res || []);
+      })
+      .catch((err) => {
+        console.error("Gagal memuat pengguna:", err);
+        setUsers([]);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
   };
 
   useEffect(() => {
@@ -248,154 +258,202 @@ export default function UserManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 font-medium">
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50/70 transition">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-2xl bg-blue-700 text-white font-black flex items-center justify-center shrink-0 shadow-xs text-sm">
-                        {u.name.charAt(0)}
-                      </div>
-                      <div>
-                        <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
-                          <span>{u.name}</span>
-                          {u.id === currentUser?.id && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200">
-                              (Anda)
-                            </span>
-                          )}
+              {loading ? (
+                [1, 2, 3, 4].map((idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-slate-200 shrink-0"></div>
+                        <div className="space-y-1.5">
+                          <div className="h-4 w-36 bg-slate-200 rounded"></div>
+                          <div className="h-3 w-24 bg-slate-100 rounded"></div>
                         </div>
-                        <p className="text-[11px] text-slate-600 font-semibold mt-0.5">{u.jabatan || "Staff Bappeda"}</p>
-                        {u.nip && <p className="text-[10px] text-slate-400 font-mono">NIP. {u.nip}</p>}
                       </div>
-                    </div>
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-slate-700 font-mono font-bold text-xs">{u.email}</td>
-
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    {u.role === "superadmin" && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs whitespace-nowrap">
-                        👑 Administrator (SuperAdmin)
-                      </span>
-                    )}
-                    {u.role === "admin_umum" && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-200 shadow-2xs whitespace-nowrap">
-                        📰 Admin Umum &amp; Humas
-                      </span>
-                    )}
-                    {u.role === "admin_bidang" && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-2xs whitespace-nowrap">
-                        🏗️ Admin Bidang ({u.bidang?.toUpperCase() || "IPW"})
-                      </span>
-                    )}
-                  </td>
-
-                  <td className="px-6 py-4 max-w-md">
-                    {renderPermissionsSummary(u)}
-                  </td>
-
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Link
-                        href={`/dashboard/users/edit/${u.id}`}
-                        className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition flex items-center gap-1 border border-slate-200 cursor-pointer"
-                      >
-                        <Edit className="w-3.5 h-3.5" />
-                        <span>Edit</span>
-                      </Link>
-
-                      <button
-                        onClick={() => handleDeleteUser(u.id, u.name)}
-                        disabled={u.id === currentUser?.id}
-                        className={`p-1.5 rounded-xl transition cursor-pointer ${
-                          u.id === currentUser?.id
-                            ? "bg-slate-100 text-slate-300 cursor-not-allowed"
-                            : "bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200"
-                        }`}
-                        title="Hapus"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    </td>
+                    <td className="px-6 py-4"><div className="h-4 w-40 bg-slate-200 rounded"></div></td>
+                    <td className="px-6 py-4"><div className="h-6 w-32 bg-slate-200 rounded-full"></div></td>
+                    <td className="px-6 py-4"><div className="h-4 w-48 bg-slate-200 rounded"></div></td>
+                    <td className="px-6 py-4 text-right"><div className="h-7 w-20 bg-slate-200 rounded-xl ml-auto"></div></td>
+                  </tr>
+                ))
+              ) : filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-12 text-center text-slate-400 font-bold">
+                    Tidak ada pengguna yang sesuai dengan pencarian.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredUsers.map((u) => (
+                  <tr key={u.id} className="hover:bg-slate-50/70 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-2xl bg-blue-700 text-white font-black flex items-center justify-center shrink-0 shadow-xs text-sm">
+                          {u.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="font-extrabold text-slate-900 flex items-center gap-1.5">
+                            <span>{u.name}</span>
+                            {u.id === currentUser?.id && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200">
+                                (Anda)
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-600 font-semibold mt-0.5">{u.jabatan || "Staff Bappeda"}</p>
+                          {u.nip && <p className="text-[10px] text-slate-400 font-mono">NIP. {u.nip}</p>}
+                        </div>
+                      </div>
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-700 font-mono font-bold text-xs">{u.email}</td>
+
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {u.role === "superadmin" && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-amber-100 text-amber-900 border border-amber-200 shadow-2xs whitespace-nowrap">
+                          👑 Administrator (SuperAdmin)
+                        </span>
+                      )}
+                      {u.role === "admin_umum" && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-blue-100 text-blue-900 border border-blue-200 shadow-2xs whitespace-nowrap">
+                          📰 Admin Umum &amp; Humas
+                        </span>
+                      )}
+                      {u.role === "admin_bidang" && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-2xs whitespace-nowrap">
+                          🏗️ Admin Bidang ({u.bidang?.toUpperCase() || "IPW"})
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4 max-w-md">
+                      {renderPermissionsSummary(u)}
+                    </td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Link
+                          href={`/dashboard/users/edit/${u.id}`}
+                          className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-extrabold text-xs transition flex items-center gap-1 border border-slate-200 cursor-pointer"
+                        >
+                          <Edit className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </Link>
+
+                        <button
+                          onClick={() => handleDeleteUser(u.id, u.name)}
+                          disabled={u.id === currentUser?.id}
+                          className={`p-1.5 rounded-xl transition cursor-pointer ${
+                            u.id === currentUser?.id
+                              ? "bg-slate-100 text-slate-300 cursor-not-allowed"
+                              : "bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 border border-slate-200"
+                          }`}
+                          title="Hapus"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
 
         {/* MOBILE CARD VIEW */}
         <div className="md:hidden divide-y divide-slate-100">
-          {filteredUsers.map((u) => (
-            <div key={u.id} className="p-4 space-y-3 bg-white">
-              <div className="flex items-start justify-between gap-3">
+          {loading ? (
+            [1, 2, 3].map((idx) => (
+              <div key={idx} className="p-4 space-y-3 bg-white animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-700 text-white font-black flex items-center justify-center text-sm shrink-0">
-                    {u.name.charAt(0)}
-                  </div>
-                  <div>
-                    <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
-                      <span>{u.name}</span>
-                      {u.id === currentUser?.id && (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200">
-                          (Anda)
-                        </span>
-                      )}
-                    </h3>
-                    <p className="text-xs text-slate-600 font-semibold">{u.jabatan || "Staff Bappeda"}</p>
-                    {u.nip && <p className="text-[10px] text-slate-400 font-mono">NIP. {u.nip}</p>}
+                  <div className="w-10 h-10 rounded-2xl bg-slate-200 shrink-0"></div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="h-4 w-32 bg-slate-200 rounded"></div>
+                    <div className="h-3 w-20 bg-slate-100 rounded"></div>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-1 shrink-0">
-                  <Link
-                    href={`/dashboard/users/edit/${u.id}`}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Link>
-                  <button
-                    onClick={() => handleDeleteUser(u.id, u.name)}
-                    disabled={u.id === currentUser?.id}
-                    className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-rose-600 font-bold text-xs"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                <div className="space-y-2 pt-2 border-t border-slate-100">
+                  <div className="h-3 w-44 bg-slate-100 rounded"></div>
+                  <div className="h-5 w-24 bg-slate-200 rounded-full"></div>
                 </div>
               </div>
-
-              <div className="space-y-1.5 pt-1 text-xs">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span className="text-slate-400 font-bold">Email:</span>
-                  <span className="font-mono font-bold text-slate-800">{u.email}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-slate-400 font-bold">Role:</span>
-                  {u.role === "superadmin" && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-200">
-                      👑 SuperAdmin
-                    </span>
-                  )}
-                  {u.role === "admin_umum" && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">
-                      📰 Admin Umum
-                    </span>
-                  )}
-                  {u.role === "admin_bidang" && (
-                    <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      🏗️ {u.bidang?.toUpperCase() || "IPW"}
-                    </span>
-                  )}
-                </div>
-                <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-100">
-                  <span className="text-slate-400 font-bold shrink-0">Hak Akses:</span>
-                  <div className="flex-1">
-                    {renderPermissionsSummary(u, true)}
-                  </div>
-                </div>
-              </div>
+            ))
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 font-bold text-xs">
+              Tidak ada pengguna yang sesuai dengan pencarian.
             </div>
-          ))}
+          ) : (
+            filteredUsers.map((u) => (
+              <div key={u.id} className="p-4 space-y-3 bg-white">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-700 text-white font-black flex items-center justify-center text-sm shrink-0">
+                      {u.name.charAt(0)}
+                    </div>
+                    <div>
+                      <h3 className="font-extrabold text-slate-900 text-sm flex items-center gap-1.5">
+                        <span>{u.name}</span>
+                        {u.id === currentUser?.id && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-100 text-amber-900 border border-amber-200">
+                            (Anda)
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-xs text-slate-600 font-semibold">{u.jabatan || "Staff Bappeda"}</p>
+                      {u.nip && <p className="text-[10px] text-slate-400 font-mono">NIP. {u.nip}</p>}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Link
+                      href={`/dashboard/users/edit/${u.id}`}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-blue-50 text-blue-700 font-bold text-xs flex items-center justify-center"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Link>
+                    <button
+                      onClick={() => handleDeleteUser(u.id, u.name)}
+                      disabled={u.id === currentUser?.id}
+                      className="p-2 rounded-xl bg-slate-100 hover:bg-rose-50 text-rose-600 font-bold text-xs"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-1.5 pt-1 text-xs">
+                  <div className="flex items-center justify-between text-slate-600">
+                    <span className="text-slate-400 font-bold">Email:</span>
+                    <span className="font-mono font-bold text-slate-800">{u.email}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-bold">Role:</span>
+                    {u.role === "superadmin" && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-200">
+                        👑 SuperAdmin
+                      </span>
+                    )}
+                    {u.role === "admin_umum" && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-800 border border-blue-200">
+                        📰 Admin Umum
+                      </span>
+                    )}
+                    {u.role === "admin_bidang" && (
+                      <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        🏗️ {u.bidang?.toUpperCase() || "IPW"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-100">
+                    <span className="text-slate-400 font-bold shrink-0">Hak Akses:</span>
+                    <div className="flex-1">
+                      {renderPermissionsSummary(u, true)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
