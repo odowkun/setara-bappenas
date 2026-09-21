@@ -60,6 +60,7 @@ Sebagai bagian dari eliminasi total elemen native `<select>` di seluruh basis ko
   - Dropdown pemilih tahun (sebelumnya elemen native `<select>` dengan batas 2020–2035) diganti menjadi **`SearchableSelect`** dengan ukuran ringkas (`size="sm"`).
   - **Dukungan Pencarian & Ketik Bebas (`creatable={true}`)**: Pengguna dapat mencari tahun secara instan atau mengetik tahun berapa saja tanpa batasan buatan.
   - **Rentang Dinamis Luas**: Rentang tahun bawaan diperluas dari `1945` hingga `2099+`, dan secara otomatis memperluas opsi jika nilai tahun dokumen berada di luar rentang tersebut (misal arsip historis atau perencanaan jangka panjang RPJMD/Indonesia Emas).
+  - **Auto-Scroll ke Opsi Aktif (Centered Positioning)**: Saat dropdown dibuka, list pilihan otomatis melakukan *instant scroll* sehingga opsi yang sedang terpilih (misal: tahun 2026) langsung berada tepat di tengah viewport dropdown (`centered in viewport`), memudahkan navigasi ke tahun sebelum dan sesudahnya tanpa harus scroll manual dari ujung atas.
   - **Stacking Context & Z-Index**: Popover portal `SearchableSelect` ditingkatkan ke `z-[10000001]` di atas portal kalender `CustomDatePicker` (`z-[999999]`), menjamin interaksi dan klik dropdown tahun bebas tumpang tindih.
 - **Pembersihan Pembatas Tahun di Formulir**:
   - Atribut pembatas sempit `minYear={2020}` dan `maxYear={2035}` telah dihapus dari seluruh pemanggil:

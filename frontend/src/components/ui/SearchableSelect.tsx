@@ -48,6 +48,8 @@ export default function SearchableSelect({
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const selectedItemRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -114,12 +116,28 @@ export default function SearchableSelect({
   }, [isOpen, size]);
 
   useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
+    if (isOpen) {
+      if (searchInputRef.current) {
+        setTimeout(() => {
+          searchInputRef.current?.focus();
+        }, 50);
+      }
+
+      // Auto-scroll selected item into the center of the viewport
+      const scrollTimer = setTimeout(() => {
+        if (listRef.current && selectedItemRef.current) {
+          const container = listRef.current;
+          const item = selectedItemRef.current;
+          const itemTop = item.offsetTop;
+          const itemHeight = item.offsetHeight;
+          const containerHeight = container.clientHeight;
+          container.scrollTop = itemTop - containerHeight / 2 + itemHeight / 2;
+        }
       }, 50);
+
+      return () => clearTimeout(scrollTimer);
     }
-  }, [isOpen]);
+  }, [isOpen, value]);
 
   const handleSelect = (val: string | number) => {
     onChange(val);
@@ -230,7 +248,7 @@ export default function SearchableSelect({
               </div>
 
               {/* OPTIONS LIST */}
-              <div className="max-h-64 overflow-y-auto p-1.5 scrollbar-thin">
+              <div ref={listRef} className="relative max-h-64 overflow-y-auto p-1.5 scrollbar-thin">
                 {/* CREATABLE ACTION BUTTON AT TOP IF USER TYPES NEW OPTION */}
                 {creatable && trimmedSearch && !exactMatch && (
                   <button
@@ -260,6 +278,7 @@ export default function SearchableSelect({
                     return (
                       <button
                         key={opt.value}
+                        ref={isSelected ? selectedItemRef : null}
                         type="button"
                         onClick={() => handleSelect(opt.value)}
                         className={`w-full px-3.5 py-2.5 rounded-xl text-left text-xs transition flex items-center justify-between gap-2 cursor-pointer ${
