@@ -124,7 +124,8 @@ export const proyekService = {
         const json = await res.json();
         return { success: true, data: json.data };
       }
-      throw new Error(`Server menolak pembaruan progres (${res.status}).`);
+      const errData = await res.json().catch(() => null);
+      throw new Error(errData?.message || `Server menolak pembaruan progres (${res.status}).`);
     } catch (e) {
       console.warn("[proyekService] Failed backend update", e);
       throw e;

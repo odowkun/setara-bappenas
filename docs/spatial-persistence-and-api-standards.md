@@ -240,3 +240,28 @@ Halaman beranda portal publik BAPPEDA Kabupaten Halmahera Utara difokuskan untuk
    - **Total Pagu**: Akumulasi pagu anggaran hanya dari proyek yang selesai 100%.
    - **Sebaran Wilayah**: Daftar kecamatan dihitung dari lokasi proyek yang 100% selesai.
    - **Marker Peta Spasial & Daftar Kanan**: Hanya merender titik marker dan item direktori proyek selesai 100%.
+
+---
+
+## 12. Resolusi Bug Simpan Progres Sektoral (`/dashboard/update-progres`)
+
+Status implementasi: 21 September 2026.
+
+### A. Akar Penyebab Masalah (Root Cause)
+1. **PHP Runtime Error (`Undefined variable $actor`)**:
+   - Pada `ProyekDetailController@updateProgres`, terdapat deklarasi variabel redundan `$updateData['updated_by'] = $actor->name;` di mana `$actor` belum didefinisikan sebelumnya (sebelumnya hanya memanggil `$request->user()->name`).
+   - Pada PHP 8.2+, pemanggilan properti pada variabel yang belum dideklarasikan memicu `Fatal Error: Undefined variable $actor`, sehingga server Laravel merespons dengan HTTP Status 500.
+2. **Generic Error Message di Frontend**:
+   - Fungsi `proyekService.updateProgress` melempar pesan generic tanpa mengekstrak detail response JSON backend saat status HTTP bukan 200.
+   - Komponen halaman `update-progres/page.tsx` menampilkan pesan fallback "Terjadi kesalahan saat memperbarui progres ke server" tanpa meneruskan pesan error sesungguhnya.
+
+### B. Solusi Teknis & Pencegahan (Regression Protection)
+1. **Perbaikan Backend (`ProyekDetailController.php`)**:
+   - Mendefinisikan `$actor = $request->user();` secara aman di awal alur validasi.
+   - Menggunakan operator null-safe: `'updated_by' => $actor?->name ?? 'Admin'`.
+   - Mengisolasi pemanggilan `SyncEsriProjectJob::dispatchSync` di dalam blok `try-catch` terproteksi, sehingga apabila sinkronisasi eksternal ArcGIS mengalami timeout atau hambatan jaringan, data progres dan realisasi anggaran proyek di MySQL tetap tersimpan 100% aman dan mengembalikan HTTP 200 ke klien.
+2. **Peningkatan Error Handling Frontend**:
+   - `proyekService.ts`: Mengurai `errData?.message` dari backend saat request gagal untuk transparansi pelaporan.
+   - `update-progres/page.tsx`: Meneruskan `err?.message` langsung ke SweetAlert2 dan toast notification.
+3. **Automated Feature Test**:
+   - Menambahkan test komprehensif pada `backend/tests/Feature/ProyekDetailProgressTest.php` mencakup pembaruan progres oleh Superadmin, mutasi database `proyek_details`, otorisasi admin bidang, serta isolasi pemblokiran lintas bidang (HTTP 403). Seluruh test lulus 100%.

@@ -209,11 +209,13 @@ class ProyekDetailController extends Controller
         $proyek = ProyekDetail::findOrFail($id);
         $this->authorizeBidang($request, $proyek->bidang);
 
+        $actor = $request->user();
+
         $updateData = [
             'persentase_progres' => $validated['persentase_progres'],
             'status_progres' => $validated['status_progres'] ?? $proyek->status_progres,
             'realisasi_anggaran' => $validated['realisasi_anggaran'] ?? $proyek->realisasi_anggaran,
-            'updated_by' => $request->user()->name,
+            'updated_by' => $actor?->name ?? 'Admin',
         ];
 
         if (array_key_exists('delineasi_geojson', $validated)) {
@@ -229,11 +231,14 @@ class ProyekDetailController extends Controller
             $updateData['panjang_km'] = $validated['panjang_km'];
         }
 
-        $updateData['updated_by'] = $actor->name;
         $proyek->update($updateData);
 
         // Synchronize GIS registry
-        SyncEsriProjectJob::dispatchSync($proyek, $proyek->esri_objectid ? 'update' : 'add');
+        try {
+            SyncEsriProjectJob::dispatchSync($proyek, $proyek->esri_objectid ? 'update' : 'add');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning("SyncEsriProjectJob failed during updateProgres for Project ID #{$proyek->id}: " . $e->getMessage());
+        }
 
         $freshProject = $proyek->fresh(['document', 'attachments']);
         $this->replaceDocumentFilePaths(collect([$freshProject]), true);

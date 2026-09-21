@@ -139,9 +139,10 @@ export default function UpdateProgresPage() {
         setEditingProject(null);
         loadProjects();
       }
-    } catch (err) {
-      toast.error("Gagal memperbarui data progres proyek.");
-      showErrorSwal("Gagal Memperbarui", "Terjadi kesalahan saat memperbarui progres ke server.");
+    } catch (err: any) {
+      const errorMsg = err?.message || "Terjadi kesalahan saat memperbarui progres ke server.";
+      toast.error(errorMsg);
+      showErrorSwal("Gagal Memperbarui", errorMsg);
     } finally {
       setSubmitting(false);
     }
