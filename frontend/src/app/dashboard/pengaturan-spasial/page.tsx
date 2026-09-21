@@ -11,9 +11,9 @@ export default function GeoSettingsRedirectPage() {
   }, [router]);
 
   return (
-    <div className="w-full p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3 font-sans">
-      <div className="w-6 h-6 border-2 border-purple-700 border-t-transparent rounded-full animate-spin mx-auto" />
-      <p className="text-xs font-bold text-slate-500">Mengarahkan ke Halaman Viewport & Peta Awal...</p>
+    <div className="w-full p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm space-y-3 font-sans animate-pulse">
+      <div className="w-10 h-10 rounded-2xl bg-purple-100 mx-auto" />
+      <div className="h-4 w-64 bg-slate-200 rounded mx-auto" />
     </div>
   );
 }

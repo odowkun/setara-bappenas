@@ -361,41 +361,67 @@ export default function InfografisDashboardPage() {
 
       {/* Main Table Card */}
       <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
-        {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
-            <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-            <p className="text-sm font-medium">Memuat data infografis...</p>
-          </div>
-        ) : filteredItems.length === 0 ? (
-          <div className="py-20 px-6 text-center space-y-3">
-            <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 mx-auto flex items-center justify-center">
-              <BarChart3 className="w-7 h-7" />
-            </div>
-            <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
-              Tidak ada infografis yang cocok
-            </h3>
-            <p className="text-xs text-slate-500 max-w-md mx-auto">
-              {searchTerm
-                ? "Tidak ada item yang cocok dengan pencarian Anda."
-                : "Belum ada infografis. Klik tombol 'Tambah Infografis Baru' untuk menambahkan."}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-sm min-w-[760px]">
-              <thead>
-                <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  <th className="py-4 px-4 sm:px-6 w-20 text-center">Gambar</th>
-                  <th className="py-4 px-4">Judul &amp; Deskripsi Infografis</th>
-                  <th className="py-4 px-4 w-32">Kategori</th>
-                  <th className="py-4 px-4 w-28 text-center">Tersemat Beranda</th>
-                  <th className="py-4 px-4 w-28 text-center">Status</th>
-                  <th className="py-4 px-4 w-20 text-center">Urutan</th>
-                  <th className="py-4 px-4 sm:px-6 w-28 text-center">Aksi</th>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse text-sm min-w-[760px]">
+            <thead>
+              <tr className="border-b border-slate-200/70 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                <th className="py-4 px-4 sm:px-6 w-20 text-center">Gambar</th>
+                <th className="py-4 px-4">Judul &amp; Deskripsi Infografis</th>
+                <th className="py-4 px-4 w-32">Kategori</th>
+                <th className="py-4 px-4 w-28 text-center">Tersemat Beranda</th>
+                <th className="py-4 px-4 w-28 text-center">Status</th>
+                <th className="py-4 px-4 w-20 text-center">Urutan</th>
+                <th className="py-4 px-4 sm:px-6 w-28 text-center">Aksi</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {loading ? (
+                [1, 2, 3, 4, 5].map((idx) => (
+                  <tr key={idx} className="animate-pulse">
+                    <td className="py-4 px-4 sm:px-6 text-center">
+                      <div className="w-14 h-18 rounded-xl bg-slate-200 dark:bg-slate-800 mx-auto" />
+                    </td>
+                    <td className="py-4 px-4 space-y-2">
+                      <div className="h-4 w-3/4 bg-slate-200 dark:bg-slate-800 rounded" />
+                      <div className="h-3 w-1/2 bg-slate-100 dark:bg-slate-800/60 rounded" />
+                    </td>
+                    <td className="py-4 px-4">
+                      <div className="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full" />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="h-6 w-20 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto" />
+                    </td>
+                    <td className="py-4 px-4 text-center">
+                      <div className="h-6 w-8 bg-slate-200 dark:bg-slate-800 rounded-lg mx-auto" />
+                    </td>
+                    <td className="py-4 px-4 sm:px-6 text-center">
+                      <div className="h-7 w-20 bg-slate-200 dark:bg-slate-800 rounded-xl mx-auto" />
+                    </td>
+                  </tr>
+                ))
+              ) : filteredItems.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="py-20 px-6 text-center">
+                    <div className="space-y-3">
+                      <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-900/20 text-blue-500 mx-auto flex items-center justify-center">
+                        <BarChart3 className="w-7 h-7" />
+                      </div>
+                      <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
+                        Tidak ada infografis yang cocok
+                      </h3>
+                      <p className="text-xs text-slate-500 max-w-md mx-auto">
+                        {searchTerm
+                          ? "Tidak ada item yang cocok dengan pencarian Anda."
+                          : "Belum ada infografis. Klik tombol 'Tambah Infografis Baru' untuk menambahkan."}
+                      </p>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                {filteredItems.map((item) => (
+              ) : (
+                filteredItems.map((item) => (
                   <tr
                     key={item.id}
                     className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40 transition-colors"
@@ -526,12 +552,12 @@ export default function InfografisDashboardPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
-              </tbody>
+                ))
+              )}
+            </tbody>
             </table>
           </div>
-        )}
-      </div>
+        </div>
 
       {/* Modal Add / Edit */}
       {modalOpen && (

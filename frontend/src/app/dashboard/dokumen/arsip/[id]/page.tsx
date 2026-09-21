@@ -175,10 +175,29 @@ export default function DocumentArchiveDetailPage() {
 
   if (loading && !data) {
     return (
-      <div role="status" className="p-12 text-center text-xs font-bold text-slate-500">
-        <Loader2 className="mx-auto mb-3 h-6 w-6 animate-spin text-blue-700" />
-        Memuat tata kelola arsip...
-      </div>
+      <main className="w-full space-y-6 font-sans pb-12 animate-pulse">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-7 w-64 bg-slate-200 rounded-lg" />
+            <div className="h-4 w-40 bg-slate-100 rounded-lg" />
+          </div>
+          <div className="h-10 w-28 bg-slate-200 rounded-2xl" />
+        </div>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {[1, 2, 3, 4].map((n) => (
+            <div key={n} className="h-24 rounded-2xl bg-slate-100 border border-slate-200 p-4 space-y-2">
+              <div className="w-4 h-4 bg-slate-200 rounded" />
+              <div className="h-3 w-20 bg-slate-200 rounded" />
+              <div className="h-4 w-28 bg-slate-200 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="h-64 rounded-3xl bg-white border border-slate-200 p-6 space-y-4">
+          <div className="h-5 w-48 bg-slate-200 rounded" />
+          <div className="h-12 w-full bg-slate-100 rounded-2xl" />
+          <div className="h-12 w-full bg-slate-100 rounded-2xl" />
+        </div>
+      </main>
     );
   }
 

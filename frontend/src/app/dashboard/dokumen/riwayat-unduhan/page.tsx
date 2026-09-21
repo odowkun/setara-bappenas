@@ -143,8 +143,39 @@ function DownloadHistoryContent() {
       </section>
 
       {loading ? (
-        <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center text-xs font-bold text-slate-500">
-          Memuat riwayat pengunduh...
+        <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[850px] text-left text-xs">
+              <thead className="bg-blue-950 text-white">
+                <tr>
+                  <th className="px-5 py-3.5 font-extrabold">Waktu Unduh</th>
+                  <th className="px-5 py-3.5 font-extrabold">Email Masyarakat</th>
+                  <th className="px-5 py-3.5 font-extrabold">Dokumen</th>
+                  <th className="px-5 py-3.5 font-extrabold">Jejak Akses</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <tr key={n} className="animate-pulse">
+                    <td className="px-5 py-4">
+                      <div className="h-4 w-32 bg-slate-200 rounded" />
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="h-4 w-44 bg-slate-200 rounded" />
+                    </td>
+                    <td className="px-5 py-4 space-y-1.5">
+                      <div className="h-4 w-56 bg-slate-200 rounded" />
+                      <div className="h-3 w-32 bg-slate-100 rounded" />
+                    </td>
+                    <td className="px-5 py-4 space-y-1.5">
+                      <div className="h-3.5 w-28 bg-slate-200 rounded" />
+                      <div className="h-2.5 w-40 bg-slate-100 rounded" />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       ) : (
         <DownloadLogTable logs={filteredLogs} />

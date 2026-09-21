@@ -148,8 +148,33 @@ export default function TupoksiEditorPage() {
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-400 font-bold animate-pulse bg-white rounded-3xl border border-slate-200">
-          Memuat data Tugas & Fungsi dari database...
+        <div className="space-y-4 animate-pulse">
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3.5">
+              <div className="w-8 h-8 rounded-xl bg-slate-200 shrink-0" />
+              <div className="space-y-1.5">
+                <div className="h-4 w-52 bg-slate-200 rounded" />
+                <div className="h-3 w-72 bg-slate-100 rounded" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-36 bg-slate-200 rounded" />
+              <div className="h-44 w-full bg-slate-100 rounded-2xl border border-slate-200" />
+            </div>
+          </div>
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3.5">
+              <div className="w-8 h-8 rounded-xl bg-slate-200 shrink-0" />
+              <div className="space-y-1.5">
+                <div className="h-4 w-52 bg-slate-200 rounded" />
+                <div className="h-3 w-72 bg-slate-100 rounded" />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="h-4 w-36 bg-slate-200 rounded" />
+              <div className="h-44 w-full bg-slate-100 rounded-2xl border border-slate-200" />
+            </div>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSave} className="space-y-4">

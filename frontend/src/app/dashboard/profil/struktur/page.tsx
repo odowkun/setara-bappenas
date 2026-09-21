@@ -297,8 +297,22 @@ export default function StrukturEditorPage() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-xs text-slate-400 font-bold animate-pulse">
-                Memuat hirarki posisi dari database...
+              <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="py-4 px-6 flex items-center justify-between gap-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-200 shrink-0" />
+                      <div className="space-y-1.5">
+                        <div className="h-4 w-48 bg-slate-200 rounded" />
+                        <div className="h-3 w-28 bg-slate-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-8 w-20 bg-slate-200 rounded-xl" />
+                      <div className="h-8 w-8 bg-slate-200 rounded-xl" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
@@ -399,8 +413,19 @@ export default function StrukturEditorPage() {
             </div>
 
             {loading ? (
-              <div className="p-8 text-center text-xs text-slate-400 font-bold animate-pulse">
-                Memuat daftar pejabat dari database...
+              <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="py-4 px-6 flex items-center justify-between gap-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-2xl bg-slate-200 shrink-0" />
+                      <div className="space-y-1.5">
+                        <div className="h-4 w-44 bg-slate-200 rounded" />
+                        <div className="h-3 w-32 bg-slate-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-8 w-28 bg-slate-200 rounded-xl" />
+                  </div>
+                ))}
               </div>
             ) : (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">

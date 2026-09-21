@@ -172,8 +172,26 @@ export default function EditPengumumanPage() {
 
   if (loading) {
     return (
-      <div className="w-full p-12 text-center text-xs text-slate-400 font-bold animate-pulse bg-white rounded-3xl border border-slate-200 font-sans">
-        Memuat data pengumuman...
+      <div className="w-full space-y-6 font-sans pb-12 animate-pulse">
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-slate-200 shrink-0" />
+            <div className="space-y-1.5">
+              <div className="h-5 w-48 bg-slate-200 rounded-lg" />
+              <div className="h-3.5 w-64 bg-slate-100 rounded" />
+            </div>
+          </div>
+        </div>
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-6">
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-slate-200 rounded" />
+            <div className="h-11 w-full bg-slate-100 rounded-2xl" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-slate-200 rounded" />
+            <div className="h-36 w-full bg-slate-100 rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }

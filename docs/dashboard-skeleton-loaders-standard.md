@@ -90,6 +90,19 @@ Skeleton loader tabel wajib dirender di dalam elemen `<tbody>` dengan jumlah sel
    - 5 kolom: Pengirim, SKPD Tujuan, Subjek/Pesan, Status Tanggapan, dan Tombol Aksi Balas.
 8. **`/dashboard/agenda` (Tabel Agenda Kegiatan)**:
    - 6 kolom: Rentang Tanggal, Judul Agenda, Kategori, Lokasi, Status, dan Tombol Aksi.
+9. **`/dashboard/infografis` (Tabel Manajemen Infografis Pembangunan)**:
+   - 7 kolom: Thumbnail Gambar, Judul & Deskripsi, Kategori, Tersemat Beranda, Status Tayang, Urutan, dan Aksi.
+   - Menggantikan spinner tengah dengan 5 baris skeleton terstruktur di dalam tabel.
+10. **`/dashboard/dokumen/riwayat-unduhan` (Tabel Riwayat Pengunduh Dokumen)**:
+    - 4 kolom: Waktu Unduh, Email Masyarakat, Dokumen, dan Jejak Akses IP/Perangkat.
+11. **`/dashboard/dokumen/arsip/[id]` (Tata Kelola & Detail Arsip)**:
+    - Skeleton loader penuh untuk kartu header, 4 metrik governance, dan metadata form.
+12. **`/dashboard/profil/struktur` (Hirarki Posisi & Penugasan Pejabat)**:
+    - Skeleton list hierarki terstruktur pada kedua tab (Posisi Jabatan & Daftar Pejabat).
+13. **`/dashboard/profil/tentang`, `/dashboard/profil/tugas-fungsi`, `/dashboard/profil/dasar-hukum`**:
+    - Form skeleton dengan placeholder heading, textarea, dan rich text editor.
+14. **Modul Pengaturan Spasial (`/dashboard/pengaturan-spasial/*`)**:
+    - Seluruh sub-halaman (Visual, ESRI, Viewport, Basemap, dan RTRW Batas) menggunakan skeleton card dan grid placeholder tanpa spinner mandiri.
 
 ---
 

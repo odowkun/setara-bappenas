@@ -342,8 +342,18 @@ export default function DashboardTentangEditorPage() {
       </div>
 
       {loading ? (
-        <div className="p-12 text-center text-xs text-slate-400 font-bold animate-pulse">
-          Memuat data dari database...
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6 animate-pulse">
+          <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+            <div className="w-5 h-5 bg-slate-200 rounded" />
+            <div className="h-5 w-64 bg-slate-200 rounded-lg" />
+          </div>
+          <div className="space-y-3">
+            <div className="h-4 w-48 bg-slate-200 rounded" />
+            <div className="h-72 w-full bg-slate-100 rounded-2xl border border-slate-200" />
+          </div>
+          <div className="flex justify-end pt-2">
+            <div className="h-10 w-36 bg-slate-200 rounded-2xl" />
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSaveAll} className="space-y-6">

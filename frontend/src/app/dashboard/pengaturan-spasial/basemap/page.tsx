@@ -258,10 +258,24 @@ export default function BasemapSettingPage() {
 
   if (loading) {
     return (
-      <div className="w-full space-y-6 font-sans pb-12">
-        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 shadow-sm animate-pulse space-y-3">
-          <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto" />
-          <p className="text-xs font-bold text-slate-500">Memuat Pengaturan Basemap Utama...</p>
+      <div className="w-full space-y-6 font-sans pb-12 animate-pulse">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-slate-200 shrink-0" />
+            <div className="space-y-1.5">
+              <div className="h-5 w-64 bg-slate-200 rounded-lg" />
+              <div className="h-3.5 w-80 bg-slate-100 rounded" />
+            </div>
+          </div>
+          <div className="h-8 w-24 bg-slate-200 rounded-full" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="h-48 rounded-3xl bg-white border border-slate-200 p-5 space-y-3">
+              <div className="aspect-video w-full rounded-2xl bg-slate-200" />
+              <div className="h-4 w-32 bg-slate-200 rounded" />
+            </div>
+          ))}
         </div>
       </div>
     );

@@ -621,9 +621,16 @@ export default function RtrwBatasSettingPage() {
               </div>
 
               {loadingLayers ? (
-                <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400">
-                  <RefreshCw className="w-6 h-6 animate-spin text-rose-600" />
-                  <span className="text-xs font-medium">Memuat layer spasial dari database...</span>
+                <div className="space-y-3">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 animate-pulse space-y-2">
+                      <div className="flex justify-between">
+                        <div className="h-4 w-40 bg-slate-200 rounded" />
+                        <div className="h-4 w-12 bg-slate-200 rounded" />
+                      </div>
+                      <div className="h-3 w-60 bg-slate-100 rounded" />
+                    </div>
+                  ))}
                 </div>
               ) : layersList.length === 0 ? (
                 <div className="py-12 text-center text-slate-400 text-xs font-medium bg-slate-50 rounded-2xl border border-dashed border-slate-200">

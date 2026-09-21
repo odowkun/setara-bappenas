@@ -170,8 +170,18 @@ export default function EditStrukturPage({ params }: { params: Promise<{ id: str
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-xs text-slate-400 font-bold animate-pulse">
-        Memuat data posisi & pejabat...
+      <div className="space-y-8 w-full font-sans pb-16 animate-pulse">
+        <div className="h-10 w-48 bg-slate-200 rounded-2xl" />
+        <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-sm space-y-6">
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-slate-200 rounded" />
+            <div className="h-11 w-full bg-slate-100 rounded-2xl" />
+          </div>
+          <div className="space-y-2">
+            <div className="h-4 w-32 bg-slate-200 rounded" />
+            <div className="h-11 w-full bg-slate-100 rounded-2xl" />
+          </div>
+        </div>
       </div>
     );
   }
