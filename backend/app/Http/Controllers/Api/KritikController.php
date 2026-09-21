@@ -8,9 +8,19 @@ use Illuminate\Http\Request;
 
 class KritikController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $kritiks = Kritik::query()->latest()->get();
+        $query = Kritik::query()->latest();
+
+        if ($request->has('visibility')) {
+            if ($request->visibility === 'hidden') {
+                $query->where('is_hidden', true);
+            } elseif ($request->visibility === 'visible') {
+                $query->where('is_hidden', false);
+            }
+        }
+
+        $kritiks = $query->get();
 
         return response()->json([
             'status' => 'success',
@@ -39,6 +49,7 @@ class KritikController extends Controller
             'pesan' => $request->pesan,
             'status' => 'Menunggu Tanggapan',
             'catatan_balasan' => null,
+            'is_hidden' => false,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -57,6 +68,7 @@ class KritikController extends Controller
     public function publicFeed()
     {
         $kritiks = Kritik::query()
+            ->where('is_hidden', false)
             ->latest()
             ->take(100)
             ->get()
@@ -103,18 +115,47 @@ class KritikController extends Controller
         $request->validate([
             'status' => 'required|string|in:Menunggu Tanggapan,Dalam Proses,Dalam Proses Tindak Lanjut,Sudah Ditanggapi,Ditutup',
             'catatan_balasan' => 'nullable|string|max:5000',
+            'is_hidden' => 'nullable|boolean',
         ]);
 
         $item = Kritik::query()->findOrFail($id);
-        $item->update([
+        $payload = [
             'status' => $request->status,
             'catatan_balasan' => $request->catatan_balasan,
-        ]);
+        ];
+
+        if ($request->has('is_hidden')) {
+            $payload['is_hidden'] = $request->boolean('is_hidden');
+        }
+
+        $item->update($payload);
 
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'message' => 'Tanggapan Kritik & Saran berhasil disimpan',
+            'data' => $item->fresh(),
+        ]);
+    }
+
+    public function toggleHide(Request $request, $id)
+    {
+        $item = Kritik::query()->findOrFail($id);
+
+        if ($request->has('is_hidden')) {
+            $item->is_hidden = $request->boolean('is_hidden');
+        } else {
+            $item->is_hidden = !$item->is_hidden;
+        }
+
+        $item->save();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => $item->is_hidden
+                ? 'Pesan masukan berhasil disembunyikan dari publik (Filter SARA/Spam).'
+                : 'Pesan masukan berhasil ditampilkan kembali ke publik.',
             'data' => $item->fresh(),
         ]);
     }

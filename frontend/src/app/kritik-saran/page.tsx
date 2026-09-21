@@ -63,7 +63,12 @@ export default function KritikSaranPublicPage() {
       setSkpdList(names);
       setSkpdTujuan(names[0]);
     }
-    setPublicList(list);
+    const sortedList = Array.isArray(list)
+      ? [...list].sort(
+          (a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()
+        )
+      : [];
+    setPublicList(sortedList);
     setLoadingList(false);
   };
 
@@ -90,7 +95,12 @@ export default function KritikSaranPublicPage() {
       setSubmitted(true);
       // Reload public feed
       const updated = await fetchPublicKritikList();
-      setPublicList(updated);
+      const sortedUpdated = Array.isArray(updated)
+        ? [...updated].sort(
+            (a, b) => new Date(b.created_at || "").getTime() - new Date(a.created_at || "").getTime()
+          )
+        : [];
+      setPublicList(sortedUpdated);
     } else {
       toast.error("Gagal mengirimkan kritik & saran. Silakan coba lagi.");
     }
@@ -454,8 +464,22 @@ export default function KritikSaranPublicPage() {
               <div>Belum ada data kritik &amp; saran pada kategori ini.</div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredItems.map((item) => {
+            <div className="space-y-3">
+              {filteredItems.length > 3 && (
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3.5 py-2 rounded-2xl bg-blue-50/70 border border-blue-100/80 text-xs">
+                  <span className="font-semibold text-slate-700">
+                    Menampilkan <strong className="text-slate-900">{filteredItems.length}</strong> aspirasi warga (terbaru berada di atas)
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-blue-700 font-bold bg-white px-3 py-1 rounded-xl shadow-2xs border border-blue-200/60 w-fit">
+                    <span>Gulir ke bawah untuk melihat masukan lainnya</span>
+                    <span className="animate-bounce text-xs font-black">↓</span>
+                  </span>
+                </div>
+              )}
+
+              {/* Scrollable Container limited to max height ~3 cards */}
+              <div className="max-h-[650px] sm:max-h-[720px] overflow-y-auto pr-1.5 sm:pr-2.5 space-y-4 overscroll-contain rounded-3xl">
+                {filteredItems.map((item) => {
                 const isDitanggapi = item.status === "Sudah Ditanggapi";
                 const isProses =
                   item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses";
@@ -547,6 +571,7 @@ export default function KritikSaranPublicPage() {
                   </div>
                 );
               })}
+              </div>
             </div>
           )}
         </div>

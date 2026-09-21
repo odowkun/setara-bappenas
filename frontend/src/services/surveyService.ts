@@ -114,6 +114,7 @@ export interface KritikSaranItem {
   pesan: string;
   status: string;
   catatan_balasan?: string;
+  is_hidden?: boolean;
   created_at: string;
 }
 
@@ -322,10 +323,13 @@ export async function submitSurvey(data: any): Promise<boolean> {
   return false;
 }
 
-export async function fetchKritikList(): Promise<KritikSaranItem[]> {
+export async function fetchKritikList(visibility?: "all" | "visible" | "hidden"): Promise<KritikSaranItem[]> {
   let apiItems: KritikSaranItem[] = [];
   try {
-    const res = await authenticatedFetch(`${API_BASE}/kritik`, { cache: "no-store" });
+    const url = visibility && visibility !== "all"
+      ? `${API_BASE}/kritik?visibility=${visibility}`
+      : `${API_BASE}/kritik`;
+    const res = await authenticatedFetch(url, { cache: "no-store" });
     if (res.ok) {
       const json = await res.json();
       if (json.data && Array.isArray(json.data)) {
@@ -336,6 +340,31 @@ export async function fetchKritikList(): Promise<KritikSaranItem[]> {
     console.warn("API fetch kritik failed:", e);
   }
   return apiItems;
+}
+
+export async function toggleHideKritik(
+  id: number,
+  isHidden?: boolean
+): Promise<{ success: boolean; is_hidden?: boolean; message?: string }> {
+  try {
+    const body = typeof isHidden === "boolean" ? JSON.stringify({ is_hidden: isHidden }) : undefined;
+    const res = await authenticatedFetch(`${API_BASE}/kritik/${id}/toggle-hide`, {
+      method: "PATCH",
+      headers: body ? { "Content-Type": "application/json" } : undefined,
+      body,
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return {
+        success: true,
+        is_hidden: json.data?.is_hidden,
+        message: json.message,
+      };
+    }
+  } catch (e) {
+    console.warn("API toggle hide kritik failed:", e);
+  }
+  return { success: false };
 }
 
 export async function submitKritik(data: {

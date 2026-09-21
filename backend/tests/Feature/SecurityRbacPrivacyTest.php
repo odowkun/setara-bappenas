@@ -485,6 +485,33 @@ class SecurityRbacPrivacyTest extends TestCase
         $this->assertStringNotContainsString('081299998888', $content);
     }
 
+    public function test_hidden_kritik_is_excluded_from_public_feed_and_admin_can_toggle(): void
+    {
+        $this->actingAsRole('superadmin');
+
+        $kritik = \App\Models\Kritik::create([
+            'nama' => 'Spammer SARA',
+            'email' => 'spam@example.com',
+            'subjek' => 'Pesan Mengandung SARA',
+            'pesan' => 'Konten provokatif yang harus disembunyikan.',
+            'status' => 'Menunggu Tanggapan',
+            'is_hidden' => false,
+        ]);
+
+        // Verify it is initially visible in public feed
+        $resBefore = $this->getJson('/api/v1/kritik/public')->assertOk();
+        $this->assertStringContainsString('Pesan Mengandung SARA', $resBefore->getContent());
+
+        // Admin toggles hide
+        $resToggle = $this->patchJson("/api/v1/kritik/{$kritik->id}/toggle-hide")
+            ->assertOk();
+        $this->assertTrue($resToggle->json('data.is_hidden'));
+
+        // Public feed now excludes this item
+        $resAfter = $this->getJson('/api/v1/kritik/public')->assertOk();
+        $this->assertStringNotContainsString('Pesan Mengandung SARA', $resAfter->getContent());
+    }
+
     public function test_survey_model_calculates_correct_permenpan_mutu_and_kategori_grade(): void
     {
         $surveyD = new \App\Models\Survey(['ikm_score' => 56.00]);

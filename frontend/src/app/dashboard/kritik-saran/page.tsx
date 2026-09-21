@@ -7,6 +7,8 @@ import {
   MessageSquare,
   HelpCircle,
   Eye,
+  EyeOff,
+  ShieldAlert,
   X,
   Search,
   CheckCircle2,
@@ -19,11 +21,13 @@ import {
   Trash2,
   Settings,
   ListFilter,
+  Filter,
 } from "lucide-react";
-import { showDeleteConfirm, toast } from "@/lib/swal";
+import { showConfirm, showDeleteConfirm, toast } from "@/lib/swal";
 import {
   fetchKritikList,
   fetchSurveyConfig,
+  toggleHideKritik,
   KritikSaranItem,
   SurveyServiceItem,
 } from "@/services/surveyService";
@@ -40,6 +44,7 @@ export default function DashboardKritikSaranPage() {
 
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [visibilityFilter, setVisibilityFilter] = useState<"all" | "visible" | "hidden">("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -51,6 +56,7 @@ export default function DashboardKritikSaranPage() {
   const [activeKritikModal, setActiveKritikModal] = useState<KritikSaranItem | null>(null);
   const [catatanBalasan, setCatatanBalasan] = useState("");
   const [statusBalasan, setStatusBalasan] = useState("Sudah Ditanggapi");
+  const [isHiddenBalasan, setIsHiddenBalasan] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -151,6 +157,7 @@ export default function DashboardKritikSaranPage() {
         body: JSON.stringify({
           status: statusBalasan,
           catatan_balasan: catatanBalasan,
+          is_hidden: isHiddenBalasan,
         }),
       });
       if (!response.ok) {
@@ -167,19 +174,58 @@ export default function DashboardKritikSaranPage() {
     loadData();
   };
 
-  const filteredKritik = kritikList.filter(
-    (k) =>
+  const handleToggleHide = async (item: KritikSaranItem) => {
+    const isCurrentlyHidden = Boolean(item.is_hidden);
+    const resConfirm = await showConfirm({
+      title: isCurrentlyHidden ? "Tampilkan Kembali Masukan?" : "Sembunyikan Masukan?",
+      text: isCurrentlyHidden
+        ? `Pesan dari "${item.nama}" akan kembali tampil di halaman publik Aspirasi Warga.`
+        : `Pesan dari "${item.nama}" akan disembunyikan dari publik. Tindakan ini disarankan untuk masukan yang mengandung SARA, ujaran kebencian, atau spam.`,
+      icon: isCurrentlyHidden ? "question" : "warning",
+      confirmButtonText: isCurrentlyHidden ? "Ya, Tampilkan" : "Ya, Sembunyikan",
+      cancelButtonText: "Batal",
+    });
+
+    if (!resConfirm.isConfirmed) return;
+
+    const res = await toggleHideKritik(item.id, !isCurrentlyHidden);
+    if (res.success) {
+      toast.success(
+        res.message ||
+          (isCurrentlyHidden
+            ? "Pesan berhasil ditampilkan kembali ke publik."
+            : "Pesan berhasil disembunyikan dari publik.")
+      );
+      loadData();
+    } else {
+      toast.error("Gagal memperbarui status visibilitas masukan.");
+    }
+  };
+
+  const filteredKritik = kritikList.filter((k) => {
+    const matchSearch =
       k.nama.toLowerCase().includes(search.toLowerCase()) ||
       k.subjek.toLowerCase().includes(search.toLowerCase()) ||
       k.pesan.toLowerCase().includes(search.toLowerCase()) ||
-      k.skpd_tujuan.toLowerCase().includes(search.toLowerCase())
-  );
+      k.skpd_tujuan.toLowerCase().includes(search.toLowerCase());
+
+    const matchVisibility =
+      visibilityFilter === "all"
+        ? true
+        : visibilityFilter === "hidden"
+        ? Boolean(k.is_hidden)
+        : !k.is_hidden;
+
+    return matchSearch && matchVisibility;
+  });
 
   const totalPages = Math.ceil(filteredKritik.length / itemsPerPage) || 1;
   const paginatedItems = filteredKritik.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const totalPending = kritikList.filter((k) => k.status !== "Sudah Ditanggapi").length;
   const totalResponded = kritikList.filter((k) => k.status === "Sudah Ditanggapi").length;
+  const totalHidden = kritikList.filter((k) => Boolean(k.is_hidden)).length;
+  const totalVisible = kritikList.filter((k) => !k.is_hidden).length;
 
   return (
     <div className="w-full space-y-6 font-sans pb-12">
@@ -240,16 +286,16 @@ export default function DashboardKritikSaranPage() {
       {activeTab === "pesan" && (
         <div className="space-y-6">
           {/* SUMMARY STATS GRID */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="p-5 rounded-3xl bg-gradient-to-br from-blue-900 to-blue-950 text-white shadow-lg space-y-1 relative overflow-hidden">
               <span className="text-[10px] font-black uppercase tracking-widest text-blue-300">
-                TOTAL KRITIK &amp; SARAN MASUK
+                TOTAL KRITIK MASUK
               </span>
               <div className="text-3xl font-black pt-1">
-                {kritikList.length} <span className="text-xs font-bold text-blue-200">Pesan Warga</span>
+                {kritikList.length} <span className="text-xs font-bold text-blue-200">Pesan</span>
               </div>
               <p className="text-[10px] text-blue-200/80 font-medium pt-2 border-t border-blue-800/60">
-                Terverifikasi dari formulir online publik
+                Dari formulir aspirasi online
               </p>
             </div>
 
@@ -261,7 +307,7 @@ export default function DashboardKritikSaranPage() {
                 {totalPending} <span className="text-xs text-slate-400 font-bold">Pesan</span>
               </div>
               <p className="text-[10px] text-slate-500 font-medium pt-2 border-t border-slate-100">
-                Perlu direspons dan ditindaklanjuti oleh SKPD
+                Perlu direspons oleh SKPD
               </p>
             </div>
 
@@ -273,25 +319,83 @@ export default function DashboardKritikSaranPage() {
                 {totalResponded} <span className="text-xs text-slate-400 font-bold">Pesan</span>
               </div>
               <p className="text-[10px] text-slate-500 font-medium pt-2 border-t border-slate-100">
-                Tanggapan resmi telah disampaikan
+                Tanggapan resmi tersimpan
+              </p>
+            </div>
+
+            <div className="p-5 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 font-bold flex items-center gap-1.5">
+                <EyeOff className="w-3.5 h-3.5" />
+                <span>DISEMBUNYIKAN (SARA/SPAM)</span>
+              </span>
+              <div className="text-3xl font-black text-rose-600">
+                {totalHidden} <span className="text-xs text-slate-400 font-bold">Pesan</span>
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium pt-2 border-t border-slate-100">
+                Tidak ditayangkan di halaman publik
               </p>
             </div>
           </div>
 
           {/* TABLE LIST & SEARCH */}
           <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <h3 className="text-xs font-black uppercase tracking-wider text-slate-700">
-                  Daftar Pesan Masukan Publik ({filteredKritik.length})
-                </h3>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+              {/* Visibility Filter Tabs */}
+              <div className="flex flex-wrap items-center gap-1.5 p-1 bg-slate-100/90 rounded-2xl border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibilityFilter("all");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                    visibilityFilter === "all"
+                      ? "bg-white text-slate-900 shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  Semua ({kritikList.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibilityFilter("visible");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+                    visibilityFilter === "visible"
+                      ? "bg-emerald-600 text-white shadow-2xs"
+                      : "text-slate-600 hover:text-slate-900"
+                  }`}
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  <span>Tayang Publik ({totalVisible})</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setVisibilityFilter("hidden");
+                    setCurrentPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition flex items-center gap-1.5 cursor-pointer ${
+                    visibilityFilter === "hidden"
+                      ? "bg-rose-600 text-white shadow-2xs"
+                      : "text-slate-600 hover:text-rose-700"
+                  }`}
+                >
+                  <EyeOff className="w-3.5 h-3.5" />
+                  <span>Disembunyikan / SARA ({totalHidden})</span>
+                </button>
               </div>
 
-              <div className="relative w-full sm:w-72">
+              <div className="relative w-full md:w-72">
                 <input
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   placeholder="Cari pengirim / subjek / isi pesan..."
                   className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
                 />
@@ -306,7 +410,7 @@ export default function DashboardKritikSaranPage() {
                     <th className="py-4 px-6">Pengirim</th>
                     <th className="py-4 px-6">Unit SKPD Tujuan</th>
                     <th className="py-4 px-6">Subjek &amp; Pesan</th>
-                    <th className="py-4 px-6">Status Tanggapan</th>
+                    <th className="py-4 px-6">Status &amp; Visibilitas</th>
                     <th className="py-4 px-6 text-right">Aksi</th>
                   </tr>
                 </thead>
@@ -330,7 +434,7 @@ export default function DashboardKritikSaranPage() {
                   ) : paginatedItems.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="py-12 text-center text-slate-400 font-bold">
-                        Belum ada pesan kritik &amp; saran dari publik.
+                        Belum ada pesan kritik &amp; saran pada filter ini.
                       </td>
                     </tr>
                   ) : (
@@ -355,35 +459,77 @@ export default function DashboardKritikSaranPage() {
                             </div>
                           )}
                         </td>
-                        <td className="py-4 px-6 whitespace-nowrap">
-                          <span
-                            className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
-                              item.status === "Sudah Ditanggapi"
-                                ? "bg-emerald-100 text-emerald-900 border-emerald-300"
-                                : item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
-                                ? "bg-sky-100 text-sky-900 border-sky-300"
-                                : "bg-amber-100 text-amber-900 border-amber-300"
-                            }`}
-                          >
-                            {item.status}
-                          </span>
+                        <td className="py-4 px-6 space-y-1.5 whitespace-nowrap">
+                          {/* Response Status */}
+                          <div>
+                            <span
+                              className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border inline-flex items-center gap-1 ${
+                                item.status === "Sudah Ditanggapi"
+                                  ? "bg-emerald-100 text-emerald-900 border-emerald-300"
+                                  : item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
+                                  ? "bg-sky-100 text-sky-900 border-sky-300"
+                                  : "bg-amber-100 text-amber-900 border-amber-300"
+                              }`}
+                            >
+                              {item.status}
+                            </span>
+                          </div>
+
+                          {/* Visibility Status */}
+                          <div>
+                            {item.is_hidden ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-50 text-rose-700 border border-rose-200 inline-flex items-center gap-1">
+                                <EyeOff className="w-3 h-3 text-rose-600" />
+                                <span>Disembunyikan (SARA)</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                <Eye className="w-3 h-3 text-emerald-600" />
+                                <span>Tayang Publik</span>
+                              </span>
+                            )}
+                          </div>
                         </td>
                         <td className="py-4 px-6 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveKritikModal(item);
-                              setCatatanBalasan(item.catatan_balasan || "");
-                              setStatusBalasan(
-                                item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
-                                  ? "Dalam Proses Tindak Lanjut"
-                                  : "Sudah Ditanggapi"
-                              );
-                            }}
-                            className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs transition cursor-pointer"
-                          >
-                            Tanggapi
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveKritikModal(item);
+                                setCatatanBalasan(item.catatan_balasan || "");
+                                setIsHiddenBalasan(Boolean(item.is_hidden));
+                                setStatusBalasan(
+                                  item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
+                                    ? "Dalam Proses Tindak Lanjut"
+                                    : "Sudah Ditanggapi"
+                                );
+                              }}
+                              className="px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs transition cursor-pointer"
+                            >
+                              Tanggapi
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleToggleHide(item)}
+                              className={`p-1.5 rounded-xl border transition cursor-pointer ${
+                                item.is_hidden
+                                  ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200"
+                                  : "bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200"
+                              }`}
+                              title={
+                                item.is_hidden
+                                  ? "Tampilkan kembali ke publik"
+                                  : "Sembunyikan dari publik (Filter SARA/Spam)"
+                              }
+                            >
+                              {item.is_hidden ? (
+                                <Eye className="w-4 h-4" />
+                              ) : (
+                                <EyeOff className="w-4 h-4" />
+                              )}
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -548,6 +694,27 @@ export default function DashboardKritikSaranPage() {
                   placeholder="Tuliskan catatan tindak lanjut atau tanggapan..."
                   className="w-full px-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
                 />
+              </div>
+
+              {/* Visibilitas Publik / Filter SARA */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
+                <label className="flex items-start gap-2.5 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isHiddenBalasan}
+                    onChange={(e) => setIsHiddenBalasan(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer"
+                  />
+                  <div>
+                    <span className="text-xs font-black text-slate-800 flex items-center gap-1.5">
+                      <EyeOff className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Sembunyikan Pesan dari Halaman Publik (Filter SARA / Spam)</span>
+                    </span>
+                    <p className="text-[11px] text-slate-500 font-medium pt-0.5">
+                      Jika dicentang, masukan warga ini tidak akan ditampilkan di halaman publik Aspirasi Warga.
+                    </p>
+                  </div>
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

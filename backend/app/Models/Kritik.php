@@ -17,6 +17,7 @@ class Kritik extends Model
         'pesan',
         'status',
         'catatan_balasan',
+        'is_hidden',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Kritik extends Model
             'subjek' => 'encrypted',
             'pesan' => 'encrypted',
             'catatan_balasan' => 'encrypted',
+            'is_hidden' => 'boolean',
         ];
     }
 }

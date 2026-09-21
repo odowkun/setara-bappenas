@@ -229,6 +229,9 @@ Route::prefix('v1')->group(function () {
     Route::put('/kritik/{id}/tanggapan', [KritikController::class, 'updateTanggapan'])
         ->middleware(['auth:sanctum', 'permission:manage_kritik', AuditAdminMutation::class])
         ->name('kritik.response.update');
+    Route::patch('/kritik/{id}/toggle-hide', [KritikController::class, 'toggleHide'])
+        ->middleware(['auth:sanctum', 'permission:manage_kritik', AuditAdminMutation::class])
+        ->name('kritik.toggle_hide');
 
     // Fitur 2 - 5: Geotagging Proyek, Tabular Update, Attachments & Geoprocessing
     Route::get('/proyek-details', [ProyekDetailController::class, 'index']);
