@@ -10,12 +10,26 @@ import {
   RefreshCw,
   Image as ImageIcon,
   HardDrive,
+  Layers,
+  Zap,
 } from "lucide-react";
+
+export const calculateDynamicChunkSizeMB = (fileSizeBytes: number): number => {
+  if (!fileSizeBytes || fileSizeBytes <= 0) return 1;
+  const sizeMB = fileSizeBytes / (1024 * 1024);
+  if (sizeMB <= 5) return 1;     // <= 5MB: chunk 1MB (1-5 irisan instan & responsif)
+  if (sizeMB <= 25) return 2;    // 5-25MB: chunk 2MB (3-13 irisan cepat)
+  if (sizeMB <= 100) return 5;   // 25-100MB: chunk 5MB (5-20 irisan)
+  if (sizeMB <= 500) return 10;  // 100-500MB: chunk 10MB (10-50 irisan)
+  if (sizeMB <= 1500) return 25; // 500MB-1.5GB: chunk 25MB (20-60 irisan)
+  if (sizeMB <= 3000) return 35; // 1.5GB-3GB: chunk 35MB (42-85 irisan)
+  return 40;                     // 3GB-5GB: chunk 40MB (75-125 irisan, high throughput & aman batas 100MB proxy)
+};
 
 interface ResumableChunkUploaderProps {
   onUploadSuccess: (fileUrl: string, fileSizeStr: string, fileName?: string) => void;
   acceptedTypes?: string;
-  chunkSizeMB?: number; // default 5MB
+  chunkSizeMB?: number | "dynamic"; // default "dynamic"
   maxSizeGB?: number; // default 5GB
 }
 
@@ -34,7 +48,7 @@ const formatFileSize = (bytes: number): string => {
 export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   onUploadSuccess,
   acceptedTypes = ".pdf",
-  chunkSizeMB = 5,
+  chunkSizeMB = "dynamic",
   maxSizeGB = 5,
 }) => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -49,7 +63,12 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isAbortedRef = useRef<boolean>(false);
 
-  const CHUNK_SIZE = chunkSizeMB * 1024 * 1024;
+  const getEffectiveChunkSizeMB = (fileSizeBytes: number): number => {
+    if (typeof chunkSizeMB === "number" && chunkSizeMB > 0) {
+      return chunkSizeMB;
+    }
+    return calculateDynamicChunkSizeMB(fileSizeBytes);
+  };
 
   const startResumableUploadForFile = async (fileToUpload: File, initialChunkIndex: number = 0) => {
     setUploading(true);
@@ -57,14 +76,16 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
     isAbortedRef.current = false;
 
     const file = fileToUpload;
-    const chunksCount = Math.ceil(file.size / CHUNK_SIZE);
-    const fileKey = `${STORAGE_KEY_PREFIX}${file.name}_${file.size}`;
+    const effectiveChunkMB = getEffectiveChunkSizeMB(file.size);
+    const chunkSize = effectiveChunkMB * 1024 * 1024;
+    const chunksCount = Math.ceil(file.size / chunkSize);
+    const fileKey = `${STORAGE_KEY_PREFIX}${file.name}_${file.size}_c${effectiveChunkMB}`;
 
     for (let i = initialChunkIndex; i < chunksCount; i++) {
       if (isAbortedRef.current) break;
 
-      const start = i * CHUNK_SIZE;
-      const end = Math.min(file.size, start + CHUNK_SIZE);
+      const start = i * chunkSize;
+      const end = Math.min(file.size, start + chunkSize);
       const chunkBlob = file.slice(start, end);
 
       const formData = new FormData();
@@ -77,7 +98,9 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
       while (!chunkUploaded && retries < 5 && !isAbortedRef.current) {
         try {
-          setStatusText(`Mengunggah berkas (${formatFileSize(end)} / ${formatFileSize(file.size)})...`);
+          setStatusText(
+            `Mengunggah berkas (${formatFileSize(end)} / ${formatFileSize(file.size)}) • Irisan ${i + 1}/${chunksCount} (${effectiveChunkMB} MB/chunk)...`
+          );
 
           const res = await authenticatedFetch(`${API_BASE_URL}/documents/upload-chunk`, {
             method: "POST",
@@ -191,15 +214,19 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       return;
     }
 
+    const effectiveChunkMB = getEffectiveChunkSizeMB(file.size);
+    const chunkSize = effectiveChunkMB * 1024 * 1024;
+    const chunks = Math.ceil(file.size / chunkSize);
     setSelectedFile(file);
-    const chunks = Math.ceil(file.size / CHUNK_SIZE);
     setProgress(0);
     setCurrentChunk(0);
     setCompletedUrl(null);
     setNetworkError(false);
-    setStatusText(`Berkas dipilih: ${file.name} (${formatFileSize(file.size)})`);
+    setStatusText(
+      `Berkas dipilih: ${file.name} (${formatFileSize(file.size)}) • Chunk dinamis: ${effectiveChunkMB} MB/irisan (${chunks} irisan)`
+    );
 
-    const fileKey = `${STORAGE_KEY_PREFIX}${file.name}_${file.size}`;
+    const fileKey = `${STORAGE_KEY_PREFIX}${file.name}_${file.size}_c${effectiveChunkMB}`;
     const savedProgress = localStorage.getItem(fileKey);
     let startChunkIndex = 0;
     if (savedProgress) {
@@ -207,7 +234,9 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       if (parsed > 0 && parsed < chunks) {
         startChunkIndex = parsed;
         setCurrentChunk(parsed);
-        setStatusText(`Ditemukan status unggah sebelumnya: Melanjutkan (${parsed}/${chunks})...`);
+        setStatusText(
+          `Ditemukan status unggah sebelumnya: Melanjutkan (${parsed}/${chunks}) • Chunk: ${effectiveChunkMB} MB...`
+        );
       }
     }
 
@@ -301,6 +330,11 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
                 <span>Maksimal {maxSizeGB} GB</span>
               </span>
 
+              <span className="px-3.5 py-1.5 rounded-xl bg-indigo-50 text-indigo-900 font-black text-xs border border-indigo-200/80 shadow-2xs flex items-center gap-1.5">
+                <Layers className="w-4 h-4 text-indigo-600 shrink-0" />
+                <span>Chunk Dinamis Otomatis (1 s/d 40 MB)</span>
+              </span>
+
               {isPdfOnly ? (
                 <span className="px-3.5 py-1.5 rounded-xl bg-red-50 text-red-700 font-extrabold text-xs border border-red-200/80 shadow-2xs flex items-center gap-1.5">
                   <FileText className="w-4 h-4 text-red-600 shrink-0" />
@@ -343,12 +377,23 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
               </div>
               <div className="overflow-hidden">
                 <p className="font-extrabold text-slate-900 text-sm truncate">{selectedFile.name}</p>
-                <div className="flex items-center gap-2 mt-0.5">
+                <div className="flex flex-wrap items-center gap-2 mt-1">
                   <span className="text-[11px] font-mono font-bold text-slate-500">
                     {formatFileSize(selectedFile.size)}
                   </span>
                   <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 uppercase">
                     {selectedFile.name.split(".").pop() || "FILE"}
+                  </span>
+                  <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-indigo-100 text-indigo-800 flex items-center gap-1">
+                    <Zap className="w-3 h-3 text-indigo-600" />
+                    <span>
+                      Chunk Dinamis: {getEffectiveChunkSizeMB(selectedFile.size)} MB/irisan (
+                      {Math.ceil(
+                        selectedFile.size /
+                          (getEffectiveChunkSizeMB(selectedFile.size) * 1024 * 1024)
+                      )}{" "}
+                      irisan)
+                    </span>
                   </span>
                 </div>
               </div>

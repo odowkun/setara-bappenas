@@ -79,6 +79,28 @@ Sebelumnya, beberapa modul dashboard menggunakan antarmuka upload berkas yang ti
 
 ---
 
-## 4. Verifikasi & Build
+## 4. Standarisasi Ukuran Irisan Dinamis (Dynamic Chunk Sizing)
 
-- Pengujian kompilasi Next.js produksi: `npm run build` dijalankan dan selesai tanpa error (`Compiled successfully`, 64/64 halaman static/dynamic lulus tanpa linting/type warning).
+Untuk mendukung unggahan dokumen berkapasitas besar hingga **5 GB** pada modul Dokumen Perencanaan (`ResumableChunkUploader.tsx`), ukuran chunk (`chunkSize`) tidak lagi dipatok statis (misal: 5 MB), melainkan dihitung secara adaptif & dinamis (`calculateDynamicChunkSizeMB`) berdasarkan ukuran total berkas dokumen:
+
+| Ukuran Berkas Dokumen | Ukuran Chunk Dinamis | Estimasi Jumlah Irisan | Karakteristik Kecepatan & Keandalan |
+|---|---|---|---|
+| **≤ 5 MB** | **1 MB** / chunk | 1 – 5 irisan | Respon instan, visual progress cepat, minim latensi per request |
+| **5 – 25 MB** | **2 MB** / chunk | 3 – 13 irisan | Unggahan berkas ringkas dengan feedback bar mulus |
+| **25 – 100 MB** | **5 MB** / chunk | 5 – 20 irisan | Keseimbangan throughput & recovery saat jaringan drop |
+| **100 – 500 MB** | **10 MB** / chunk | 10 – 50 irisan | Mengurangi beban overhead HTTP request pada berkas menengah-besar |
+| **500 MB – 1.5 GB** | **25 MB** / chunk | 20 – 60 irisan | Throughput tinggi pada dokumen master perencanaan |
+| **1.5 GB – 3 GB** | **35 MB** / chunk | 42 – 85 irisan | Meminimalkan roundtrip jaringan pada transfer gigabit |
+| **3 GB – 5 GB** | **40 MB** / chunk | 75 – 125 irisan | Maksimal throughput tanpa melewati batas proxy/Cloudflare (100MB limit) |
+
+### Keuntungan Teknis:
+1. **Pencegahan Kegagalan Proxy**: Batas maksimal 40 MB menjamin request multipart/form-data tidak pernah menyentuh limit `413 Request Entity Too Large` dari Cloudflare / Nginx (biasanya 100 MB).
+2. **Efisiensi Roundtrip Jaringan**: Pada berkas 5 GB, chunk 40 MB hanya membutuhkan 125 request, dibandingkan dengan 1.000 request jika menggunakan ukuran statis 5 MB.
+3. **Penyimpanan Resume State Dinamis**: LocalStorage key menyertakan parameter irisan dinamis (`bappeda_chunk_upload_{name}_{size}_c{effectiveChunkMB}`) sehingga status unggah yang terjeda dapat dilanjutkan secara akurat.
+4. **Indikator Transparan di Antarmuka**: Dropzone dan kartu dokumen menampilkan badge pill *"Chunk Dinamis Otomatis (1 s/d 40 MB)"* serta rincian irisan aktif saat berkas dipilih.
+
+---
+
+## 5. Verifikasi & Build
+
+- Pengujian kompilasi Next.js produksi: `npm run build` dijalankan dan selesai tanpa error (`Compiled successfully`, 66/66 halaman static/dynamic lulus tanpa warning).

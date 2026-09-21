@@ -450,13 +450,13 @@ export default function TambahDokumenPage() {
                 <span>Dukungan Dokumen Induk s/d 5 GB</span>
               </span>
             </div>
-            <p className="mb-3 text-[11px] font-medium text-blue-800">
-              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> untuk keandalan transfer jaringan. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
+            <p className="mb-3 text-[11px] font-medium text-blue-800 leading-relaxed">
+              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> dengan ukuran irisan dinamis otomatis (1 MB - 40 MB) menyesuaikan besar dokumen untuk keandalan dan kecepatan transfer jaringan. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
             </p>
             <ResumableChunkUploader
               acceptedTypes=".pdf"
               onUploadSuccess={handleUploadSuccess}
-              chunkSizeMB={5}
+              chunkSizeMB="dynamic"
               maxSizeGB={5}
             />
           </div>

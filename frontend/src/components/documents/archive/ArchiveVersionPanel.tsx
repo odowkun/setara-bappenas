@@ -162,7 +162,7 @@ export function ArchiveVersionPanel({
         {!uploadedPath ? (
           <ResumableChunkUploader
             acceptedTypes=".pdf"
-            chunkSizeMB={5}
+            chunkSizeMB="dynamic"
             onUploadSuccess={(filePath, fileSize) => {
               setUploadedPath(filePath);
               setUploadedSize(fileSize);
