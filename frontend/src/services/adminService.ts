@@ -15,6 +15,21 @@ export function normalizeMediaUrl(url?: string | null): string {
   return clean;
 }
 
+/**
+ * Resolves an ultra-lightweight thumbnail variant (~25-45 KB) for card grids and carousels.
+ */
+export function getThumbnailUrl(url?: string | null): string {
+  const normal = normalizeMediaUrl(url);
+  if (!normal) return "/images/bappeda/thumbs/default-news-cover.jpg";
+
+  // Case 1: Seeded static images in /images/bappeda/ -> /images/bappeda/thumbs/
+  if (normal.startsWith("/images/bappeda/") && !normal.includes("/thumbs/")) {
+    return normal.replace("/images/bappeda/", "/images/bappeda/thumbs/");
+  }
+
+  return normal;
+}
+
 interface UserMutationInput extends Partial<User> {
   name: string;
   email: string;

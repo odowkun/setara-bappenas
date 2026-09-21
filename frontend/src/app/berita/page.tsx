@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { API_BASE_URL } from "@/lib/apiClient";
 import { officialContentService } from "@/services/officialContentService";
-import { normalizeMediaUrl } from "@/services/adminService";
+import { normalizeMediaUrl, getThumbnailUrl } from "@/services/adminService";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
@@ -31,6 +31,7 @@ interface NewsItem {
   date: string;
   views: number;
   featuredImage: string;
+  thumbnailImage?: string;
   summary: string;
   readTime: string;
 }
@@ -67,6 +68,7 @@ export default function PublicNewsPage() {
               date: item.date || item.created_at?.split("T")[0] || "",
               views: Number(item.views) || 0,
               featuredImage: normalizeMediaUrl(item.image || item.featured_image || item.image_url),
+              thumbnailImage: getThumbnailUrl(item.thumbnail_url || item.image || item.featured_image || item.image_url),
               summary: item.summary
                 ? item.summary.replace(/<[^>]*>/g, "")
                 : item.content
@@ -267,7 +269,7 @@ export default function PublicNewsPage() {
                   {/* COVER THUMBNAIL */}
                   <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 border-b border-slate-100">
                     <ProgressiveImage
-                      src={item.featuredImage || "/images/bappeda/default-news-cover.jpg"}
+                      src={item.thumbnailImage || item.featuredImage || "/images/bappeda/default-news-cover.jpg"}
                       alt={item.title}
                       fallbackSrc="/images/bappeda/default-news-cover.jpg"
                       className="group-hover:scale-105 transition duration-500"

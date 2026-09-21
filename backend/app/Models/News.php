@@ -39,6 +39,22 @@ class News extends Model
         'date' => 'date:Y-m-d',
     ];
 
+    protected $appends = [
+        'thumbnail_url',
+    ];
+
+    public function getThumbnailUrlAttribute(): string
+    {
+        $img = $this->image;
+        if (!$img) {
+            return '/images/bappeda/thumbs/default-news-cover.jpg';
+        }
+        if (str_starts_with($img, '/images/bappeda/') && !str_contains($img, '/thumbs/')) {
+            return str_replace('/images/bappeda/', '/images/bappeda/thumbs/', $img);
+        }
+        return $img;
+    }
+
     /**
      * Normalize image URLs to root-relative paths, stripping any obsolete dev/local absolute hosts.
      */

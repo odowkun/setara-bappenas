@@ -5,7 +5,7 @@ import Link from "next/link";
 import { Newspaper, Calendar, Eye, User, ArrowRight, ChevronRight, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { API_BASE_URL } from "@/lib/apiClient";
-import { normalizeMediaUrl } from "@/services/adminService";
+import { normalizeMediaUrl, getThumbnailUrl } from "@/services/adminService";
 import { ProgressiveImage } from "@/components/ui/ProgressiveImage";
 
 interface NewsCardItem {
@@ -41,7 +41,7 @@ export const LatestNewsCarousel: React.FC = () => {
               category: item.category || "Belum dikategorikan",
               author: item.author || "Belum tersedia",
               views: Number(item.views) || 0,
-              image: normalizeMediaUrl(item.image || item.featured_image || item.image_url),
+              image: getThumbnailUrl(item.thumbnail_url || item.image || item.featured_image || item.image_url),
               desc: item.summary
                 ? item.summary.replace(/<[^>]*>/g, "")
                 : item.content
