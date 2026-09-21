@@ -1,24 +1,23 @@
 # Dokumentasi Seksi Media Sosial Beranda (YouTube & Instagram)
 
 ## 1. Ikhtisar (Overview)
-Seksi **Media Sosial BAPPEDA** (`SocialMediaSection.tsx`) dirancang untuk menyajikan integrasi publikasi multimedia daerah secara elegan di beranda utama, diletakkan tepat di bawah deretan Infografis Pembangunan Daerah.
+Seksi **Media Sosial BAPPEDA** (`SocialMediaSection.tsx`) dirancang untuk menyajikan integrasi publikasi multimedia daerah secara elegan dan proporsional di beranda utama, diletakkan tepat di bawah deretan Infografis Pembangunan Daerah.
 
-Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmahera Utara dengan tata letak proporsional dan responsif:
-1. **Pemutar Video YouTube Resmi (Sisi Kiri / 5 Kolom Desktop)**:
-   - Menampilkan siaran resmi kegiatan rapat koordinasi, musrenbang, dan rilis kebijakan pembangunan.
-   - **Tinggi Selaras Desktop (Desktop Equal Height)**: Di layar desktop, card YouTube sebelah kiri mengikuti tinggi card Instagram di sebelah kanan (`items-stretch`, `h-full` dengan flex container `lg:flex-1` pada video player).
-   - Menggunakan cover thumbnail YouTube resolusi tinggi (`maxresdefault`), animasi tombol play, dan transisi mulus ke pemutar iframe YouTube tanpa cookie (`youtube-nocookie.com`).
-   - Dilengkapi metadata judul siaran, tanggal, lokasi agenda, dan tombol tautan langsung ke kanal YouTube Bappeda Halut.
-   - **Dukungan Manajemen Dinamis di Dashboard**: Administrator dapat mengganti link YouTube, judul, tanggal, lokasi, dan deskripsi secara langsung dari dashboard tanpa edit kode sumber.
-2. **Feed Postingan Instagram Interaktif (Sisi Kanan / 7 Kolom Desktop - 6 Postingan)**:
-   - Header profil Instagram resmi `@bappeda_halut` dengan foto avatar terverifikasi, tagline "Sinergi Lokal, Solusi Global", dan tombol `Ikuti`.
-   - **6 Kartu Postingan Feed (3 Kolom x 2 Baris)**: Menampilkan 6 postingan warta terkini dengan kategori, judul, tanggal, dan cover gambar rasio 4:3.
-   - **Modal Popup Ala Instagram (Instagram-Style Modal)**:
+Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmahera Utara dengan tata letak direposisi agar tidak gepeng atau terpotong:
+1. **Blok Atas: Sorotan Siaran Resmi YouTube (Widescreen Cinematic 16:9 Spotlight)**:
+   - **Rasio Layar Lebar 16:9 Alami (`aspect-video`)**: Thumbnail dan pemutar video menggunakan rasio asli 16:9 tanpa pemotongan teks maupun kompresi gambar vertikal ("anti-gepeng").
+   - **Tata Letak Internal 2 Kolom**:
+     - **Sisi Kiri (7 Kolom LG / 8 Kolom XL)**: Frame video widescreen 16:9 dengan badge *HD VIDEO*, animasi play button, indikator siaran resmi, dan pemutaran inline iframe (`youtube-nocookie.com`).
+     - **Sisi Kanan (5 Kolom LG / 4 Kolom XL)**: Panel metadata lengkap berisi badge status siaran, tanggal rilis, lokasi agenda, judul siaran, deskripsi lengkap, serta tombol aksi *"Tonton di YouTube"* dan *"Kanal Resmi"*.
+   - **Dukungan Manajemen Dinamis di Dashboard**: Administrator dapat mengganti link YouTube, judul, tanggal, lokasi, dan deskripsi secara langsung dari dashboard (`/dashboard/galeri?tab=youtube-media`).
+2. **Blok Bawah: Feed Postingan Instagram Interaktif (Grid 6 Postingan Proporsional)**:
+   - Header profil Instagram resmi `@bappeda_halut` dengan foto avatar berbingkai gradien, centang terverifikasi, tagline *"Sinergi Lokal, Solusi Global"*, dan tombol aksi `Ikuti di Instagram`.
+   - **Grid 6 Kartu Postingan (3 Kolom x 2 Baris)**: Memanfaatkan lebar penuh kontainer secara seimbang (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5`) sehingga teks judul dan cover gambar 4:3 tampil lega dan mudah dibaca.
+   - **Modal Popup Interaktif Ala Instagram**:
      - Saat salah satu kartu postingan diklik, muncul dialog modal 2 kolom ala Instagram.
-     - **Sisi Kiri**: Galeri foto resolusi tinggi dengan navigasi carousel panah (jika multi-foto) dan titik pagination.
-     - **Sisi Kanan**: Profil pengunggah `@bappeda_halut`, tanggal, teks narasi caption lengkap yang dapat discroll, jumlah suka, dan tombol aksi `Buka di Instagram ↗`.
+     - **Sisi Kiri**: Galeri foto resolusi tinggi dengan navigasi carousel panah dan titik pagination.
+     - **Sisi Kanan**: Profil pengunggah `@bappeda_halut`, tanggal, teks narasi caption lengkap, jumlah suka, dan tombol aksi `Buka di Instagram ↗`.
      - Mendukung penutupan via tombol silang (X), tombol keyboard `ESC`, dan klik di luar area modal (backdrop blur).
-
 ---
 
 ## 2. Struktur Berkas & Komponen Terkait
