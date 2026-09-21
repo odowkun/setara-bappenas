@@ -14,6 +14,7 @@ export const SmoothScrollProvider: React.FC<{ children: React.ReactNode }> = ({ 
       smoothWheel: true,
       wheelMultiplier: 1,
       touchMultiplier: 2,
+      allowNestedScroll: true,
     });
 
     function raf(time: number) {

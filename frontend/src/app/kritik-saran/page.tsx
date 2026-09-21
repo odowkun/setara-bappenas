@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import {
   HelpCircle,
@@ -46,6 +46,24 @@ export default function KritikSaranPublicPage() {
   const [loadingList, setLoadingList] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("Semua");
   const [searchQuery, setSearchQuery] = useState<string>("");
+
+  // Scroll container ref to stop Lenis smooth scroll collision
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+
+    const onWheel = (e: WheelEvent) => {
+      // Prevent wheel events inside this container from bubbling up to Lenis window listener
+      e.stopPropagation();
+    };
+
+    el.addEventListener("wheel", onWheel, { passive: true });
+    return () => {
+      el.removeEventListener("wheel", onWheel);
+    };
+  }, []);
 
   useEffect(() => {
     loadInitialData();
@@ -477,8 +495,15 @@ export default function KritikSaranPublicPage() {
                 </div>
               )}
 
-              {/* Scrollable Container limited to max height ~3 cards */}
-              <div className="max-h-[650px] sm:max-h-[720px] overflow-y-auto pr-1.5 sm:pr-2.5 space-y-4 overscroll-contain rounded-3xl">
+              {/* Scrollable Container limited to max height ~3 cards (with data-lenis-prevent to prevent Lenis page scroll collision) */}
+              <div
+                ref={scrollContainerRef}
+                data-lenis-prevent="true"
+                data-lenis-prevent-wheel="true"
+                data-lenis-prevent-touch="true"
+                style={{ overscrollBehavior: "contain" }}
+                className="max-h-[650px] sm:max-h-[720px] overflow-y-auto pr-1.5 sm:pr-2.5 space-y-4 overscroll-contain rounded-3xl"
+              >
                 {filteredItems.map((item) => {
                 const isDitanggapi = item.status === "Sudah Ditanggapi";
                 const isProses =

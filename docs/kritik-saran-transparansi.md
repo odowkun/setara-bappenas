@@ -5,10 +5,14 @@
 ### A. Pembatasan Tinggi & Scroll Halus Halaman Publik (`/kritik-saran`)
 1. **Urutan Terbaru di Atas**:
    - Seluruh masukan publik diurutkan secara descending (`latest` / `created_at` DESC) sehingga aspirasi warga paling baru selalu berada di baris pertama.
-2. **Kontainer Maksimal Tinggi ~3 Card dengan Scroll**:
+2. **Kontainer Maksimal Tinggi ~3 Card dengan Scroll & Isolasi Lenis Smooth Scroll**:
    - Untuk mencegah halaman menjadi terlalu panjang saat jumlah masukan bertambah, kontainer feed dibatasi setinggi ~3 kartu (`max-h-[650px] sm:max-h-[720px] overflow-y-auto`).
    - Dilengkapi notifikasi panduan scroll di atas kontainer jika jumlah masukan melebihi 3: *"Menampilkan X aspirasi warga (terbaru berada di atas) — Gulir ke bawah untuk melihat masukan lainnya ↓"*.
-   - Menggunakan smooth scrollbar dan `overscroll-contain` untuk kenyamanan navigasi mobile dan desktop.
+   - **Bebas Tabrakan dengan Lenis Smooth Scroll**:
+     - Ditambahkan atribut `data-lenis-prevent="true"`, `data-lenis-prevent-wheel="true"`, dan `data-lenis-prevent-touch="true"` pada kontainer.
+     - Event listener wheel internal menghentikan perambatan (*stopPropagation*) agar saat kursor mouse berada di dalam area card feed, scroll roda mouse secara mulus menggulir daftar masukan dan tidak membajak scroll halaman global (*anti-scroll collision*).
+     - Provider Lenis global (`SmoothScrollProvider.tsx`) diaktifkan `allowNestedScroll: true`.
+     - Menggunakan `overscroll-contain` untuk kenyamanan navigasi mobile dan desktop.
 
 ### B. Moderasi Konten SARA / Spam & Fitur Sembunyikan (Hide/Unhide) pada Dashboard Admin (`/dashboard/kritik-saran`)
 1. **Penyaringan Konten Tidak Layak (SARA / Hoax / Spam)**:
