@@ -68,6 +68,32 @@ class DocumentWatermarkServiceTest extends TestCase
         unlink($sourcePath);
     }
 
+    public function test_it_skips_watermark_when_skip_watermark_flag_is_true(): void
+    {
+        Storage::fake('local');
+        $sourcePath = $this->createTwoPagePdf();
+        $uploadedFile = new UploadedFile(
+            $sourcePath,
+            'Dokumen Sudah Watermark Manual.pdf',
+            'application/pdf',
+            null,
+            true
+        );
+
+        $result = app(DocumentWatermarkService::class)->process(
+            $uploadedFile,
+            'documents/testing',
+            true // skipWatermark = true
+        );
+
+        Storage::disk('local')->assertExists($result['relative_path']);
+        $this->assertStringEndsWith('_watermarked.pdf', $result['file_name']);
+        $this->assertFalse($result['watermark_applied']);
+        $this->assertTrue($result['watermark_bypassed']);
+
+        unlink($sourcePath);
+    }
+
     public function test_it_rejects_an_unsupported_document_format(): void
     {
         Storage::fake('local');

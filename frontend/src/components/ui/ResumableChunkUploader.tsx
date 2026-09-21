@@ -32,6 +32,7 @@ interface ResumableChunkUploaderProps {
   chunkSizeMB?: number | "dynamic"; // default "dynamic"
   maxSizeGB?: number; // default 5GB
   maxSizeMB?: number; // optional, e.g. 500 for 500MB
+  skipWatermark?: boolean; // optional: lewati watermark otomatis sistem
 }
 
 import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
@@ -52,6 +53,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   chunkSizeMB = "dynamic",
   maxSizeGB = 5,
   maxSizeMB,
+  skipWatermark = false,
 }) => {
   const effectiveMaxSizeLabel = maxSizeMB ? `${maxSizeMB} MB` : `${maxSizeGB} GB`;
   const effectiveMaxSizeBytes = maxSizeMB ? maxSizeMB * 1024 * 1024 : maxSizeGB * 1024 * 1024 * 1024;
@@ -96,6 +98,9 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       formData.append("file", chunkBlob, file.name);
       formData.append("chunk", i.toString());
       formData.append("chunks", chunksCount.toString());
+      if (skipWatermark) {
+        formData.append("skip_watermark", "1");
+      }
 
       let chunkUploaded = false;
       let retries = 0;
@@ -121,7 +126,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
             localStorage.setItem(fileKey, (i + 1).toString());
 
-            if (data.status === "success" && data.watermark_applied === true) {
+            if (data.status === "success") {
               const rawPath = data.file_path || `/documents/${file.name}`;
               const finalUrl = rawPath.startsWith("/storage/")
                 ? `${BACKEND_BASE_URL}${rawPath}`
@@ -129,7 +134,11 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
               const sizeStr = data.file_size || formatFileSize(file.size);
               setCompletedUrl(finalUrl);
-              setStatusText("✅ Berkas dokumen resmi berhasil tersimpan aman di server!");
+              if (data.watermark_applied === false || data.watermark_bypassed === true) {
+                setStatusText("✅ Berkas dokumen resmi tersimpan aman (watermark sistem dilewati / sudah ber-watermark).");
+              } else {
+                setStatusText("✅ Berkas dokumen resmi berhasil tersimpan aman di server!");
+              }
               localStorage.removeItem(fileKey);
               onUploadSuccess(finalUrl, sizeStr, file.name);
               setUploading(false);
@@ -138,7 +147,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
             if (i + 1 === chunksCount) {
               chunkUploaded = false;
-              throw new Error("Server belum mengonfirmasi watermark dokumen");
+              throw new Error("Server belum mengonfirmasi penyimpanan dokumen");
             }
           } else {
             let errorMsg = `Gagal mengunggah berkas (${res.status})`;

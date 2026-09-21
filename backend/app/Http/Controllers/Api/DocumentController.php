@@ -139,6 +139,7 @@ class DocumentController extends Controller
             'submit_for_review' => ['sometimes', 'boolean'],
             // Legacy clients are accepted, but this flag never bypasses review.
             'is_public' => ['sometimes', 'boolean'],
+            'skip_watermark' => ['sometimes', 'boolean'],
         ]);
 
         $actor = $request->user();
@@ -309,7 +310,8 @@ class DocumentController extends Controller
         $save = $receiver->receive();
         if ($save->isFinished()) {
             @set_time_limit(300);
-            return $this->saveFile($save->getFile());
+            $skipWatermark = $request->boolean('skip_watermark');
+            return $this->saveFile($save->getFile(), $skipWatermark);
         }
 
         $handler = $save->handler();
@@ -321,24 +323,31 @@ class DocumentController extends Controller
         ]);
     }
 
-    protected function saveFile(UploadedFile $file)
+    protected function saveFile(UploadedFile $file, bool $skipWatermark = false)
     {
         $destinationDirectory = 'documents/'.date('Y/m');
 
         try {
             $processedDocument = $this->documentWatermarkService->process(
                 $file,
-                $destinationDirectory
+                $destinationDirectory,
+                $skipWatermark
             );
+
+            $watermarkApplied = (bool) ($processedDocument['watermark_applied'] ?? true);
+            $watermarkBypassed = (bool) ($processedDocument['watermark_bypassed'] ?? false);
 
             return response()->json([
                 'status' => 'success',
                 'code' => 200,
-                'message' => 'Berkas tersimpan privat dan watermark BAPPEDA HALUT diterapkan.',
+                'message' => $watermarkBypassed
+                    ? 'Berkas tersimpan privat (watermark sistem dilewati).'
+                    : 'Berkas tersimpan privat dan watermark BAPPEDA HALUT diterapkan.',
                 'file_path' => $processedDocument['relative_path'],
                 'file_name' => $processedDocument['file_name'],
                 'file_size' => $this->formatFileSize($processedDocument['file_size_bytes']),
-                'watermark_applied' => true,
+                'watermark_applied' => $watermarkApplied,
+                'watermark_bypassed' => $watermarkBypassed,
             ]);
         } catch (Throwable $exception) {
             Log::error('Document watermark processing failed.', [

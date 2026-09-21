@@ -93,11 +93,25 @@ export const adminService = {
 
     try {
       const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
-      if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+      if (!res.ok) {
+        let errorMsg = `HTTP Error ${res.status}`;
+        try {
+          const errData = await res.json();
+          if (errData?.message) {
+            errorMsg = errData.message;
+          } else if (errData?.errors) {
+            const firstErr = Object.values(errData.errors)[0];
+            errorMsg = Array.isArray(firstErr) ? firstErr[0] : String(firstErr);
+          }
+        } catch {
+          // ignore
+        }
+        throw new Error(errorMsg);
+      }
       return await res.json();
     } catch (err) {
-      console.warn(`[adminService] Backend API tidak dapat dijangkau pada ${endpoint}.`, err);
-      return null;
+      console.warn(`[adminService] Backend API request failed pada ${endpoint}:`, err);
+      throw err;
     }
   },
 
@@ -227,7 +241,11 @@ export const adminService = {
     return [];
   },
 
-  addDocument: async (doc: Omit<AdminDocument, "id" | "downloads" | "views" | "createdAt">): Promise<AdminDocument> => {
+  addDocument: async (
+    doc: Omit<AdminDocument, "id" | "downloads" | "views" | "createdAt"> & {
+      skipWatermark?: boolean;
+    }
+  ): Promise<AdminDocument> => {
     try {
       const res = await adminService.apiFetch("/documents", {
         method: "POST",
@@ -247,19 +265,19 @@ export const adminService = {
           tanggal_mulai: doc.tanggalMulai || null,
           tanggal_selesai: doc.tanggalSelesai || null,
           submit_for_review: doc.isPublic,
+          skip_watermark: doc.skipWatermark || false,
         }),
       });
 
       if (!res?.data) {
-        throw new Error("Server tidak memverifikasi dokumen ber-watermark.");
+        throw new Error(res?.message || "Server tidak dapat memverifikasi berkas dokumen.");
       }
 
       return mapDocument(res.data);
     } catch (err) {
-      console.warn("[adminService] Failed to post watermarked document to API:", err);
+      console.warn("[adminService] Failed to post document to API:", err);
       throw err;
     }
-
   },
 
   updateDocumentPublication: async (

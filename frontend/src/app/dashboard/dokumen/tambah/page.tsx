@@ -42,6 +42,7 @@ export default function TambahDokumenPage() {
 
   const [fileUrl, setFileUrl] = useState<string | null>(null);
   const [fileSizeStr, setFileSizeStr] = useState("");
+  const [skipWatermark, setSkipWatermark] = useState(false);
   const [description, setDescription] = useState("");
   const [documentNumber, setDocumentNumber] = useState("");
   const [ownerOpd, setOwnerOpd] = useState(
@@ -186,6 +187,7 @@ export default function TambahDokumenPage() {
           user.role === "admin_bidang" ? "internal" : classification,
         retentionPolicy,
         uploadedBy: `${user.name} (${user.role})`,
+        skipWatermark,
       });
 
       setIsSaved(true);
@@ -203,10 +205,10 @@ export default function TambahDokumenPage() {
           : "Versi pertama dan checksum tersimpan di storage privat; dokumen belum tampil ke publik."
       );
       router.push("/dashboard/dokumen");
-    } catch {
+    } catch (err: any) {
       showErrorSwal(
         "Dokumen Gagal Disimpan",
-        "Server tidak dapat memverifikasi berkas ber-watermark. Silakan unggah ulang."
+        err?.message || "Server tidak dapat menyimpan dokumen. Silakan periksa kembali formulir atau unggah ulang berkas."
       );
     }
   };
@@ -443,8 +445,8 @@ export default function TambahDokumenPage() {
           </div>
 
           {/* Resumable Chunked File Uploader Component */}
-          <div>
-            <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
               <label className="block text-xs font-extrabold text-slate-700">
                 Unggah Berkas Dokumen Induk Perencanaan (Wajib PDF, Maksimal 5 GB) *
               </label>
@@ -452,14 +454,43 @@ export default function TambahDokumenPage() {
                 <span>Dukungan Dokumen Induk s/d 5 GB</span>
               </span>
             </div>
-            <p className="mb-3 text-[11px] font-medium text-blue-800 leading-relaxed">
-              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> dengan ukuran irisan dinamis otomatis (1 MB - 40 MB) menyesuaikan besar dokumen untuk keandalan dan kecepatan transfer jaringan. Watermark BAPPEDA HALUT diterapkan otomatis dengan transparansi rendah agar isi tetap terbaca.
+            <p className="text-[11px] font-medium text-blue-800 leading-relaxed">
+              Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> dengan ukuran irisan dinamis otomatis (1 MB - 40 MB) menyesuaikan besar dokumen untuk keandalan dan kecepatan transfer jaringan.
             </p>
+
+            {/* Opsi Bypass Watermark (Dokumen Manual / Pra-Watermark) */}
+            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 transition shadow-2xs">
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={skipWatermark}
+                  onChange={(e) => setSkipWatermark(e.target.checked)}
+                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-amber-300 focus:ring-blue-500 cursor-pointer shrink-0"
+                />
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs font-black text-slate-900">
+                      Dokumen Sudah Ber-watermark Resmi / Lewati Watermark Otomatis
+                    </span>
+                    {skipWatermark && (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 text-[10px] font-black uppercase tracking-wider">
+                        Watermark Sistem Dilewati
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] font-medium text-slate-600 leading-relaxed">
+                    Centang jika berkas PDF Anda sudah memiliki stempel/cap/watermark manual resmi dari instansi, atau memiliki proteksi tata letak (PDF terenkripsi/terkompresi). Sistem akan menyimpan berkas asli seutuhnya tanpa penimpaan watermark otomatis.
+                  </p>
+                </div>
+              </label>
+            </div>
+
             <ResumableChunkUploader
               acceptedTypes=".pdf"
               onUploadSuccess={handleUploadSuccess}
               chunkSizeMB="dynamic"
               maxSizeGB={5}
+              skipWatermark={skipWatermark}
             />
           </div>
 

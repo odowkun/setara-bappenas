@@ -16,10 +16,13 @@ use Throwable;
 class DocumentWatermarkService
 {
     /**
-     * @return array{relative_path: string, file_name: string, file_size_bytes: int}
+     * @return array{relative_path: string, file_name: string, file_size_bytes: int, watermark_applied: bool, watermark_bypassed: bool}
      */
-    public function process(UploadedFile $file, string $destinationDirectory): array
-    {
+    public function process(
+        UploadedFile $file,
+        string $destinationDirectory,
+        bool $skipWatermark = false
+    ): array {
         $extension = strtolower($file->getClientOriginalExtension());
         $supportedExtensions = config('document-watermark.supported_extensions', []);
 
@@ -30,8 +33,8 @@ class DocumentWatermarkService
         $fileSizeBytes = $file->getSize();
         $maxWatermarkBytes = (int) config('document-watermark.max_file_size_bytes', 150 * 1024 * 1024);
 
-        // Untuk dokumen PDF berukuran raksasa (>150MB s/d 5GB), bypass FPDI in-memory untuk mencegah OOM
-        if ($extension === 'pdf' && $fileSizeBytes > $maxWatermarkBytes) {
+        // Bypass FPDI jika diminta user (skipWatermark) ATAU dokumen berukuran raksasa (>150MB s/d 5GB)
+        if ($skipWatermark || ($extension === 'pdf' && $fileSizeBytes > $maxWatermarkBytes)) {
             $baseName = $this->sanitizeBaseName($file->getClientOriginalName());
             $outputFileName = now()->format('YmdHis').'_'.Str::lower(Str::random(10))
                 .'_'.$baseName.'_watermarked.pdf';
@@ -40,20 +43,23 @@ class DocumentWatermarkService
             Storage::disk('local')->makeDirectory($destinationDirectory);
             $outputPath = Storage::disk('local')->path($relativePath);
 
-            Log::info('Dokumen berukuran besar diproses tanpa FPDI in-memory (hingga 5GB)', [
+            Log::info($skipWatermark ? 'Watermark manual terdeteksi/dilewati sesuai permintaan pengguna' : 'Dokumen berukuran besar diproses tanpa FPDI in-memory (hingga 5GB)', [
                 'file' => $file->getClientOriginalName(),
                 'size_bytes' => $fileSizeBytes,
                 'target_path' => $relativePath,
+                'skip_watermark' => $skipWatermark,
             ]);
 
             if (! File::copy($file->getRealPath(), $outputPath)) {
-                throw new RuntimeException('Gagal menyalin berkas dokumen perencanaan berukuran besar.');
+                throw new RuntimeException('Gagal menyalin berkas dokumen perencanaan.');
             }
 
             return [
                 'relative_path' => $relativePath,
                 'file_name' => $outputFileName,
                 'file_size_bytes' => Storage::disk('local')->size($relativePath),
+                'watermark_applied' => ! $skipWatermark,
+                'watermark_bypassed' => $skipWatermark,
             ];
         }
 
@@ -71,6 +77,7 @@ class DocumentWatermarkService
             Storage::disk('local')->makeDirectory($destinationDirectory);
             $outputPath = Storage::disk('local')->path($relativePath);
 
+            $watermarkApplied = true;
             try {
                 $this->applyWatermark($sourcePdfPath, $outputPath);
             } catch (Throwable $watermarkEx) {
@@ -79,12 +86,15 @@ class DocumentWatermarkService
                     'error' => $watermarkEx->getMessage(),
                 ]);
                 File::copy($sourcePdfPath, $outputPath);
+                $watermarkApplied = false;
             }
 
             return [
                 'relative_path' => $relativePath,
                 'file_name' => $outputFileName,
                 'file_size_bytes' => Storage::disk('local')->size($relativePath),
+                'watermark_applied' => $watermarkApplied,
+                'watermark_bypassed' => ! $watermarkApplied,
             ];
         } catch (Throwable $exception) {
             if (is_string($relativePath)) {
