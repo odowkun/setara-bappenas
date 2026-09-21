@@ -149,8 +149,8 @@ export default function PublicNewsDetailPage() {
             alt={displayData.title}
             onError={(e) => {
               const target = e.currentTarget;
-              if (!target.src.includes("logo-halut.png")) {
-                target.src = "/images/bappeda/logo-halut.png";
+              if (!target.src.includes("default-news-cover.jpg")) {
+                target.src = "/images/bappeda/default-news-cover.jpg";
               }
             }}
             className="w-full h-full object-cover"

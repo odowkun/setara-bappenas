@@ -199,7 +199,7 @@ export const OptimizedMediaUploader: React.FC<OptimizedMediaUploaderProps> = ({
                 alt="Preview Sampul"
                 className="w-16 h-16 rounded-xl object-cover border border-slate-200 shrink-0 shadow-2xs"
                 onError={(e) => {
-                  (e.currentTarget as HTMLImageElement).src = "/images/bappeda/logo-halut.png";
+                  (e.currentTarget as HTMLImageElement).src = "/images/bappeda/default-news-cover.jpg";
                 }}
               />
             )}

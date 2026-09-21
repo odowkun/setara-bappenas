@@ -3,9 +3,12 @@ import { API_BASE_URL, STORAGE_BASE_URL, withAuthHeaders } from "@/lib/apiClient
 
 export function normalizeMediaUrl(url?: string | null): string {
   if (!url || typeof url !== "string" || !url.trim()) {
-    return "/images/bappeda/logo-halut.png";
+    return "/images/bappeda/default-news-cover.jpg";
   }
-  const clean = url.trim().replace(/^https?:\/\/[^\/]+(:8100|:8000)?\//, "/");
+  let clean = url.trim().replace(/^https?:\/\/[^\/]+(:8100|:8000)?\//, "/");
+  if (!clean.startsWith("/") && !clean.startsWith("http")) {
+    clean = "/" + clean;
+  }
   if (clean.startsWith("/storage/")) {
     return `${STORAGE_BASE_URL}${clean}`;
   }

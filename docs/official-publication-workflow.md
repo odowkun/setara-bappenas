@@ -147,8 +147,9 @@ Jika frontend harus di-rollback sendiri, backend baru tetap kompatibel untuk pem
 2. **Root-Relative Storage URLs**:
    - Backend `MediaController` mengembalikan path root-relative (`/storage/media/...`) untuk menghindari domain/port absolut lokal (`http://127.0.0.1:8100` atau `http://localhost:8000`) yang menyebabkan mixed-content block di browser HTTPS.
    - Model `News` menyematkan accessor/mutator `getImageAttribute` & `setImageAttribute` untuk otomatis membersihkan URL absolut host lokal yang usang.
-3. **Pencegahan Broken Image (Fallback & Error Handlers)**:
-   - Frontend (`adminService.ts`, `dashboard/berita`, `berita`, `berita/[slug]`, `LatestNewsCarousel`) menerapkan `normalizeMediaUrl` dan fallback bawaan `/images/bappeda/logo-halut.png` saat gambar belum ada atau gagal dimuat via event `onError`.
+3. **Pencegahan Broken Image (Fallback & Modern Editorial Cover)**:
+   - Frontend (`adminService.ts`, `dashboard/berita`, `berita`, `berita/[slug]`, `LatestNewsCarousel`) menerapkan `normalizeMediaUrl` dan fallback visual modern `/images/bappeda/default-news-cover.jpg` (bukan flat dark logo) saat gambar belum ada atau gagal dimuat via event `onError`.
+   - Di Beranda (`LatestNewsCarousel.tsx`), pemetaan payload API wajib menyertakan `image: normalizeMediaUrl(item.image || item.featured_image || item.image_url)` dan `views: Number(item.views) || 0` agar cover gambar dan statistik pembaca tampil proporsional.
    - `TambahBeritaPage` melarang penyimpanan ketika proses unggah masih berlangsung (`isImageUploading` guard) dan menjamin artikel baru tidak pernah tersimpan dengan path gambar kosong.
 4. **Otomasi Storage Symlink di Server**:
    - Skrip deployment produksi `scripts/deploy-prod.ps1` menyertakan `php artisan storage:link` untuk memastikan symlink storage selalu aktif.

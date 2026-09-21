@@ -268,12 +268,12 @@ export default function BeritaManagementPage() {
                 <div className="flex items-center gap-4 overflow-hidden">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={item.featuredImage || "/images/bappeda/logo-halut.png"}
+                    src={item.featuredImage || "/images/bappeda/default-news-cover.jpg"}
                     alt={item.title}
                     onError={(e) => {
                       const target = e.currentTarget;
-                      if (!target.src.includes("logo-halut.png")) {
-                        target.src = "/images/bappeda/logo-halut.png";
+                      if (!target.src.includes("default-news-cover.jpg")) {
+                        target.src = "/images/bappeda/default-news-cover.jpg";
                       }
                     }}
                     className="w-20 h-20 rounded-2xl object-cover border border-slate-200 shrink-0 group-hover:scale-105 transition"

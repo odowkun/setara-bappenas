@@ -39,6 +39,8 @@ export const LatestNewsCarousel: React.FC = () => {
               title: item.title,
               category: item.category || "Belum dikategorikan",
               author: item.author || "Belum tersedia",
+              views: Number(item.views) || 0,
+              image: normalizeMediaUrl(item.image || item.featured_image || item.image_url),
               desc: item.summary
                 ? item.summary.replace(/<[^>]*>/g, "")
                 : item.content
@@ -129,15 +131,15 @@ export const LatestNewsCarousel: React.FC = () => {
                 >
                   <div>
                     {/* CARD IMAGE WITH OVERLAY BADGE */}
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={item.image || "/images/bappeda/logo-halut.png"}
+                        src={item.image || "/images/bappeda/default-news-cover.jpg"}
                         alt={item.title}
                         onError={(e) => {
                           const target = e.currentTarget;
-                          if (!target.src.includes("logo-halut.png")) {
-                            target.src = "/images/bappeda/logo-halut.png";
+                          if (!target.src.includes("default-news-cover.jpg")) {
+                            target.src = "/images/bappeda/default-news-cover.jpg";
                           }
                         }}
                         className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
@@ -170,7 +172,7 @@ export const LatestNewsCarousel: React.FC = () => {
                   <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-400 group-hover:text-blue-700 transition">
                     <span className="flex items-center gap-1">
                       <Eye className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{item.views} views</span>
+                      <span>{item.views?.toLocaleString() || "0"} views</span>
                     </span>
 
                     <span className="flex items-center gap-0.5 text-blue-700 font-black">

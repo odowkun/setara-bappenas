@@ -124,7 +124,7 @@ export default function TambahBeritaPage() {
 
     setSaving(true);
     try {
-      const finalImage = mediaData?.webUrl || mediaData?.masterUrl || "/images/bappeda/logo-halut.png";
+      const finalImage = mediaData?.webUrl || mediaData?.masterUrl || "/images/bappeda/default-news-cover.jpg";
       const payload = {
         title: title.trim(),
         summary,
