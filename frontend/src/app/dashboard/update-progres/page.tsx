@@ -236,26 +236,30 @@ export default function UpdateProgresPage() {
   ];
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* Header Banner Clean */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
-            <Activity className="w-6 h-6 text-blue-600" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <Activity className="w-3.5 h-3.5" />
+              Monitoring Realisasi Proyek
+            </span>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              Update Data Sektoral & Progres Pembangunan
-            </h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
-              Perbarui status realisasi fisik (%) dan realisasi keuangan proyek pembangunan daerah.
-            </p>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Activity className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Update Data Sektoral &amp; Progres Pembangunan</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Perbarui status realisasi fisik (%) dan realisasi keuangan proyek pembangunan daerah.
+          </p>
         </div>
 
-        <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200/80 w-fit">
-          📊 Total Proyek: {projects.length} Paket
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-blue-700 bg-blue-50 px-3.5 py-1.5 rounded-full border border-blue-200/80 w-fit">
+            📊 Total Proyek: {projects.length} Paket
+          </span>
+        </div>
       </div>
 
       {/* Input Selection: Dokumen Induk */}

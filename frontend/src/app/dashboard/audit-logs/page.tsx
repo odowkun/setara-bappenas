@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
 import { AuditLog } from "@/types/auth";
-import { Lock, Search } from "lucide-react";
+import { Lock, Search, ShieldAlert, ShieldCheck } from "lucide-react";
 import { formatDateWIT } from "@/lib/dateUtils";
 
 export default function AuditLogsPage() {
@@ -27,7 +27,7 @@ export default function AuditLogsPage() {
 
   if (!isSuperAdmin) {
     return (
-      <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center space-y-4 max-w-lg mx-auto mt-12 shadow-sm">
+      <div className="p-8 rounded-3xl bg-white border border-slate-200 text-center space-y-4 max-w-lg mx-auto mt-12 shadow-sm font-sans">
         <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto font-bold">
           <Lock className="w-6 h-6" />
         </div>
@@ -40,18 +40,31 @@ export default function AuditLogsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* Header */}
-      <div>
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200 tracking-wider">
+              <ShieldAlert className="w-3.5 h-3.5" />
+              Modul SuperAdmin SPBE
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ShieldAlert className="w-6 h-6 text-purple-600 shrink-0" />
+            <span>Audit Log Security SPBE</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Jejak rekam aktivitas pengubahan data, unggah berkas, dan autentikasi pengelola.
+          </p>
+        </div>
+
         <div className="flex items-center gap-2">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-            MODUL SUPERADMIN SPBE
+          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-3.5 py-1.5 rounded-full border border-purple-200 flex items-center gap-1.5">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>{logs.length} Aktivitas Terekam</span>
           </span>
         </div>
-        <h1 className="text-xl sm:text-2xl font-black text-slate-900">Audit Log Security SPBE</h1>
-        <p className="text-xs text-slate-600 font-medium">
-          Jejak rekam aktivitas pengubahan data, unggah berkas, dan autentikasi pengelola.
-        </p>
       </div>
 
       {/* Search */}

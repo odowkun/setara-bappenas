@@ -176,7 +176,7 @@ export default function EditGaleriPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-xs text-slate-400 font-bold animate-pulse bg-white rounded-3xl border border-slate-200 max-w-[1400px] mx-auto">
+      <div className="w-full p-12 text-center text-xs text-slate-400 font-bold animate-pulse bg-white rounded-3xl border border-slate-200 font-sans">
         Memuat data galeri...
       </div>
     );
@@ -185,7 +185,7 @@ export default function EditGaleriPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/galeri"

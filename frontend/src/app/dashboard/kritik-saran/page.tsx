@@ -184,25 +184,28 @@ export default function DashboardKritikSaranPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER BAR */}
-      <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-            <HelpCircle className="w-4 h-4" />
-            <span>MANAJEMEN MASUKAN &amp; OPSI BIDANG TUJUAN PUBLIK</span>
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <HelpCircle className="w-3.5 h-3.5" />
+              Manajemen Masukan &amp; Layanan Publik
+            </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Kritik &amp; Saran Masukan Warga
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <MessageSquare className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Kritik &amp; Saran Masukan Warga</span>
           </h1>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed mt-0.5">
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Kelola data kritik &amp; saran publik serta kelola daftar dinamis opsi Bidang / Unit Tujuan BAPPEDA.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/kritik-saran"
             target="_blank"
-            className="px-4 py-2.5 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-extrabold transition flex items-center gap-2"
+            className="px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <Eye className="w-4 h-4" />
             <span>Lihat Form Publik</span>

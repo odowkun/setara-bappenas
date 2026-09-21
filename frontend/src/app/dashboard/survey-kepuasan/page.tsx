@@ -215,20 +215,34 @@ export default function DashboardSurveyPage() {
   );
 
   return (
-    <div className="space-y-8">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* TITLE & HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-black text-blue-600 uppercase tracking-widest">
-            <HeartHandshake className="w-4 h-4" />
-            <span>IKM &amp; DYNAMIC FORM BUILDER</span>
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <HeartHandshake className="w-3.5 h-3.5" />
+              IKM &amp; Dynamic Form Builder
+            </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight mt-1">
-            Survei Kepuasan Masyarakat &amp; Pengaturan Formulir
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <HeartHandshake className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Survei Kepuasan Masyarakat &amp; Pengaturan Formulir</span>
           </h1>
-          <p className="text-xs text-slate-500 font-medium">
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Kelola tanggapan survei warga, pertanyaan dinamis per jenis layanan, dan opsi SKPD BAPPEDA.
           </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/survey-kepuasan"
+            target="_blank"
+            className="px-5 py-3 rounded-2xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+          >
+            <Eye className="w-4 h-4" />
+            <span>Lihat Form Publik</span>
+          </Link>
         </div>
       </div>
 

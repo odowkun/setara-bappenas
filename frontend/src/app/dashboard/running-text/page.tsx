@@ -179,32 +179,32 @@ export default function RunningTextDashboardPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-xs font-semibold tracking-wide text-blue-200">
-              <ScrollText className="w-3.5 h-3.5 text-blue-300" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <ScrollText className="w-3.5 h-3.5" />
               Floating Bar Marquee Controller
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-              Manajemen Teks Berjalan (Running Text)
-            </h1>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed">
-              Kelola pesan penting, sorotan dokumen strategis, dan pengumuman berjalan yang tayang pada bilah mengambang di bawah halaman publik.
-            </p>
+            </span>
           </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <ScrollText className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Manajemen Teks Berjalan (Running Text)</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Kelola pesan penting, sorotan dokumen strategis, dan pengumuman berjalan yang tayang pada bilah mengambang di bawah halaman publik.
+          </p>
+        </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={handleOpenAdd}
-              disabled={!canManage}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
-            >
-              <Plus className="w-4 h-4" />
-              Tambah Teks Berjalan
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleOpenAdd}
+            disabled={!canManage}
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Teks Berjalan</span>
+          </button>
         </div>
       </div>
 

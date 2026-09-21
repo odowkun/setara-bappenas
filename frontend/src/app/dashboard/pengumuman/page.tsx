@@ -115,24 +115,32 @@ export default function PengumumanManagementPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* HEADER CARD */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-0.5">
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <Megaphone className="w-3.5 h-3.5" />
+              Pemberitahuan &amp; Edaran Daerah
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Megaphone className="w-6 h-6 text-blue-600 shrink-0" />
-            <span>Manajemen Pengumuman Resmi & Surat Edaran</span>
+            <span>Manajemen Pengumuman Resmi &amp; Surat Edaran</span>
           </h1>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Kelola edaran resmi, pengumuman seleksi, serta lampiran dokumen/media resmi.
           </p>
         </div>
 
-        <Link
-          href="/dashboard/pengumuman/tambah"
-          className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition shrink-0 active:scale-95"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Buat Pengumuman Baru</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/pengumuman/tambah"
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Buat Pengumuman Baru</span>
+          </Link>
+        </div>
       </div>
 
       {/* SEARCH & FILTER BAR */}

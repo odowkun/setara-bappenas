@@ -10,7 +10,7 @@ import { AdminDocument, BidangType, JenisDokumenItem } from "@/types/auth";
 import { RichTextEditor } from "@/components/ui/RichTextEditor";
 import { ResumableChunkUploader } from "@/components/ui/ResumableChunkUploader";
 import { DateRangePlanner } from "@/components/ui/DateRangePlanner";
-import { ArrowLeft, Save, CheckCircle2, Lock, Plus, X } from "lucide-react";
+import { ArrowLeft, Save, CheckCircle2, Lock, Plus, X, FileUp } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
 
@@ -227,29 +227,31 @@ export default function TambahDokumenPage() {
   };
 
   return (
-    <div className="space-y-6 w-full font-sans pb-12">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* Clean Back Header without limits or repository badges */}
-      <div className="flex items-center justify-between border-b border-slate-200 pb-4">
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/dokumen"
-            className="p-2.5 rounded-2xl bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 transition shadow-sm"
+            className="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 transition shadow-2xs shrink-0"
+            title="Kembali ke Dokumen"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
-          <div>
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-              Unggah Dokumen Perencanaan
+          <div className="space-y-0.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
+              <FileUp className="w-6 h-6 text-blue-600 shrink-0" />
+              <span>Unggah Dokumen Perencanaan</span>
             </h1>
-            <p className="text-xs text-slate-500 font-medium">
+            <p className="text-xs text-slate-500 font-medium leading-relaxed">
               Form pengunggahan dokumen resmi perencanaan daerah Kabupaten Halmahera Utara.
             </p>
           </div>
         </div>
 
         {isSaved && (
-          <div className="px-4 py-2 rounded-2xl bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+          <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center gap-2 animate-in fade-in shrink-0">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Dokumen Berhasil Diunggah!</span>
           </div>
         )}

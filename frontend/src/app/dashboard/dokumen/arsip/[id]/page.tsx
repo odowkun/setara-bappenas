@@ -210,21 +210,32 @@ export default function DocumentArchiveDetailPage() {
 
   return (
     <main className="w-full space-y-6 font-sans pb-12">
-      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <Link href="/dashboard/dokumen" className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-blue-700">
-          <ArrowLeft className="h-4 w-4" /> Kembali ke Repository
-        </Link>
-        <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-blue-700">
-              {data.jenis} · {data.tahun}
-            </p>
-            <h1 className="mt-1 text-xl font-black text-slate-900">{data.title}</h1>
-            <p className="mt-1 text-xs text-slate-500">{data.owner_opd || data.bidang}</p>
+      <header className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <Archive className="w-3.5 h-3.5" />
+              {data.jenis} · TAHUN {data.tahun}
+            </span>
           </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Archive className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>{data.title}</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            {data.owner_opd || data.bidang} • Tata Kelola &amp; Integritas Berkas Arsip Digital
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link href="/dashboard/dokumen" className="px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition flex items-center justify-center gap-2 shrink-0">
+            <ArrowLeft className="h-4 w-4" />
+            <span>Kembali</span>
+          </Link>
           {data.preview_url && (
-            <a href={resolveDocumentUrl(data.preview_url)} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 self-start rounded-2xl bg-blue-700 px-4 py-2.5 text-xs font-extrabold text-white hover:bg-blue-800 focus-visible:ring-4 focus-visible:ring-amber-300">
-              <ExternalLink className="h-4 w-4" /> Preview Privat
+            <a href={resolveDocumentUrl(data.preview_url)} target="_blank" rel="noreferrer" className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0">
+              <ExternalLink className="h-4 w-4" />
+              <span>Preview Privat</span>
             </a>
           )}
         </div>

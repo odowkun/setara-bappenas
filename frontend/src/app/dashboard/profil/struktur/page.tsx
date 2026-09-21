@@ -219,21 +219,27 @@ export default function StrukturEditorPage() {
   }
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
-      {/* HEADER CARD (FLUID & COMPACT PADDING) */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-0.5">
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
-            <Network className="w-5 h-5 text-blue-600 shrink-0" />
+    <div className="w-full space-y-6 font-sans pb-12">
+      {/* HEADER CARD */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <Network className="w-3.5 h-3.5" />
+              Hirarki &amp; Struktur Birokrasi
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Network className="w-6 h-6 text-blue-600 shrink-0" />
             <span>Kelola Struktur Organisasi BAPPEDA ({officials.length} Posisi)</span>
           </h1>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Proses terpisah: Buat hirarki posisi terlebih dahulu via popup, lalu penugasan pejabat pada daftar di bawah.
           </p>
         </div>
 
         {saved && (
-          <div className="px-4 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center gap-2 animate-in fade-in shrink-0">
+          <div className="px-4 py-2.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-black flex items-center gap-2 animate-in fade-in shrink-0">
             <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
             <span>Perubahan Berhasil Disimpan!</span>
           </div>

@@ -397,23 +397,25 @@ export default function GeoprocessingAnalisisPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* Header Banner Clean */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-700 font-bold shrink-0">
-            <Compass className="w-6 h-6 text-purple-600" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200 tracking-wider">
+              <Compass className="w-3.5 h-3.5" />
+              Studio Geoprocessing &amp; Buffer
+            </span>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              Studio Analisis Spasial & Geoprocessing Bappeda
-            </h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
-              Kalkulasi radius dampak pembangunan, jangkauan pelayanan publik & zonasi mitigasi bencana di Halmahera Utara.
-            </p>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Compass className="w-6 h-6 text-purple-600 shrink-0" />
+            <span>Studio Analisis Spasial &amp; Geoprocessing Bappeda</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Kalkulasi radius dampak pembangunan, jangkauan pelayanan publik &amp; zonasi mitigasi bencana di Halmahera Utara.
+          </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-3 py-1.5 rounded-full border border-purple-200 flex items-center gap-1.5">
+          <span className="text-xs font-bold text-purple-700 bg-purple-50 px-3.5 py-1.5 rounded-full border border-purple-200 flex items-center gap-1.5">
             <Sparkles className="w-3.5 h-3.5" />
             <span>{savedAnalyses.length} Analisis Spasial Tersimpan</span>
           </span>

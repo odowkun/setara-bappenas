@@ -138,23 +138,26 @@ export default function ManajemenJenisDokumenPage() {
   return (
     <div className="space-y-6 w-full font-sans pb-12">
       {/* HEADER SECTION */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-blue-900 via-blue-800 to-indigo-950 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2 relative z-10">
-          <span className="px-3 py-1 rounded-full text-[10px] font-black tracking-wider uppercase bg-amber-400 text-slate-950 border border-amber-300">
-            ADMINISTRATOR MANAGEMENT
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3">
-            <FolderPlus className="w-8 h-8 text-amber-400" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <FolderPlus className="w-3.5 h-3.5" />
+              Administrator Management
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <FolderPlus className="w-6 h-6 text-blue-600 shrink-0" />
             <span>Manajemen Jenis Dokumen Perencanaan</span>
           </h1>
-          <p className="text-xs text-blue-100 max-w-2xl font-medium leading-relaxed">
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Kelola kategori resmi dokumen kebijakan Bappeda di database. Seluruh jenis dokumen yang terdaftar di sini disiapkan oleh SuperAdmin untuk dipilih oleh Admin Umum dan Admin Bidang.
           </p>
         </div>
 
         <button
           onClick={() => setIsModalOpen(true)}
-          className="px-5 py-3 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-lg flex items-center gap-2 transition shrink-0 relative z-10 active:scale-95"
+          className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Jenis Dokumen Baru</span>

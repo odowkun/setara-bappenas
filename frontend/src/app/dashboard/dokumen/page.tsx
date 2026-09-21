@@ -128,34 +128,36 @@ export default function DocumentManagementPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
-            <FileText className="w-6 h-6 text-blue-600" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <FileText className="w-3.5 h-3.5" />
+              Arsip &amp; Publikasi Perencanaan
+            </span>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              Repository Dokumen Perencanaan
-            </h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
-              {user?.role === "admin_bidang"
-                ? `Manajemen pengunggahan dokumen khusus Bidang ${user.bidang?.toUpperCase()}`
-                : "Pengelolaan RPJPD, RPJMD, RKPD, LKPJ, Renstra, & Data Sektoral."}
-            </p>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <FileText className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Repository Dokumen Perencanaan</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            {user?.role === "admin_bidang"
+              ? `Manajemen pengunggahan dokumen khusus Bidang ${user.bidang?.toUpperCase()}`
+              : "Pengelolaan RPJPD, RPJMD, RKPD, LKPJ, Renstra, & Data Sektoral."}
+          </p>
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex flex-wrap items-center gap-3">
           <Link
             href="/dashboard/dokumen/riwayat-unduhan"
-            className="flex items-center justify-center gap-2 rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs font-bold text-blue-800 transition hover:bg-blue-100"
+            className="px-4 py-2.5 rounded-2xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-xs font-bold text-blue-800 transition flex items-center justify-center gap-2 shrink-0"
           >
             <History className="h-4 w-4" />
             <span>Riwayat Pengunduh</span>
           </Link>
           <Link
             href="/dashboard/dokumen/tambah"
-            className="px-4 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 font-bold text-xs text-white shadow-xs flex items-center justify-center gap-2 transition shrink-0 cursor-pointer"
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
           >
             <FileUp className="w-4 h-4" />
             <span>Unggah Dokumen Baru</span>

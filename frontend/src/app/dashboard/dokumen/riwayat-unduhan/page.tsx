@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ArrowLeft, Download, Mail, Search, Users } from "lucide-react";
+import { ArrowLeft, Download, History, Mail, Search, Users } from "lucide-react";
 import { DownloadLogTable } from "@/components/documents/DownloadLogTable";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { adminService } from "@/services/adminService";
@@ -90,20 +90,32 @@ function DownloadHistoryContent() {
 
   return (
     <main className="w-full space-y-6 pb-12 font-sans">
-      <header className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <Link
-          href="/dashboard/dokumen"
-          className="inline-flex items-center gap-2 text-xs font-bold text-slate-500 transition hover:text-blue-700"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Repository Dokumen
-        </Link>
-        <h1 className="mt-4 text-xl font-black text-slate-900">
-          Riwayat Pengunduh Dokumen
-        </h1>
-        <p className="mt-1 text-xs font-medium text-slate-500">
-          Daftar email masyarakat yang telah mengunduh dokumen resmi BAPPEDA.
-        </p>
+      <header className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <History className="w-3.5 h-3.5" />
+              Audit Trail Unduhan
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <History className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Riwayat Pengunduh Dokumen</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Daftar email masyarakat yang telah mengunduh dokumen resmi BAPPEDA.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/dokumen"
+            className="px-4 py-2.5 rounded-2xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-xs font-bold text-slate-700 transition flex items-center justify-center gap-2 shrink-0"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span>Kembali ke Dokumen</span>
+          </Link>
+        </div>
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">

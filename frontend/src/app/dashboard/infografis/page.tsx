@@ -268,36 +268,36 @@ export default function InfografisDashboardPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 p-6 sm:p-8 text-white shadow-xl">
-        <div className="absolute right-0 top-0 -mt-10 -mr-10 h-64 w-64 rounded-full bg-blue-500/10 blur-3xl pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-xs font-semibold tracking-wide text-blue-200">
-              <BarChart3 className="w-3.5 h-3.5 text-amber-400" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <BarChart3 className="w-3.5 h-3.5" />
               Visual Data &amp; Infographics Manager
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-              Manajemen Infografis Pembangunan
-            </h1>
-            <p className="text-sm text-slate-300 max-w-2xl leading-relaxed font-medium">
-              Kelola lembar visual data, indikator kinerja, dan publikasi grafis. Tandai hingga 5 infografis sebagai &quot;Tersemat&quot; untuk tayang di beranda utama tepat di bawah video sambutan.
-            </p>
+            </span>
+          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <BarChart3 className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Manajemen Infografis Pembangunan</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Kelola lembar visual data, indikator kinerja, dan publikasi grafis. Tandai hingga 5 infografis sebagai &quot;Tersemat&quot; untuk tayang di beranda utama tepat di bawah video sambutan.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="px-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600">
+            Tersemat: <span className="text-blue-600 font-extrabold">{pinnedCount}</span> / 5 Beranda
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="px-4 py-2 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 text-xs font-bold text-slate-200">
-              Tersemat: <span className="text-amber-400 font-extrabold">{pinnedCount}</span> / 5 Beranda
-            </div>
-
-            <button
-              onClick={handleOpenAdd}
-              disabled={!canManage}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white font-bold text-sm shadow-lg shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
-            >
-              <Plus className="w-4 h-4" />
-              Tambah Infografis Baru
-            </button>
-          </div>
+          <button
+            onClick={handleOpenAdd}
+            disabled={!canManage}
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-extrabold text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0 cursor-pointer"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Infografis Baru</span>
+          </button>
         </div>
       </div>
 

@@ -151,9 +151,9 @@ export default function TambahBeritaPage() {
   };
 
   return (
-    <div className="space-y-4 w-full max-w-[1400px] mx-auto font-sans">
-      {/* HEADER CARD (FLUID & COMPACT PADDING) */}
-      <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="w-full space-y-6 font-sans pb-12">
+      {/* HEADER CARD */}
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/berita"

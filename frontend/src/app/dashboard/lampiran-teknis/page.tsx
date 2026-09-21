@@ -288,23 +288,25 @@ export default function LampiranTeknisPage() {
   return (
     <div className="w-full space-y-6 font-sans pb-12">
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200 shadow-xs">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-700 font-bold shrink-0">
-            <Paperclip className="w-6 h-6 text-blue-600" />
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <Paperclip className="w-3.5 h-3.5" />
+              Kelengkapan Dokumen Proyek
+            </span>
           </div>
-          <div>
-            <h1 className="text-xl font-black text-slate-900 tracking-tight">
-              Upload Lampiran Teknis Spasial
-            </h1>
-            <p className="text-xs font-medium text-slate-500 mt-0.5">
-              Kelola dan unggah berkas spasial, foto dokumentasi lapangan, DED, dan AMDAL proyek daerah.
-            </p>
-          </div>
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Paperclip className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Upload Lampiran Teknis Spasial</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
+            Kelola dan unggah berkas spasial, foto dokumentasi lapangan, DED, dan AMDAL proyek daerah.
+          </p>
         </div>
 
         {/* Global Document Tag Filter */}
-        <div className="w-full md:w-80">
+        <div className="w-full sm:w-80">
           <label className="text-[11px] font-bold text-slate-600 block mb-1">
             Filter Dokumen Induk (Renja/Renstra)
           </label>

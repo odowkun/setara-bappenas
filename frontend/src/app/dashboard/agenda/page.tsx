@@ -202,27 +202,34 @@ export default function DashboardAgendaPage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="w-full space-y-6 font-sans pb-12">
       {/* ADMIN HEADER BAR */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 rounded-3xl bg-white border border-slate-200 shadow-xs">
-        <div>
-          <div className="flex items-center gap-2 text-xs font-bold text-blue-600 uppercase tracking-wider mb-1">
-            <CalendarIcon className="w-4 h-4" />
-            <span>MANAJEMEN AGENDA &amp; KALENDER KEGIATAN</span>
+      <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
+              <CalendarIcon className="w-3.5 h-3.5" />
+              Manajemen Agenda &amp; Kalender Kegiatan
+            </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">Agenda Kerja BAPPEDA</h1>
-          <p className="text-xs text-slate-500 font-medium">
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <CalendarIcon className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Agenda Kerja BAPPEDA</span>
+          </h1>
+          <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Kelola jadwal Musrenbang, rapat koordinasi, dan peninjauan lapangan daerah.
           </p>
         </div>
 
-        <Link
-          href="/dashboard/agenda/tambah"
-          className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs flex items-center gap-2 shadow-md shadow-blue-600/20 transition active:scale-95 shrink-0 self-start sm:self-auto"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Tambah Agenda Baru</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            href="/dashboard/agenda/tambah"
+            className="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-extrabold text-xs text-white shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition active:scale-95 shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Tambah Agenda Baru</span>
+          </Link>
+        </div>
       </div>
 
       {/* APPLE CALENDAR TOOLBAR CONTROL BAR */}
