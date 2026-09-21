@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
   Youtube,
@@ -30,10 +31,15 @@ import {
 } from "@/data/socialMediaData";
 
 export const SocialMediaSection: React.FC = () => {
+  const [mounted, setMounted] = useState(false);
   const [selectedPost, setSelectedPost] = useState<InstagramPostData | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
   const [youtubeData, setYoutubeData] = useState<YouTubeVideoData>(OFFICIAL_YOUTUBE_VIDEO);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Fetch dynamic YouTube video settings from backend if available
   useEffect(() => {
@@ -322,155 +328,173 @@ export const SocialMediaSection: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* INSTAGRAM POST DETAIL MODAL (Matching Image 3) */}
+      {/* INSTAGRAM POST DETAIL MODAL (Portaled to document.body to prevent scroll jumping) */}
       {/* ========================================================================= */}
-      <AnimatePresence>
-        {selectedPost && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setSelectedPost(null)}
-              className="fixed inset-0 bg-slate-950/85 backdrop-blur-md cursor-pointer"
-            />
-
-            {/* Modal Dialog Card */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              transition={{ type: "spring", duration: 0.4, bounce: 0.15 }}
-              className="relative w-full max-w-5xl bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col md:flex-row max-h-[90vh]"
-            >
-              {/* Close Button Top Right */}
-              <button
-                onClick={() => setSelectedPost(null)}
-                aria-label="Tutup Modal"
-                className="absolute top-3 right-3 z-30 w-9 h-9 rounded-full bg-black/60 hover:bg-black/90 text-white/90 hover:text-white border border-white/10 flex items-center justify-center transition active:scale-95 cursor-pointer"
+      {mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {selectedPost && (
+              <div
+                data-lenis-prevent="true"
+                data-lenis-prevent-wheel="true"
+                data-lenis-prevent-touch="true"
+                className="fixed inset-0 z-[999999] overflow-y-auto"
               >
-                <X className="w-5 h-5" />
-              </button>
-
-              {/* MODAL LEFT: PHOTO CAROUSEL */}
-              <div className="relative md:w-7/12 bg-black flex items-center justify-center overflow-hidden aspect-square md:aspect-auto md:min-h-[500px]">
-                <ProgressiveImage
-                  key={currentImageIndex}
-                  src={selectedPost.images[currentImageIndex]}
-                  alt={selectedPost.title}
-                  fallbackSrc="/images/bappeda/default-news-cover.jpg"
-                  className="w-full h-full object-contain"
-                  containerClassName="w-full h-full flex items-center justify-center"
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSelectedPost(null)}
+                  className="fixed inset-0 bg-slate-950/85 backdrop-blur-md cursor-pointer"
                 />
 
-                {/* Left/Right Carousel Arrows */}
-                {selectedPost.images.length > 1 && (
-                  <>
-                    <button
-                      onClick={handlePrevImage}
-                      aria-label="Foto Sebelumnya"
-                      className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <button
-                      onClick={handleNextImage}
-                      aria-label="Foto Selanjutnya"
-                      className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-
-                    {/* Pagination Dots at Bottom */}
-                    <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 z-20">
-                      {selectedPost.images.map((_, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => setCurrentImageIndex(idx)}
-                          aria-label={`Slide ${idx + 1}`}
-                          className={`h-2 rounded-full transition-all cursor-pointer ${
-                            currentImageIndex === idx
-                              ? "w-6 bg-white shadow-md"
-                              : "w-2 bg-white/40 hover:bg-white/70"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </>
-                )}
-
-                {/* Subtle Brand Watermark at Bottom Left */}
-                <div className="absolute bottom-3 left-3 z-10 hidden sm:flex items-center gap-1 text-[10px] text-white/60 bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
-                  <span>bappeda.halmaherautarakab.go.id</span>
-                </div>
-              </div>
-
-              {/* MODAL RIGHT: INSTAGRAM PROFILE & CAPTION (Matching Image 3) */}
-              <div className="md:w-5/12 bg-slate-900 text-white flex flex-col justify-between overflow-hidden border-t md:border-t-0 md:border-l border-slate-800">
-                {/* Profile Header */}
-                <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shrink-0">
-                      <div className="w-full h-full rounded-full bg-slate-900 p-0.5 flex items-center justify-center overflow-hidden">
-                        <img
-                          src={OFFICIAL_INSTAGRAM_PROFILE.avatarUrl}
-                          alt={OFFICIAL_INSTAGRAM_PROFILE.displayName}
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1.5">
-                        <span className="font-extrabold text-sm text-white">
-                          {OFFICIAL_INSTAGRAM_PROFILE.handle}
-                        </span>
-                        <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">
-                          ✓
-                        </span>
-                      </div>
-                      <span className="text-[11px] text-slate-400 font-medium">
-                        {selectedPost.category} • {selectedPost.date}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Scrollable Caption Content */}
-                <div className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-4 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal">
-                  <div className="space-y-2">
-                    <h3 className="text-base font-extrabold text-white leading-snug">
-                      {selectedPost.title}
-                    </h3>
-                  </div>
-
-                  <div className="whitespace-pre-line text-slate-300">
-                    {selectedPost.caption}
-                  </div>
-                </div>
-
-                {/* Footer Action Bar */}
-                <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between shrink-0">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400">
-                    <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
-                    <span>{selectedPost.likesCount} suka</span>
-                  </div>
-
-                  <a
-                    href={selectedPost.postUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-xs shadow-lg shadow-pink-600/30 transition active:scale-95 cursor-pointer"
+                {/* Centering Flex Wrapper (min-h-full prevents Flexbox negative scroll clipping) */}
+                <div className="flex min-h-full items-center justify-center p-3 sm:p-6 text-center">
+                  {/* Modal Dialog Card */}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95, y: 15 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95, y: 15 }}
+                    transition={{ type: "spring", duration: 0.35, bounce: 0.1 }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="relative w-full max-w-5xl my-auto text-left bg-slate-900 border border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden z-10 flex flex-col md:flex-row max-h-[85vh] md:h-[560px] lg:h-[600px]"
                   >
-                    <span>Buka di Instagram</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
+                    {/* Close Button Top Right */}
+                    <button
+                      onClick={() => setSelectedPost(null)}
+                      aria-label="Tutup Modal"
+                      className="absolute top-3.5 right-3.5 z-30 w-9 h-9 rounded-full bg-black/70 hover:bg-black text-white border border-white/20 flex items-center justify-center shadow-lg transition active:scale-95 cursor-pointer"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+
+                    {/* MODAL LEFT: PHOTO CAROUSEL */}
+                    <div className="relative md:w-7/12 bg-black flex items-center justify-center overflow-hidden aspect-square md:aspect-auto md:h-full">
+                      <ProgressiveImage
+                        key={currentImageIndex}
+                        src={selectedPost.images[currentImageIndex]}
+                        alt={selectedPost.title}
+                        fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                        className="w-full h-full object-contain"
+                        containerClassName="w-full h-full flex items-center justify-center"
+                      />
+
+                      {/* Left/Right Carousel Arrows */}
+                      {selectedPost.images.length > 1 && (
+                        <>
+                          <button
+                            onClick={handlePrevImage}
+                            aria-label="Foto Sebelumnya"
+                            className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <button
+                            onClick={handleNextImage}
+                            aria-label="Foto Selanjutnya"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/60 hover:bg-black/85 border border-white/15 text-white flex items-center justify-center transition active:scale-90 cursor-pointer z-20"
+                          >
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+
+                          {/* Pagination Dots at Bottom */}
+                          <div className="absolute bottom-3 inset-x-0 flex items-center justify-center gap-1.5 z-20">
+                            {selectedPost.images.map((_, idx) => (
+                              <button
+                                key={idx}
+                                onClick={() => setCurrentImageIndex(idx)}
+                                aria-label={`Slide ${idx + 1}`}
+                                className={`h-2 rounded-full transition-all cursor-pointer ${
+                                  currentImageIndex === idx
+                                    ? "w-6 bg-white shadow-md"
+                                    : "w-2 bg-white/40 hover:bg-white/70"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+
+                      {/* Subtle Brand Watermark at Bottom Left */}
+                      <div className="absolute bottom-3 left-3 z-10 hidden sm:flex items-center gap-1 text-[10px] text-white/60 bg-black/40 px-2 py-0.5 rounded backdrop-blur-xs">
+                        <span>bappeda.halmaherautarakab.go.id</span>
+                      </div>
+                    </div>
+
+                    {/* MODAL RIGHT: INSTAGRAM PROFILE & CAPTION */}
+                    <div className="md:w-5/12 bg-slate-900 text-white flex flex-col justify-between overflow-hidden border-t md:border-t-0 md:border-l border-slate-800 md:h-full">
+                      {/* Profile Header */}
+                      <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shrink-0">
+                            <div className="w-full h-full rounded-full bg-slate-900 p-0.5 flex items-center justify-center overflow-hidden">
+                              <img
+                                src={OFFICIAL_INSTAGRAM_PROFILE.avatarUrl}
+                                alt={OFFICIAL_INSTAGRAM_PROFILE.displayName}
+                                className="w-full h-full object-contain"
+                              />
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="font-extrabold text-sm text-white">
+                                {OFFICIAL_INSTAGRAM_PROFILE.handle}
+                              </span>
+                              <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black">
+                                ✓
+                              </span>
+                            </div>
+                            <span className="text-[11px] text-slate-400 font-medium">
+                              {selectedPost.category} • {selectedPost.date}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Scrollable Caption Content */}
+                      <div
+                        data-lenis-prevent="true"
+                        data-lenis-prevent-wheel="true"
+                        className="p-4 sm:p-5 overflow-y-auto flex-1 space-y-3 text-xs sm:text-sm text-slate-200 leading-relaxed font-normal"
+                      >
+                        <div className="space-y-1.5">
+                          <h3 className="text-base font-extrabold text-white leading-snug">
+                            {selectedPost.title}
+                          </h3>
+                        </div>
+
+                        <div className="whitespace-pre-line text-slate-300">
+                          {selectedPost.caption}
+                        </div>
+                      </div>
+
+                      {/* Footer Action Bar */}
+                      <div className="p-4 sm:p-5 border-t border-slate-800 bg-slate-950/50 flex items-center justify-between shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-rose-400">
+                          <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+                          <span>{selectedPost.likesCount} suka</span>
+                        </div>
+
+                        <a
+                          href={selectedPost.postUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-extrabold text-xs shadow-lg shadow-pink-600/30 transition active:scale-95 cursor-pointer"
+                        >
+                          <span>Buka di Instagram</span>
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </a>
+                      </div>
+                    </div>
+                  </motion.div>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>
     </section>
   );
 };

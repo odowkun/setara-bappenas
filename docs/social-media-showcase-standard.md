@@ -12,8 +12,10 @@ Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmaher
 2. **Sisi Kanan: Feed Postingan Instagram Interaktif (6 Kolom Desktop / 2 Postingan Seimbang)**:
    - **Tinggi Selaras & Seimbang Presisi**: Menggunakan formasi 2 postingan berdampingan (`grid-cols-1 sm:grid-cols-2 gap-3`) sehingga total tinggi card Instagram sejajar presisi dengan tinggi pemutar video YouTube 16:9 di sebelah kiri (~340px).
    - **Branding Akun Resmi**: Header profil Instagram resmi `@bappeda_halut` dengan avatar berbingkai gradien, centang terverifikasi, tagline *"Sinergi Lokal, Solusi Global"*, dan tombol aksi `Ikuti`.
-   - **Modal Popup Interaktif Ala Instagram**:
-     - Saat salah satu kartu postingan diklik, muncul dialog modal 2 kolom ala Instagram.
+   - **Modal Popup Interaktif Ala Instagram (Portaled & Anti-Scroll Jump)**:
+     - **React `createPortal`**: Modal di-mount langsung ke `document.body` dengan `z-[999999]`, sehingga bebas dari stacking context maupun clipping navbar (`z-50`).
+     - **Pencegahan Flexbox Negative Scroll Bug**: Menggunakan pembungkus `min-h-full` dengan `my-auto` dan batas tinggi proporsional (`max-h-[85vh] md:h-[560px] lg:h-[600px]`), mencegah modal terdorong ke atas atau terpotong.
+     - **Pencegahan Scroll Jump (Lenis Integration)**: Dilengkapi `data-lenis-prevent="true"`, `data-lenis-prevent-wheel="true"`, dan `data-lenis-prevent-touch="true"` agar interaksi mouse/touch di dalam modal tidak memicu pergeseran scroll pada halaman utama.
      - **Sisi Kiri**: Galeri foto resolusi tinggi dengan navigasi carousel panah dan titik pagination.
      - **Sisi Kanan**: Profil pengunggah `@bappeda_halut`, tanggal, teks narasi caption lengkap, jumlah suka, dan tombol aksi `Buka di Instagram ↗`.
      - Mendukung penutupan via tombol silang (X), tombol keyboard `ESC`, dan klik di luar area modal (backdrop blur).
