@@ -159,4 +159,16 @@ class KritikController extends Controller
             'data' => $item->fresh(),
         ]);
     }
+
+    public function destroy($id)
+    {
+        $item = Kritik::query()->findOrFail($id);
+        $item->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Pesan kritik & saran berhasil dihapus.',
+        ]);
+    }
 }

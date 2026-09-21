@@ -28,6 +28,7 @@ import {
   fetchKritikList,
   fetchSurveyConfig,
   toggleHideKritik,
+  deleteKritik,
   KritikSaranItem,
   SurveyServiceItem,
 } from "@/services/surveyService";
@@ -199,6 +200,22 @@ export default function DashboardKritikSaranPage() {
       loadData();
     } else {
       toast.error("Gagal memperbarui status visibilitas masukan.");
+    }
+  };
+
+  const handleDeleteKritik = async (item: KritikSaranItem) => {
+    const resConfirm = await showDeleteConfirm(`Pesan dari "${item.nama}" (${item.subjek})`);
+    if (!resConfirm.isConfirmed) return;
+
+    const res = await deleteKritik(item.id);
+    if (res.success) {
+      toast.success(res.message || "Pesan kritik & saran berhasil dihapus.");
+      if (activeKritikModal?.id === item.id) {
+        setActiveKritikModal(null);
+      }
+      loadData();
+    } else {
+      toast.error("Gagal menghapus pesan kritik & saran.");
     }
   };
 
@@ -529,6 +546,15 @@ export default function DashboardKritikSaranPage() {
                                 <EyeOff className="w-4 h-4" />
                               )}
                             </button>
+
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteKritik(item)}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition cursor-pointer"
+                              title="Hapus pesan masukan warga ini"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -717,20 +743,31 @@ export default function DashboardKritikSaranPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-between gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setActiveKritikModal(null)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition cursor-pointer"
+                  onClick={() => handleDeleteKritik(activeKritikModal)}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs flex items-center gap-1.5 border border-rose-200 transition cursor-pointer"
                 >
-                  Batal
+                  <Trash2 className="w-4 h-4" />
+                  <span>Hapus Pesan</span>
                 </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-md shadow-blue-600/20 cursor-pointer"
-                >
-                  Simpan Tanggapan
-                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveKritikModal(null)}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs transition shadow-md shadow-blue-600/20 cursor-pointer"
+                  >
+                    Simpan Tanggapan
+                  </button>
+                </div>
               </div>
             </form>
           </div>

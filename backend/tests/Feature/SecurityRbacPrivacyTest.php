@@ -530,4 +530,30 @@ class SecurityRbacPrivacyTest extends TestCase
         $this->assertEquals('A', $surveyA->mutu_pelayanan);
         $this->assertEquals('Sangat Baik', $surveyA->kategori);
     }
+
+    public function test_admin_can_delete_kritik_entry(): void
+    {
+        $this->actingAsRole('superadmin');
+
+        $kritik = \App\Models\Kritik::create([
+            'nama' => 'Pesan Hapus',
+            'email' => 'hapus@example.com',
+            'subjek' => 'Subjek Akan Dihapus',
+            'pesan' => 'Pesan ini akan dihapus oleh admin.',
+            'status' => 'Menunggu Tanggapan',
+            'is_hidden' => false,
+        ]);
+
+        $this->assertDatabaseHas('kritiks', ['id' => $kritik->id]);
+
+        $response = $this->deleteJson("/api/v1/kritik/{$kritik->id}")
+            ->assertOk();
+
+        $response->assertJson([
+            'status' => 'success',
+            'message' => 'Pesan kritik & saran berhasil dihapus.',
+        ]);
+
+        $this->assertDatabaseMissing('kritiks', ['id' => $kritik->id]);
+    }
 }

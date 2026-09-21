@@ -31,7 +31,20 @@
      - `Disembunyikan / SARA` (Hanya masukan yang di-hide)
    - Kartu statistik ringkasan kini menampilkan 4 metrik: Total Masuk, Menunggu Tanggapan, Sudah Ditanggapi, dan Disembunyikan (SARA/Spam).
 
-### C. Keamanan & Sensor Data Responden
+### C. Penghapusan Pesan Kritik & Saran (`DELETE /api/v1/kritik/{id}`)
+1. **Tombol Hapus pada Baris Tabel & Modal Tanggapan**:
+   - Di tabel masukan warga, ditambahkan tombol `Trash2` merah di baris aksi.
+   - Di modal detail tanggapan admin, ditambahkan tombol `Hapus Pesan` pada footer sebelah kiri.
+2. **Dialog Konfirmasi SweetAlert2 (`showDeleteConfirm`)**:
+   - Menggunakan dialog standar `showDeleteConfirm` dengan teks nama pengirim dan subjek pesan sebelum eksekusi penghapusan.
+   - Mencegah penghapusan tidak sengaja dan mematuhi aturan tanpa browser native `confirm()`.
+3. **Endpoint & Otorisasi Backend**:
+   - Rute: `DELETE /api/v1/kritik/{id}`.
+   - Middleware: `auth:sanctum`, `permission:manage_kritik`, serta `AuditAdminMutation` untuk mencatat audit log penghapusan data.
+4. **Pengujian Otomatis**:
+   - Unit test `test_admin_can_delete_kritik_entry` di `SecurityRbacPrivacyTest` memastikan data terhapus permanen dari database.
+
+### D. Keamanan & Sensor Data Responden
 - **Sensor Nama Responden (`***`)**: Setiap nama pelapor disensor di level backend (`KritikController@publicFeed`) dan di-format ulang pada frontend (`formatMaskedName`), misalnya `Budi Santoso` menjadi `B*** S***`.
 - **Perlindungan Data Pribadi**: Email dan nomor telepon pelapor dienkripsi (`encrypted` cast) dan tidak pernah diekspos di endpoint publik.
 
@@ -43,9 +56,9 @@
 | :--- | :--- |
 | `backend/database/migrations/2026_09_21_000007_add_is_hidden_to_kritiks_table.php` | Migration kolom `is_hidden` dengan indeks. |
 | `backend/app/Models/Kritik.php` | Model Kritik dengan fillable dan cast `is_hidden => boolean`. |
-| `backend/app/Http/Controllers/Api/KritikController.php` | Controller index (filter visibility), publicFeed (filter !is_hidden), updateTanggapan, dan toggleHide. |
-| `backend/routes/api.php` | Rute API publik & admin (`PATCH /api/v1/kritik/{id}/toggle-hide`). |
-| `backend/tests/Feature/SecurityRbacPrivacyTest.php` | Pengujian otomatis enkripsi, sensor nama, dan eksklusi pesan hidden dari public feed. |
-| `frontend/src/services/surveyService.ts` | Interface `KritikSaranItem` & API helper `toggleHideKritik`. |
+| `backend/app/Http/Controllers/Api/KritikController.php` | Controller index (filter visibility), publicFeed (filter !is_hidden), updateTanggapan, toggleHide, dan destroy. |
+| `backend/routes/api.php` | Rute API publik & admin (`PATCH /api/v1/kritik/{id}/toggle-hide`, `DELETE /api/v1/kritik/{id}`). |
+| `backend/tests/Feature/SecurityRbacPrivacyTest.php` | Pengujian otomatis enkripsi, sensor nama, eksklusi pesan hidden, dan aksi delete kritik. |
+| `frontend/src/services/surveyService.ts` | Interface `KritikSaranItem`, API helper `toggleHideKritik`, dan `deleteKritik`. |
 | `frontend/src/app/kritik-saran/page.tsx` | Halaman publik dengan layout scrollable ~3 cards dan urutan descending. |
-| `frontend/src/app/dashboard/kritik-saran/page.tsx` | Dashboard admin dengan filter SARA, toggle hide/unhide, stat card, dan modal checkbox. |
+| `frontend/src/app/dashboard/kritik-saran/page.tsx` | Dashboard admin dengan filter SARA, toggle hide/unhide, tombol hapus, stat card, dan modal detail. |

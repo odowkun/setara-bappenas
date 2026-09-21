@@ -367,6 +367,21 @@ export async function toggleHideKritik(
   return { success: false };
 }
 
+export async function deleteKritik(id: number): Promise<{ success: boolean; message?: string }> {
+  try {
+    const res = await authenticatedFetch(`${API_BASE}/kritik/${id}`, {
+      method: "DELETE",
+    });
+    if (res.ok) {
+      const json = await res.json();
+      return { success: true, message: json.message };
+    }
+  } catch (e) {
+    console.warn("API delete kritik failed:", e);
+  }
+  return { success: false };
+}
+
 export async function submitKritik(data: {
   nama: string;
   email: string;
