@@ -14,8 +14,10 @@ export const DOCUMENT_QUICK_CATEGORIES = [
 export type DocumentCategoryCode =
   (typeof DOCUMENT_QUICK_CATEGORIES)[number]["code"];
 
-export function isPrimaryDocumentCategory(value: string): boolean {
+export function isPrimaryDocumentCategory(value?: string | null): boolean {
+  if (!value || typeof value !== "string") return false;
+  const upper = value.toUpperCase();
   return PRIMARY_DOCUMENT_CATEGORY_CODES.some(
-    (code) => value === code || value.includes(code)
+    (code) => upper === code || upper.includes(code)
   );
 }

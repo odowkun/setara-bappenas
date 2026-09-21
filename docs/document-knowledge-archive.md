@@ -783,3 +783,17 @@ php artisan test --compact tests/Feature/DocumentKnowledgeArchiveTest.php
 
 Suite menjaga secure default, filter publik, reviewer workflow, scope bidang, signed stream, unique view, one-time download, revision swap, checksum tamper, legal hold, dan full-text isolation.
 
+## Troubleshooting & Mitigasi Frontend (Preview & Download Modal)
+
+### Error Boundary "Terjadi Kendala Memuat Halaman" pada Preview Dokumen
+- **Penyebab**:
+  1. **Variable Shadowing**: Parameter prop bernama `document` pada `DocumentPreviewModal` atau `DocumentDownloadModal` menimpa objek global browser `window.document`. Saat komponen memanggil `document.body.style.overflow`, JavaScript mengevaluasi `(AdminDocument).body`, menghasilkan `undefined`, sehingga throw `TypeError: Cannot read properties of undefined (reading 'style')` yang memicu fallback `frontend/src/app/error.tsx`.
+  2. **Unchecked String Operations**: Pemanggilan `.toUpperCase()` atau `.replace()` langsung pada field opsional/null seperti `doc.jenis` pada grid publik atau filter kategori tanpa fallback `doc.jenis || ""`.
+  3. **Null File URL**: `resolveDocumentUrl(url)` melempar exception jika menerima `null` / `undefined`.
+- **Solusi Standar Arsitektur**:
+  - Selalu rename prop `document` menjadi `document: doc` dalam destructuring komponen modal.
+  - Akses DOM secara eksplisit melalui `window.document.body` dengan pengecekan `typeof window !== "undefined"`.
+  - Gunakan helper defensif `resolveDocumentUrl(url?: string | null): string` yang mengembalikan string kosong jika URL tidak tersedia.
+  - Sediakan UI Fallback ramah pengguna di dalam modal pratinjau apabila dokumen belum memiliki tautan berkas digital, dilengkapi opsi "Tab Baru" dan tombol unduh.
+
+

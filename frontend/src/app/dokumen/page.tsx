@@ -180,7 +180,7 @@ function DokumenContent() {
   };
 
   const filteredDocs = docsList.filter((doc) => {
-    const normalizedType = doc.jenis.toUpperCase();
+    const normalizedType = (doc.jenis || "").toUpperCase();
     const matchCategory =
       category === "ALL" ||
       (category === "LAINNYA"

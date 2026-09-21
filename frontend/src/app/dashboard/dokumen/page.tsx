@@ -245,10 +245,10 @@ export default function DocumentManagementPage() {
                 </div>
                 <div className="flex max-w-[75%] flex-wrap items-center justify-end gap-1.5">
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase bg-amber-50 text-amber-800 border border-amber-200/80 font-mono">
-                    {doc.jenis.replace("_", " ")}
+                    {(doc.jenis || "DOKUMEN").replace(/_/g, " ")}
                   </span>
                   <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                    {doc.tahun}
+                    {doc.tahun || "-"}
                   </span>
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-black border ${
                     doc.isPublic

@@ -77,7 +77,10 @@ async function requestJson<T>(endpoint: string, options?: RequestInit): Promise<
   return response.json() as Promise<T>;
 }
 
-export function resolveDocumentUrl(url: string): string {
+export function resolveDocumentUrl(url?: string | null): string {
+  if (!url || typeof url !== "string") {
+    return "";
+  }
   return url.startsWith("/storage/") || url.startsWith("/api/")
     ? `${BACKEND_BASE_URL}${url}`
     : url;

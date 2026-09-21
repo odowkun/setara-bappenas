@@ -77,16 +77,16 @@ export function PublicDocumentGrid({
               </div>
               <div className="flex items-center gap-1.5">
                 <span className="rounded-full border border-amber-200 bg-amber-100 px-3 py-1 text-[10px] font-extrabold uppercase text-amber-900">
-                  {document.jenis.replace("_", " ")}
+                  {(document.jenis || "DOKUMEN").replace(/_/g, " ")}
                 </span>
                 <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-bold text-slate-700">
-                  {document.tahun}
+                  {document.tahun || "-"}
                 </span>
               </div>
             </div>
 
             <h2 className="text-base font-extrabold leading-snug text-slate-900">
-              {document.title}
+              {document.title || "Dokumen Publik BAPPEDA"}
             </h2>
             {(document.archiveCode || document.currentVersion?.versionLabel) && (
               <div className="flex flex-wrap items-center gap-2 font-mono text-[10px] font-bold text-blue-700">
@@ -100,9 +100,9 @@ export function PublicDocumentGrid({
             <div className="flex items-center gap-4 pt-1 text-xs font-medium text-slate-500">
               <span className="flex items-center gap-1">
                 <Building2 className="h-3.5 w-3.5 text-slate-400" />
-                Bidang: <strong className="uppercase text-slate-800">{document.bidang}</strong>
+                Bidang: <strong className="uppercase text-slate-800">{document.bidang || "UMUM"}</strong>
               </span>
-              <span>Ukuran: {document.ukuran}</span>
+              <span>Ukuran: {document.ukuran || "-"}</span>
             </div>
           </div>
 
@@ -110,11 +110,11 @@ export function PublicDocumentGrid({
             <div className="flex items-center gap-3 font-mono text-[11px] text-slate-500">
               <span className="flex items-center gap-1">
                 <Eye className="h-3.5 w-3.5" />
-                {document.views} dilihat
+                {document.views ?? 0} dilihat
               </span>
               <span className="flex items-center gap-1">
                 <Download className="h-3.5 w-3.5" />
-                {document.downloads} diunduh
+                {document.downloads ?? 0} diunduh
               </span>
             </div>
             <div className="flex items-center gap-2">

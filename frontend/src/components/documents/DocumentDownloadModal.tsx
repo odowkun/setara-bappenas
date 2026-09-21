@@ -17,7 +17,7 @@ interface DocumentDownloadModalProps {
 }
 
 export function DocumentDownloadModal({
-  document,
+  document: doc,
   onClose,
   onDownloaded,
 }: DocumentDownloadModalProps) {
@@ -33,18 +33,19 @@ export function DocumentDownloadModal({
   useEffect(() => {
     setEmail("");
     setErrorMessage("");
-  }, [document]);
+  }, [doc]);
 
   useEffect(() => {
-    if (!document) return;
+    if (!doc || typeof window === "undefined") return;
 
-    const originalOverflow = document.body.style.overflow;
-    const originalPaddingRight = document.body.style.paddingRight;
+    const domDoc = window.document;
+    const originalOverflow = domDoc.body.style.overflow;
+    const originalPaddingRight = domDoc.body.style.paddingRight;
 
-    const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
-    document.body.style.overflow = "hidden";
+    const scrollBarWidth = window.innerWidth - domDoc.documentElement.clientWidth;
+    domDoc.body.style.overflow = "hidden";
     if (scrollBarWidth > 0) {
-      document.body.style.paddingRight = `${scrollBarWidth}px`;
+      domDoc.body.style.paddingRight = `${scrollBarWidth}px`;
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -53,15 +54,15 @@ export function DocumentDownloadModal({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.paddingRight = originalPaddingRight;
+      domDoc.body.style.overflow = originalOverflow;
+      domDoc.body.style.paddingRight = originalPaddingRight;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [document, onClose, submitting]);
+  }, [doc, onClose, submitting]);
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!document) return;
+    if (!doc) return;
 
     setSubmitting(true);
     setErrorMessage("");
@@ -69,7 +70,7 @@ export function DocumentDownloadModal({
 
     try {
       const result = await documentAnalyticsService.registerDownload(
-        document.id,
+        doc.id,
         email.trim()
       );
       onDownloaded(result);
@@ -94,7 +95,7 @@ export function DocumentDownloadModal({
     }
   };
 
-  if (!mounted || !document) return null;
+  if (!mounted || !doc) return null;
 
   return createPortal(
     <div
@@ -139,7 +140,7 @@ export function DocumentDownloadModal({
 
         <div className="my-5 rounded-2xl border border-blue-100 bg-blue-50 p-3">
           <p className="line-clamp-2 text-xs font-extrabold text-blue-950">
-            {document.title}
+            {doc.title || "Dokumen Publik BAPPEDA"}
           </p>
         </div>
 
