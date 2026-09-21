@@ -118,40 +118,17 @@ export const SocialMediaSection: React.FC = () => {
       {/* SECTION CONTAINER */}
       <div className="space-y-6 sm:space-y-8">
         {/* SECTION HEADER */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 sm:gap-6 border-b border-slate-100 pb-5">
-          <div className="space-y-2 sm:space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-rose-50 border border-rose-200/80 text-rose-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
-              <Sparkles className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-              <span>Publikasi Multimedia &amp; Media Sosial</span>
-            </div>
-            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
-              Kanal Media Sosial BAPPEDA
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
-              Ikuti siaran langsung, liputan kegiatan musrenbang, dan warta perencanaan daerah melalui kanal YouTube dan postingan Instagram resmi BAPPEDA Halmahera Utara.
-            </p>
+        <div className="space-y-2 sm:space-y-3 max-w-3xl border-b border-slate-100 pb-5">
+          <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-700 text-[10px] sm:text-xs font-black uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+            <span>Publikasi Multimedia &amp; Media Sosial</span>
           </div>
-
-          <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
-            <a
-              href={youtubeData.channelUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-700 border border-red-200/80 font-bold text-xs flex items-center gap-2 transition active:scale-95 shadow-xs"
-            >
-              <Youtube className="w-4 h-4 text-red-600" />
-              <span>Kanal YouTube</span>
-            </a>
-            <a
-              href={OFFICIAL_INSTAGRAM_PROFILE.profileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200/80 font-bold text-xs flex items-center gap-2 transition active:scale-95 shadow-xs"
-            >
-              <Instagram className="w-4 h-4 text-pink-600" />
-              <span>Instagram Resmi</span>
-            </a>
-          </div>
+          <h2 className="text-2xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            Kanal Media Sosial BAPPEDA
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium leading-relaxed">
+            Ikuti siaran langsung, liputan kegiatan musrenbang, dan warta perencanaan daerah melalui kanal YouTube dan postingan Instagram resmi BAPPEDA Halmahera Utara.
+          </p>
         </div>
 
         {/* REPOSITIONED SOCIAL MEDIA SHOWCASE (WIDESCREEN 16:9 YOUTUBE SPOTLIGHT + 6 INSTAGRAM CARDS GRID) */}
