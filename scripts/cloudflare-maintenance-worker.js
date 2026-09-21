@@ -144,7 +144,17 @@ const MAINTENANCE_HTML = `<!DOCTYPE html>
 export default {
   async fetch(request, env, ctx) {
     try {
-      const response = await fetch(request);
+      const url = new URL(request.url);
+
+      // Jika request datang dari domain resmi Pemkab, arahkan hostname ke domain tunnel
+      let outgoingRequest = request;
+      if (url.hostname === "bappeda.halmaherautarakab.go.id") {
+        url.hostname = "bappeda.halut.my.id";
+        outgoingRequest = new Request(url.toString(), request);
+        outgoingRequest.headers.set("X-Forwarded-Host", "bappeda.halmaherautarakab.go.id");
+      }
+
+      const response = await fetch(outgoingRequest);
 
       // Tangkap kode error saat server fisik mati / tidak bisa dihubungi
       const serverDownStatuses = [502, 503, 504, 521, 522, 523, 530];
