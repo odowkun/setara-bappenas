@@ -35,6 +35,7 @@ import {
   FilePlus,
   Scale,
   CheckCircle2,
+  Lightbulb,
 } from "lucide-react";
 
 export const Navbar: React.FC = () => {
@@ -293,16 +294,51 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* 4. POPEDA DIRECT LINK */}
-          <a
-            href="https://sites.google.com/view/popeda"
-            target="_blank"
-            rel="noreferrer"
-            className="px-3.5 py-2 rounded-full hover:bg-blue-50 hover:text-blue-700 transition flex items-center gap-1"
+          {/* 4. INOVASI DROPDOWN */}
+          <div
+            className="relative"
+            onMouseEnter={() => handleMouseEnter("inovasi")}
+            onMouseLeave={handleMouseLeave}
           >
-            POPEDA
-            <ExternalLink className="w-3 h-3 text-slate-400" />
-          </a>
+            <button
+              onClick={() =>
+                setActiveDropdown(activeDropdown === "inovasi" ? null : "inovasi")
+              }
+              className={`px-3.5 py-2 rounded-full flex items-center gap-1.5 transition ${
+                activeDropdown === "inovasi"
+                  ? "bg-blue-50 text-blue-700"
+                  : "hover:bg-blue-50 hover:text-blue-700"
+              }`}
+            >
+              Inovasi
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                  activeDropdown === "inovasi" ? "rotate-180 text-blue-600" : ""
+                }`}
+              />
+            </button>
+
+            {activeDropdown === "inovasi" && (
+              <div className="absolute top-full left-0 mt-6 w-64 p-3.5 rounded-2xl bg-white border border-slate-200 shadow-2xl shadow-slate-950/20 z-50 animate-in fade-in zoom-in-95 duration-200 space-y-1">
+                <a
+                  href="https://sites.google.com/view/popeda"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setActiveDropdown(null)}
+                  className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-blue-50 text-slate-800 hover:text-blue-800 transition group"
+                >
+                  <Lightbulb className="w-4 h-4 text-blue-600 group-hover:scale-110 transition shrink-0" />
+                  <div className="flex-1">
+                    <div className="font-bold text-xs flex items-center justify-between">
+                      <span>POPEDA</span>
+                      <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-600 transition" />
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-normal">Pojok Perencanaan Daerah</div>
+                  </div>
+                </a>
+              </div>
+            )}
+          </div>
 
           {/* 5. LAYANAN PUBLIK DROPDOWN */}
           <div
@@ -524,17 +560,37 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile POPEDA Link */}
-          <a
-            href="https://sites.google.com/view/popeda"
-            target="_blank"
-            rel="noreferrer"
-            onClick={() => setMobileMenuOpen(false)}
-            className="p-3 rounded-2xl hover:bg-blue-50 hover:text-blue-700 transition border-t border-slate-100 flex items-center justify-between"
-          >
-            <span>POPEDA</span>
-            <ExternalLink className="w-4 h-4 text-slate-400" />
-          </a>
+          {/* Mobile Inovasi Submenu */}
+          <div className="border-t border-slate-100 pt-1">
+            <button
+              onClick={() => toggleMobileSubmenu("inovasi")}
+              className="w-full p-3 rounded-2xl flex items-center justify-between hover:bg-blue-50 transition"
+            >
+              <span>Inovasi</span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  mobileExpanded["inovasi"] ? "rotate-180 text-blue-600" : ""
+                }`}
+              />
+            </button>
+            {mobileExpanded["inovasi"] && (
+              <div className="pl-4 pr-2 py-1 space-y-1 font-medium text-slate-600">
+                <a
+                  href="https://sites.google.com/view/popeda"
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block p-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 flex items-center justify-between"
+                >
+                  <div className="flex items-center gap-2">
+                    <Lightbulb className="w-3.5 h-3.5 text-blue-600" />
+                    <span>POPEDA</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                </a>
+              </div>
+            )}
+          </div>
 
           {/* Mobile Layanan Publik Submenu */}
           <div className="border-t border-slate-100 pt-1">
