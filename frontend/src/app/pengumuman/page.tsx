@@ -31,6 +31,7 @@ import {
   officialContentService,
   type AnnouncementItem as OfficialAnnouncement,
 } from "@/services/officialContentService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 interface AnnouncementItem extends OfficialAnnouncement {
   fileSize?: string;
@@ -482,22 +483,25 @@ export default function PublicPengumumanPage() {
               </span>
 
               {/* Items Per Page Selector */}
-              <div className="flex items-center gap-1 bg-white border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-700">
-                <span className="text-slate-400">Tampilkan:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-                >
-                  <option value={5}>5 Dokumen</option>
-                  <option value={10}>10 Dokumen</option>
-                  <option value={50}>50 Dokumen</option>
-                  <option value={100}>100 Dokumen</option>
-                  <option value={999999}>Semua Data</option>
-                </select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Tampilkan:</span>
+                <div className="w-40">
+                  <SearchableSelect
+                    options={[
+                      { value: 5, label: "5 Dokumen" },
+                      { value: 10, label: "10 Dokumen" },
+                      { value: 50, label: "50 Dokumen" },
+                      { value: 100, label: "100 Dokumen" },
+                      { value: 999999, label: "Semua Data" },
+                    ]}
+                    value={itemsPerPage}
+                    onChange={(val) => {
+                      setItemsPerPage(Number(val));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Jumlah dokumen"
+                  />
+                </div>
               </div>
             </div>
 

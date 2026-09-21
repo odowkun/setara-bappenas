@@ -840,16 +840,17 @@ export default function DocumentDetailPage() {
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Status Progres Pembangunan</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "belum_mulai", label: "Belum Mulai" },
+                    { value: "dalam_proses", label: "Dalam Proses" },
+                    { value: "selesai", label: "Selesai 100%" },
+                    { value: "terkendala", label: "Terkendala / Restrukturisasi" },
+                  ]}
                   value={updateProgresForm.status_progres}
-                  onChange={(e) => setUpdateProgresForm({ ...updateProgresForm, status_progres: e.target.value as any })}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
-                >
-                  <option value="belum_mulai">Belum Mulai</option>
-                  <option value="dalam_proses">Dalam Proses</option>
-                  <option value="selesai">Selesai 100%</option>
-                  <option value="terkendala">Terkendala / Restrukturisasi</option>
-                </select>
+                  onChange={(val) => setUpdateProgresForm({ ...updateProgresForm, status_progres: val as any })}
+                  placeholder="Pilih status progres"
+                />
               </div>
 
               <div>
@@ -918,16 +919,17 @@ export default function DocumentDetailPage() {
             <form onSubmit={handleSaveAttachment} className="space-y-4">
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Kategori Dokumen Teknis</label>
-                <select
+                <SearchableSelect
+                  options={[
+                    { value: "foto", label: "Foto Dokumentasi Lapangan (JPG/PNG)" },
+                    { value: "ded", label: "Dokumen DED (Detail Engineering Design)" },
+                    { value: "amdal", label: "Dokumen AMDAL / Analisis Lingkungan" },
+                    { value: "pdf", label: "Laporan Hasil Pengawasan Monev" },
+                  ]}
                   value={attachmentType}
-                  onChange={(e) => setAttachmentType(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none"
-                >
-                  <option value="foto">Foto Dokumentasi Lapangan (JPG/PNG)</option>
-                  <option value="ded">Dokumen DED (Detail Engineering Design)</option>
-                  <option value="amdal">Dokumen AMDAL / Analisis Lingkungan</option>
-                  <option value="pdf">Laporan Hasil Pengawasan Monev</option>
-                </select>
+                  onChange={(val) => setAttachmentType(String(val))}
+                  placeholder="Pilih kategori dokumen teknis"
+                />
               </div>
 
               <div>

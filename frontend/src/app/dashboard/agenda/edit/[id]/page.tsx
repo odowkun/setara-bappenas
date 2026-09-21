@@ -25,6 +25,7 @@ import {
   officialContentService,
   type TaxonomyItem,
 } from "@/services/officialContentService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function EditAgendaPage() {
   const router = useRouter();
@@ -260,18 +261,23 @@ export default function EditAgendaPage() {
               Kategori Kegiatan *
             </label>
             {!isCustomCategory ? (
-              <select
+              <SearchableSelect
+                options={[
+                  ...categories.map((cat) => ({ value: cat, label: cat })),
+                  { value: "__NEW_CUSTOM__", label: "+ Buat Kategori Baru..." },
+                ]}
                 value={selectedCategory}
-                onChange={handleCategorySelectChange}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition shadow-2xs"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-                <option value="__NEW_CUSTOM__">+ Buat Kategori Baru...</option>
-              </select>
+                onChange={(val) => {
+                  if (val === "__NEW_CUSTOM__") {
+                    setIsCustomCategory(true);
+                    setCustomCategory("");
+                  } else {
+                    setSelectedCategory(String(val));
+                  }
+                }}
+                placeholder="-- Pilih Kategori Kegiatan --"
+                searchPlaceholder="Cari kategori kegiatan..."
+              />
             ) : (
               <div className="flex items-center gap-2">
                 <input
@@ -301,18 +307,23 @@ export default function EditAgendaPage() {
               <span>Penyelenggara / SKPD Penanggung Jawab *</span>
             </label>
             {!isCustomOrganizer ? (
-              <select
+              <SearchableSelect
+                options={[
+                  ...organizersList.map((org) => ({ value: org, label: org })),
+                  { value: "__NEW_CUSTOM_ORG__", label: "+ Lainnya / Tulis Manual..." },
+                ]}
                 value={selectedOrganizer}
-                onChange={handleOrganizerSelectChange}
-                className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition shadow-2xs"
-              >
-                {organizersList.map((org) => (
-                  <option key={org} value={org}>
-                    {org}
-                  </option>
-                ))}
-                <option value="__NEW_CUSTOM_ORG__">+ Lainnya / Tulis Manual...</option>
-              </select>
+                onChange={(val) => {
+                  if (val === "__NEW_CUSTOM_ORG__") {
+                    setIsCustomOrganizer(true);
+                    setCustomOrganizer("");
+                  } else {
+                    setSelectedOrganizer(String(val));
+                  }
+                }}
+                placeholder="-- Pilih Penyelenggara / SKPD --"
+                searchPlaceholder="Cari nama dinas / SKPD..."
+              />
             ) : (
               <div className="flex items-center gap-2">
                 <input

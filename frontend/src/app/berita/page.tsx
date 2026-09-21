@@ -19,6 +19,7 @@ import {
 import { API_BASE_URL } from "@/lib/apiClient";
 import { officialContentService } from "@/services/officialContentService";
 import { normalizeMediaUrl } from "@/services/adminService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 interface NewsItem {
   id: string;
@@ -334,22 +335,25 @@ export default function PublicNewsPage() {
               </span>
 
               {/* Items Per Page Selector */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-700">
-                <span className="text-slate-400">Tampilkan:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-                >
-                  <option value={6}>6 Kartu</option>
-                  <option value={10}>10 Kartu</option>
-                  <option value={50}>50 Kartu</option>
-                  <option value={100}>100 Kartu</option>
-                  <option value={999999}>Semua Data</option>
-                </select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Tampilkan:</span>
+                <div className="w-36">
+                  <SearchableSelect
+                    options={[
+                      { value: 6, label: "6 Kartu" },
+                      { value: 10, label: "10 Kartu" },
+                      { value: 50, label: "50 Kartu" },
+                      { value: 100, label: "100 Kartu" },
+                      { value: 999999, label: "Semua Data" },
+                    ]}
+                    value={itemsPerPage}
+                    onChange={(val) => {
+                      setItemsPerPage(Number(val));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Jumlah kartu"
+                  />
+                </div>
               </div>
             </div>
 

@@ -20,6 +20,7 @@ import {
 import { officialContentService } from "@/services/officialContentService";
 import { adminService } from "@/services/adminService";
 import { toast } from "@/lib/swal";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function TambahBeritaPage() {
   const router = useRouter();
@@ -257,20 +258,31 @@ export default function TambahBeritaPage() {
                   </button>
                 </div>
               ) : (
-                <select
+                <SearchableSelect
+                  options={categoryList.map((cat) => ({ value: cat, label: cat }))}
                   value={selectedCategory}
-                  onChange={handleSelectChange}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition cursor-pointer shadow-2xs"
-                >
-                  {categoryList.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                  <option value="__ADD_NEW__" className="font-bold text-blue-600 bg-blue-50">
-                    + Buat Kategori Baru...
-                  </option>
-                </select>
+                  onChange={(val) => setSelectedCategory(String(val))}
+                  placeholder="-- Pilih Kategori Topik Berita --"
+                  searchPlaceholder="Cari atau ketik kategori baru..."
+                  creatable={true}
+                  createLabelPrefix="Tambah kategori baru:"
+                  onCreateOption={async (newCat) => {
+                    const trimmed = newCat.trim();
+                    if (!trimmed) return;
+                    if (!categoryList.includes(trimmed)) {
+                      try {
+                        const created = await officialContentService.createNewsCategory(trimmed);
+                        setCategoryList((current) => [...current, created.name]);
+                        setSelectedCategory(created.name);
+                        toast.success(`Kategori "${created.name}" berhasil dibuat!`);
+                      } catch (error) {
+                        toast.error(error instanceof Error ? error.message : "Kategori gagal disimpan.");
+                      }
+                    } else {
+                      setSelectedCategory(trimmed);
+                    }
+                  }}
+                />
               )}
             </div>
 

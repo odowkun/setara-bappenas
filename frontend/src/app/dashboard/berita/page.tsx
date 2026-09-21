@@ -22,6 +22,7 @@ import {
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { adminService } from "@/services/adminService";
 import { officialContentService } from "@/services/officialContentService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 interface NewsItem {
   id: string;
@@ -197,41 +198,34 @@ export default function BeritaManagementPage() {
 
         <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap sm:flex-nowrap">
           {/* Category Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700">
-            <Tag className="w-3.5 h-3.5 text-slate-400" />
-            <span>Kategori:</span>
-            <select
+          <div className="w-full sm:w-56">
+            <SearchableSelect
+              options={categories.map((c) => ({ value: c, label: c === "Semua" ? "Semua Kategori" : c }))}
               value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
+              onChange={(val) => {
+                setSelectedCategory(String(val));
                 setCurrentPage(1);
               }}
-              className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-            >
-              {categories.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
+              placeholder="Pilih Kategori"
+              searchPlaceholder="Cari kategori..."
+            />
           </div>
 
           {/* Status Filter */}
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span>Status:</span>
-            <select
+          <div className="w-full sm:w-44">
+            <SearchableSelect
+              options={[
+                { value: "Semua", label: "Semua Status" },
+                { value: "Published", label: "Published" },
+                { value: "Draft", label: "Draft" },
+              ]}
               value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
+              onChange={(val) => {
+                setStatusFilter(String(val));
                 setCurrentPage(1);
               }}
-              className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-            >
-              <option value="Semua">Semua</option>
-              <option value="Published">Published</option>
-              <option value="Draft">Draft</option>
-            </select>
+              placeholder="Pilih Status"
+            />
           </div>
         </div>
       </div>
@@ -366,22 +360,25 @@ export default function BeritaManagementPage() {
               </span>
 
               {/* Items Per Page Selector */}
-              <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-700">
-                <span className="text-slate-400">Tampilkan:</span>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-                >
-                  <option value={5}>5 Baris</option>
-                  <option value={10}>10 Baris</option>
-                  <option value={50}>50 Baris</option>
-                  <option value={100}>100 Baris</option>
-                  <option value={999999}>Semua Data</option>
-                </select>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">Tampilkan:</span>
+                <div className="w-36">
+                  <SearchableSelect
+                    options={[
+                      { value: 5, label: "5 Baris" },
+                      { value: 10, label: "10 Baris" },
+                      { value: 50, label: "50 Baris" },
+                      { value: 100, label: "100 Baris" },
+                      { value: 999999, label: "Semua Data" },
+                    ]}
+                    value={itemsPerPage}
+                    onChange={(val) => {
+                      setItemsPerPage(Number(val));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Jumlah baris"
+                  />
+                </div>
               </div>
             </div>
 

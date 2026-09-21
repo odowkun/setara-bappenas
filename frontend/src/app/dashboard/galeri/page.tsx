@@ -24,6 +24,7 @@ import {
 import { showDeleteConfirm, toast } from "@/lib/swal";
 import { galeriService, AlbumItem, MediaItem } from "@/services/galeriService";
 import HeroVideoSettingsPanel from "@/components/admin/HeroVideoSettingsPanel";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function GaleriManagementPage() {
   const { hasRole } = useAuth();
@@ -207,25 +208,17 @@ export default function GaleriManagementPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span>Kategori Album:</span>
-            <select
-              value={selectedCategory}
-              onChange={(e) => {
-                setSelectedCategory(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-            >
-              {categoryOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="w-full sm:w-64">
+          <SearchableSelect
+            options={categoryOptions.map((c) => ({ value: c, label: c === "Semua" ? "Semua Kategori" : c }))}
+            value={selectedCategory}
+            onChange={(val) => {
+              setSelectedCategory(String(val));
+              setCurrentPage(1);
+            }}
+            placeholder="Pilih Kategori Album"
+            searchPlaceholder="Cari kategori album..."
+          />
         </div>
       </div>
 

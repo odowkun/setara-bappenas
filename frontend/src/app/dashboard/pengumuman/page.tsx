@@ -24,6 +24,7 @@ import {
   officialContentService,
   type AnnouncementItem,
 } from "@/services/officialContentService";
+import SearchableSelect from "@/components/ui/SearchableSelect";
 
 export default function PengumumanManagementPage() {
   const { hasRole } = useAuth();
@@ -150,25 +151,17 @@ export default function PengumumanManagementPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-700">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span>Tipe:</span>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-            >
-              {typeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="w-full sm:w-60">
+          <SearchableSelect
+            options={typeOptions.map((t) => ({ value: t, label: t === "Semua" ? "Semua Tipe" : t }))}
+            value={typeFilter}
+            onChange={(val) => {
+              setTypeFilter(String(val));
+              setCurrentPage(1);
+            }}
+            placeholder="Pilih Tipe Pengumuman"
+            searchPlaceholder="Cari tipe..."
+          />
         </div>
       </div>
 
@@ -334,22 +327,25 @@ export default function PengumumanManagementPage() {
             </span>
 
             {/* Items Per Page Selector */}
-            <div className="flex items-center gap-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold text-slate-700">
-              <span className="text-slate-400">Tampilkan:</span>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => {
-                  setItemsPerPage(Number(e.target.value));
-                  setCurrentPage(1);
-                }}
-                className="bg-transparent font-black text-blue-700 focus:outline-none cursor-pointer"
-              >
-                <option value={5}>5 Baris</option>
-                <option value={10}>10 Baris</option>
-                <option value={50}>50 Baris</option>
-                <option value={100}>100 Baris</option>
-                <option value={999999}>Semua Data</option>
-              </select>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-slate-500">Tampilkan:</span>
+              <div className="w-36">
+                <SearchableSelect
+                  options={[
+                    { value: 5, label: "5 Baris" },
+                    { value: 10, label: "10 Baris" },
+                    { value: 50, label: "50 Baris" },
+                    { value: 100, label: "100 Baris" },
+                    { value: 999999, label: "Semua Data" },
+                  ]}
+                  value={itemsPerPage}
+                  onChange={(val) => {
+                    setItemsPerPage(Number(val));
+                    setCurrentPage(1);
+                  }}
+                  placeholder="Jumlah baris"
+                />
+              </div>
             </div>
           </div>
 
