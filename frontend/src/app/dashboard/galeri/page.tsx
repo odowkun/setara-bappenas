@@ -138,19 +138,6 @@ export default function GaleriManagementPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
-          <button
-            type="button"
-            onClick={() => setActiveTab(activeTab === "hero-video" ? "albums" : "hero-video")}
-            className={`w-full sm:w-auto px-4 py-2.5 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer border ${
-              activeTab === "hero-video"
-                ? "bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100"
-                : "bg-amber-50 text-amber-900 border-amber-300 hover:bg-amber-100"
-            }`}
-          >
-            <Video className="w-4 h-4 text-amber-600" />
-            <span>{activeTab === "hero-video" ? "Lihat Daftar Album" : "Pengaturan Video Beranda"}</span>
-          </button>
-
           {hasRole(["superadmin", "admin_umum", "admin_bidang"]) && (
             <Link
               href="/dashboard/galeri/tambah"
