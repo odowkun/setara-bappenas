@@ -5,7 +5,8 @@ Seksi **Media Sosial BAPPEDA** (`SocialMediaSection.tsx`) dirancang untuk menyaj
 
 Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmahera Utara dengan tata letak direposisi agar proporsional:
 - **Header Standar Konsisten**: Menggunakan badge biru selaras tema utama (`bg-blue-50 border-blue-200/80 text-blue-700`) bertuliskan *"Publikasi Multimedia & Media Sosial"* dengan deskripsi ringkas tanpa tombol duplikat di header agar fokus pandangan langsung tertuju ke card utama.
-1. **Blok Atas: Sorotan Siaran Resmi YouTube (Widescreen Cinematic 16:9 Spotlight)**:
+1. **Blok Atas: Sorotan Siaran Resmi YouTube (Widescreen 16:9 - Tema Terang / Light Theme)**:
+   - **Tampilan Terang Bersih & Elegan**: Menggunakan card berlatar putih (`bg-white border-slate-200/90 shadow-lg`) dengan tipografi gelap kontras (`text-slate-900`) dan badge merah lembut (`bg-red-50 text-red-700`) selaras dengan tema portal Pemkab.
    - **Rasio Layar Lebar 16:9 Alami (`aspect-video`)**: Thumbnail dan pemutar video menggunakan rasio asli 16:9 tanpa pemotongan teks maupun kompresi gambar vertikal ("anti-gepeng").
    - **Tata Letak Internal 2 Kolom**:
      - **Sisi Kiri (7 Kolom LG / 8 Kolom XL)**: Frame video widescreen 16:9 dengan badge *HD VIDEO*, animasi play button, indikator siaran resmi, dan pemutaran inline iframe (`youtube-nocookie.com`).
