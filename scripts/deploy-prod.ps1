@@ -105,7 +105,7 @@ $env:NODE_ENV = "production"
 $env:CI = "1"
 $env:NEXT_TELEMETRY_DISABLED = "1"
 $env:NODE_OPTIONS = "--max-old-space-size=4096"
-$env:NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY = "0x4AAAAAAAE-ZwI9f5kc3-XTA"
+$env:NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY = "0x4AAAAAAE-ZwI9f5kc3-XTA"
 
 # Bersihkan file config lama jika ada
 $legacyConfigTs = Join-Path $frontendDest "next.config.ts"

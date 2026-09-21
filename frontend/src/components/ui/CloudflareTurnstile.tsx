@@ -38,7 +38,7 @@ export const CloudflareTurnstile: React.FC<CloudflareTurnstileProps> = ({
   onVerify,
   onExpire,
   onError,
-  siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAAAE-ZwI9f5kc3-XTA",
+  siteKey = process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY || "0x4AAAAAAE-ZwI9f5kc3-XTA",
   theme = "light",
   className = "",
 }) => {

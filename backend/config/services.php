@@ -41,8 +41,8 @@ return [
     ],
 
     'cloudflare' => [
-        'turnstile_secret' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY', '0x4AAAAAAAE-ZwB1DjRPVylt4Jy-4SUnW4E4'),
-        'turnstile_site_key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY', '0x4AAAAAAAE-ZwI9f5kc3-XTA'),
+        'turnstile_secret' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY', '0x4AAAAAAE-ZwB1DjRPVylt4Jy-4SUnW4E4'),
+        'turnstile_site_key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY', '0x4AAAAAAE-ZwI9f5kc3-XTA'),
     ],
 
 ];
