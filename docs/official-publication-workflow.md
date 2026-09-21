@@ -58,7 +58,8 @@ Halaman tambah juga menjadi halaman edit ketika menerima `?edit={id}`. Data edit
 
 ### Agenda dan Pengumuman
 
-Form tambah/edit dapat menyimpan draf. Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Fitur Sematkan / Pin (`PATCH /pengumuman/{id}/pin`) memungkinkan admin memilih Pengumuman Resmi Utama yang langsung tampil di banner Beranda dan Hero Card Pengumuman Publik.
+Form tambah/edit agenda dapat menyimpan draf dan menerbitkan kegiatan resmi daerah. Input tautan Google Maps / koordinat peta lokasi kegiatan bersifat opsional murni tanpa tombol preset statis (tombol preset *"Titik BAPPEDA Halut"* telah dihapus agar form lebih bersih dan tidak memicu input koordinat yang tidak relevan dengan agenda eksternal).
+Dashboard menampilkan status dan menyediakan publish/unpublish melalui route khusus. Fitur Sematkan / Pin (`PATCH /pengumuman/{id}/pin`) memungkinkan admin memilih Pengumuman Resmi Utama yang langsung tampil di banner Beranda dan Hero Card Pengumuman Publik.
 
 **Aturan Penayangan & Arsip Pengumuman Resmi**:
 1. **Prioritas Sematan Beranda (PIN)**: Pengumuman yang ditandai `is_important = true` selalu diprioritaskan dan ditampilkan pada banner Beranda tanpa terhalang filter tanggal kedaluwarsa (`valid_until`), sampai administrator secara sadar melepas pin.

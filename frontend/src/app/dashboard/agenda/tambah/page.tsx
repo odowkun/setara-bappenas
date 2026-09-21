@@ -12,7 +12,6 @@ import {
   Building2,
   MapPin,
   ExternalLink,
-  Navigation,
 } from "lucide-react";
 import {
   AGENDA_COLOR_PALETTES,
@@ -370,23 +369,9 @@ export default function TambahAgendaPage() {
             </div>
 
             <div>
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-1.5">
-                <label className="block text-xs font-black uppercase text-slate-700">
-                  Link Google Maps ATAU Koordinat Peta (Opsional)
-                </label>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMapInput("1.7285, 128.0051");
-                    if (!location) setLocation("Aula Utama Kantor BAPPEDA Kab. Halmahera Utara");
-                  }}
-                  className="px-3 py-1 rounded-xl bg-blue-100 hover:bg-blue-200 text-blue-800 text-[11px] font-bold transition flex items-center gap-1.5 shrink-0 self-start sm:self-auto"
-                  title="Gunakan Titik Koordinat Kantor BAPPEDA Halut"
-                >
-                  <Navigation className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Titik BAPPEDA Halut</span>
-                </button>
-              </div>
+              <label className="block text-xs font-black uppercase text-slate-700 mb-1.5">
+                Link Google Maps ATAU Koordinat Peta (Opsional)
+              </label>
 
               <div className="flex items-center gap-2">
                 <input
