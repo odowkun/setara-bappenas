@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { ShieldCheck, Lock, Mail, ArrowRight, Eye, EyeOff, AlertCircle } from "lucide-react";
+import CloudflareTurnstile from "@/components/ui/CloudflareTurnstile";
 
 export default function DashboardLoginPage() {
   const router = useRouter();
@@ -11,6 +12,7 @@ export default function DashboardLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -19,11 +21,11 @@ export default function DashboardLoginPage() {
     setError("");
     setSubmitting(true);
 
-    const success = await login(email, password);
-    if (success) {
+    const res = await login(email, password, turnstileToken || undefined);
+    if (res.success) {
       router.push("/dashboard");
     } else {
-      setError("Email atau kata sandi tidak terdaftar di direktori akun SPBE.");
+      setError(res.message || "Email atau kata sandi tidak terdaftar di direktori akun SPBE.");
     }
     setSubmitting(false);
   };
@@ -104,6 +106,13 @@ export default function DashboardLoginPage() {
               </button>
             </div>
           </div>
+
+          {/* Cloudflare Turnstile Verification */}
+          <CloudflareTurnstile
+            onVerify={(token) => setTurnstileToken(token)}
+            onExpire={() => setTurnstileToken(null)}
+            onError={() => setTurnstileToken(null)}
+          />
 
           <button
             type="submit"

@@ -18,7 +18,50 @@ class AuthController extends Controller
         $request->validate([
             'email' => 'required|email',
             'password' => 'required|string',
+            'cf_turnstile_token' => 'nullable|string',
         ]);
+
+        // Cloudflare Turnstile Verification (jika secret key dikonfigurasi)
+        $turnstileSecret = config('services.cloudflare.turnstile_secret') ?? env('CLOUDFLARE_TURNSTILE_SECRET_KEY');
+        if (! empty($turnstileSecret)) {
+            $turnstileToken = $request->input('cf_turnstile_token') ?? $request->input('cf-turnstile-response');
+
+            if (empty($turnstileToken)) {
+                return response()->json([
+                    'status' => 'error',
+                    'code' => 422,
+                    'message' => 'Verifikasi keamanan Cloudflare Turnstile wajib diselesaikan.',
+                ], 422);
+            }
+
+            try {
+                $cfResponse = \Illuminate\Support\Facades\Http::asForm()->timeout(5)->post(
+                    'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+                    [
+                        'secret' => $turnstileSecret,
+                        'response' => $turnstileToken,
+                        'remoteip' => $request->ip(),
+                    ]
+                );
+
+                $cfData = $cfResponse->json();
+
+                if (! ($cfData['success'] ?? false)) {
+                    \Illuminate\Support\Facades\Log::warning('Cloudflare Turnstile verification failed', [
+                        'ip' => $request->ip(),
+                        'errors' => $cfData['error-codes'] ?? [],
+                    ]);
+
+                    return response()->json([
+                        'status' => 'error',
+                        'code' => 422,
+                        'message' => 'Verifikasi keamanan Cloudflare gagal atau kedaluwarsa. Silakan muat ulang verifikasi.',
+                    ], 422);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::error('Cloudflare Turnstile connection failed: ' . $e->getMessage());
+            }
+        }
 
         $email = Str::lower(trim($request->string('email')->toString()));
         $user = User::where('email', $email)->first();

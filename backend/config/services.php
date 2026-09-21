@@ -40,4 +40,9 @@ return [
         'geoprocessing_url' => env('ESRI_GEOPROCESSING_URL'),
     ],
 
+    'cloudflare' => [
+        'turnstile_secret' => env('CLOUDFLARE_TURNSTILE_SECRET_KEY'),
+        'turnstile_site_key' => env('CLOUDFLARE_TURNSTILE_SITE_KEY'),
+    ],
+
 ];

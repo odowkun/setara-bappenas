@@ -12,7 +12,11 @@ import {
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
+  login: (
+    email: string,
+    password: string,
+    cfTurnstileToken?: string
+  ) => Promise<{ success: boolean; message?: string }>;
   logout: () => void;
   hasRole: (roles: Role[]) => boolean;
   hasPermission: (permission: string) => boolean;
@@ -68,25 +72,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     validateSession();
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (
+    email: string,
+    password: string,
+    cfTurnstileToken?: string
+  ): Promise<{ success: boolean; message?: string }> => {
     try {
+      const payload: Record<string, string> = { email, password };
+      if (cfTurnstileToken) {
+        payload.cf_turnstile_token = cfTurnstileToken;
+      }
+
       const response = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify(payload),
       });
 
-      if (!response.ok) return false;
+      const result = await response.json().catch(() => null);
 
-      const result = (await response.json()) as LoginResponse;
+      if (!response.ok) {
+        return {
+          success: false,
+          message:
+            result?.message ||
+            "Email atau kata sandi tidak terdaftar di direktori akun SPBE.",
+        };
+      }
+
       setUser(result.data.user);
       localStorage.setItem(AUTH_TOKEN_KEY, result.data.token);
-      return true;
+      return { success: true };
     } catch {
-      return false;
+      return {
+        success: false,
+        message:
+          "Gangguan koneksi ke server autentikasi. Silakan periksa jaringan Anda.",
+      };
     }
   };
 
