@@ -251,12 +251,6 @@ export default function DasarHukumEditorPage() {
       {/* HEADER CARD */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
-              <Scale className="w-3.5 h-3.5" />
-              Regulasi &amp; Landasan Kerja
-            </span>
-          </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Scale className="w-6 h-6 text-blue-600 shrink-0" />
             <span>Editor Dasar Hukum &amp; Regulasi</span>

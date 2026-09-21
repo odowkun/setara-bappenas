@@ -246,12 +246,9 @@ export default function TautanOpdDashboardPage() {
     <div className="w-full space-y-6 font-sans pb-12">
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="space-y-2">
-          <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
-            <Link2 className="w-3.5 h-3.5" />
-            Integrasi OPD
-          </span>
-          <h1 className="text-2xl font-black text-slate-900 tracking-tight">
-            Manajemen Tautan OPD &amp; Aplikasi Daerah
+          <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
+            <Link2 className="w-6 h-6 text-blue-600 shrink-0" />
+            <span>Manajemen Tautan OPD &amp; Aplikasi Daerah</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium max-w-3xl">
             Kelola nama OPD, logo, URL opsional, status tampil, dan urutan kartu yang muncul di halaman beranda.

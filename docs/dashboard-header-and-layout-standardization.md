@@ -22,21 +22,13 @@ Seluruh halaman modul utama maupun sub-halaman dashboard menggunakan format kart
 ```tsx
 <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
   <div className="space-y-1">
-    {/* 1. Badge Pill Kategori */}
-    <div className="flex items-center gap-2">
-      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
-        <Icon className="w-3.5 h-3.5" />
-        {BadgeKategori}
-      </span>
-    </div>
-
-    {/* 2. Judul Modul */}
+    {/* 1. Judul Modul */}
     <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
       <MainIcon className="w-6 h-6 text-blue-600 shrink-0" />
       <span>{JudulHalaman}</span>
     </h1>
 
-    {/* 3. Deskripsi Subjudul */}
+    {/* 2. Deskripsi Subjudul */}
     <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
       {DeskripsiFungsiModul}
     </p>

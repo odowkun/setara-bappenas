@@ -240,11 +240,6 @@ export default function DashboardPage() {
       {/* 1. TOP WELCOME BANNER */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <span className="px-3.5 py-1 rounded-full text-xs font-black uppercase bg-blue-50 text-blue-800 border border-blue-200/80 tracking-wider">
-              HAK AKSES: {getRoleDisplayName()}
-            </span>
-          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Selamat Datang, <span className="text-blue-700">{user?.name}</span> 👋
           </h1>

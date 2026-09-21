@@ -399,12 +399,6 @@ export default function GeoprocessingAnalisisPage() {
       {/* Header Banner Clean */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-purple-50 text-purple-700 border border-purple-200 tracking-wider">
-              <Compass className="w-3.5 h-3.5" />
-              Studio Geoprocessing &amp; Buffer
-            </span>
-          </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Compass className="w-6 h-6 text-purple-600 shrink-0" />
             <span>Studio Analisis Spasial &amp; Geoprocessing Bappeda</span>

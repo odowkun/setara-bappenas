@@ -212,12 +212,6 @@ export default function DocumentArchiveDetailPage() {
     <main className="w-full space-y-6 font-sans pb-12">
       <header className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-[10px] font-black uppercase bg-blue-50 text-blue-700 border border-blue-200 tracking-wider">
-              <Archive className="w-3.5 h-3.5" />
-              {data.jenis} · TAHUN {data.tahun}
-            </span>
-          </div>
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Archive className="w-6 h-6 text-blue-600 shrink-0" />
             <span>{data.title}</span>
