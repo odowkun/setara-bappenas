@@ -37,14 +37,31 @@ import {
 } from "@/data/socialMediaData";
 
 const CATEGORY_OPTIONS = [
-  "WARTA PERENCANAAN",
-  "SPASIAL & LINGKUNGAN",
-  "INFRASTRUKTUR",
-  "KESEJAHTERAAN SOSIAL",
-  "AGENDA DAERAH",
-  "PEMERINTAHAN",
-  "UMUM",
+  { value: "WARTA PERENCANAAN", label: "WARTA PERENCANAAN" },
+  { value: "SPASIAL & LINGKUNGAN", label: "SPASIAL & LINGKUNGAN" },
+  { value: "INFRASTRUKTUR", label: "INFRASTRUKTUR" },
+  { value: "KESEJAHTERAAN SOSIAL", label: "KESEJAHTERAAN SOSIAL" },
+  { value: "AGENDA DAERAH", label: "AGENDA DAERAH" },
+  { value: "PEMERINTAHAN", label: "PEMERINTAHAN" },
+  { value: "UMUM", label: "UMUM" },
 ];
+
+const formatDateToIndonesian = (dateStr: string) => {
+  if (!dateStr) return "";
+  const parts = dateStr.trim().split(/\s+/);
+  if (parts.length === 3) return dateStr;
+  const [y, m, d] = dateStr.split("-");
+  if (y && m && d) {
+    const monthNames = [
+      "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+      "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    const monthIdx = parseInt(m, 10) - 1;
+    const monthName = monthNames[monthIdx] || m;
+    return `${parseInt(d, 10)} ${monthName} ${y}`;
+  }
+  return dateStr;
+};
 
 export default function InstagramSocialMediaSettingsPanel() {
   const [loading, setLoading] = useState(true);
@@ -63,7 +80,7 @@ export default function InstagramSocialMediaSettingsPanel() {
 
   // Form fields
   const [formTitle, setFormTitle] = useState("");
-  const [formCategory, setFormCategory] = useState(CATEGORY_OPTIONS[0]);
+  const [formCategory, setFormCategory] = useState(CATEGORY_OPTIONS[0].value);
   const [formDate, setFormDate] = useState("");
   const [formImages, setFormImages] = useState<string[]>([]);
   const [formCaption, setFormCaption] = useState("");
@@ -145,8 +162,8 @@ export default function InstagramSocialMediaSettingsPanel() {
     }
     setEditingPostId(null);
     setFormTitle("");
-    setFormCategory(CATEGORY_OPTIONS[0]);
-    setFormDate(new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }));
+    setFormCategory(CATEGORY_OPTIONS[0].value);
+    setFormDate(new Date().toISOString().split("T")[0]);
     setFormImages([]);
     setFormCaption("");
     setFormLikes(150);
@@ -159,7 +176,7 @@ export default function InstagramSocialMediaSettingsPanel() {
   const handleOpenEditForm = (post: InstagramPostData) => {
     setEditingPostId(post.id);
     setFormTitle(post.title);
-    setFormCategory(post.category);
+    setFormCategory(post.category || CATEGORY_OPTIONS[0].value);
     setFormDate(post.date);
     setFormImages(post.images && post.images.length > 0 ? [...post.images] : []);
     setFormCaption(post.caption);
@@ -219,6 +236,10 @@ export default function InstagramSocialMediaSettingsPanel() {
       return;
     }
 
+    const finalDate =
+      formatDateToIndonesian(formDate.trim()) ||
+      new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
+
     let updatedPosts: InstagramPostData[];
     if (editingPostId) {
       updatedPosts = posts.map((p) =>
@@ -227,7 +248,7 @@ export default function InstagramSocialMediaSettingsPanel() {
               ...p,
               title: formTitle.trim(),
               category: formCategory,
-              date: formDate.trim(),
+              date: finalDate,
               images: formImages,
               caption: formCaption.trim(),
               likesCount: Number(formLikes) || 0,
@@ -244,7 +265,7 @@ export default function InstagramSocialMediaSettingsPanel() {
         id: `ig-${Date.now()}`,
         title: formTitle.trim(),
         category: formCategory,
-        date: formDate.trim() || new Date().toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" }),
+        date: finalDate,
         images: formImages,
         caption: formCaption.trim(),
         likesCount: Number(formLikes) || 0,
@@ -637,7 +658,7 @@ export default function InstagramSocialMediaSettingsPanel() {
                   <SearchableSelect
                     options={CATEGORY_OPTIONS}
                     value={formCategory}
-                    onChange={(val) => setFormCategory(val)}
+                    onChange={(val) => setFormCategory(String(val))}
                     placeholder="Pilih Kategori"
                   />
                 </div>

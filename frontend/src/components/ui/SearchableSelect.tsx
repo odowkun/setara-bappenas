@@ -11,7 +11,7 @@ export interface SearchableOption {
 }
 
 interface SearchableSelectProps {
-  options: SearchableOption[];
+  options: (SearchableOption | string | number)[];
   value?: string | number | null;
   onChange: (value: string | number) => void;
   placeholder?: string;
@@ -27,7 +27,7 @@ interface SearchableSelectProps {
 }
 
 export default function SearchableSelect({
-  options,
+  options = [],
   value,
   onChange,
   placeholder = "-- Pilih Opsi --",
@@ -55,7 +55,25 @@ export default function SearchableSelect({
     setMounted(true);
   }, []);
 
-  const selectedOption = options.find((opt) => String(opt.value) === String(value));
+  // Safe normalization of options: supports SearchableOption, plain string, or plain number
+  const normalizedOptions: SearchableOption[] = (options || []).map((opt) => {
+    if (opt === null || opt === undefined) {
+      return { value: "", label: "" };
+    }
+    if (typeof opt === "string" || typeof opt === "number") {
+      return { value: String(opt), label: String(opt) };
+    }
+    return {
+      value: opt.value !== undefined && opt.value !== null ? opt.value : "",
+      label:
+        opt.label !== undefined && opt.label !== null
+          ? String(opt.label)
+          : String(opt.value ?? ""),
+      sublabel: opt.sublabel,
+    };
+  });
+
+  const selectedOption = normalizedOptions.find((opt) => String(opt.value) === String(value));
   const hasValue = value !== undefined && value !== null && String(value).trim() !== "";
   const displayLabel = selectedOption
     ? selectedOption.label
@@ -64,16 +82,16 @@ export default function SearchableSelect({
     : placeholder;
 
   const trimmedSearch = searchTerm.trim();
-  const exactMatch = options.some(
+  const exactMatch = normalizedOptions.some(
     (opt) =>
-      opt.label.toLowerCase() === trimmedSearch.toLowerCase() ||
-      String(opt.value).toLowerCase() === trimmedSearch.toLowerCase()
+      (opt.label || "").toLowerCase() === trimmedSearch.toLowerCase() ||
+      String(opt.value || "").toLowerCase() === trimmedSearch.toLowerCase()
   );
 
-  const filteredOptions = options.filter(
+  const filteredOptions = normalizedOptions.filter(
     (opt) =>
-      opt.label.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (opt.sublabel && opt.sublabel.toLowerCase().includes(searchTerm.toLowerCase()))
+      (opt.label || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (opt.sublabel && (opt.sublabel || "").toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const updatePosition = () => {

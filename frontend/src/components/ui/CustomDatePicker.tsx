@@ -46,10 +46,22 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
     setMounted(true);
   }, []);
 
-  // Parse initial date or default to current date
+  // Parse initial date (supports YYYY-MM-DD, ISO, or Indonesian format like "17 September 2026")
   const parseValueDate = (valStr: string) => {
     if (!valStr) return new Date();
-    const d = new Date(valStr);
+    const cleanStr = String(valStr).trim();
+    const parts = cleanStr.split(/\s+/);
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const monthIdx = MONTH_NAMES_ID.findIndex(
+        (m) => m.toLowerCase() === parts[1].toLowerCase()
+      );
+      const year = parseInt(parts[2], 10);
+      if (!isNaN(day) && monthIdx !== -1 && !isNaN(year)) {
+        return new Date(year, monthIdx, day);
+      }
+    }
+    const d = new Date(cleanStr);
     return isNaN(d.getTime()) ? new Date() : d;
   };
 
@@ -122,8 +134,8 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   const formatDisplayDate = (valStr: string) => {
     if (!valStr) return "Pilih Tanggal";
-    const d = new Date(valStr);
-    if (isNaN(d.getTime())) return "Pilih Tanggal";
+    const d = parseValueDate(valStr);
+    if (isNaN(d.getTime())) return String(valStr);
     const day = String(d.getDate()).padStart(2, "0");
     const month = MONTH_NAMES_ID[d.getMonth()];
     const year = d.getFullYear();
