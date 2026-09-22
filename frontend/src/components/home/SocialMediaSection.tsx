@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import {
-  Youtube,
   Instagram,
   ExternalLink,
   ChevronLeft,
@@ -187,16 +186,6 @@ export const SocialMediaSection: React.FC = () => {
                   </p>
                 </div>
               </div>
-
-              <a
-                href={youtubeData.channelUrl || "https://www.youtube.com/@bappedahalmaherautara"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white font-extrabold text-[11px] flex items-center gap-1.5 shadow-md shadow-red-600/20 active:scale-95 transition cursor-pointer shrink-0"
-              >
-                <Youtube className="w-3.5 h-3.5 fill-white" />
-                <span>Berlangganan</span>
-              </a>
             </div>
 
             {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
@@ -226,38 +215,11 @@ export const SocialMediaSection: React.FC = () => {
                   {/* Subtle Dark Vignette for contrast on video overlay elements */}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
 
-                  {/* Top Bar Overlay */}
-                  <div className="absolute top-3.5 inset-x-3.5 flex items-center justify-between z-10 pointer-events-none">
-                    <div className="flex items-center gap-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 shadow-md">
-                      <div className="w-4 h-4 rounded-full bg-red-600 flex items-center justify-center text-white shrink-0">
-                        <Youtube className="w-2.5 h-2.5 fill-white" />
-                      </div>
-                      <span className="text-[10px] font-bold text-white tracking-wide truncate max-w-[160px] sm:max-w-xs">
-                        {youtubeData.channelTitle}
-                      </span>
-                    </div>
-
-                    <span className="px-2 py-0.5 rounded-full bg-red-600 text-white text-[9px] font-black uppercase tracking-wider shadow-md animate-pulse">
-                      HD VIDEO
-                    </span>
-                  </div>
-
                   {/* Big Play Button in Center */}
                   <div className="absolute inset-0 flex items-center justify-center z-10">
                     <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/70 group-hover/video:scale-110 group-hover/video:bg-red-500 transition-all duration-300 ring-4 ring-white/25">
                       <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
                     </div>
-                  </div>
-
-                  {/* Bottom Status Bar */}
-                  <div className="absolute bottom-3 inset-x-3.5 z-10 flex items-center justify-between pointer-events-none">
-                    <div className="flex items-center gap-1.5 text-white/95 text-[11px] font-semibold drop-shadow-md">
-                      <span className="w-2 h-2 rounded-full bg-red-500 animate-ping" />
-                      <span>Putar Video Siaran Resmi</span>
-                    </div>
-                    <span className="px-1.5 py-0.5 rounded bg-black/70 backdrop-blur-sm text-white/90 text-[9px] font-mono border border-white/10">
-                      YouTube Official
-                    </span>
                   </div>
                 </div>
               )}

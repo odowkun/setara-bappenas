@@ -8,7 +8,7 @@ Fitur ini menghadirkan dua pilar utama saluran komunikasi publik Pemkab Halmaher
 1. **Sisi Kiri: Pemutar Video YouTube Murni (6 Kolom Desktop / 16:9 Widescreen Asli)**:
    - **Tampilan Bersih & Nol White Space**: Frame pemutar video berdiri mandiri tanpa teks penjelasan/deskripsi di bawahnya (`bg-white rounded-3xl border border-slate-200/90 shadow-lg p-3 sm:p-4`), menghilangkan seluruh area kosong/whitespace.
    - **Rasio Layar Lebar 16:9 Alami (`aspect-video`)**: Pemutar video dikunci pada rasio murni 16:9 (`aspect-video w-full`) sehingga thumbnail resolusi tinggi (`maxresdefault`) dan pemutar video tidak pernah terpotong (*uncropped*) ataupun terkompresi vertikal ("anti-gepeng").
-   - **Interaktif & Siap Putar**: Dilengkapi overlay status siaran resmi, badge HD Video, animasi tombol play di tengah, dan dukungan pemutaran inline iframe (`youtube-nocookie.com`).
+   - **Interaktif & Siap Putar**: Tampilan thumbnail 16:9 ultra-bersih dengan tombol play elegan di tengah dan dukungan pemutaran inline iframe (`youtube-nocookie.com`), bebas dari teks/overlay yang menutupi gambar.
 2. **Sisi Kanan: Feed Postingan Instagram Interaktif (6 Kolom Desktop / 2 Postingan Seimbang)**:
    - **Tinggi Selaras & Seimbang Presisi**: Menggunakan formasi 2 postingan berdampingan (`grid-cols-1 sm:grid-cols-2 gap-3`) sehingga total tinggi card Instagram sejajar presisi dengan tinggi pemutar video YouTube 16:9 di sebelah kiri (~340px).
    - **Branding Akun Resmi**: Header profil Instagram resmi `@bappeda_halut` dengan avatar berbingkai gradien, centang terverifikasi, tagline *"Sinergi Lokal, Solusi Global"*, dan tombol aksi `Ikuti`.
