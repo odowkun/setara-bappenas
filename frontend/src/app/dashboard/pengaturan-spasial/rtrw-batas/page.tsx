@@ -22,14 +22,22 @@ import {
   AlertTriangle,
   MapPin,
   Check,
+  X,
+  ExternalLink,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, showDeleteConfirm, showConfirm, toast } from "@/lib/swal";
 import KmzUploader from "@/components/gis/KmzUploader";
-import { ParsedKmzResult } from "@/lib/gis/kmzParser";
+import KmzFeaturePreview from "@/components/gis/KmzFeaturePreview";
+import { parseKmzOrKmlFile, ParsedKmzResult } from "@/lib/gis/kmzParser";
 import { geoSettingService, GeoSettingData, SpatialLayerItem } from "@/services/geoSettingService";
 
 const GeotaggingMapPicker = dynamic(
   () => import("@/components/gis/GeotaggingMapPicker"),
+  { ssr: false }
+);
+
+const KmzMiniMapPreview = dynamic(
+  () => import("@/components/gis/KmzMiniMapPreview"),
   { ssr: false }
 );
 
@@ -51,6 +59,9 @@ export default function RtrwBatasSettingPage() {
   const [newLayerColor, setNewLayerColor] = useState("#0284c7");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submittingLayer, setSubmittingLayer] = useState(false);
+  const [isParsingNewLayer, setIsParsingNewLayer] = useState(false);
+  const [newLayerParsedResult, setNewLayerParsedResult] = useState<ParsedKmzResult | null>(null);
+  const [inspectingLayer, setInspectingLayer] = useState<SpatialLayerItem | null>(null);
 
   // Styling Tab Controls
   const [showKabBoundary, setShowKabBoundary] = useState(true);
@@ -194,7 +205,7 @@ export default function RtrwBatasSettingPage() {
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       if (file.size > 15 * 1024 * 1024) {
@@ -202,7 +213,33 @@ export default function RtrwBatasSettingPage() {
         return;
       }
       setSelectedFile(file);
-      toast.success(`File "${file.name}" berhasil dipilih.`);
+
+      // Parse spatial content immediately
+      try {
+        setIsParsingNewLayer(true);
+        const parsed = await parseKmzOrKmlFile(file);
+        setNewLayerParsedResult(parsed);
+
+        // Auto-fill Layer Name if empty
+        if (!newLayerName.trim()) {
+          const rawName = file.name.replace(/\.[^/.]+$/, "");
+          const cleanName = rawName
+            .replace(/[_-]/g, " ")
+            .replace(/\b\w/g, (l) => l.toUpperCase());
+          setNewLayerName(cleanName);
+        }
+
+        toast.success(
+          `File "${file.name}" berhasil diurai (${parsed.summary.totalFeatures} objek spasial). Preview isian siap ditampilkan!`
+        );
+      } catch (err: any) {
+        console.error("Gagal mengurai file spasial:", err);
+        toast.error(err.message || "Gagal mengurai file spasial.");
+        showErrorSwal("Gagal Membaca File Spasial", err.message || "File KMZ/KML/GeoJSON tidak dapat diurai.");
+        setNewLayerParsedResult(null);
+      } finally {
+        setIsParsingNewLayer(false);
+      }
     }
   };
 
@@ -219,20 +256,23 @@ export default function RtrwBatasSettingPage() {
         name: newLayerName.trim(),
         type: newLayerType,
         legal_basis: newLegalBasis.trim() || "SK Bupati Halut 2026",
-        feature_count: Math.floor(Math.random() * 8) + 1,
+        feature_count: newLayerParsedResult?.summary.totalFeatures || 1,
         color: newLayerColor,
         visible: true,
+        file_name: newLayerParsedResult?.fileName || selectedFile?.name || undefined,
+        geojson: newLayerParsedResult?.geojson || undefined,
       });
 
       setLayersList((prev) => [res.data, ...prev]);
       setNewLayerName("");
       setNewLegalBasis("");
       setSelectedFile(null);
+      setNewLayerParsedResult(null);
 
       toast.success("Master layer spasial berhasil ditambahkan ke database!");
       showSuccessSwal(
         "Layer Berhasil Ditambahkan!",
-        `Master data "${res.data.name}" telah disimpan ke database spasial Bappeda.`
+        `Master data "${res.data.name}" (${res.data.feature_count || 1} objek spasial) telah disimpan ke database spasial Bappeda.`
       );
     } catch (err: any) {
       toast.error("Gagal menambahkan layer spasial");
@@ -577,20 +617,48 @@ export default function RtrwBatasSettingPage() {
                 </div>
 
                 <div>
-                  <label className="font-bold text-slate-700 block mb-1.5">File Spasial (.geojson / .kmz / .kml) *</label>
-                  <div className="border-2 border-dashed border-slate-300 rounded-2xl p-4 bg-slate-50 text-center hover:bg-slate-100 transition cursor-pointer relative">
-                    <input
-                      type="file"
-                      accept=".geojson,.json,.kmz,.kml"
-                      onChange={handleFileUpload}
-                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                    />
-                    <FileCode className="w-8 h-8 text-slate-400 mx-auto mb-1" />
-                    <span className="font-bold text-slate-700 block text-xs">
-                      {selectedFile ? selectedFile.name : "Pilih atau Drag File GeoJSON / KMZ"}
-                    </span>
-                    <span className="text-[10px] text-slate-500 block mt-0.5">Maksimal file 15MB (SRID EPSG:4326)</span>
-                  </div>
+                  <label className="font-bold text-slate-700 block mb-1.5">
+                    File Spasial (.geojson / .kmz / .kml) *
+                  </label>
+
+                  {isParsingNewLayer ? (
+                    <div className="border-2 border-dashed border-rose-300 rounded-2xl p-6 bg-rose-50/40 text-center flex flex-col items-center justify-center space-y-2">
+                      <RefreshCw className="w-8 h-8 text-rose-600 animate-spin" />
+                      <span className="text-xs font-bold text-rose-900">
+                        Mengurai dan membaca isian data spasial KMZ/GeoJSON...
+                      </span>
+                      <p className="text-[11px] text-rose-600">
+                        Memeriksa koordinat, poligon, dan atribut placemark
+                      </p>
+                    </div>
+                  ) : newLayerParsedResult ? (
+                    <div className="space-y-2">
+                      <KmzFeaturePreview
+                        parsedResult={newLayerParsedResult}
+                        color={newLayerColor}
+                        onClear={() => {
+                          setSelectedFile(null);
+                          setNewLayerParsedResult(null);
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-300 hover:border-rose-400 rounded-2xl p-5 bg-slate-50 hover:bg-rose-50/30 text-center transition cursor-pointer relative group">
+                      <input
+                        type="file"
+                        accept=".geojson,.json,.kmz,.kml"
+                        onChange={handleFileUpload}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <FileCode className="w-8 h-8 text-slate-400 group-hover:text-rose-600 mx-auto mb-1 transition-colors" />
+                      <span className="font-bold text-slate-700 block text-xs">
+                        Pilih atau Drag File GeoJSON / KMZ / KML
+                      </span>
+                      <span className="text-[10px] text-slate-500 block mt-0.5">
+                        Maksimal file 15MB (SRID EPSG:4326) • Preview isian akan langsung muncul
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <button
@@ -662,6 +730,17 @@ export default function RtrwBatasSettingPage() {
                         </div>
 
                         <div className="flex items-center gap-2 shrink-0">
+                          {item.geojson && (
+                            <button
+                              type="button"
+                              onClick={() => setInspectingLayer(item)}
+                              className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition cursor-pointer"
+                              title="Lihat Preview Peta & Data"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
                           <label className="relative inline-flex items-center cursor-pointer">
                             <input
                               type="checkbox"
@@ -857,6 +936,63 @@ export default function RtrwBatasSettingPage() {
               >
                 {saving ? <RefreshCw className="w-4 h-4 animate-spin text-white" /> : <Save className="w-4 h-4 text-white" />}
                 <span>{saving ? "Menyimpan..." : "Simpan Batas Administrasi"}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL INSPECTION FOR MASTER LAYER */}
+      {inspectingLayer && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-2xl w-full overflow-hidden text-xs space-y-4 p-6">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-3">
+                <span
+                  className="w-4 h-4 rounded-full border border-white shadow-xs shrink-0"
+                  style={{ backgroundColor: inspectingLayer.color }}
+                />
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm">{inspectingLayer.name}</h4>
+                  <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 font-medium">
+                    <span className="uppercase font-bold text-slate-700 bg-slate-100 px-1.5 py-0.5 rounded">
+                      {inspectingLayer.type}
+                    </span>
+                    <span>• {inspectingLayer.legal_basis || "Dasar Hukum"}</span>
+                    <span>• {inspectingLayer.feature_count ?? 1} Feature</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setInspectingLayer(null)}
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Map Preview */}
+            <div className="h-[280px] rounded-2xl overflow-hidden border border-slate-200">
+              <KmzMiniMapPreview
+                geojson={
+                  typeof inspectingLayer.geojson === "string"
+                    ? JSON.parse(inspectingLayer.geojson)
+                    : inspectingLayer.geojson
+                }
+                color={inspectingLayer.color}
+                height="280px"
+              />
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <button
+                type="button"
+                onClick={() => setInspectingLayer(null)}
+                className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs transition cursor-pointer"
+              >
+                Tutup Preview
               </button>
             </div>
           </div>

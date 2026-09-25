@@ -2,8 +2,9 @@
 
 import React, { useState } from "react";
 import { parseKmzOrKmlFile, ParsedKmzResult } from "@/lib/gis/kmzParser";
-import { Upload, FileCode2, CheckCircle2, AlertCircle, RefreshCw, Layers, ShieldCheck } from "lucide-react";
+import { Upload, FileCode2, CheckCircle2, AlertCircle, RefreshCw, Layers, ShieldCheck, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { toast } from "@/lib/swal";
+import KmzFeaturePreview from "./KmzFeaturePreview";
 
 interface KmzUploaderProps {
   onKmzParsed: (result: ParsedKmzResult, color: string) => void;
@@ -29,14 +30,15 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
   const [isParsing, setIsParsing] = useState(false);
   const [parsedData, setParsedData] = useState<ParsedKmzResult | null>(null);
   const [selectedColor, setSelectedColor] = useState<string>("#7c3aed");
+  const [showFullPreview, setShowFullPreview] = useState(false);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const ext = file.name.split(".").pop()?.toLowerCase();
-    if (ext !== "kmz" && ext !== "kml") {
-      toast.error("Format file harus berupa .kmz atau .kml");
+    if (!["kmz", "kml", "geojson", "json"].includes(ext || "")) {
+      toast.error("Format file harus berupa .kmz, .kml, atau .geojson");
       return;
     }
 
@@ -48,7 +50,7 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
       toast.success(`Berhasil mengimpor ${result.summary.totalFeatures} objek spasial dari file ${file.name}`);
     } catch (err: any) {
       console.error("KMZ parse error:", err);
-      toast.error(err.message || "Gagal mengurai file KMZ");
+      toast.error(err.message || "Gagal mengurai file spasial");
     } finally {
       setIsParsing(false);
     }
@@ -63,6 +65,7 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
 
   const handleReset = () => {
     setParsedData(null);
+    setShowFullPreview(false);
     if (onClear) onClear();
   };
 
@@ -75,7 +78,7 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
               <FileCode2 className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-800">Import File Spasial (.KMZ / .KML)</h4>
+              <h4 className="text-sm font-bold text-slate-800">Import File Spasial (.KMZ / .KML / .GeoJSON)</h4>
               <p className="text-xs text-slate-500">Unggah peta rencana RTRW, delineasi lahan, atau koridor proyek</p>
             </div>
           </div>
@@ -93,7 +96,16 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
       )}
 
       {hideHeader && parsedData && (
-        <div className="flex items-center justify-end mb-2">
+        <div className="flex items-center justify-between mb-2">
+          <button
+            type="button"
+            onClick={() => setShowFullPreview((prev) => !prev)}
+            className="text-xs font-bold text-purple-700 hover:bg-purple-50 px-2.5 py-1 rounded-lg transition flex items-center gap-1 cursor-pointer"
+          >
+            <Eye className="w-3.5 h-3.5" />
+            <span>{showFullPreview ? "Sembunyikan Isian KMZ" : "Lihat Isian & Placemark KMZ"}</span>
+            {showFullPreview ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+          </button>
           <button
             type="button"
             onClick={handleReset}
@@ -109,7 +121,7 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
         <label className="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-purple-200 hover:border-purple-400 rounded-xl bg-purple-50/40 hover:bg-purple-50 cursor-pointer transition-all">
           <input
             type="file"
-            accept=".kmz,.kml"
+            accept=".kmz,.kml,.geojson,.json"
             onChange={handleFileChange}
             disabled={isParsing}
             className="hidden"
@@ -125,36 +137,57 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
                 <Upload className="w-6 h-6" />
               </div>
               <div>
-                <span className="text-xs font-bold text-slate-700">Pilih file .KMZ / .KML dari Komputer</span>
-                <p className="text-[11px] text-slate-400 mt-0.5">Mendukung format Google Earth & ArcGIS Pro KMZ</p>
+                <span className="text-xs font-bold text-slate-700">Pilih file .KMZ / .KML / .GeoJSON dari Komputer</span>
+                <p className="text-[11px] text-slate-400 mt-0.5">Mendukung format Google Earth, Ina-Geoportal & ArcGIS Pro</p>
               </div>
             </div>
           )}
         </label>
       ) : (
         <div className="space-y-4">
-          <div className="p-3 bg-purple-50/70 rounded-xl border border-purple-100 flex items-start space-x-3">
-            <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
-            <div className="text-xs space-y-1">
-              <p className="font-bold text-purple-950">File Terurai: {parsedData.fileName}</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 pt-1">
-                <div>• Total Objek: <strong className="text-slate-800">{parsedData.summary.totalFeatures}</strong></div>
-                <div>• Poligon Tapak: <strong className="text-slate-800">{parsedData.summary.polygonsCount}</strong></div>
-                <div>• Koridor/Jalur: <strong className="text-slate-800">{parsedData.summary.polylinesCount}</strong></div>
-                <div>• Titik Acuan: <strong className="text-slate-800">{parsedData.summary.pointsCount}</strong></div>
-                {parsedData.summary.totalAreaHa > 0 && (
-                  <div className="col-span-2 text-purple-700 font-medium">
-                    • Estimasi Total Luas Area: <strong>{parsedData.summary.totalAreaHa} Ha</strong>
-                  </div>
-                )}
-                {parsedData.summary.totalLengthKm > 0 && (
-                  <div className="col-span-2 text-blue-700 font-medium">
-                    • Estimasi Total Panjang Koridor: <strong>{parsedData.summary.totalLengthKm} Km</strong>
-                  </div>
-                )}
+          <div className="p-3 bg-purple-50/70 rounded-xl border border-purple-100 flex items-start justify-between gap-3">
+            <div className="flex items-start space-x-3">
+              <CheckCircle2 className="w-5 h-5 text-purple-600 shrink-0 mt-0.5" />
+              <div className="text-xs space-y-1">
+                <p className="font-bold text-purple-950">File Terurai: {parsedData.fileName}</p>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-slate-600 pt-1">
+                  <div>• Total Objek: <strong className="text-slate-800">{parsedData.summary.totalFeatures}</strong></div>
+                  <div>• Poligon Tapak: <strong className="text-slate-800">{parsedData.summary.polygonsCount}</strong></div>
+                  <div>• Koridor/Jalur: <strong className="text-slate-800">{parsedData.summary.polylinesCount}</strong></div>
+                  <div>• Titik Acuan: <strong className="text-slate-800">{parsedData.summary.pointsCount}</strong></div>
+                  {parsedData.summary.totalAreaHa > 0 && (
+                    <div className="col-span-2 text-purple-700 font-medium">
+                      • Estimasi Total Luas Area: <strong>{parsedData.summary.totalAreaHa} Ha</strong>
+                    </div>
+                  )}
+                  {parsedData.summary.totalLengthKm > 0 && (
+                    <div className="col-span-2 text-blue-700 font-medium">
+                      • Estimasi Total Panjang Koridor: <strong>{parsedData.summary.totalLengthKm} Km</strong>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setShowFullPreview((prev) => !prev)}
+              className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-xs"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>{showFullPreview ? "Tutup Preview" : "Preview Isian KMZ"}</span>
+            </button>
           </div>
+
+          {/* Full Content Preview Drawer */}
+          {showFullPreview && (
+            <KmzFeaturePreview
+              parsedResult={parsedData}
+              color={selectedColor}
+              compact={hideHeader}
+              onClear={handleReset}
+            />
+          )}
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center space-x-1.5">
@@ -192,3 +225,4 @@ export const KmzUploader: React.FC<KmzUploaderProps> = ({
 };
 
 export default KmzUploader;
+

@@ -27,9 +27,24 @@ Sistem menggunakan pendekatan **Persistent Server-Side (Option A)**:
    - Jika batas kustom aktif di database, peta menayangkan poligon kustom tersebut.
    - Jika batas kustom di-reset (`null`), peta secara otomatis kembali ke poligon bawaan resmi di `src/data/halut-boundary.json`.
 
-## 3. Alur Penggunaan
+## 3. Fitur Preview Isian KMZ & Inspeksi Placemark (Terbaru)
+Pada pembaruan ini, seluruh proses unggah file spasial (`.kmz`, `.kml`, `.geojson`, `.json`) dilengkapi dengan **Preview Isian Spasial Real-Time**:
+1. **Multi-Format Parsing Langsung di Browser**:
+   - Mendukung `.kmz` (arsip zip KML), `.kml` (dokumen XML Google Earth), serta `.geojson` dan `.json` (Ina-Geoportal, QGIS, ArcGIS).
+   - Mengurai koordinat poligon, garis, dan titik secara otomatis ke proyeksi WGS84 (EPSG:4326).
+2. **Komponen Preview (`KmzFeaturePreview` & `KmzMiniMapPreview`)**:
+   - **Tab 1: Preview Peta Interaktif**: Mini map Leaflet dengan switch basemap (Satelit Esri vs OpenStreetMap/Carto) yang langsung menayangkan geometri hasil urai dengan warna layer yang dipilih, lengkap dengan popup informasi dan tooltip nama placemark.
+   - **Tab 2: Isian Placemark & Fitur**: Menampilkan daftar seluruh objek spasial dengan badge tipe geometri (`Polygon`, `LineString`, `Point`), estimasi luas (Ha) / panjang (km), serta filter pencarian instan nama objek.
+   - **Tab 3: Tabel Atribut Lengkap**: Menampilkan tabel properti KML `ExtendedData` / tag HTML yang telah diekstrak secara otomatis menjadi pasangan kunci-nilai (key-value), serta tombol salin format GeoJSON.
+   - **Inspeksi Layer Tersimpan**: Pada kolom master data layer aktif, tersedia tombol aksi *Eye* untuk menginspeksi kembali peta dan data dari setiap layer spasial yang telah tersimpan di database.
+
+## 4. Alur Penggunaan
 1. Buka menu **Dashboard $\rightarrow$ Pengaturan Spasial $\rightarrow$ Batas Administrasi & RTRW** (`/dashboard/pengaturan-spasial/rtrw-batas`).
-2. Di seksi **Garis Batas Utama Kabupaten Halmahera Utara**, pilih file `.kmz` atau `.kml` pada area upload.
-3. Sistem mengurai file dan menampilkan ringkasan data spasial.
-4. Klik **Simpan & Sinkronkan Batas Resmi** untuk menyimpan ke database. Seluruh peta WebGIS publik dan dashboard akan langsung menggunakan batas ini.
-5. Untuk mengembalikan ke batas bawaan, klik tombol **Reset ke Default BPS** dengan konfirmasi dialog SweetAlert2.
+2. Di seksi **Unggah Layer Spasial Sub-Wilayah / RTRW**:
+   - Pilih atau drag file `.kmz`, `.kml`, atau `.geojson`.
+   - Sistem seketika mengurai file dan menampilkan kartu **Preview Isian KMZ** (Peta mini interaktif, daftar placemark, dan tabel atribut).
+   - Nama layer spasial otomatis terisi cerdas dari nama file jika belum diisi.
+3. Klik **+ Simpan Layer Spasial Tambahan** untuk menyimpan data spasial dan GeoJSON ke database server.
+4. Di seksi **Garis Batas Utama Kabupaten Halmahera Utara**, file KMZ batas resmi juga dapat diinspeksi isian placemark-nya sebelum disinkronkan ke database.
+5. Untuk mengembalikan batas kabupaten ke standar BPS, gunakan tombol **Reset ke Default BPS** dengan konfirmasi SweetAlert2.
+
