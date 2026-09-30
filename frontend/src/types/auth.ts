@@ -25,7 +25,7 @@ export interface JenisDokumenItem {
   id: number | string;
   name: string;
   code: string;
-  scope_role: 'admin_umum' | 'admin_bidang' | 'semua';
+  scope_role: string;
   is_default: boolean;
   created_by?: string;
 }

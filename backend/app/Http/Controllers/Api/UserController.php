@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
+use App\Models\JenisDokumen;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -46,7 +47,7 @@ class UserController extends Controller
             'jabatan' => ['nullable', 'string', 'max:255'],
             'permissions' => ['sometimes', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
-            'allowed_document_permissions' => ['sometimes', 'array'],
+            'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
         ]);
 
@@ -62,7 +63,7 @@ class UserController extends Controller
                 'nip' => $validated['nip'] ?? null,
                 'jabatan' => $validated['jabatan'] ?? null,
                 'allowed_document_permissions' => $validated['allowed_document_permissions']
-                    ?? $this->defaultDocumentPermissions($validated['role']),
+                    ?? $this->defaultDocumentPermissions($validated['role'], $validated['bidang'] ?? null),
             ]);
 
             $user->syncRoles([$validated['role']]);
@@ -102,7 +103,7 @@ class UserController extends Controller
             'jabatan' => ['nullable', 'string', 'max:255'],
             'permissions' => ['sometimes', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
-            'allowed_document_permissions' => ['sometimes', 'array'],
+            'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
         ]);
 
@@ -225,17 +226,37 @@ class UserController extends Controller
      */
     private function documentPermissionNames(): array
     {
-        return ['rpjpd', 'rpjmd', 'rkpd', 'lkpj', 'renstra', 'renja', 'dik_sektoral', 'data_sektoral'];
+        $codes = JenisDokumen::pluck('code')->all();
+        $fallback = ['rpjpd', 'rpjmd', 'rkpd', 'lkpj', 'renstra', 'renja', 'dik_sektoral', 'data_sektoral', 'rpjmn', 'rpjmd_prov', 'rpjmd_kab'];
+        return array_values(array_unique(array_merge($fallback, $codes)));
     }
 
     /**
      * @return array<int, string>
      */
-    private function defaultDocumentPermissions(string $role): array
+    private function defaultDocumentPermissions(string $role, ?string $bidang = null): array
     {
+        if ($role === 'superadmin') {
+            return $this->documentPermissionNames();
+        }
+
+        $query = JenisDokumen::query();
+        if ($role === 'admin_umum' || $bidang === 'semua') {
+            $query->whereIn('scope_role', ['admin_umum', 'semua', 'sektert']);
+        } elseif ($bidang) {
+            $query->whereIn('scope_role', ['semua', 'admin_bidang', $bidang]);
+        } else {
+            $query->whereIn('scope_role', ['semua', 'admin_bidang']);
+        }
+
+        $codes = $query->pluck('code')->all();
+        if (! empty($codes)) {
+            return $codes;
+        }
+
         return match ($role) {
             'superadmin' => $this->documentPermissionNames(),
-            'admin_umum' => ['rpjpd', 'rpjmd', 'rkpd', 'lkpj'],
+            'admin_umum' => ['rpjpd', 'rpjmd', 'rkpd', 'lkpj', 'rpjmn', 'rpjmd_prov', 'rpjmd_kab'],
             default => ['renstra', 'renja', 'dik_sektoral', 'data_sektoral'],
         };
     }

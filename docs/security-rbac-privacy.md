@@ -22,26 +22,47 @@ Dokumen ini menjelaskan kontrol keamanan yang benar-benar diterapkan pada Portal
 - Login dibatasi 5 percobaan/menit; survei/kritik, preview, download, pencarian, dan counter berita juga dibatasi.
 - Token memiliki masa berlaku default 480 menit.
 
-## Matriks role dan permission
+## Matriks Role dan Permission (14 Modul Granular SPBE)
 
-| Permission | Super Admin | Admin Umum | Admin Bidang |
-|---|---:|---:|---:|
-| `manage_dashboard` | Ya | Ya | Tidak |
-| `manage_users` | Ya | Tidak | Tidak |
-| `view_audit_logs` | Ya | Tidak | Tidak |
-| `manage_profil` | Ya | Tidak | Tidak |
-| `manage_berita` | Ya | Ya | Tidak |
-| `manage_pengumuman` | Ya | Ya | Tidak |
-| `manage_galeri` | Ya | Ya | Tidak |
-| `manage_tautan_opd` | Ya | Ya | Tidak |
-| `manage_dokumen` | Ya | Ya | Ya, bidang sendiri |
-| `manage_document_types` | Ya | Tidak | Tidak |
-| `view_download_logs` | Ya | Ya | Tidak |
-| `manage_survey` | Ya | Ya | Tidak |
-| `manage_kritik` | Ya | Ya | Tidak |
-| `manage_gis` | Ya | Ya | Ya, bidang sendiri |
+Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Utara, hak akses SPBE dipetakan ke dalam 14 modul permission Spatie secara granular:
 
-Super Admin mempunyai seluruh permission. Endpoint `/users` juga mewajibkan role `superadmin`, sehingga pemberian permission `manage_users` secara langsung kepada role lain tidak dapat dipakai untuk eskalasi hak akses.
+| No | Nama Modul Permission | Slug Spatie | Cakupan & Otoritas Akses |
+|:---:|---|---|---|
+| 1 | Kelola Profil & Kelembagaan | `manage_profil` | Visi-misi, tugas-fungsi, dasar hukum, profil kepala bappeda & struktur organisasi |
+| 2 | Kelola Pengumuman Resmi & Edaran | `manage_pengumuman` | Publikasi surat edaran resmi, pengumuman lelang/tender, lampiran PDF |
+| 3 | Kelola Tautan OPD & Aplikasi | `manage_tautan_opd` | Kartu direktori website OPD & aplikasi daerah di beranda |
+| 4 | Kelola Editor Peta Spasial GIS | `manage_gis` | Layer peta interaktif, batas wilayah kecamatan/desa, proyek spasial RTRW |
+| 5 | Kelola Statistik Dashboard | `manage_dashboard` | Metrik indikator makro, realisasi APBD daerah, capaian sasaran pembangunan |
+| 6 | Lihat Audit Log SPBE | `view_audit_logs` | Catatan forensik mutasi data server, alamat IP, waktu kejadian & aktor |
+| 7 | Kelola Berita & Artikel Humas | `manage_berita` | Rilis siaran pers, artikel berita daerah, kategori topik berita portal |
+| 8 | Kelola Galeri Dokumentasi | `manage_galeri` | Album foto kegiatan BAPPEDA, video YouTube liputan perencana |
+| 9 | Kelola Repository Dokumen | `manage_dokumen` | Upload, arsip, dan penerbitan dokumen perencanaan daerah/bidang |
+| 10 | Kelola Pengguna & Hak Akses | `manage_users` | Manajemen akun admin, penetapan role, dan modul izin (Khusus SuperAdmin) |
+| 11 | Kelola Survei Kepuasan (IKM) | `manage_survey` | Manajemen kuesioner responden survei kepuasan layanan publik BAPPEDA |
+| 12 | Lihat Riwayat Pengunduh Dokumen | `view_download_logs` | Audit trail email pengunduh dokumen publik dan metadata unduhan |
+| 13 | Kelola Master Jenis Dokumen | `manage_document_types` | Master jenis dokumen dan konfigurasi scope bidang perizinan dokumen |
+| 14 | Kelola Kritik, Saran & Aspirasi | `manage_kritik` | Kotak aspirasi masyarakat, moderasi masukan, dan pemberian tanggapan |
+
+### Presets Hak Akses Pegawai per Bidang
+Frontend form pembuatan/pengeditan pengguna (`/dashboard/users/tambah` dan `/dashboard/users/edit/[id]`) menyediakan fitur **Quick Presets** yang langsung mengisi modul permission dan scope dokumen sesuai tupoksi:
+- **IPW (Infrastruktur & Pengembangan Wilayah)**: Modul 2, 3, 8, 9, 10 + Scope Dokumen IPW & Bersama (KLHS, RTRW, RDTR, Renstra, Renja, Data Sektoral).
+- **MONEV / RENVAL (Perencanaan & Evaluasi)**: Modul 2, 3, 4, 8, 9, 10 + Scope Dokumen Monev (LKPJ, RKPD, Evaluasi RKPD).
+- **EKONOMI & SDA**: Modul 2, 3, 8, 9, 10 + Scope Dokumen Ekonomi (TPID, Ketahanan Pangan, Renstra, Renja).
+- **SOSBUD (Pembangunan Manusia)**: Modul 1, 7, 11, 13, 14 + Scope Dokumen Sosbud (Stunting, Kemiskinan Ekstrem, PPM).
+- **SEKRETARIAT UMUM**: Modul 2, 3, 8, 9, 10, 12 + Dokumen Makro Daerah (RPJPD, RPJMD, Renja Sekretariat).
+- **SUPER ADMIN**: Akses Penuh (Seluruh 14 Modul & Semua Dokumen).
+
+## Dynamic Bidang-Scoped Document Authorization
+
+Tabel master `jenis_dokuments` memiliki kolom `scope_role` bertipe string dinamis untuk menghubungkan jenis dokumen dengan bidang pengunggah tanpa bentrok:
+- `semua`: Dapat diunggah oleh semua admin bidang dan admin umum (contoh: *Renstra, Renja, Data Sektoral*).
+- `admin_umum`: Dokumen makro strategis yang hanya boleh dikelola oleh Sekretariat/Super Admin (*RPJPD, RPJMD, RKPD*).
+- `infrastruktur`: Dokumen teknis spesifik Bidang IPW (*RTRW, RDTR, KLHS, Masterplan Drainase*).
+- `sosbud`: Dokumen teknis spesifik Bidang Sosbud (*Stunting, Kemiskinan Ekstrem, Indeks SPM*).
+- `perekonomian`: Dokumen teknis spesifik Bidang Ekonomi (*TPID, PDRB, Neraca Bahan Makanan*).
+- `renval`: Dokumen teknis spesifik Bidang Monev (*LKPJ, Evaluasi Triwulan, Capaian Renja*).
+
+Jika `allowed_document_permissions` pengguna disetel `null`, sistem secara otomatis mengizinkan seluruh dokumen yang ber-scope `semua` plus dokumen yang ber-scope bidang pengguna tersebut. SuperAdmin tetap dapat memberikan izin dokumen kustom jika ada penugasan silang.
 
 ## Batas publik dan admin
 

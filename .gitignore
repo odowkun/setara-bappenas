@@ -31,6 +31,8 @@ tmp/
 storage/*.key
 storage/pail/
 public/storage
+frontend/public/storage
+frontend/tsconfig.tsbuildinfo
 
 # OS & IDE Files
 .DS_Store

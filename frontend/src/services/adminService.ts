@@ -134,8 +134,11 @@ export const adminService = {
     return [{ code: "ALL", label: "Semua Jenis Dokumen" }];
   },
 
-  fetchJenisDokumenItems: async (role?: string): Promise<JenisDokumenItem[]> => {
-    const query = role ? `?role=${encodeURIComponent(role)}` : "";
+  fetchJenisDokumenItems: async (role?: string, bidang?: string): Promise<JenisDokumenItem[]> => {
+    const params = new URLSearchParams();
+    if (role) params.set("role", role);
+    if (bidang) params.set("bidang", bidang);
+    const query = params.toString() ? `?${params.toString()}` : "";
     const res = await adminService.apiFetch(`/jenis-dokumen${query}`);
     if (!res?.data || !Array.isArray(res.data)) {
       throw new Error("Jenis dokumen gagal dimuat dari database.");
@@ -146,7 +149,7 @@ export const adminService = {
   createJenisDokumen: async (data: {
     name: string;
     code: string;
-    scope_role: "admin_umum" | "admin_bidang" | "semua";
+    scope_role: string;
   }): Promise<JenisDokumenItem> => {
     const res = await adminService.apiFetch("/jenis-dokumen", {
       method: "POST",

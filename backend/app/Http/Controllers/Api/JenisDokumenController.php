@@ -13,14 +13,22 @@ class JenisDokumenController extends Controller
      */
     public function index(Request $request)
     {
-        $role = $request->role ?? 'semua';
+        $role = $request->role ?? null;
+        $bidang = $request->bidang ?? null;
 
         $query = JenisDokumen::query();
 
-        if ($role === 'admin_umum') {
-            $query->whereIn('scope_role', ['admin_umum', 'semua']);
-        } elseif (str_contains($role, 'admin_bidang')) {
-            $query->whereIn('scope_role', ['admin_bidang', 'semua']);
+        if ($role === 'superadmin') {
+            // SuperAdmin has access to all document types
+        } elseif ($bidang && $bidang !== 'semua') {
+            // Filter by specific bidang plus global/common documents
+            $query->whereIn('scope_role', ['semua', 'admin_bidang', $bidang]);
+        } elseif ($role === 'admin_umum' || $bidang === 'semua') {
+            // Sekretariat / Admin Umum gets makro and global documents
+            $query->whereIn('scope_role', ['admin_umum', 'semua', 'sektert']);
+        } elseif ($role === 'admin_bidang') {
+            // Any admin_bidang gets global or bidang-scoped documents
+            $query->whereIn('scope_role', ['admin_bidang', 'semua', 'infrastruktur', 'sosbud', 'perekonomian', 'renval']);
         }
 
         $list = $query->orderBy('id', 'asc')->get();
@@ -40,7 +48,7 @@ class JenisDokumenController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|max:50|unique:jenis_dokuments,code',
-            'scope_role' => 'required|in:admin_umum,admin_bidang,semua',
+            'scope_role' => 'required|in:admin_umum,admin_bidang,semua,infrastruktur,sosbud,perekonomian,renval,sektert',
         ]);
 
         $jenis = JenisDokumen::create([

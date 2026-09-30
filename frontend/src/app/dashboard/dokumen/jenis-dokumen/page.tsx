@@ -20,6 +20,35 @@ import {
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 
+const SCOPE_ROLE_OPTIONS = [
+  { value: "semua", label: "Semua Bidang (Global / Dokumen Bersama: Renstra, Renja, Data Sektoral)" },
+  { value: "infrastruktur", label: "Khusus Bidang IPW (Infrastruktur & Pengembangan Wilayah)" },
+  { value: "sosbud", label: "Khusus Bidang Sosbud (Pembangunan Manusia & Masyarakat)" },
+  { value: "perekonomian", label: "Khusus Bidang Ekonomi & SDA" },
+  { value: "renval", label: "Khusus Bidang Monev / Renval (Pengendalian & Evaluasi)" },
+  { value: "admin_umum", label: "Khusus Sekretariat / Dokumen Makro Daerah (RPJPD, RPJMD, dll)" },
+];
+
+const renderScopeBadge = (scope: string) => {
+  switch (scope) {
+    case "infrastruktur":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-cyan-100 text-cyan-900 border border-cyan-200">Khusus Bidang IPW</span>;
+    case "sosbud":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-rose-100 text-rose-900 border border-rose-200">Khusus Bidang Sosbud</span>;
+    case "perekonomian":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200">Khusus Bidang Ekonomi</span>;
+    case "renval":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-violet-100 text-violet-900 border border-violet-200">Khusus Monev / Renval</span>;
+    case "admin_umum":
+    case "sektert":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-blue-100 text-blue-900 border border-blue-200">Sekretariat / Makro</span>;
+    case "admin_bidang":
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-200">Semua Bidang Teknis</span>;
+    default:
+      return <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-slate-100 text-slate-800 border border-slate-200">Semua Bidang (Global)</span>;
+  }
+};
+
 export default function ManajemenJenisDokumenPage() {
   const { user, hasRole } = useAuth();
   const isSuperAdmin = hasRole(["superadmin"]);
@@ -39,7 +68,7 @@ export default function ManajemenJenisDokumenPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
-  const [scopeRole, setScopeRole] = useState<'admin_umum' | 'admin_bidang' | 'semua'>("semua");
+  const [scopeRole, setScopeRole] = useState<string>("semua");
   const [successMessage, setSuccessMessage] = useState("");
 
   // Fetch real list from Laravel Backend API
@@ -184,18 +213,17 @@ export default function ManajemenJenisDokumenPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 w-full sm:w-auto">
-          <span className="text-xs font-bold text-slate-600 whitespace-nowrap">Filter Scope Role:</span>
-          <div className="w-full sm:w-64">
+          <span className="text-xs font-bold text-slate-600 whitespace-nowrap">Filter Scope Bidang:</span>
+          <div className="w-full sm:w-72">
             <SearchableSelect
               options={[
-                { value: "semua", label: "Semua Role" },
-                { value: "admin_umum", label: "Admin Umum" },
-                { value: "admin_bidang", label: "Admin Bidang" },
+                { value: "semua", label: "Tampilkan Semua Scope" },
+                ...SCOPE_ROLE_OPTIONS,
               ]}
               value={filterRole}
               onChange={(val) => setFilterRole(String(val))}
-              placeholder="-- Pilih Role --"
-              searchPlaceholder="Cari role..."
+              placeholder="-- Pilih Filter Scope --"
+              searchPlaceholder="Cari scope..."
             />
           </div>
         </div>
@@ -261,19 +289,7 @@ export default function ManajemenJenisDokumenPage() {
                       </code>
                     </td>
                     <td className="py-3.5 px-4">
-                      {item.scope_role === "admin_umum" ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
-                          Admin Umum
-                        </span>
-                      ) : item.scope_role === "admin_bidang" ? (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-200">
-                          Admin Bidang
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
-                          Semua Role
-                        </span>
-                      )}
+                      {renderScopeBadge(item.scope_role)}
                     </td>
                     <td className="py-3.5 px-4">
                       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-800 font-extrabold border border-slate-200 text-[11px]">
@@ -343,17 +359,13 @@ export default function ManajemenJenisDokumenPage() {
               </div>
 
               <div>
-                <label className="font-bold text-slate-700 block mb-1">Scope Izin Peran Pengunggah Dokumen *</label>
+                <label className="font-bold text-slate-700 block mb-1">Scope Izin Peran / Bidang Pengunggah Dokumen *</label>
                 <SearchableSelect
-                  options={[
-                    { value: "semua", label: "Semua Role" },
-                    { value: "admin_umum", label: "Admin Umum" },
-                    { value: "admin_bidang", label: "Admin Bidang" },
-                  ]}
+                  options={SCOPE_ROLE_OPTIONS}
                   value={scopeRole}
-                  onChange={(val) => setScopeRole(val as any)}
-                  placeholder="-- Pilih Scope Role --"
-                  searchPlaceholder="Cari scope role..."
+                  onChange={(val) => setScopeRole(String(val))}
+                  placeholder="-- Pilih Scope Peran / Bidang --"
+                  searchPlaceholder="Cari scope bidang..."
                 />
               </div>
 

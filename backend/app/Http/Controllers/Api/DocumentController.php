@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Document;
 use App\Models\DocumentVersion;
 use App\Models\GeoprocessingAnalysis;
+use App\Models\JenisDokumen;
 use App\Services\DocumentAccessService;
 use App\Services\DocumentArchiveService;
 use App\Services\DocumentWatermarkService;
@@ -143,11 +144,40 @@ class DocumentController extends Controller
         ]);
 
         $actor = $request->user();
-        $allowedTypes = $actor->allowed_document_permissions
-            ?? $this->defaultDocumentPermissions($actor->role);
 
-        if (! $actor->hasRole('superadmin') && ! in_array($validated['jenis'], $allowedTypes, true)) {
-            abort(403, 'Jenis dokumen tidak termasuk hak unggah pengguna.');
+        if (! $actor->hasRole('superadmin')) {
+            $explicitAllowed = $actor->allowed_document_permissions;
+            if (! empty($explicitAllowed) && is_array($explicitAllowed)) {
+                if (! in_array($validated['jenis'], $explicitAllowed, true)) {
+                    abort(403, 'Jenis dokumen tidak termasuk hak unggah akun pengguna.');
+                }
+            } else {
+                $jenisMaster = JenisDokumen::where('code', $validated['jenis'])->first();
+                $isAllowed = false;
+                $actorBidang = $actor->bidang;
+                $actorRole = $actor->role;
+
+                if ($jenisMaster) {
+                    $scope = $jenisMaster->scope_role;
+                    if ($scope === 'semua' || $scope === 'admin_bidang') {
+                        $isAllowed = true;
+                    } elseif ($actorRole === 'admin_umum') {
+                        $isAllowed = in_array($scope, ['admin_umum', 'sektert', 'renval', 'semua'], true)
+                            || in_array($validated['jenis'], ['rpjpd', 'rpjmd', 'rkpd', 'lkpj', 'rpjmn', 'rpjmd_prov', 'rpjmd_kab'], true);
+                    } elseif (($scope === 'admin_umum' || $scope === 'sektert') && $actorBidang === 'semua') {
+                        $isAllowed = true;
+                    } elseif ($actorBidang && ($scope === $actorBidang || ($actorBidang === 'renval' && in_array($scope, ['renval', 'admin_umum'], true)))) {
+                        $isAllowed = true;
+                    }
+                } else {
+                    $allowedTypes = $this->defaultDocumentPermissions($actorRole);
+                    $isAllowed = in_array($validated['jenis'], $allowedTypes, true);
+                }
+
+                if (! $isAllowed) {
+                    abort(403, 'Jenis dokumen tidak termasuk hak unggah pengguna.');
+                }
+            }
         }
 
         $bidang = $actor->hasRole('admin_bidang')

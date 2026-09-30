@@ -24,6 +24,34 @@ import {
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 
+const PERMISSION_LABEL_MAP: Record<string, { no: number; short: string }> = {
+  manage_profil: { no: 1, short: "Profil" },
+  manage_pengumuman: { no: 2, short: "Pengumuman" },
+  manage_tautan_opd: { no: 3, short: "Tautan OPD" },
+  manage_gis: { no: 4, short: "Peta GIS" },
+  manage_dashboard: { no: 5, short: "Dashboard" },
+  view_audit_logs: { no: 6, short: "Audit Log" },
+  manage_berita: { no: 7, short: "Berita" },
+  manage_galeri: { no: 8, short: "Galeri" },
+  manage_dokumen: { no: 9, short: "Dokumen" },
+  manage_users: { no: 10, short: "Kelola User" },
+  manage_survey: { no: 11, short: "Survei" },
+  view_download_logs: { no: 12, short: "Riwayat Unduh" },
+  manage_document_types: { no: 13, short: "Jenis Dokumen" },
+  manage_kritik: { no: 14, short: "Kritik" },
+};
+
+const getBidangLabel = (bidang?: string) => {
+  switch (bidang) {
+    case "infrastruktur": return "IPW";
+    case "sosbud": return "SOSBUD";
+    case "perekonomian": return "EKONOMI";
+    case "renval": return "MONEV / RENVAL";
+    case "semua": return "SEKRETARIAT";
+    default: return bidang ? bidang.toUpperCase() : "BAPPEDA";
+  }
+};
+
 const ALL_SPATIE_PERMISSIONS = [
   { id: "manage_profil", label: "Kelola Profil & Kelembagaan BAPPEDA" },
   { id: "manage_berita", label: "Kelola Berita & Artikel Humas" },
@@ -127,9 +155,14 @@ export default function UserManagementPage() {
       );
     }
 
-    const limit = 3;
+    const limit = 4;
     const displayed = isExpanded ? u.permissions : u.permissions.slice(0, limit);
     const remaining = u.permissions.length - limit;
+
+    const formatBadge = (pId: string) => {
+      const info = PERMISSION_LABEL_MAP[pId];
+      return info ? `${info.no}. ${info.short}` : pId.replace("manage_", "");
+    };
 
     return (
       <div
@@ -142,7 +175,7 @@ export default function UserManagementPage() {
             key={pId}
             className="px-2 py-0.5 rounded-lg text-[10px] font-extrabold bg-slate-100 text-slate-700 border border-slate-200/80 whitespace-nowrap shadow-2xs"
           >
-            {pId.replace("manage_", "")}
+            {formatBadge(pId)}
           </span>
         ))}
         {u.permissions.length > limit && (
@@ -320,7 +353,7 @@ export default function UserManagementPage() {
                       )}
                       {u.role === "admin_bidang" && (
                         <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[11px] font-black bg-emerald-100 text-emerald-900 border border-emerald-200 shadow-2xs whitespace-nowrap">
-                          🏗️ Admin Bidang ({u.bidang?.toUpperCase() || "IPW"})
+                          🏗️ Admin Bidang ({getBidangLabel(u.bidang)})
                         </span>
                       )}
                     </td>
@@ -440,7 +473,7 @@ export default function UserManagementPage() {
                     )}
                     {u.role === "admin_bidang" && (
                       <span className="px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 border border-emerald-200">
-                        🏗️ {u.bidang?.toUpperCase() || "IPW"}
+                        🏗️ {getBidangLabel(u.bidang)}
                       </span>
                     )}
                   </div>

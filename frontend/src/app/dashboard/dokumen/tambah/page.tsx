@@ -65,7 +65,7 @@ export default function TambahDokumenPage() {
 
   useEffect(() => {
     if (!user?.role) return;
-    adminService.fetchJenisDokumenItems(user.role)
+    adminService.fetchJenisDokumenItems(user.role, user.bidang)
       .then((rows) => {
         setCustomJenisList(rows);
         setJenis((current) =>
@@ -77,7 +77,7 @@ export default function TambahDokumenPage() {
       .catch((error) => toast.error(
         error instanceof Error ? error.message : "Jenis dokumen gagal dimuat."
       ));
-  }, [user?.role]);
+  }, [user?.role, user?.bidang]);
 
   // Update Year range display when dates change
   useEffect(() => {
