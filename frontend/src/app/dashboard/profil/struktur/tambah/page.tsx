@@ -288,7 +288,7 @@ export default function TambahStrukturPage() {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Contoh: Dr. Jan W. N. Papilaya, M.Si (Kosongkan jika Vacant)"
+                placeholder="Contoh: Agustino Hermanus (Kosongkan jika Vacant)"
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 font-bold text-xs text-slate-900 focus:border-blue-600 focus:bg-white focus:outline-none transition"
               />
             </div>

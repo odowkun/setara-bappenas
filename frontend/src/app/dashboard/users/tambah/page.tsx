@@ -614,7 +614,7 @@ export default function TambahUserPage() {
                   required
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Contoh: Nofrendy Johanis Utubulang, ST"
+                  placeholder="Contoh: Agustino Hermanus"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs"
                 />
               </div>

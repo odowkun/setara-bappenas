@@ -278,7 +278,7 @@ export default function KritikSaranPublicPage() {
                     required
                     value={nama}
                     onChange={(e) => setNama(e.target.value)}
-                    placeholder="Contoh: Dra. Maria S. Lesnussa"
+                    placeholder="Contoh: Agustino Hermanus"
                     className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition shadow-2xs"
                   />
                   <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />

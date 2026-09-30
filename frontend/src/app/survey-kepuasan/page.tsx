@@ -378,7 +378,7 @@ export default function SurveyKepuasanPublicPage() {
                   type="text"
                   value={namaResponden}
                   onChange={(e) => setNamaResponden(e.target.value)}
-                  placeholder="Contoh: Dra. Maria S. Lesnussa"
+                  placeholder="Contoh: Agustino Hermanus"
                   className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-sm font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition shadow-2xs"
                 />
               </div>

@@ -216,7 +216,7 @@ export default function PengaturanProfilPage() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Nama Lengkap Beserta Gelar"
+                    placeholder="Contoh: Agustino Hermanus"
                     className="w-full pl-10 pr-4 py-2.5 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-700 focus:bg-white text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none transition shadow-2xs"
                   />
                 </div>
