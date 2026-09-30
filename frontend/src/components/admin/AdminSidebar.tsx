@@ -164,7 +164,7 @@ const menuItems: MenuItem[] = [
     permissions: ["manage_tautan_opd"],
   },
   {
-    title: "Audit Logs SPBE",
+    title: "Audit Logs Sistem",
     href: "/dashboard/audit-logs",
     icon: ShieldCheck,
     roles: ["superadmin"],
@@ -255,7 +255,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               />
               <div>
                 <h3 className="text-xs font-black text-slate-900 leading-none">BAPPEDA HALUT</h3>
-                <p className="text-[9px] font-bold text-slate-400 mt-0.5">Dashboard SPBE</p>
+                <p className="text-[9px] font-bold text-slate-400 mt-0.5">Dashboard Portal</p>
               </div>
             </div>
             <button
@@ -307,7 +307,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {/* Dynamic Navigation Menu */}
         <nav className="px-3 pb-6 space-y-1">
           <p className="px-3 py-2 text-[10px] font-extrabold text-slate-400 tracking-wider uppercase">
-            Menu Utama SPBE
+            Menu Utama Portal
           </p>
           {menuItems.map((item) => {
             const isAllowed =

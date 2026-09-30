@@ -133,7 +133,7 @@ export default function GaleriManagementPage() {
             <span>Manajemen Album Galeri Foto &amp; Video</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Kelompokkan dokumentasi kegiatan daerah ke dalam album multi foto dan video langsung tersimpan di database backend SPBE.
+            Kelompokkan dokumentasi kegiatan daerah ke dalam album multi foto dan video langsung tersimpan di database portal.
           </p>
         </div>
 

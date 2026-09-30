@@ -43,7 +43,7 @@ export default function AuditLogsPage() {
         </div>
         <h2 className="text-lg font-black text-slate-900">Akses Terbatas (Restricted Area)</h2>
         <p className="text-xs text-slate-600 font-medium">
-          Modul Audit Log Keamanan SPBE hanya dapat diakses oleh role **Administrator (SuperAdmin)**.
+          Modul Audit Log Keamanan Sistem hanya dapat diakses oleh role **Administrator (SuperAdmin)**.
         </p>
       </div>
     );
@@ -56,7 +56,7 @@ export default function AuditLogsPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <ShieldAlert className="w-6 h-6 text-purple-600 shrink-0" />
-            <span>Audit Log Security SPBE</span>
+            <span>Audit Log Security Portal</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Jejak rekam aktivitas pengubahan data, unggah berkas, dan autentikasi pengelola.
@@ -90,7 +90,7 @@ export default function AuditLogsPage() {
             <thead className="bg-slate-50 text-slate-600 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-5 py-3.5">Waktu / Timestamp</th>
-                <th className="px-5 py-3.5">Pengelola SPBE</th>
+                <th className="px-5 py-3.5">Pengelola / Aktor</th>
                 <th className="px-5 py-3.5">Jenis Aksi (Action)</th>
                 <th className="px-5 py-3.5">Detail Rincian Activity</th>
                 <th className="px-5 py-3.5">IP Address</th>

@@ -151,7 +151,7 @@ export default function PengaturanProfilPage() {
     setSavingPassword(true);
     const saved = await changePassword(currentPassword, newPassword, confirmPassword);
     if (saved) {
-      toast.success("Kata sandi akun SPBE Anda berhasil diperbarui!");
+      toast.success("Kata sandi akun Anda berhasil diperbarui!");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -185,7 +185,7 @@ export default function PengaturanProfilPage() {
             <span>Pengaturan Profil &amp; Keamanan Akun</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium">
-            Kelola data biodata pengguna, kredensial akses SPBE, serta matriks peranan jabatan BAPPEDA Halmahera Utara.
+            Kelola data biodata pengguna, kredensial akses akun, serta matriks peranan jabatan BAPPEDA Halmahera Utara.
           </p>
         </div>
       </div>
@@ -308,7 +308,7 @@ export default function PengaturanProfilPage() {
               </div>
               <div>
                 <h3 className="text-sm font-black text-slate-900">Ubah Kata Sandi Akses</h3>
-                <p className="text-[11px] text-slate-500 font-medium">Perbarui kata sandi login sesi SPBE Anda</p>
+                <p className="text-[11px] text-slate-500 font-medium">Perbarui kata sandi login sesi akun Anda</p>
               </div>
             </div>
 
@@ -523,7 +523,7 @@ export default function PengaturanProfilPage() {
             <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
               <Layers3 className="w-4 h-4 text-blue-600" />
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
-                Matriks Hak Akses Modul SPBE
+                Matriks Hak Akses Modul Sistem
               </h3>
             </div>
 

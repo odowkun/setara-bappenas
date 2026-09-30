@@ -5,7 +5,7 @@ export const SPATIE_PERMISSIONS_ORDERED = [
   { no: 3, id: "manage_tautan_opd", label: "Kelola Tautan OPD & Aplikasi Daerah", desc: "Akses menambah, mengubah, dan menonaktifkan kartu tautan OPD di beranda" },
   { no: 4, id: "manage_gis", label: "Kelola Editor Peta Spasial GIS", desc: "Akses menambahkan layer peta infrastruktur & tata ruang wilayah" },
   { no: 5, id: "manage_dashboard", label: "Kelola Statistik Dashboard", desc: "Akses memperbarui data realisasi APBD dan capaian program daerah" },
-  { no: 6, id: "view_audit_logs", label: "Lihat Audit Log SPBE", desc: "Akses audit aktivitas admin, waktu mutasi data, dan alamat IP" },
+  { no: 6, id: "view_audit_logs", label: "Lihat Audit Log Sistem", desc: "Akses audit aktivitas admin, waktu mutasi data, dan alamat IP" },
   { no: 7, id: "manage_berita", label: "Kelola Berita & Artikel Humas", desc: "Akses merilis siaran pers, artikel berita utama, & topik kategori portal" },
   { no: 8, id: "manage_galeri", label: "Kelola Galeri Foto & Video Kegiatan", desc: "Akses mengunggah arsip foto dokumentasi & video YouTube kegiatan" },
   { no: 9, id: "manage_dokumen", label: "Kelola Repository Dokumen Perencanaan", desc: "Akses mengunggah dan mengelola dokumen perencanaan daerah & bidang" },

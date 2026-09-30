@@ -22,9 +22,9 @@ Dokumen ini menjelaskan kontrol keamanan yang benar-benar diterapkan pada Portal
 - Login dibatasi 5 percobaan/menit; survei/kritik, preview, download, pencarian, dan counter berita juga dibatasi.
 - Token memiliki masa berlaku default 480 menit.
 
-## Matriks Role dan Permission (14 Modul Granular SPBE)
+## Matriks Role dan Permission (14 Modul Granular Portal)
 
-Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Utara, hak akses SPBE dipetakan ke dalam 14 modul permission Spatie secara granular:
+Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Utara, hak akses dipetakan ke dalam 14 modul permission Spatie secara granular:
 
 | No | Nama Modul Permission | Slug Spatie | Cakupan & Otoritas Akses |
 |:---:|---|---|---|
@@ -33,7 +33,7 @@ Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Uta
 | 3 | Kelola Tautan OPD & Aplikasi | `manage_tautan_opd` | Kartu direktori website OPD & aplikasi daerah di beranda |
 | 4 | Kelola Editor Peta Spasial GIS | `manage_gis` | Layer peta interaktif, batas wilayah kecamatan/desa, proyek spasial RTRW |
 | 5 | Kelola Statistik Dashboard | `manage_dashboard` | Metrik indikator makro, realisasi APBD daerah, capaian sasaran pembangunan |
-| 6 | Lihat Audit Log SPBE | `view_audit_logs` | Catatan forensik mutasi data server, alamat IP, waktu kejadian & aktor |
+| 6 | Lihat Audit Log Sistem | `view_audit_logs` | Catatan forensik mutasi data server, alamat IP, waktu kejadian & aktor |
 | 7 | Kelola Berita & Artikel Humas | `manage_berita` | Rilis siaran pers, artikel berita daerah, kategori topik berita portal |
 | 8 | Kelola Galeri Dokumentasi | `manage_galeri` | Album foto kegiatan BAPPEDA, video YouTube liputan perencana |
 | 9 | Kelola Repository Dokumen | `manage_dokumen` | Upload, arsip, dan penerbitan dokumen perencanaan daerah/bidang |

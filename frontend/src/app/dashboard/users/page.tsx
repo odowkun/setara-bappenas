@@ -65,7 +65,7 @@ const ALL_SPATIE_PERMISSIONS = [
   { id: "manage_survey", label: "Kelola Survei Kepuasan" },
   { id: "manage_kritik", label: "Kelola Kritik & Saran" },
   { id: "view_download_logs", label: "Lihat Riwayat Pengunduh" },
-  { id: "view_audit_logs", label: "Lihat Audit Log SPBE" },
+  { id: "view_audit_logs", label: "Lihat Audit Log Sistem" },
   { id: "manage_document_types", label: "Kelola Jenis Dokumen" },
 ];
 
@@ -224,7 +224,7 @@ export default function UserManagementPage() {
         </div>
         <h2 className="text-lg font-black text-slate-900">Akses Terbatas</h2>
         <p className="text-xs text-slate-600 font-medium">
-          Modul Manajemen Pengguna & Hak Akses SPBE hanya dapat dibuka oleh role <strong>Administrator (SuperAdmin)</strong>.
+          Modul Manajemen Pengguna & Hak Akses hanya dapat dibuka oleh role <strong>Administrator (SuperAdmin)</strong>.
         </p>
       </div>
     );
@@ -237,7 +237,7 @@ export default function UserManagementPage() {
         <div className="space-y-1">
           <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">
             <Users className="w-6 h-6 text-blue-600 shrink-0" />
-            <span>Manajemen Pengguna SPBE &amp; Spatie Hak Akses</span>
+            <span>Manajemen Pengguna &amp; Hak Akses</span>
           </h1>
           <p className="text-xs text-slate-500 font-medium max-w-2xl leading-relaxed">
             Daftar pengelola portal resmi BAPPEDA Halmahera Utara beserta atribusi role &amp; matriks permissions.

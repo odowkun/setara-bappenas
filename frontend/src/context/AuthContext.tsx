@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           success: false,
           message:
             result?.message ||
-            "Email atau kata sandi tidak terdaftar di direktori akun SPBE.",
+            "Email atau kata sandi tidak terdaftar di direktori akun.",
         };
       }
 
@@ -187,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900 font-sans">
         <div className="flex items-center gap-3">
           <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-bold text-slate-700">Memuat Sesi Dashboard SPBE BAPPEDA...</span>
+          <span className="text-xs font-bold text-slate-700">Memuat Sesi Dashboard BAPPEDA...</span>
         </div>
       </div>
     );

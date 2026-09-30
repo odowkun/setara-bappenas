@@ -244,7 +244,7 @@ export default function DashboardPage() {
             Selamat Datang, <span className="text-blue-700">{user?.name}</span> 👋
           </h1>
           <p className="text-xs text-slate-600 font-medium leading-relaxed max-w-3xl">
-            Ikhtisar Pusat Kendali Sistem Pengelolaan SPBE &amp; Geotagging Pembangunan Daerah BAPPEDA Kabupaten Halmahera Utara.
+            Ikhtisar Pusat Kendali Sistem Informasi &amp; Geotagging Pembangunan Daerah BAPPEDA Kabupaten Halmahera Utara.
           </p>
         </div>
 
@@ -693,12 +693,12 @@ export default function DashboardPage() {
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
-            <h3 className="text-sm font-black text-slate-900">Audit Log Aktivitas Pengelola SPBE</h3>
+            <h3 className="text-sm font-black text-slate-900">Audit Log Aktivitas Pengelola</h3>
             <p className="text-[11px] text-slate-500 font-medium">Rekap riwayat aktivitas admin terenkripsi</p>
           </div>
           {isSuperAdmin && (
             <Link href="/dashboard/audit-logs" className="text-xs font-bold text-blue-700 hover:underline">
-              Buka Log SPBE &rarr;
+              Buka Audit Log &rarr;
             </Link>
           )}
         </div>

@@ -131,7 +131,7 @@ export default function PublicNewsPage() {
               Berita &amp; Artikel Publik BAPPEDA
             </h1>
             <p className="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed">
-              Informasi terkini perihal kebijakan perencanaan, kegiatan pembangunan fisik, digitalisasi SPBE, dan inovasi daerah Kabupaten Halmahera Utara.
+              Informasi terkini perihal kebijakan perencanaan, kegiatan pembangunan fisik, digitalisasi layanan, dan inovasi daerah Kabupaten Halmahera Utara.
             </p>
           </div>
         </div>

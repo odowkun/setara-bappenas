@@ -25,7 +25,7 @@ export default function DashboardLoginPage() {
     if (res.success) {
       router.push("/dashboard");
     } else {
-      setError(res.message || "Email atau kata sandi tidak terdaftar di direktori akun SPBE.");
+      setError(res.message || "Email atau kata sandi tidak terdaftar di direktori akun.");
     }
     setSubmitting(false);
   };
@@ -51,7 +51,7 @@ export default function DashboardLoginPage() {
               Portal Admin BAPPEDA <span className="text-blue-700">HALUT</span>
             </h1>
             <p className="text-xs text-slate-500 font-semibold mt-0.5">
-              Sistem Informasi Perencanaan &amp; Manajemen SPBE Terpadu
+              Sistem Informasi Perencanaan &amp; Pembangunan Terpadu
             </p>
           </div>
         </div>

@@ -163,7 +163,7 @@ export const CloudflareTurnstile: React.FC<CloudflareTurnstileProps> = ({
       <div className="flex items-center justify-between text-[11px] font-bold text-slate-600">
         <span className="flex items-center gap-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
-          <span>Verifikasi Keamanan Akses SPBE</span>
+          <span>Verifikasi Keamanan Akses Portal</span>
         </span>
         {verified ? (
           <span className="text-emerald-600 font-extrabold flex items-center gap-1">

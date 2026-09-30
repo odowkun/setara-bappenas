@@ -75,7 +75,7 @@ class UserController extends Controller
         return response()->json([
             'status' => 'success',
             'code' => 201,
-            'message' => 'Pengguna pengelola SPBE berhasil ditambahkan',
+            'message' => 'Pengguna pengelola berhasil ditambahkan',
             'data' => (new UserResource($user->fresh()))->resolve(),
         ], 201);
     }

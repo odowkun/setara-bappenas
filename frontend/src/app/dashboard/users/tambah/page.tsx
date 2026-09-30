@@ -73,7 +73,7 @@ export default function TambahUserPage() {
     "Kabid Pembangunan Manusia & Masyarakat (Sosbud)",
     "Kabid Perencanaan, Pengendalian & Evaluasi (Renval)",
     "Pejabat Fungsional Perencana Ahli",
-    "Staf Admin Pengelola SPBE",
+    "Staf Pengelola TI / Portal",
   ];
 
   // Muat master jenis dokumen dari database
@@ -272,10 +272,10 @@ export default function TambahUserPage() {
           <div className="space-y-0.5">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2">
               <Users className="w-6 h-6 text-blue-600 shrink-0" />
-              <span>Tambah Pengguna Pengelola SPBE Baru</span>
+              <span>Tambah Pengguna Pengelola Baru</span>
             </h1>
             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-              Daftarkan akun kedinasan, atur bidang Bappeda, matriks hak akses modul SPBE (1–14), serta izin dokumen perencanaan.
+              Daftarkan akun kedinasan, atur bidang Bappeda, matriks hak akses modul portal (1–14), serta izin dokumen perencanaan.
             </p>
           </div>
         </div>
@@ -648,7 +648,7 @@ export default function TambahUserPage() {
           )}
         </div>
 
-        {/* CARD 5: MATRIKS HAK AKSES MODUL SPBE (1–14 SESUAI TABEL RESMI) */}
+        {/* CARD 5: MATRIKS HAK AKSES MODUL (1–14 SESUAI TABEL RESMI) */}
         <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-3.5 flex-wrap gap-2">
             <div className="flex items-center gap-3">
@@ -660,7 +660,7 @@ export default function TambahUserPage() {
                   5. Granular Spatie RBAC Permissions (Nomor 1 s/d 14)
                 </h2>
                 <p className="text-[11px] text-slate-500 font-medium">
-                  Centang modul SPBE yang ditugaskan ke pegawai ini (sesuai nomor tabel resmi BAPPEDA)
+                  Centang modul yang ditugaskan ke pegawai ini (sesuai nomor tabel resmi BAPPEDA)
                 </p>
               </div>
             </div>

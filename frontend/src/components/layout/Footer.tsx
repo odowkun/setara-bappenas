@@ -72,7 +72,7 @@ export const Footer: React.FC = () => {
             </p>
             <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/80 text-blue-800 text-[10px] font-black uppercase tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span>SPBE BSSN Verified Portal</span>
+              <span>BSSN Verified Security Portal</span>
             </div>
 
             {/* Media Sosial Resmi BAPPEDA */}
