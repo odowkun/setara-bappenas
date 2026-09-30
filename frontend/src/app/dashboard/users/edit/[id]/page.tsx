@@ -488,15 +488,16 @@ export default function EditUserPage() {
                   >
                     {/* Header Card */}
                     <div className="space-y-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0 group-hover:scale-105 transition shadow-2xs">
                           {renderPresetIcon(preset.iconType)}
                         </div>
-                        <span
-                          className={`text-[10px] font-black px-2.5 py-0.5 rounded-full border ${preset.badgeBg} ${preset.badgeText}`}
-                        >
-                          {preset.badge}
-                        </span>
+                        {isSelected && (
+                          <span className="inline-flex items-center gap-1 text-[11px] font-black text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                            Terpilih
+                          </span>
+                        )}
                       </div>
 
                       <div>
@@ -515,14 +516,13 @@ export default function EditUserPage() {
 
                     {/* Footer Info of Card */}
                     <div className="pt-2.5 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                      <span className="font-bold text-slate-500 truncate max-w-[170px]">
-                        {preset.skPerson}
+                      <span className="font-bold text-slate-500">
+                        {preset.modules.length > 0 ? `${preset.modules.length} Modul Aktif` : "Fleksibel Manual"}
                       </span>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isSelected ? (
-                          <span className="inline-flex items-center gap-1 text-[11px] font-black text-blue-700">
-                            <CheckCircle2 className="w-4 h-4 text-blue-600" />
-                            Terpilih
+                          <span className="text-[10px] font-black text-blue-600">
+                            Aktif
                           </span>
                         ) : (
                           <span className="text-[10px] font-extrabold text-slate-400 group-hover:text-slate-600">
@@ -537,24 +537,24 @@ export default function EditUserPage() {
             </div>
           </div>
 
-          {/* PANEL IKHTISAR PREVIEW TEMPLATE TERPILIH */}
-          <div className="p-5 sm:p-6 rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 text-white shadow-lg space-y-4">
-            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-white/10 pb-3">
+          {/* PANEL IKHTISAR PREVIEW TEMPLATE TERPILIH (WARNA PUTIH) */}
+          <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs text-slate-900 space-y-4">
+            <div className="flex items-center justify-between flex-wrap gap-2 border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center font-bold shrink-0">
-                  <Sparkles className="w-4 h-4 text-blue-300" />
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center font-bold shrink-0">
+                  <Sparkles className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-white">
+                  <h3 className="text-sm font-black text-slate-900">
                     Ikhtisar Otomatisasi: {currentSelectedPreset.title}
                   </h3>
-                  <p className="text-[11px] text-blue-200/80 font-medium">
-                    {currentSelectedPreset.category} • {currentSelectedPreset.skPerson}
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {currentSelectedPreset.category}
                   </p>
                 </div>
               </div>
 
-              <span className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-black border border-blue-400/30">
+              <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-black border border-blue-200">
                 {currentSelectedPreset.id === "superadmin"
                   ? "Akses Penuh (14 Modul)"
                   : currentSelectedPreset.modules.length > 0
@@ -563,17 +563,17 @@ export default function EditUserPage() {
               </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1">
-                <span className="text-[10px] font-black uppercase text-blue-300 tracking-wider">Peran &amp; Bidang</span>
-                <p className="text-xs font-bold text-white capitalize">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-1">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Peran &amp; Bidang</span>
+                <p className="text-xs font-black text-slate-800 capitalize">
                   {currentSelectedPreset.role.replace("_", " ")} ({currentSelectedPreset.bidang.toUpperCase()})
                 </p>
               </div>
 
-              <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-1 sm:col-span-1 lg:col-span-2">
-                <span className="text-[10px] font-black uppercase text-blue-300 tracking-wider">Cakupan Dokumen Unggahan</span>
-                <p className="text-xs font-bold text-white truncate">
+              <div className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/80 space-y-1 sm:col-span-1 lg:col-span-2">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">Cakupan Dokumen Unggahan</span>
+                <p className="text-xs font-bold text-slate-700 truncate">
                   {currentSelectedPreset.docScopeDesc}
                 </p>
               </div>
@@ -581,7 +581,7 @@ export default function EditUserPage() {
 
             {currentSelectedPreset.modules.length > 0 && (
               <div className="space-y-1.5 pt-1">
-                <span className="text-[10px] font-black uppercase text-blue-300 tracking-wider">
+                <span className="text-[10px] font-black uppercase text-slate-400 tracking-wider">
                   Nomor Modul Sesuai SK:
                 </span>
                 <div className="flex flex-wrap gap-1.5">
@@ -590,9 +590,9 @@ export default function EditUserPage() {
                     return (
                       <span
                         key={num}
-                        className="px-2.5 py-1 rounded-xl bg-blue-600/30 border border-blue-400/40 text-blue-100 text-[11px] font-bold flex items-center gap-1"
+                        className="px-2.5 py-1 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-bold flex items-center gap-1 shadow-2xs"
                       >
-                        <Check className="w-3 h-3 text-blue-300" />
+                        <Check className="w-3 h-3 text-blue-600" />
                         <span>Modul {num}: {mod?.label.split(" ")[1] || "Modul"}</span>
                       </span>
                     );

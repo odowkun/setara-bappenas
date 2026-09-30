@@ -58,12 +58,8 @@ export interface TemplatePresetOption {
   category: string;
   role: "admin_bidang" | "admin_umum" | "superadmin";
   bidang: "infrastruktur" | "sosbud" | "perekonomian" | "renval" | "semua";
-  badge: string;
-  badgeBg: string;
-  badgeText: string;
   iconType: "custom" | "ipw" | "monev" | "ekonomi" | "sosbud" | "sektert" | "superadmin";
   description: string;
-  skPerson: string;
   modules: number[];
   permissions: string[];
   docScopeDesc: string;
@@ -76,12 +72,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Paling Fleksibel (Default)",
     role: "admin_bidang",
     bidang: "infrastruktur",
-    badge: "Manual Custom",
-    badgeBg: "bg-slate-100 border-slate-300",
-    badgeText: "text-slate-800",
     iconType: "custom",
     description: "Tentukan sendiri peran, bidang, dan kombinasi modul secara leluasa tanpa batasan template bawaan.",
-    skPerson: "Fleksibel Sesuai Kebutuhan",
     modules: [],
     permissions: [
       "manage_pengumuman",
@@ -98,12 +90,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Infrastruktur & Pengembangan Wilayah",
     role: "admin_bidang",
     bidang: "infrastruktur",
-    badge: "SK Nofrendy ST",
-    badgeBg: "bg-amber-50 border-amber-300",
-    badgeText: "text-amber-900",
     iconType: "ipw",
     description: "Penugasan tata ruang, dokumen KLHS, RTRW, RDTR, pengumuman tender dinas, serta arsip infrastruktur daerah.",
-    skPerson: "Nofrendy Johanis Utubulang, ST",
     modules: [2, 3, 8, 9, 10],
     permissions: [
       "manage_pengumuman",
@@ -120,12 +108,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Perencanaan, Pengendalian & Evaluasi",
     role: "admin_bidang",
     bidang: "renval",
-    badge: "SK Christian SP",
-    badgeBg: "bg-indigo-50 border-indigo-300",
-    badgeText: "text-indigo-900",
     iconType: "monev",
     description: "Penugasan pelaporan LKPJ, evaluasi berkala RKPD, pengendalian indikator makro, serta editor layer spasial GIS.",
-    skPerson: "Christian Melkianus, SP",
     modules: [2, 3, 4, 8, 9, 10],
     permissions: [
       "manage_pengumuman",
@@ -143,12 +127,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Perekonomian & Ketahanan Pangan",
     role: "admin_bidang",
     bidang: "perekonomian",
-    badge: "SK Gregoryan",
-    badgeBg: "bg-emerald-50 border-emerald-300",
-    badgeText: "text-emerald-900",
     iconType: "ekonomi",
     description: "Penugasan pengendalian inflasi/TPID, neraca pangan, potensi komoditas daerah, serta data sektoral ekonomi.",
-    skPerson: "Gregoryan",
     modules: [2, 3, 8, 9, 10],
     permissions: [
       "manage_pengumuman",
@@ -165,12 +145,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Pembangunan Manusia & Masyarakat",
     role: "admin_bidang",
     bidang: "sosbud",
-    badge: "SK Vinchadros",
-    badgeBg: "bg-rose-50 border-rose-300",
-    badgeText: "text-rose-900",
     iconType: "sosbud",
     description: "Penugasan percepatan stunting, kemiskinan ekstrem, siaran pers berita humas, survei kepuasan, & aspirasi warga.",
-    skPerson: "Vinchadros",
     modules: [1, 7, 11, 13, 14],
     permissions: [
       "manage_profil",
@@ -187,12 +163,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Tata Usaha & Kearsipan Dinas",
     role: "admin_umum",
     bidang: "semua",
-    badge: "SK Hjon",
-    badgeBg: "bg-sky-50 border-sky-300",
-    badgeText: "text-sky-900",
     iconType: "sektert",
     description: "Penugasan publikasi surat edaran dinas, arsip dokumen makro daerah (RPJPD/RPJMD), & monitoring unduhan warga.",
-    skPerson: "Hjon",
     modules: [2, 3, 8, 9, 10, 12],
     permissions: [
       "manage_pengumuman",
@@ -210,12 +182,8 @@ export const TEMPLATE_PRESET_OPTIONS: TemplatePresetOption[] = [
     category: "Pusat Kendali Sistem Penuh",
     role: "superadmin",
     bidang: "semua",
-    badge: "Akses Penuh (1–14)",
-    badgeBg: "bg-purple-50 border-purple-300",
-    badgeText: "text-purple-900",
     iconType: "superadmin",
     description: "Akses absolut tanpa batas ke seluruh 14 modul sistem portal, konfigurasi database, dan seluruh jenis dokumen.",
-    skPerson: "Administrator Utama BAPPEDA",
     modules: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
     permissions: [
       "manage_profil",

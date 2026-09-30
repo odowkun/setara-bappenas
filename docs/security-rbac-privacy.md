@@ -47,8 +47,8 @@ Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Uta
 Manajemen pengguna (`/dashboard/users/tambah` dan `/dashboard/users/edit/[id]`) menerapkan arsitektur **2-Step Wizard** yang intuitif dan terfokus:
 
 1. **Langkah 1: Pemilihan Profil / Template Penugasan (Fokus Utama)**:
-   - Menampilkan antarmuka grid 7 kartu template interaktif dengan ikon bidang, lencana badge, status SK penugasan, dan ringkasan tupoksi.
-   - Dilengkapi panel preview visual langsung yang menampilkan peran, bidang, cakupan jenis dokumen, dan nomor modul Spatie (1–14).
+   - Menampilkan antarmuka grid 7 kartu template interaktif dengan ikon bidang, tupoksi, dan jumlah modul aktif.
+   - Dilengkapi panel preview visual putih bersih yang menampilkan peran, bidang, cakupan jenis dokumen, dan nomor modul Spatie (1–14).
    - Opsi default adalah **Kustom / Fleksibel Manual** yang memungkinkan konfigurasi bebas tanpa batasan template.
    - Tombol *Lanjutkan ke Pengisian Formulir Akun* secara otomatis menerapkan template dan membuka langkah berikutnya.
 
