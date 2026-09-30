@@ -111,14 +111,22 @@ Otomatis deploy setiap `git push origin develop` tanpa perlu remote server:
 - **Normalisasi Exit Code Robocopy**: Perintah `robocopy` mengembalikan nilai 1–7 untuk status sukses penyalinan berkas, yang dapat mencemari `$LASTEXITCODE` di PowerShell. Script `deploy-prod.ps1` selalu mereset `$global:LASTEXITCODE = 0` jika nilai `<= 7` sebelum menjalankan `npm run build`.
 - **Penanganan ChunkLoadError & Cache Deployment**: Saat deployment baru memperbarui hash chunk frontend Next.js, `error.tsx` dan `global-error.tsx` secara otomatis mendeteksi `ChunkLoadError` dan memicu `window.location.reload()` secara cerdas (debounced) agar browser pengguna segera memuat chunk terbaru tanpa tertahan di layar error boundary.
 
-#### Perintah Auto-Start Runner (Background 24/7):
+#### Standar Auto-Start Runner 24/7 (Native Windows Service):
+Cara terbaik dan paling andal di Windows Server adalah mendaftarkan runner sebagai **Windows Service resmi** (bukan sekadar Task Scheduler biasa):
+```powershell
+cd C:\actions-runner
+.\svc.cmd install
+.\svc.cmd start
+```
+**Keunggulan Native Windows Service**:
+- **Auto-Start Otomatis Saat Boot**: Berjalan di latar belakang saat Windows Server menyala kembali tanpa perlu login user.
+- **Bebas Limit 72 Jam**: Task Scheduler default di Windows memiliki batasan *ExecutionTimeLimit (PT72H)* yang mematikan task setelah 3 hari. Native Windows Service berjalan permanen 24/7/365.
+- **Auto-Recovery**: Otomatis restart sendiri jika proses mengalami crash.
+
+Jika menggunakan Task Scheduler, pastikan flag limit durasi dihilangkan:
 ```powershell
 schtasks /Create /TN "GitHub_Actions_Runner" /TR "cmd.exe /c cd /d C:\actions-runner && run.cmd" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F
 schtasks /Run /TN "GitHub_Actions_Runner"
-```
-Cek status berjalan:
-```powershell
-schtasks /Query /TN "GitHub_Actions_Runner"
 ```
 
 #### Troubleshooting Handshake / Clock Skew:
