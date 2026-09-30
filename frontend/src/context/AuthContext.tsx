@@ -8,6 +8,7 @@ import {
   AUTH_USER_KEY,
   authenticatedFetch,
 } from "@/lib/apiClient";
+import DashboardLoadingScreen from "@/components/ui/DashboardLoadingScreen";
 
 interface AuthContextType {
   user: User | null;
@@ -184,12 +185,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-900 font-sans">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
-          <span className="text-xs font-bold text-slate-700">Memuat Sesi Dashboard BAPPEDA...</span>
-        </div>
-      </div>
+      <DashboardLoadingScreen
+        title="Memuat Sesi Dashboard BAPPEDA"
+        subtitle="Menyinkronkan otentikasi kedinasan, izin modul (RBAC), & ruang kerja digital."
+        statusText="Memverifikasi hak akses portal..."
+      />
     );
   }
 

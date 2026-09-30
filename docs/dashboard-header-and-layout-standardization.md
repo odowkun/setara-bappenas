@@ -1,4 +1,4 @@
-# Standarisasi Header Card dan Layout Dashboard SPBE Bappeda Halmahera Utara
+# Standarisasi Header Card dan Layout Dashboard Bappeda Halmahera Utara
 
 ## Ringkasan Standar
 Dokumen ini mendefinisikan standar resmi tata letak antarmuka (UI layout) dan kartu header (*Header Card*) pada seluruh halaman menu dashboard pengelola (`/dashboard/*`) Bappeda Halmahera Utara. Standarisasi ini dibuat untuk mengeliminasi inkonsistensi visual ("compang-camping"), seperti penggunaan banner dark navy gradien yang kontras dengan modul lain, ketiadaan pembungkus kartu, ataupun penyempitan kontainer (`max-w-*`).
@@ -125,3 +125,31 @@ Setiap pop-up, dialog, atau lightbox di seluruh dashboard WAJIB mematuhi arsitek
    - `AdminSidebar.tsx` (Mobile Drawer Sidebar)
    - `CircularImageCropperModal.tsx` & `MediaAlbumModal.tsx` (Modal Utility UI)
    - `GlobalSearchModal.tsx`, `DocumentPreviewModal.tsx`, `DocumentDownloadModal.tsx`
+
+---
+
+## 5. Standar Layar Pemuatan Sesi (*DashboardLoadingScreen*)
+Untuk mencegah tampilan layar kosong ("polos") saat sesi dashboard sedang divalidasi atau halaman sedang dimuat, portal menerapkan komponen resmi `DashboardLoadingScreen`:
+
+```tsx
+import DashboardLoadingScreen from "@/components/ui/DashboardLoadingScreen";
+
+// Penggunaan default:
+<DashboardLoadingScreen
+  title="Memuat Sesi Dashboard BAPPEDA"
+  subtitle="Menyinkronkan otentikasi kedinasan, izin modul (RBAC), & ruang kerja digital."
+  statusText="Memverifikasi hak akses portal..."
+/>
+```
+
+### Elemen Visual:
+1. **Latar Belakang**: `bg-gradient-to-br from-slate-50 via-blue-50/40 to-slate-100` dengan efek cahaya ambient radial `blur-3xl`.
+2. **Kartu Tengah Glassmorphic**: `bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-2xl rounded-3xl`.
+3. **Lambang Resmi Daerah**: Logo Kabupaten Halmahera Utara dengan animasi denyut ganda (*double-ring ping animation*).
+4. **Indikator Progres**: Shimmer bar dinamis dengan micro-spinner dan teks status sinkronisasi.
+5. **Kredensial Keamanan**: Badge resmi BAPPEDA dan penanda koneksi terenkripsi.
+
+Komponen ini digunakan di:
+- `frontend/src/context/AuthContext.tsx` (saat validasi token sesi `/auth/me`).
+- `frontend/src/app/dashboard/layout.tsx` (saat pengalihan login tidak terautentikasi).
+- `frontend/src/app/dashboard/loading.tsx` (Suspense fallback bawaan Next.js App Router).

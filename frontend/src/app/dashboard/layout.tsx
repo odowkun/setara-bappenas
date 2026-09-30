@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
+import DashboardLoadingScreen from "@/components/ui/DashboardLoadingScreen";
 
 function PageTransitionContainer({
   children,
@@ -130,12 +131,11 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
       router.push("/dashboard/login");
     }
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex items-center justify-center">
-        <div className="flex items-center gap-3">
-          <div className="w-5 h-5 border-2 border-blue-700 border-t-transparent rounded-full animate-spin" />
-          <p className="text-xs font-bold text-slate-700">Mengarahkan ke Login Dashboard...</p>
-        </div>
-      </div>
+      <DashboardLoadingScreen
+        title="Mengarahkan ke Login Dashboard"
+        subtitle="Sesi kedinasan belum aktif atau telah berakhir."
+        statusText="Membuka gerbang otentikasi..."
+      />
     );
   }
 
