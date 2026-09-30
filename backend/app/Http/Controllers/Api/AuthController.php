@@ -85,7 +85,7 @@ class AuthController extends Controller
         }
 
         // Generate Sanctum API token
-        $token = $user->createToken('bappeda_spbe_token')->plainTextToken;
+        $token = $user->createToken('bappeda_auth_token')->plainTextToken;
 
         // Log audit
         DB::table('audit_logs')->insert([

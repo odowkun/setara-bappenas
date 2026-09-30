@@ -43,14 +43,32 @@ Sesuai Surat Keputusan / Matriks Penugasan Resmi BAPPEDA Kabupaten Halmahera Uta
 | 13 | Kelola Master Jenis Dokumen | `manage_document_types` | Master jenis dokumen dan konfigurasi scope bidang perizinan dokumen |
 | 14 | Kelola Kritik, Saran & Aspirasi | `manage_kritik` | Kotak aspirasi masyarakat, moderasi masukan, dan pemberian tanggapan |
 
-### Presets Hak Akses Pegawai per Bidang
-Frontend form pembuatan/pengeditan pengguna (`/dashboard/users/tambah` dan `/dashboard/users/edit/[id]`) menyediakan fitur **Quick Presets** yang langsung mengisi modul permission dan scope dokumen sesuai tupoksi:
+### Alur 2-Step Wizard & 7 Profil Template Penugasan Pegawai
+Manajemen pengguna (`/dashboard/users/tambah` dan `/dashboard/users/edit/[id]`) menerapkan arsitektur **2-Step Wizard** yang intuitif dan terfokus:
+
+1. **Langkah 1: Pemilihan Profil / Template Penugasan (Fokus Utama)**:
+   - Menampilkan antarmuka grid 7 kartu template interaktif dengan ikon bidang, lencana badge, status SK penugasan, dan ringkasan tupoksi.
+   - Dilengkapi panel preview visual langsung yang menampilkan peran, bidang, cakupan jenis dokumen, dan nomor modul Spatie (1–14).
+   - Opsi default adalah **Kustom / Fleksibel Manual** yang memungkinkan konfigurasi bebas tanpa batasan template.
+   - Tombol *Lanjutkan ke Pengisian Formulir Akun* secara otomatis menerapkan template dan membuka langkah berikutnya.
+
+2. **Langkah 2: Kelola Biodata & Rincian Hak Akses**:
+   - Menampilkan banner status template penugasan aktif dengan opsi cepat *Ganti / Terapkan Template* untuk kembali ke Langkah 1 kapan saja.
+   - Formulir 5 Card terstruktur:
+     - Card 1: Informasi Identitas Kedinasan & Jabatan Struktural Bappeda.
+     - Card 2: Pengaturan Password Akun (wajib minimal 12 karakter alfanumerik; opsional saat edit).
+     - Card 3: Peran Pengguna & Penugasan Bidang Bappeda.
+     - Card 4: Hak Akses Upload Dokumen Perencanaan (otomatis terisi & terbuka default, dilengkapi tombol reset standar bidang).
+     - Card 5: Granular Spatie RBAC Permissions (14 Modul Berurutan Sesuai SK Resmi).
+
+Tujuh opsi profil template penugasan yang tersedia:
+- **Kustom / Fleksibel Manual** (Default): Konfigurasi bebas untuk staf fungsional atau kebutuhan penugasan khusus.
 - **IPW (Infrastruktur & Pengembangan Wilayah)**: Modul 2, 3, 8, 9, 10 + Scope Dokumen IPW & Bersama (KLHS, RTRW, RDTR, Renstra, Renja, Data Sektoral).
 - **MONEV / RENVAL (Perencanaan & Evaluasi)**: Modul 2, 3, 4, 8, 9, 10 + Scope Dokumen Monev (LKPJ, RKPD, Evaluasi RKPD).
 - **EKONOMI & SDA**: Modul 2, 3, 8, 9, 10 + Scope Dokumen Ekonomi (TPID, Ketahanan Pangan, Renstra, Renja).
 - **SOSBUD (Pembangunan Manusia)**: Modul 1, 7, 11, 13, 14 + Scope Dokumen Sosbud (Stunting, Kemiskinan Ekstrem, PPM).
 - **SEKRETARIAT UMUM**: Modul 2, 3, 8, 9, 10, 12 + Dokumen Makro Daerah (RPJPD, RPJMD, Renja Sekretariat).
-- **SUPER ADMIN**: Akses Penuh (Seluruh 14 Modul & Semua Dokumen).
+- **SUPER ADMIN**: Akses Penuh (Seluruh 14 Modul & Semua Dokumen Perencanaan).
 
 ## Dynamic Bidang-Scoped Document Authorization
 
