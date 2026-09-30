@@ -50,7 +50,7 @@ export default function TambahUserPage() {
   const [allDocTypes, setAllDocTypes] = useState<JenisDokumenItem[]>([]);
   const [allowedDocPermissions, setAllowedDocPermissions] = useState<string[]>([]);
   const [isDocCustomized, setIsDocCustomized] = useState(false);
-  const [isDocSectionOpen, setIsDocSectionOpen] = useState(false);
+  const [isDocSectionOpen, setIsDocSectionOpen] = useState(true);
 
   // Spatie Permissions State
   const [selectedPermissions, setSelectedPermissions] = useState<string[]>([
