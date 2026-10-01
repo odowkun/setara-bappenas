@@ -280,6 +280,25 @@ Untuk mempermudah login aparatur sipil negara dan staf BAPPEDA tanpa mewajibkan 
      - Saran Username unik berbasis nama pejabat (contoh: `agustino.hermanus`).
    - Apabila staf atau tenaga kontrak belum terdaftar pada struktur organisasi, admin dapat langsung mengetikkan nama baru (*creatable option*) secara mandiri.
 
+## Granular Module Permission Overrides (`custom_permissions`)
+
+Status implementasi: Oktober 2026.
+
+Sebagai pemecahan masalah pewarisan hak akses Spatie Permission di mana izin role global (`role_has_permissions`) sebelumnya menimpa atau mengunci izin yang di-uncheck oleh Super Admin:
+1. **Penyebab Masalah (Root Cause)**:
+   - Spatie Permission mengevaluasi `$user->hasPermissionTo(...)` dan `$user->getAllPermissions()` sebagai penggabungan (*UNION*) antara izin langsung user (`model_has_permissions`) dengan izin role bawaan (`role_has_permissions`).
+   - Karena role seperti `admin_umum` dan `admin_bidang` memiliki izin permanen di level role, penghapusan centang modul (misalnya mencabut modul survei dari akun Admin Umum) di `/dashboard/users/edit/[id]` tidak berpengaruh karena Spatie selalu mengembalikan izin dari role.
+2. **Arsitektur Solusi Kolom `custom_permissions`**:
+   - Menambahkan kolom `custom_permissions` (JSON nullable) pada tabel `users`.
+   - **User Tanpa Kustomisasi (`custom_permissions === null`)**: Tetap mewarisi izin default role bawaan (sehingga seeder dan test legacy tetap berjalan normal).
+   - **User yang Dikonfigurasi Super Admin (`custom_permissions !== null`)**:
+     - Model `App\Models\User` meng-override method `hasPermissionTo(...)` dan `getAllPermissions()` sehingga secara presisi mengevaluasi array `custom_permissions`.
+     - Super Admin dapat secara bebas mencentang atau menghapus centang dari 14 modul (bahkan mengosongkan modul `[]`).
+     - Sesi frontend, `UserResource`, dan middleware API (`permission:...`) secara ketat mematuhi izin granular per-user tersebut.
+     - Role `superadmin` tetap mempertahankan bypass penuh ke seluruh 14 modul.
+3. **Pencegahan Reset Tidak Disengaja pada UI**:
+   - Handler `onStepClick` pada komponen `StepWizardNav` di `/dashboard/users/edit/[id]` diperbaiki agar sekadar berpindah tab langkah tanpa mengeksekusi preset template kustom secara otomatis.
+
 ## Risiko tersisa
 
 - Belum ada kebijakan retensi formal untuk survei, kritik/saran, email unduhan, dan audit log. Durasi penghapusan harus ditetapkan pejabat pengendali data sebelum job penghapusan otomatis diaktifkan.

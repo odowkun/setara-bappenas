@@ -141,6 +141,40 @@ class SecurityRbacPrivacyTest extends TestCase
         ])->assertUnprocessable()->assertJsonValidationErrors('email');
     }
 
+    public function test_superadmin_can_update_user_granular_module_permissions_and_restrict_access(): void
+    {
+        $this->actingAsRole('superadmin');
+        $targetUser = User::factory()->create([
+            'role' => 'admin_umum',
+            'name' => 'Staf Khusus Dokumen',
+            'username' => 'staf.dokumen',
+        ]);
+        $targetUser->assignRole('admin_umum');
+
+        // Update permissions to only manage_dokumen (unchecking all other modules like survey, berita)
+        $response = $this->putJson("/api/v1/users/{$targetUser->id}", [
+            'name' => 'Staf Khusus Dokumen',
+            'username' => 'staf.dokumen',
+            'role' => 'admin_umum',
+            'permissions' => ['manage_dokumen'],
+        ]);
+
+        $response->assertOk()
+            ->assertJsonPath('data.permissions', ['manage_dokumen']);
+
+        $targetUser->refresh();
+        $this->assertEquals(['manage_dokumen'], $targetUser->custom_permissions);
+        $this->assertTrue($targetUser->hasPermissionTo('manage_dokumen'));
+        $this->assertFalse($targetUser->hasPermissionTo('manage_survey'));
+        $this->assertFalse($targetUser->hasPermissionTo('manage_berita'));
+
+        // Act as the updated user to verify middleware enforcement
+        Sanctum::actingAs($targetUser);
+        $this->getJson('/api/v1/admin/documents')->assertOk();
+        $this->getJson('/api/v1/surveys')->assertForbidden();
+        $this->getJson('/api/v1/admin/news')->assertForbidden();
+    }
+
     public function test_public_search_excludes_private_documents_and_their_projects(): void
     {
         $publicDocumentId = $this->createDocument([

@@ -465,7 +465,7 @@ export default function EditUserPage() {
           if (step.stepNumber === 1) {
             setActiveStep(1);
           } else {
-            handleProceedToStep2();
+            setActiveStep(2);
           }
         }}
       />

@@ -69,7 +69,7 @@ class UserController extends Controller
             'bidang' => ['nullable', Rule::in(['infrastruktur', 'perekonomian', 'sosbud', 'renval'])],
             'nip' => ['nullable', 'string', 'max:50'],
             'jabatan' => ['nullable', 'string', 'max:255'],
-            'permissions' => ['sometimes', 'array'],
+            'permissions' => ['sometimes', 'nullable', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
             'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
@@ -95,7 +95,9 @@ class UserController extends Controller
             ]);
 
             $user->syncRoles([$validated['role']]);
-            $user->syncPermissions($validated['permissions'] ?? []);
+            if (array_key_exists('permissions', $validated) && $validated['permissions'] !== null) {
+                $user->syncPermissions($validated['permissions']);
+            }
 
             return $user;
         });
@@ -141,7 +143,7 @@ class UserController extends Controller
             'bidang' => ['nullable', Rule::in(['infrastruktur', 'perekonomian', 'sosbud', 'renval'])],
             'nip' => ['nullable', 'string', 'max:50'],
             'jabatan' => ['nullable', 'string', 'max:255'],
-            'permissions' => ['sometimes', 'array'],
+            'permissions' => ['sometimes', 'nullable', 'array'],
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
             'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
@@ -198,7 +200,13 @@ class UserController extends Controller
             $user->syncRoles([$role]);
 
             if (array_key_exists('permissions', $validated)) {
-                $user->syncPermissions($validated['permissions']);
+                if ($validated['permissions'] === null) {
+                    $user->custom_permissions = null;
+                    $user->save();
+                    $user->traitSyncPermissions([]);
+                } else {
+                    $user->syncPermissions($validated['permissions']);
+                }
             }
 
             if (! empty($validated['password'])) {
