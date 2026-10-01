@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\JenisDokumenController;
 use App\Http\Controllers\Api\KritikController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NewsController;
+use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\PejabatController;
 use App\Http\Controllers\Api\PejabatFungsionalController;
 use App\Http\Controllers\Api\ProfilController;
@@ -621,6 +622,7 @@ Route::prefix('v1')->group(function () {
             ->name('auth.password.update');
         Route::get('/document-download-logs', [DocumentAnalyticsController::class, 'downloadLogs'])
             ->middleware('permission:view_download_logs');
+        Route::get('/admin/notifications', [NotificationController::class, 'index']);
 
         // User Management (Superadmin)
         Route::middleware(['role:superadmin', 'permission:manage_users'])->group(function () {

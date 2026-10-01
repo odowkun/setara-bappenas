@@ -299,6 +299,9 @@ Sebagai pemecahan masalah pewarisan hak akses Spatie Permission di mana izin rol
 3. **Pencegahan Reset Tidak Disengaja pada UI**:
    - Handler `onStepClick` pada komponen `StepWizardNav` di `/dashboard/users/edit/[id]` diperbaiki agar sekadar berpindah tab langkah tanpa mengeksekusi preset template kustom secara otomatis.
 
+4. **Sistem Notifikasi Berbasis Otoritas & Peran**:
+   - Aktivitas sistem, aspirasi warga, dan draf dokumen kini difilter secara cerdas sesuai role dan izin Spatie masing-masing pengguna. Detail dapat dilihat pada [Sistem Notifikasi Aktivitas Berbasis Role & Permission](admin-notification-system.md).
+
 ## Risiko tersisa
 
 - Belum ada kebijakan retensi formal untuk survei, kritik/saran, email unduhan, dan audit log. Durasi penghapusan harus ditetapkan pejabat pengendali data sebelum job penghapusan otomatis diaktifkan.
