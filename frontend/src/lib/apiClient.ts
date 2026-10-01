@@ -32,11 +32,6 @@ export async function authenticatedFetch(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<Response> {
-  const token = getAuthToken();
-  if (!token) {
-    throw new Error("Sesi dashboard tidak tersedia. Silakan login kembali.");
-  }
-
   let url: string;
   if (endpoint.startsWith("http://") || endpoint.startsWith("https://")) {
     url = endpoint;
@@ -52,6 +47,7 @@ export async function authenticatedFetch(
   }
 
   return fetch(url, {
+    credentials: "include", // Auto-attach HttpOnly Sanctum cookie on all requests
     ...options,
     headers: withAuthHeaders(options.headers),
   });

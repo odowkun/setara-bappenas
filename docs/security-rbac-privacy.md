@@ -241,9 +241,27 @@ php artisan migrate:rollback --step=3
 
 Jangan rollback jika `APP_KEY` yang mengenkripsi data tidak tersedia. Selalu uji rollback pada salinan database terlebih dahulu.
 
+## Dual-Layer Hybrid Authentication (HttpOnly Secure Cookie + Bearer Token Fallback)
+
+Status implementasi: Oktober 2026.
+
+Sebagai pemenuhan standar SPBE tertinggi dan pengamanan terhadap risiko pencurian kredensial via Cross-Site Scripting (XSS):
+1. **HttpOnly Cookie Shield**:
+   - Saat login (`/api/v1/auth/login`), backend Laravel menerbitkan cookie `bappeda_sanctum_token` dengan flag:
+     - `HttpOnly = true`: Browser melarang JavaScript (`localStorage` maupun `document.cookie`) untuk mengakses nilai token.
+     - `SameSite = Lax`: Mencegah serangan CSRF lintas domain.
+     - `Secure = true` (pada produksi HTTPS).
+     - Durasi kedaluwarsa 7 hari.
+2. **Middleware Interceptor (`AuthenticateWithHttpOnlyCookie`)**:
+   - Jika request dari browser tidak memuat header `Authorization: Bearer`, middleware otomatis membaca cookie `bappeda_sanctum_token` dan menginjeksinya ke header autentikasi Laravel Sanctum.
+3. **CORS & Credentials Security**:
+   - Backend `config/cors.php` mengaktifkan `supports_credentials => true` dengan pembatasan domain asal (*allowed origins*) kedinasan yang ketat.
+   - Frontend `apiClient.ts` dan `AuthContext.tsx` mengirimkan opsi `credentials: "include"` pada seluruh request autentikasi dan mutasi data.
+4. **Proteksi Sesi Terverifikasi (Fail-Fast)**:
+   - Jika cookie atau token kedaluwarsa/ditolak (HTTP 401), sistem frontend langsung menghentikan animasi loading, mengubah indikator menjadi merah ("Ditolak"), dan membersihkan sesi.
+
 ## Risiko tersisa
 
-- Token Bearer masih berada di `localStorage`. Sanitasi server mengurangi risiko XSS, tetapi migrasi ke cookie HttpOnly Sanctum tetap menjadi penguatan berikutnya.
 - Belum ada kebijakan retensi formal untuk survei, kritik/saran, email unduhan, dan audit log. Durasi penghapusan harus ditetapkan pejabat pengendali data sebelum job penghapusan otomatis diaktifkan.
 - MFA belum diterapkan. MFA disarankan khusus Super Admin setelah kanal email/OTP resmi tersedia.
 - Backup database harus dienkripsi dan diatur masa simpannya di lingkungan produksi.

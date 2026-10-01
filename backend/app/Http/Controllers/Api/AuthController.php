@@ -98,6 +98,19 @@ class AuthController extends Controller
             'updated_at' => now(),
         ]);
 
+        $isSecure = $request->isSecure() || config('app.env') === 'production';
+        $cookie = cookie(
+            'bappeda_sanctum_token',
+            $token,
+            60 * 24 * 7, // 7 days duration
+            '/',
+            null,
+            $isSecure,
+            true, // httpOnly: prevents XSS and JavaScript theft
+            false,
+            'Lax'
+        );
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
@@ -106,7 +119,7 @@ class AuthController extends Controller
                 'token' => $token,
                 'user' => (new UserResource($user))->resolve(),
             ],
-        ]);
+        ])->withCookie($cookie);
     }
 
     public function logout(Request $request)
@@ -115,11 +128,13 @@ class AuthController extends Controller
             $request->user()->currentAccessToken()?->delete();
         }
 
+        $forgetCookie = cookie()->forget('bappeda_sanctum_token', '/');
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'message' => 'Logout berhasil',
-        ]);
+        ])->withCookie($forgetCookie);
     }
 
     public function me(Request $request)
