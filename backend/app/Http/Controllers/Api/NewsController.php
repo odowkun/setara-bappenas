@@ -85,6 +85,7 @@ class NewsController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'category' => 'required|string|max:100|exists:news_categories,name',
+            'author' => 'nullable|string|max:255',
             'content' => 'required|string|max:500000',
             'summary' => 'nullable|string|max:2000',
             'image' => 'nullable|string|max:2048',
@@ -94,7 +95,8 @@ class NewsController extends Controller
         $publish = (bool) ($validated['is_published'] ?? false);
         unset($validated['is_published']);
         $validated['content'] = $this->htmlSanitizer->sanitize($validated['content']);
-        $validated['author'] = $request->user()->name;
+        $authorInput = trim((string) ($validated['author'] ?? ''));
+        $validated['author'] = $authorInput !== '' ? $authorInput : $request->user()->name;
         $validated['slug'] = Str::slug($validated['title']).'-'.time();
         $validated['date'] = now()->format('Y-m-d');
         $validated['views'] = 0;
@@ -123,6 +125,7 @@ class NewsController extends Controller
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'category' => 'sometimes|required|string|max:100|exists:news_categories,name',
+            'author' => 'sometimes|nullable|string|max:255',
             'content' => 'sometimes|required|string|max:500000',
             'summary' => 'nullable|string|max:2000',
             'image' => 'nullable|string|max:2048',
@@ -134,6 +137,10 @@ class NewsController extends Controller
         unset($validated['is_published']);
         if (array_key_exists('content', $validated)) {
             $validated['content'] = $this->htmlSanitizer->sanitize($validated['content']);
+        }
+        if (array_key_exists('author', $validated)) {
+            $authorInput = trim((string) ($validated['author'] ?? ''));
+            $validated['author'] = $authorInput !== '' ? $authorInput : $request->user()->name;
         }
 
         if (isset($validated['title']) && $validated['title'] !== $news->title) {

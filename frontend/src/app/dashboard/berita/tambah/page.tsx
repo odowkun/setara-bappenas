@@ -34,6 +34,17 @@ export default function TambahBeritaPage() {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
 
+  // Author / Redaksi State
+  const DEFAULT_AUTHORS = [
+    "Tim Redaksi BAPPEDA Halut",
+    "Humas BAPPEDA Halmahera Utara",
+    "Sekretariat BAPPEDA",
+  ];
+  const [authorList, setAuthorList] = useState<string[]>(DEFAULT_AUTHORS);
+  const [selectedAuthor, setSelectedAuthor] = useState("");
+  const [showAddAuthor, setShowAddAuthor] = useState(false);
+  const [newAuthorName, setNewAuthorName] = useState("");
+
   const [content, setContent] = useState("");
 
   const [mediaData, setMediaData] = useState<{
@@ -57,6 +68,28 @@ export default function TambahBeritaPage() {
       .catch((error) => toast.error(error instanceof Error ? error.message : "Kategori berita gagal dimuat."));
   }, []);
 
+  // Sync logged in user to author list
+  useEffect(() => {
+    if (user?.name) {
+      setAuthorList((prev) => Array.from(new Set([user.name, ...prev])));
+      setSelectedAuthor((curr) => curr || user.name);
+    }
+  }, [user]);
+
+  // Fetch unique authors from published news
+  useEffect(() => {
+    adminService.fetchNews()
+      .then((items) => {
+        const existing = items
+          .map((i) => (i.author ? String(i.author).trim() : ""))
+          .filter(Boolean);
+        if (existing.length > 0) {
+          setAuthorList((prev) => Array.from(new Set([...prev, ...existing])));
+        }
+      })
+      .catch((err) => console.warn("Gagal memuat riwayat penulis:", err));
+  }, []);
+
   useEffect(() => {
     const id = new URLSearchParams(window.location.search).get("edit");
     if (!id) return;
@@ -67,6 +100,11 @@ export default function TambahBeritaPage() {
         setTitle(String(item.title ?? ""));
         setSummary(String(item.summary ?? ""));
         setSelectedCategory(String(item.category ?? ""));
+        if (item.author) {
+          const auth = String(item.author).trim();
+          setSelectedAuthor(auth);
+          setAuthorList((prev) => Array.from(new Set([auth, ...prev])));
+        }
         setContent(String(item.content ?? ""));
         setIsPublished(Boolean(item.is_published));
         const image = String(item.image ?? "");
@@ -102,13 +140,18 @@ export default function TambahBeritaPage() {
     setShowAddCategory(false);
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = e.target.value;
-    if (val === "__ADD_NEW__") {
-      setShowAddCategory(true);
-    } else {
-      setSelectedCategory(val);
+  const handleAddNewAuthor = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = newAuthorName.trim();
+    if (!trimmed) return;
+
+    if (!authorList.includes(trimmed)) {
+      setAuthorList((current) => [...current, trimmed]);
     }
+    setSelectedAuthor(trimmed);
+    toast.success(`Penulis "${trimmed}" berhasil ditambahkan!`);
+    setNewAuthorName("");
+    setShowAddAuthor(false);
   };
 
   const handleSave = async (publish: boolean) => {
@@ -117,8 +160,8 @@ export default function TambahBeritaPage() {
       return;
     }
 
-    if (!title.trim() || !content.trim() || !selectedCategory) {
-      toast.error("Judul, kategori, dan isi berita wajib diisi.");
+    if (!title.trim() || !content.trim() || !selectedCategory || !selectedAuthor.trim()) {
+      toast.error("Judul, kategori, penulis/redaksi, dan isi berita wajib diisi.");
       return;
     }
 
@@ -129,6 +172,7 @@ export default function TambahBeritaPage() {
         title: title.trim(),
         summary,
         category: selectedCategory,
+        author: selectedAuthor.trim(),
         content,
         image: finalImage,
         is_published: publish,
@@ -287,19 +331,66 @@ export default function TambahBeritaPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Penulis / Redaksi Humas
+              <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <span>Penulis / Redaksi Humas *</span>
+                {!showAddAuthor && (
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAuthor(true)}
+                    className="text-[11px] font-black text-blue-600 hover:underline flex items-center gap-0.5"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Tambah Penulis Baru</span>
+                  </button>
+                )}
               </label>
-              <input
-                type="text"
-                disabled
-                value={
-                  user
-                    ? `${user.name} (${user.role})`
-                    : "Memuat identitas pengelola dari server..."
-                }
-                className="w-full px-3.5 py-2.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-bold text-slate-500 cursor-not-allowed"
-              />
+
+              {showAddAuthor ? (
+                <div className="flex items-center gap-2 p-1.5 rounded-xl bg-blue-50 border border-blue-200 animate-in fade-in">
+                  <input
+                    type="text"
+                    autoFocus
+                    value={newAuthorName}
+                    onChange={(e) => setNewAuthorName(e.target.value)}
+                    placeholder="Ketik nama penulis / redaksi baru..."
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-white border border-blue-200 text-xs font-bold text-slate-900 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddNewAuthor}
+                    className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1 shrink-0"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Simpan</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAuthor(false)}
+                    className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 shrink-0"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ) : (
+                <SearchableSelect
+                  options={authorList.map((auth) => ({ value: auth, label: auth }))}
+                  value={selectedAuthor}
+                  onChange={(val) => setSelectedAuthor(String(val))}
+                  placeholder="-- Pilih Penulis / Redaksi Humas --"
+                  searchPlaceholder="Cari atau ketik penulis baru..."
+                  creatable={true}
+                  createLabelPrefix="Tambah penulis baru:"
+                  onCreateOption={(newAuth) => {
+                    const trimmed = newAuth.trim();
+                    if (!trimmed) return;
+                    if (!authorList.includes(trimmed)) {
+                      setAuthorList((current) => [...current, trimmed]);
+                    }
+                    setSelectedAuthor(trimmed);
+                    toast.success(`Penulis "${trimmed}" berhasil ditambahkan!`);
+                  }}
+                />
+              )}
             </div>
           </div>
 

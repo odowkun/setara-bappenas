@@ -54,7 +54,7 @@ Semua mutasi memerlukan autentikasi, permission domain, dan `AuditAdminMutation`
 
 ### Berita
 
-Halaman tambah juga menjadi halaman edit ketika menerima `?edit={id}`. Data edit dimuat dari `GET /admin/news/{id}` dan disimpan dengan `PUT`, bukan membuat berita baru. Tombol **Simpan Draf** dan **Terbitkan** mengirim status eksplisit. Penulis dan aktor audit diturunkan dari sesi server.
+Halaman tambah juga menjadi halaman edit ketika menerima `?edit={id}`. Data edit dimuat dari `GET /admin/news/{id}` dan disimpan dengan `PUT`, bukan membuat berita baru. Tombol **Simpan Draf** dan **Terbitkan** mengirim status eksplisit. Field **Penulis / Redaksi Humas** menggunakan `SearchableSelect` dengan dukungan `creatable={true}` dan opsi cepat, memungkinkan admin memilih penulis yang sudah ada (termasuk nama akun login dan preset resmi seperti *Tim Redaksi BAPPEDA Halut*, *Humas BAPPEDA Halmahera Utara*) atau menambahkan nama penulis baru secara bebas yang otomatis disimpan ke database (`author` column di tabel `news`). Aktor audit tetap tersimpan di database (`created_by_user_id` dan `published_by_user_id`).
 
 ### Agenda dan Pengumuman
 

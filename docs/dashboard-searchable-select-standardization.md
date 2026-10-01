@@ -29,11 +29,12 @@ Audit menyeluruh memeriksa seluruh file di bawah direktori `frontend/src/app/das
 | 1 | **Manajemen Galeri** | `dashboard/galeri/page.tsx` | Filter Kategori Album | Menggantikan native `<select>` dengan `SearchableSelect` real-time filter kategori album. |
 | 2 | **Manajemen Pengumuman** | `dashboard/pengumuman/page.tsx` | Filter Tipe & Selector Baris Pagination | Dua native select (filter tipe & baris per halaman) dimigrasi ke `SearchableSelect`. |
 | 3 | **Update Progres Pembangunan** | `dashboard/update-progres/page.tsx` | Modal Status Progres Pembangunan | Status pengerjaan (*belum mulai, dalam proses, selesai 100%, terkendala*) kini menggunakan `SearchableSelect`. |
-| 4 | **Tambah & Edit Berita** | `dashboard/berita/tambah/page.tsx` | Dropdown Kategori Berita | Menggantikan native select dan mengaktifkan fitur `creatable` langsung dari dropdown. |
+| 4 | **Tambah & Edit Berita** | `dashboard/berita/tambah/page.tsx` | Dropdown Kategori Berita & Penulis/Redaksi Humas | Kategori dan Penulis/Redaksi kini menggunakan `SearchableSelect` dengan dukungan `creatable={true}` serta tombol tambah cepat inline. |
 | 5 | **Edit Agenda Kegiatan** | `dashboard/agenda/edit/[id]/page.tsx` | Kategori Kegiatan & Penyelenggara OPD | Menyelaraskan dengan halaman tambah agenda, menggunakan `SearchableSelect` dengan opsi custom. |
 | 6 | **Manajemen Berita** | `dashboard/berita/page.tsx` | Filter Kategori, Filter Status, & Pagination | Tiga native select diubah menjadi `SearchableSelect` responsif. |
 | 7 | **Detail Dokumen & Lampiran Teknis** | `dashboard/dokumen/[id]/page.tsx` | Modal Status Progres & Kategori Dokumen Teknis | Dua dropdown modal (status proyek dan jenis lampiran teknis) menggunakan `SearchableSelect`. |
 | 8 | **Halaman Publik Pengumuman & Berita** | `pengumuman/page.tsx` & `berita/page.tsx` | Selector Baris Data Pagination | Turut diseragamkan ke `SearchableSelect` untuk konsistensi seluruh aplikasi. |
+| 9 | **Penulis / Redaksi Humas Berita** | `dashboard/berita/tambah/page.tsx` | Input Penulis Dinamis (Creatable) | Mengganti input statis disabled dengan `SearchableSelect` creatable untuk memilih atau menambah nama penulis baru secara instan. |
 
 ---
 

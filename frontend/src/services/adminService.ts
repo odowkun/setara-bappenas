@@ -366,6 +366,7 @@ export const adminService = {
     summary?: string;
     image?: string;
     is_published?: boolean;
+    author?: string;
   }) => {
     const res = await adminService.apiFetch("/news", {
       method: "POST",

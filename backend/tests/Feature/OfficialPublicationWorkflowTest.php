@@ -375,6 +375,37 @@ class OfficialPublicationWorkflowTest extends TestCase
         $this->assertEquals('/storage/media/web/test-image.webp', $news->fresh()->image);
     }
 
+    public function test_news_can_be_stored_and_updated_with_custom_author(): void
+    {
+        $actor = $this->actingAsAdminUmum();
+        $newsCategory = DB::table('news_categories')->value('name');
+
+        $created = $this->postJson('/api/v1/news', [
+            'title' => 'Berita Dengan Penulis Khusus',
+            'category' => $newsCategory,
+            'author' => 'Tim Redaksi BAPPEDA Halut',
+            'content' => '<p>Konten berita redaksi khusus.</p>',
+            'is_published' => false,
+        ])->assertCreated();
+
+        $newsId = $created->json('data.id');
+        $this->assertEquals('Tim Redaksi BAPPEDA Halut', $created->json('data.author'));
+        $this->assertDatabaseHas('news', [
+            'id' => $newsId,
+            'author' => 'Tim Redaksi BAPPEDA Halut',
+        ]);
+
+        $updated = $this->putJson("/api/v1/news/{$newsId}", [
+            'author' => 'Humas BAPPEDA Halmahera Utara',
+        ])->assertOk();
+
+        $this->assertEquals('Humas BAPPEDA Halmahera Utara', $updated->json('data.author'));
+        $this->assertDatabaseHas('news', [
+            'id' => $newsId,
+            'author' => 'Humas BAPPEDA Halmahera Utara',
+        ]);
+    }
+
     private function actingAsAdminUmum(): User
     {
         $user = User::factory()->create(['role' => 'admin_umum']);
