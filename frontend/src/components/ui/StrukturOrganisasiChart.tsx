@@ -325,12 +325,9 @@ export const StrukturOrganisasiChart: React.FC<{
         <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 space-y-6">
           <RenderVerticalNode node={data} isRoot />
 
-          {/* UNIFIED GROUPING SECTION: KELOMPOK JABATAN FUNGSIONAL (Image 2 Bagan Style) */}
-          <div className="relative pt-6 sm:pt-8">
-            {/* Connecting vertical hierarchy stem line from tree above */}
-            <div className="absolute left-6 sm:left-12 -top-0 w-0.5 h-6 sm:h-8 bg-blue-500 z-0" />
-
-            <div className="relative z-10 rounded-2xl sm:rounded-3xl bg-white border-2 border-blue-500 shadow-md p-4 sm:p-7 space-y-4">
+          {/* UNIFIED GROUPING SECTION: KELOMPOK JABATAN FUNGSIONAL (Separated Standalone Box) */}
+          <div className="pt-2">
+            <div className="rounded-2xl sm:rounded-3xl bg-white border-2 border-blue-500 shadow-md p-4 sm:p-7 space-y-4">
               {/* Header Box */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-100 pb-3 sm:pb-4">
                 <div className="flex items-center gap-3">
@@ -353,14 +350,14 @@ export const StrukturOrganisasiChart: React.FC<{
                 </div>
               </div>
 
-              {/* Functional Personnel Grid */}
+              {/* Functional Personnel Row List (Per Row List Layout) */}
               {fungsionalData.length === 0 ? (
                 <div className="p-6 text-center text-xs font-bold text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
                   Belum ada personel jabatan fungsional yang ditambahkan.
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                  {fungsionalData.map((person) => {
+                <div className="space-y-2.5 sm:space-y-3">
+                  {fungsionalData.map((person, idx) => {
                     const initials = person.name
                       ? person.name
                           .replace(/^(Dr\.|Drs\.|Ir\.|H\.|Hj\.)\s+/gi, "")
@@ -375,38 +372,53 @@ export const StrukturOrganisasiChart: React.FC<{
                     return (
                       <div
                         key={person.id}
-                        className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 hover:border-blue-400 hover:shadow-sm transition flex items-center gap-3"
+                        className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
                       >
-                        {/* Avatar Photo or Initials Circle */}
-                        {person.avatar ? (
-                          <img
-                            src={
-                              person.avatar.startsWith("http")
-                                ? person.avatar
-                                : `${STORAGE_BASE_URL}${person.avatar}`
-                            }
-                            alt={person.name}
-                            className="w-11 h-11 rounded-xl object-cover border border-blue-200 shadow-xs shrink-0"
-                          />
-                        ) : (
-                          <div className="w-11 h-11 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
-                            {initials}
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                          {/* Index numbering badge */}
+                          <span className="w-6 text-center text-xs font-black text-slate-400 shrink-0">
+                            {idx + 1}.
+                          </span>
 
-                        {/* Name, Jabatan/Position Badge, NIP */}
-                        <div className="min-w-0 flex-1 space-y-0.5">
-                          <span className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200/80 max-w-full truncate">
+                          {/* Avatar Photo or Initials Circle */}
+                          {person.avatar ? (
+                            <img
+                              src={
+                                person.avatar.startsWith("http")
+                                  ? person.avatar
+                                  : `${STORAGE_BASE_URL}${person.avatar}`
+                              }
+                              alt={person.name}
+                              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl object-cover border border-blue-200 shadow-xs shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                              {initials}
+                            </div>
+                          )}
+
+                          {/* Name & NIP */}
+                          <div className="min-w-0 space-y-0.5">
+                            <h4 className="text-xs sm:text-sm font-black text-slate-900 break-words leading-tight">
+                              {person.name}
+                            </h4>
+                            {person.nip ? (
+                              <p className="text-[10px] sm:text-xs font-mono text-slate-500 font-medium">
+                                NIP: {person.nip}
+                              </p>
+                            ) : (
+                              <p className="text-[10px] sm:text-xs font-mono text-slate-400 italic">
+                                NIP: -
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Jabatan / Position Badge - Full width text without truncation */}
+                        <div className="shrink-0 pl-9 sm:pl-0">
+                          <span className="inline-flex items-center px-3 py-1 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
                             {person.position}
                           </span>
-                          <h4 className="text-xs sm:text-[13px] font-black text-slate-900 break-words leading-tight">
-                            {person.name}
-                          </h4>
-                          {person.nip && (
-                            <p className="text-[10px] font-mono text-slate-500 font-medium">
-                              NIP: {person.nip}
-                            </p>
-                          )}
                         </div>
                       </div>
                     );
@@ -1117,7 +1129,7 @@ const InteractiveCanvasOrgChart: React.FC<{
                 Belum ada personel jabatan fungsional yang terdaftar.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 {fungsionalData.map((person) => {
                   const initials = person.name
                     ? person.name
@@ -1133,36 +1145,41 @@ const InteractiveCanvasOrgChart: React.FC<{
                   return (
                     <div
                       key={person.id}
-                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-3"
+                      className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex items-center justify-between gap-3"
                     >
-                      {person.avatar ? (
-                        <img
-                          src={
-                            person.avatar.startsWith("http")
-                              ? person.avatar
-                              : `${STORAGE_BASE_URL}${person.avatar}`
-                          }
-                          alt={person.name}
-                          className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-xs shrink-0"
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-black text-xs flex items-center justify-center shrink-0">
-                          {initials}
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3 min-w-0">
+                        {person.avatar ? (
+                          <img
+                            src={
+                              person.avatar.startsWith("http")
+                                ? person.avatar
+                                : `${STORAGE_BASE_URL}${person.avatar}`
+                            }
+                            alt={person.name}
+                            className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-xs shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-black text-xs flex items-center justify-center shrink-0">
+                            {initials}
+                          </div>
+                        )}
 
-                      <div className="min-w-0 flex-1 space-y-0.5">
-                        <span className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 max-w-full truncate">
+                        <div className="min-w-0 space-y-0.5">
+                          <h4 className="text-xs font-black text-slate-900 break-words leading-tight">
+                            {person.name}
+                          </h4>
+                          {person.nip && (
+                            <p className="text-[10px] font-mono text-slate-500 font-medium">
+                              NIP: {person.nip}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="shrink-0">
+                        <span className="inline-block px-2.5 py-1 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
                           {person.position}
                         </span>
-                        <h4 className="text-xs font-black text-slate-900 break-words leading-tight">
-                          {person.name}
-                        </h4>
-                        {person.nip && (
-                          <p className="text-[10px] font-mono text-slate-500 font-medium">
-                            NIP: {person.nip}
-                          </p>
-                        )}
                       </div>
                     </div>
                   );

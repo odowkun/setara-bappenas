@@ -111,7 +111,7 @@ Sesuai regulasi kelembagaan pemerintah (PermenPAN-RB), Jabatan Fungsional pada B
    - Endpoint CRUD mandiri: `/api/v1/pejabat-fungsional` dengan otentikasi Sanctum dan izin `manage_struktur`.
 
 2. **Visualisasi Bagan Terpadu (Image 2 Bagan Standard)**:
-   - **Bagan Vertikal (`RenderVerticalNode`)**: Kotak besar *Kelompok Jabatan Fungsional* ditempatkan di bagian bawah pohon dengan garis penghubung vertikal (`stem connector`), memuat kartu-kartu personel dengan foto/inisial, nama lengkap, NIP, serta badge jabatan fungsional (contoh: Perencana Ahli Muda, Analis Kebijakan).
+   - **Bagan Vertikal (`RenderVerticalNode`)**: Kotak besar *Kelompok Jabatan Fungsional* ditempatkan mandiri terpisah di bagian bawah (tanpa garis panah/stem connector hierarki struktural), memuat daftar personel per baris (*row list*) lengkap dengan nomor urut, foto/inisial, nama lengkap, NIP, serta badge nama jabatan fungsional utuh tanpa terpotong.
    - **Bagan Kanvas Interaktif (`InteractiveCanvasOrgChart`)**: Kotak lebar mandiri dirender di bagian bawah kanvas dengan garis vektor ortogonal putus-putus (`strokeDasharray="6 4"`) yang terhubung langsung dari pusat bawah pohon ke pucuk kotak kelompok fungsional.
 
 3. **Pengelolaan 3-Langkah di Dashboard (`/dashboard/profil/struktur`)**:
