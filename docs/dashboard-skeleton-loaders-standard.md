@@ -125,5 +125,10 @@ Komponen layar memuat sesi (`DashboardLoadingScreen.tsx`) digunakan saat autenti
 1. **Tipografi Bersih & Fokus**:
    - Subtitle bersifat opsional (`subtitle = ""`) dan dirender secara kondisional (`{subtitle ? <p>{subtitle}</p> : null}`).
    - Menghindari teks deskripsi berlebih (seperti singkronisasi izin modul/RBAC) agar tampilan loading kartu glassmorphic tetap bersih, ringkas, dan profesional.
-2. **Indikator Progres Dinamis**:
-   - Menampilkan lambang resmi BAPPEDA dengan animasi ring pulse, badge identitas kedinasan, bar progres berkilau (*shimmer progress bar*), dan status teks proses verifikasi hak akses portal.
+2. **Indikator Progres Dinamis (0% -> 100%)**:
+   - **Progress Bar Nyata**: Menggantikan persentase statis 45% dengan pergerakan tahapan dinamis mulai dari 0% hingga tuntas 100% (`0%` -> `18%` -> `38%` -> `68%` -> `90%` -> `100%`).
+   - **Label Persentase Aktif**: Dilengkapi indikator angka persen (`%`) bergaya monospaced di pojok kanan atas progress bar dan status transisi kontekstual di sebelah kiri.
+   - **Status Penyelesaian**: Saat mencapai 100%, bar bertransformasi dengan palet emerald (`bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500`) disertai ikon konfirmasi `CheckCircle2` ("Sesi Terverifikasi").
+3. **Kalibrasi Waktu Minimum UX (No Sudden Flashes)**:
+   - Pada `AuthContext.tsx`, validasi sesi menerapkan batasan waktu minimum (`minLoadingDuration = 1350ms`) sebelum `setLoading(false)`. Hal ini mencegah antarmuka langsung hilang seketika saat respons API lokal/cepat (~50-100ms), memberikan umpan balik visual yang utuh dan nyaman bagi pengguna.
+

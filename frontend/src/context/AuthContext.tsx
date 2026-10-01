@@ -51,6 +51,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return;
       }
 
+      const startTime = Date.now();
+      const minLoadingDuration = 1350; // Enforce calibrated UX duration so 0-100% progress finishes smoothly
+
       try {
         const response = await authenticatedFetch("/auth/me", {
           cache: "no-store",
@@ -66,6 +69,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.removeItem(AUTH_USER_KEY);
         localStorage.removeItem(AUTH_TOKEN_KEY);
       } finally {
+        const elapsed = Date.now() - startTime;
+        const remainingDelay = Math.max(0, minLoadingDuration - elapsed);
+        if (remainingDelay > 0) {
+          await new Promise((resolve) => setTimeout(resolve, remainingDelay));
+        }
         setLoading(false);
       }
     };
