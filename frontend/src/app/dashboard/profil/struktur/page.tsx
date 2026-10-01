@@ -15,7 +15,6 @@ import {
   Network,
   UserCheck,
   Building2,
-  ChevronRight,
   ChevronDown,
   CornerDownRight,
   Check,
@@ -323,12 +322,18 @@ export default function StrukturEditorPage() {
                   return (
                     <div
                       key={item.id}
-                      style={{ paddingLeft: `${Math.max(12, Math.min(depth * 18 + 12, 48))}px` }}
-                      className="py-4 pr-4 sm:pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition"
+                      style={{ paddingLeft: `calc(1.25rem + ${Math.min(depth, 6)} * clamp(28px, 4vw, 52px))` }}
+                      className={`py-4 pr-4 sm:pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
+                        depth === 0
+                          ? "bg-gradient-to-r from-blue-50/50 via-white to-transparent hover:bg-blue-50/70"
+                          : "hover:bg-slate-50/80"
+                      }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         {depth > 0 && (
-                          <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                          <div className="flex items-center gap-1 shrink-0 select-none">
+                            <CornerDownRight className="w-4 h-4 text-blue-600/80 shrink-0" />
+                          </div>
                         )}
 
                         {/* Avatar Image or Initials */}
@@ -350,13 +355,18 @@ export default function StrukturEditorPage() {
                               {item.position}
                             </h4>
                             {depth === 0 ? (
-                              <span className="px-2 py-0.5 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-[10px] font-extrabold">
+                              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-[10px] font-extrabold">
                                 Root (Pimpinan Utama)
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold">
-                                Atasan: {parentItem?.position || item.parent_id}
-                              </span>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[10px] font-extrabold">
+                                  Tingkat {depth}
+                                </span>
+                                <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[10px] font-bold">
+                                  Atasan: {parentItem?.position || item.parent_id}
+                                </span>
+                              </div>
                             )}
                           </div>
 
@@ -431,18 +441,25 @@ export default function StrukturEditorPage() {
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
                 {hierarchicalTreeList.map(({ item, depth }) => {
                   const isAssigned = item.name && item.name !== "(Belum Ditentukan)";
+                  const parentItem = officials.find((o) => o.node_id === item.parent_id);
 
                   return (
                     <div
                       key={item.id}
-                      style={{ paddingLeft: `${Math.max(16, depth * 32 + 16)}px` }}
+                      style={{ paddingLeft: `calc(1.25rem + ${Math.min(depth, 6)} * clamp(28px, 4vw, 52px))` }}
                       className={`py-4 pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition ${
-                        isAssigned ? "hover:bg-slate-50/80" : "bg-slate-50/60 hover:bg-slate-100/60"
+                        depth === 0
+                          ? "bg-gradient-to-r from-blue-50/50 via-white to-transparent hover:bg-blue-50/70"
+                          : isAssigned
+                          ? "hover:bg-slate-50/80"
+                          : "bg-slate-50/60 hover:bg-slate-100/60"
                       }`}
                     >
                       <div className="flex items-center gap-3.5 min-w-0">
                         {depth > 0 && (
-                          <ChevronRight className="w-4 h-4 text-slate-300 shrink-0" />
+                          <div className="flex items-center gap-1 shrink-0 select-none">
+                            <CornerDownRight className="w-4 h-4 text-blue-600/80 shrink-0" />
+                          </div>
                         )}
 
                         {/* Avatar Image or Initials Circle */}
@@ -466,9 +483,27 @@ export default function StrukturEditorPage() {
 
                         {/* Position & Name */}
                         <div className="min-w-0 space-y-0.5">
-                          <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">
-                            {isAssigned ? item.name : "(Belum Ditentukan / Vacant)"}
-                          </h4>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h4 className="text-xs font-black text-slate-900 uppercase tracking-tight">
+                              {isAssigned ? item.name : "(Belum Ditentukan / Vacant)"}
+                            </h4>
+                            {depth === 0 ? (
+                              <span className="px-2.5 py-0.5 rounded-full bg-blue-100 border border-blue-200 text-blue-900 text-[10px] font-extrabold">
+                                Root (Pimpinan Utama)
+                              </span>
+                            ) : (
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <span className="px-1.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 text-[9px] font-black uppercase">
+                                  Tingkat {depth}
+                                </span>
+                                {parentItem && (
+                                  <span className="px-2 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[9px] font-bold">
+                                    Atasan: {parentItem.position}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[11px] font-extrabold text-blue-700">
                               {item.position}
@@ -614,7 +649,7 @@ export default function StrukturEditorPage() {
                               setModalParentId(item.node_id);
                               setParentDropdownOpen(false);
                             }}
-                            style={{ paddingLeft: `${depth * 14 + 10}px` }}
+                            style={{ paddingLeft: `${Math.min(depth, 5) * 18 + 12}px` }}
                             className={`w-full text-left py-2 pr-3 rounded-xl text-xs font-extrabold flex items-center justify-between transition ${
                               isSelected
                                 ? "bg-blue-50 text-blue-900"
