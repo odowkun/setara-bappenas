@@ -187,7 +187,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return (
       <DashboardLoadingScreen
         title="Memuat Sesi Dashboard BAPPEDA"
-        subtitle="Menyinkronkan otentikasi kedinasan, izin modul (RBAC), & ruang kerja digital."
         statusText="Memverifikasi hak akses portal..."
       />
     );

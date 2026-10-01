@@ -12,7 +12,7 @@ interface DashboardLoadingScreenProps {
 
 export default function DashboardLoadingScreen({
   title = "Memuat Sesi Dashboard",
-  subtitle = "Menyinkronkan otentikasi kedinasan, matriks hak akses modul, dan ruang kerja digital.",
+  subtitle = "",
   statusText = "Memverifikasi sesi kredensial akun...",
 }: DashboardLoadingScreenProps) {
   return (
@@ -49,9 +49,11 @@ export default function DashboardLoadingScreen({
           <h2 className="text-base sm:text-lg font-black text-slate-900 tracking-tight">
             {title}
           </h2>
-          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
-            {subtitle}
-          </p>
+          {subtitle ? (
+            <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-xs mx-auto">
+              {subtitle}
+            </p>
+          ) : null}
         </div>
 
         {/* Shimmering Animated Progress Bar */}
