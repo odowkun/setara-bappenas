@@ -327,26 +327,22 @@ export const StrukturOrganisasiChart: React.FC<{
 
           {/* UNIFIED GROUPING SECTION: KELOMPOK JABATAN FUNGSIONAL (Separated Standalone Box) */}
           <div className="pt-2">
-            <div className="rounded-2xl sm:rounded-3xl bg-white border-2 border-blue-500 shadow-md p-4 sm:p-7 space-y-4">
-              {/* Header Box */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-100 pb-3 sm:pb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20 shrink-0">
-                    <Users className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-wide">
-                        KELOMPOK JABATAN FUNGSIONAL
-                      </h3>
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-blue-100 text-blue-800 border border-blue-200">
-                        {fungsionalData.length} Personel
-                      </span>
-                    </div>
-                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
-                      Bagan gabungan tenaga fungsional tertentu dan fungsional umum BAPPEDA Halmahera Utara
-                    </p>
-                  </div>
+            <div className="rounded-2xl sm:rounded-3xl bg-white border-2 border-blue-500 shadow-md p-3.5 sm:p-7 space-y-3.5 sm:space-y-4">
+              {/* Header Box: No Icon, Personel badge on the far right, fully responsive */}
+              <div className="flex items-center justify-between gap-3 border-b border-blue-100 pb-3 sm:pb-4">
+                <div className="min-w-0 flex-1 space-y-0.5">
+                  <h3 className="text-xs sm:text-base font-black text-slate-900 uppercase tracking-wide leading-tight">
+                    KELOMPOK JABATAN FUNGSIONAL
+                  </h3>
+                  <p className="text-[10px] sm:text-xs text-slate-500 font-medium leading-relaxed">
+                    Bagan gabungan tenaga fungsional tertentu dan fungsional umum BAPPEDA Halmahera Utara
+                  </p>
+                </div>
+
+                <div className="shrink-0">
+                  <span className="px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-black bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs whitespace-nowrap">
+                    {fungsionalData.length} Personel
+                  </span>
                 </div>
               </div>
 
@@ -372,11 +368,11 @@ export const StrukturOrganisasiChart: React.FC<{
                     return (
                       <div
                         key={person.id}
-                        className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/70 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs"
+                        className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shadow-2xs"
                       >
-                        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
                           {/* Index numbering badge */}
-                          <span className="w-6 text-center text-xs font-black text-slate-400 shrink-0">
+                          <span className="w-5 sm:w-6 text-center text-xs font-black text-slate-400 shrink-0 select-none">
                             {idx + 1}.
                           </span>
 
@@ -414,9 +410,9 @@ export const StrukturOrganisasiChart: React.FC<{
                           </div>
                         </div>
 
-                        {/* Jabatan / Position Badge - Full width text without truncation */}
-                        <div className="shrink-0 pl-9 sm:pl-0">
-                          <span className="inline-flex items-center px-3 py-1 rounded-xl text-[10.5px] sm:text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                        {/* Jabatan / Position Badge - Full text on mobile aligned with name */}
+                        <div className="shrink-0 pl-7 sm:pl-0 self-start sm:self-auto">
+                          <span className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
                             {person.position}
                           </span>
                         </div>
@@ -1101,25 +1097,21 @@ const InteractiveCanvasOrgChart: React.FC<{
             }}
             className="rounded-3xl bg-white border-2 border-blue-500 shadow-xl p-6 space-y-4 z-10 select-none font-sans"
           >
-            {/* Header Box */}
-            <div className="flex items-center justify-between border-b border-blue-100 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20 shrink-0">
-                  <Users className="w-5 h-5" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">
-                      KELOMPOK JABATAN FUNGSIONAL
-                    </h3>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800 border border-blue-200">
-                      {fungsionalData.length} Personel
-                    </span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Bagan gabungan tenaga fungsional tertentu &amp; umum BAPPEDA Halmahera Utara
-                  </p>
-                </div>
+            {/* Header Box: No Icon, Personel badge on the far right */}
+            <div className="flex items-center justify-between gap-3 border-b border-blue-100 pb-3">
+              <div className="min-w-0 flex-1 space-y-0.5">
+                <h3 className="text-base font-black text-slate-900 uppercase tracking-wide leading-tight">
+                  KELOMPOK JABATAN FUNGSIONAL
+                </h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  Bagan gabungan tenaga fungsional tertentu &amp; umum BAPPEDA Halmahera Utara
+                </p>
+              </div>
+
+              <div className="shrink-0">
+                <span className="px-3 py-1 rounded-full text-xs font-black bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs whitespace-nowrap">
+                  {fungsionalData.length} Personel
+                </span>
               </div>
             </div>
 
