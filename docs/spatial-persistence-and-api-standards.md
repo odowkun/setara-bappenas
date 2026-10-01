@@ -288,3 +288,39 @@ Pada komponen beranda `GeospatialSection`:
 3. **Penyempurnaan Empty State Box**:
    - **Kondisi Belum Ada Proyek Selesai**: Menampilkan ikon peta interaktif dengan teks deskriptif: *"Belum Ada Proyek Selesai - Lokasi proyek fisik pembangunan dengan progres 100% (selesai) akan terdata otomatis pada daftar ini."*
    - **Kondisi Pencarian / Filter Tidak Cocok**: Menampilkan ikon pencarian dengan pesan spesifik *"Lokasi Tidak Ditemukan - Tidak ada proyek yang sesuai dengan pencarian [keyword] pada kategori [kategori]"* beserta tombol *Reset Pencarian*.
+
+---
+
+## 14. Kontrol Publikasi Proyek Selesai 100% (`is_published` Flag & Seleksi Interaktif)
+
+Status implementasi: 01 Oktober 2026.
+
+### A. Latar Belakang & Persyaratan Bisnis
+Ketika proyek pembangunan fisik telah mencapai progres 100% (selesai), administrator membutuhkan kontrol apakah proyek tersebut langsung ditayangkan di portal publik dan WebGIS atau disimpan terlebih dahulu sebagai draft internal (misalnya menunggu serah terima pertama / PHO, audit BPK, atau persetujuan pimpinan Bappeda).
+
+### B. Arsitektur & Skema Database
+1. **Migrasi `proyek_details`**:
+   - Kolom `is_published` (`boolean`, default: `true`, diindeks).
+   - Kolom `published_at` (`timestamp`, `nullable`).
+   - Proyek eksisting otomatis memiliki `is_published = true` untuk menjaga backward compatibility.
+2. **Model `ProyekDetail.php`**:
+   - Menambahkan `is_published` dan `published_at` ke dalam `$fillable` dan `$casts` (`'is_published' => 'boolean'`, `'published_at' => 'datetime'`).
+
+### C. Backend API Filtering & Validation (`ProyekDetailController.php`)
+1. **Public Endpoint (`GET /api/v1/proyek-details`)**:
+   - Untuk pengunjung publik dan pengguna non-admin dokumen, query otomatis membatasi `where('is_published', true)`. Proyek dengan `is_published = false` (draft internal) tidak bocor ke publik atau peta WebGIS.
+2. **Admin Endpoint (`GET /api/v1/admin/proyek-details`)**:
+   - Mengembalikan seluruh proyek (baik publik maupun draft internal) untuk admin pengelola.
+3. **Pembaruan Progres (`PUT /api/v1/proyek-details/{id}/progres`)**:
+   - Validasi parameter `is_published` (`nullable|boolean`).
+   - Menyimpan status `is_published` dan memperbarui `published_at` (jika `true` diisi `now()`, jika `false` diset `null`).
+
+### D. Antarmuka Dashboard Frontend (`update-progres` & `dokumen/[id]`)
+1. **Selektor Publikasi Dinamis**:
+   - Ketika slider progres digeser ke 100% atau status dipilih "Selesai 100%", muncul card seleksi opsi publikasi:
+     - **Publikasikan ke Publik & WebGIS** (`is_published: true`): Proyek tampil di portal publik Halut dan peta interaktif.
+     - **Draft Internal Saja** (`is_published: false`): Proyek hanya tersimpan di dashboard admin Bappeda.
+2. **Badge Status Visual & Filter Cepat**:
+   - Kolom Status pada tabel Monev kini menampilkan badge `Publik` (hijau) atau `Draft Internal` (amber).
+   - Filter dropdown status menyediakan opsi filter langsung `🌐 Publik (Ditampilkan)` dan `🔒 Draft Internal (Tersembunyi)`.
+

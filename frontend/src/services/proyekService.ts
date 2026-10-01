@@ -34,6 +34,8 @@ export interface ProyekDetail {
   realisasi_anggaran: number;
   persentase_progres: number;
   status_progres: 'belum_mulai' | 'dalam_proses' | 'selesai' | 'terkendala';
+  is_published?: boolean;
+  published_at?: string;
   opd_penanggung_jawab?: string;
   created_by?: string;
   created_at?: string;
@@ -111,13 +113,14 @@ export const proyekService = {
     projectId: string | number,
     persentase_progres: number,
     status_progres: 'belum_mulai' | 'dalam_proses' | 'selesai' | 'terkendala',
-    realisasi_anggaran?: number
+    realisasi_anggaran?: number,
+    is_published?: boolean
   ): Promise<{ success: boolean; data: ProyekDetail }> => {
     try {
       const res = await authenticatedFetch(`${API_BASE_URL}/proyek-details/${projectId}/progres`, {
         method: "PUT",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ persentase_progres, status_progres, realisasi_anggaran }),
+        body: JSON.stringify({ persentase_progres, status_progres, realisasi_anggaran, is_published }),
       });
 
       if (res.ok) {

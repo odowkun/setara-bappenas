@@ -32,6 +32,10 @@ class ProyekDetailController extends Controller
     {
         $query = ProyekDetail::with(['document', 'attachments']);
 
+        if (!$request->user() || !$request->user()->can('manage_documents')) {
+            $query->where('is_published', true);
+        }
+
         $this->applyProjectFilters($query, $request);
         $projects = $query->orderBy('created_at', 'desc')->get();
         $this->hideInternalActorFields($projects);
@@ -91,6 +95,10 @@ class ProyekDetailController extends Controller
                 $q->where('status_progres', 'selesai')
                   ->orWhere('persentase_progres', '>=', 100);
             });
+        }
+
+        if ($request->has('is_published') && $request->is_published !== 'semua') {
+            $query->where('is_published', $request->boolean('is_published'));
         }
     }
 
@@ -200,6 +208,7 @@ class ProyekDetailController extends Controller
             'persentase_progres' => 'required|integer|min:0|max:100',
             'status_progres' => 'nullable|string|in:belum_mulai,dalam_proses,selesai,terkendala',
             'realisasi_anggaran' => 'nullable|numeric|min:0',
+            'is_published' => 'nullable|boolean',
             'delineasi_geojson' => 'nullable|array',
             'tipe_geometri' => 'nullable|string|in:point,polygon,polyline,circle',
             'luas_area_ha' => 'nullable|numeric|min:0',
@@ -217,6 +226,12 @@ class ProyekDetailController extends Controller
             'realisasi_anggaran' => $validated['realisasi_anggaran'] ?? $proyek->realisasi_anggaran,
             'updated_by' => $actor?->name ?? 'Admin',
         ];
+
+        if ($request->has('is_published')) {
+            $isPub = $request->boolean('is_published');
+            $updateData['is_published'] = $isPub;
+            $updateData['published_at'] = $isPub ? ($proyek->published_at ?? now()) : null;
+        }
 
         if (array_key_exists('delineasi_geojson', $validated)) {
             $updateData['delineasi_geojson'] = $validated['delineasi_geojson'];

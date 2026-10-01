@@ -24,6 +24,9 @@ import {
   RefreshCw,
   Edit2,
   Trash2,
+  Globe,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, showDeleteConfirm, toast } from "@/lib/swal";
 
@@ -54,6 +57,7 @@ export default function UpdateProgresPage() {
     persentase_progres: 0,
     status_progres: "dalam_proses" as "dalam_proses" | "selesai" | "terkendala",
     realisasi_anggaran: 0,
+    is_published: true,
   });
   const [submitting, setSubmitting] = useState(false);
 
@@ -114,7 +118,35 @@ export default function UpdateProgresPage() {
       persentase_progres: prj.persentase_progres,
       status_progres: (prj.status_progres === "belum_mulai" || !prj.status_progres ? "dalam_proses" : prj.status_progres) as "dalam_proses" | "selesai" | "terkendala",
       realisasi_anggaran: prj.realisasi_anggaran,
+      is_published: prj.is_published ?? true,
     });
+  };
+
+  const handleProgressChange = (val: number) => {
+    const newProgress = Math.min(100, Math.max(0, val));
+    let newStatus = progresForm.status_progres;
+    if (newProgress === 100 && newStatus !== "selesai") {
+      newStatus = "selesai";
+    } else if (newProgress < 100 && newStatus === "selesai") {
+      newStatus = "dalam_proses";
+    }
+    setProgresForm((prev) => ({
+      ...prev,
+      persentase_progres: newProgress,
+      status_progres: newStatus,
+    }));
+  };
+
+  const handleStatusChange = (val: "dalam_proses" | "selesai" | "terkendala") => {
+    let newProgress = progresForm.persentase_progres;
+    if (val === "selesai" && newProgress < 100) {
+      newProgress = 100;
+    }
+    setProgresForm((prev) => ({
+      ...prev,
+      status_progres: val,
+      persentase_progres: newProgress,
+    }));
   };
 
   const handleSaveProgress = async (e: React.FormEvent) => {
@@ -127,14 +159,15 @@ export default function UpdateProgresPage() {
         editingProject.id,
         progresForm.persentase_progres,
         progresForm.status_progres,
-        progresForm.realisasi_anggaran
+        progresForm.realisasi_anggaran,
+        progresForm.is_published
       );
 
       if (res.success) {
         toast.success("Progres & Data Sektoral Berhasil Diperbarui!");
         showSuccessSwal(
           "Progres & Data Sektoral Diperbarui!",
-          `1. MySQL Record Updated\n2. POST /updateFeatures terkirim ke ArcGIS REST API (OBJECTID: #${editingProject.esri_objectid || 'N/A'})\n3. Visualisasi peta otomatis diperbarui secara realtime.`
+          `1. MySQL Record Updated (${progresForm.is_published ? 'Status: Publikasi Aktif' : 'Status: Draft Internal'})\n2. POST /updateFeatures terkirim ke ArcGIS REST API (OBJECTID: #${editingProject.esri_objectid || 'N/A'})\n3. Visualisasi peta otomatis diperbarui secara realtime.`
         );
         setEditingProject(null);
         loadProjects();
@@ -181,7 +214,13 @@ export default function UpdateProgresPage() {
     const matchSearch = p.nama_proyek.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (p.kode_proyek && p.kode_proyek.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchBidang = selectedBidang === "semua" || p.bidang === selectedBidang;
-    const matchStatus = selectedStatus === "semua" || p.status_progres === selectedStatus;
+    const matchStatus =
+      selectedStatus === "semua" ||
+      (selectedStatus === "publik"
+        ? p.is_published !== false
+        : selectedStatus === "internal"
+        ? p.is_published === false
+        : p.status_progres === selectedStatus);
     return matchSearch && matchBidang && matchStatus;
   });
 
@@ -228,11 +267,13 @@ export default function UpdateProgresPage() {
 
   const availableStatuses = Array.from(new Set(projects.map((p) => p.status_progres))).filter(Boolean);
   const statusSelectOptions = [
-    { value: "semua", label: "Semua Status" },
+    { value: "semua", label: "Semua Status & Publikasi" },
     ...availableStatuses.map((s) => ({
       value: s,
       label: formatStatusLabel(s),
     })),
+    { value: "publik", label: "🌐 Publik (Ditampilkan)" },
+    { value: "internal", label: "🔒 Draft Internal (Tersembunyi)" },
   ];
 
   return (
@@ -372,7 +413,7 @@ export default function UpdateProgresPage() {
                 <th className="p-3">Pagu Anggaran</th>
                 <th className="p-3">Realisasi Keuangan</th>
                 <th className="p-3">Progres Fisik</th>
-                <th className="p-3">Status</th>
+                <th className="p-3">Status &amp; Publikasi</th>
                 <th className="p-3 text-right">Aksi Update</th>
               </tr>
             </thead>
@@ -448,30 +489,44 @@ export default function UpdateProgresPage() {
                       </div>
                     </td>
                     <td className="p-3">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-2xs ${
-                          prj.status_progres === "selesai"
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                            : prj.status_progres === "terkendala"
-                            ? "bg-rose-50 text-rose-700 border-rose-200"
-                            : prj.status_progres === "dalam_proses"
-                            ? "bg-blue-50 text-blue-700 border-blue-200"
-                            : "bg-slate-100 text-slate-700 border-slate-200"
-                        }`}
-                      >
+                      <div className="flex flex-col gap-1 items-start">
                         <span
-                          className={`w-1.5 h-1.5 rounded-full ${
+                          className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap border shadow-2xs ${
                             prj.status_progres === "selesai"
-                              ? "bg-emerald-500"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                               : prj.status_progres === "terkendala"
-                              ? "bg-rose-500"
+                              ? "bg-rose-50 text-rose-700 border-rose-200"
                               : prj.status_progres === "dalam_proses"
-                              ? "bg-blue-500"
-                              : "bg-slate-400"
+                              ? "bg-blue-50 text-blue-700 border-blue-200"
+                              : "bg-slate-100 text-slate-700 border-slate-200"
                           }`}
-                        />
-                        <span>{formatStatusLabel(prj.status_progres)}</span>
-                      </span>
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              prj.status_progres === "selesai"
+                                ? "bg-emerald-500"
+                                : prj.status_progres === "terkendala"
+                                ? "bg-rose-500"
+                                : prj.status_progres === "dalam_proses"
+                                ? "bg-blue-500"
+                                : "bg-slate-400"
+                            }`}
+                          />
+                          <span>{formatStatusLabel(prj.status_progres)}</span>
+                        </span>
+
+                        {prj.is_published !== false ? (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80">
+                            <Globe className="w-3 h-3 text-emerald-600" />
+                            <span>Publik</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                            <Lock className="w-3 h-3 text-amber-600" />
+                            <span>Draft Internal</span>
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="p-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -561,7 +616,7 @@ export default function UpdateProgresPage() {
                   min="0"
                   max="100"
                   value={progresForm.persentase_progres}
-                  onChange={(e) => setProgresForm({ ...progresForm, persentase_progres: Number(e.target.value) })}
+                  onChange={(e) => handleProgressChange(Number(e.target.value))}
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-700"
                 />
               </div>
@@ -575,10 +630,100 @@ export default function UpdateProgresPage() {
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
                   value={progresForm.status_progres}
-                  onChange={(val) => setProgresForm({ ...progresForm, status_progres: (val as any) || "dalam_proses" })}
+                  onChange={(val) => handleStatusChange((val as any) || "dalam_proses")}
                   placeholder="Pilih status pembangunan"
                 />
               </div>
+
+              {/* Pilihan Publikasi Proyek ketika Progres 100% atau Selesai */}
+              {(progresForm.persentase_progres === 100 || progresForm.status_progres === "selesai") && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-slate-50 border border-emerald-200/90 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wide">
+                          Pilihan Publikasi Proyek
+                        </h4>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          100% Selesai
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-emerald-800/80 font-medium mt-0.5 leading-snug">
+                        Proyek telah rampung 100%. Tentukan apakah data dan peta proyek ini siap dipublikasikan ke portal publik atau disimpan sebagai draft internal terlebih dahulu.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    {/* Opsi 1: Publikasi ke Publik & WebGIS */}
+                    <button
+                      type="button"
+                      onClick={() => setProgresForm({ ...progresForm, is_published: true })}
+                      className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                        progresForm.is_published
+                          ? "bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                          : "bg-white/60 border-slate-200 hover:border-emerald-300 hover:bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                            progresForm.is_published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            <Globe className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-xs font-black ${
+                            progresForm.is_published ? "text-emerald-950" : "text-slate-700"
+                          }`}>
+                            Publikasikan
+                          </span>
+                        </div>
+                        {progresForm.is_published && (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 leading-snug font-medium">
+                        Tampil di portal publik Halut, peta interaktif WebGIS, dan pencarian masyarakat.
+                      </p>
+                    </button>
+
+                    {/* Opsi 2: Draft Internal Saja */}
+                    <button
+                      type="button"
+                      onClick={() => setProgresForm({ ...progresForm, is_published: false })}
+                      className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                        !progresForm.is_published
+                          ? "bg-white border-amber-500 ring-2 ring-amber-500/20 shadow-xs"
+                          : "bg-white/60 border-slate-200 hover:border-amber-300 hover:bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                            !progresForm.is_published ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            <Lock className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-xs font-black ${
+                            !progresForm.is_published ? "text-amber-950" : "text-slate-700"
+                          }`}>
+                            Draft Internal
+                          </span>
+                        </div>
+                        {!progresForm.is_published && (
+                          <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 leading-snug font-medium">
+                        Hanya tersimpan di dashboard admin Bappeda. Disembunyikan dari portal publik.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center justify-between mb-1">

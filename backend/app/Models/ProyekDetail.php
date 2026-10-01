@@ -29,6 +29,8 @@ class ProyekDetail extends Model
         'realisasi_anggaran',
         'persentase_progres',
         'status_progres',
+        'is_published',
+        'published_at',
         'delineasi_geojson',
         'tipe_geometri',
         'luas_area_ha',
@@ -47,6 +49,8 @@ class ProyekDetail extends Model
         'pagu_anggaran' => 'float',
         'realisasi_anggaran' => 'float',
         'persentase_progres' => 'float',
+        'is_published' => 'boolean',
+        'published_at' => 'datetime',
         'esri_synced_at' => 'datetime',
     ];
 

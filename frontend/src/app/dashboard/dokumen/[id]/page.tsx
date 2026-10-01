@@ -29,6 +29,9 @@ import {
   Edit2,
   Download,
   Trash2,
+  Globe,
+  Lock,
+  Sparkles,
 } from "lucide-react";
 import { showSuccessSwal, showErrorSwal, showDeleteConfirm, toast } from "@/lib/swal";
 import SearchableSelect from "@/components/ui/SearchableSelect";
@@ -71,6 +74,7 @@ export default function DocumentDetailPage() {
     persentase_progres: 0,
     status_progres: "dalam_proses" as "dalam_proses" | "selesai" | "terkendala",
     realisasi_anggaran: 0,
+    is_published: true,
   });
   const [submittingProgres, setSubmittingProgres] = useState(false);
 
@@ -198,7 +202,8 @@ export default function DocumentDetailPage() {
         selectedProjectForUpdate.id,
         updateProgresForm.persentase_progres,
         updateProgresForm.status_progres,
-        updateProgresForm.realisasi_anggaran
+        updateProgresForm.realisasi_anggaran,
+        updateProgresForm.is_published
       );
 
       if (res.success) {
@@ -535,17 +540,30 @@ export default function DocumentDetailPage() {
                         <h4 className="mt-1 text-xs font-extrabold text-slate-900 leading-snug">{prj.nama_proyek}</h4>
                       </div>
 
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase shrink-0 ${
-                          prj.status_progres === "selesai"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : prj.status_progres === "terkendala"
-                            ? "bg-rose-100 text-rose-800"
-                            : "bg-amber-100 text-amber-900"
-                        }`}
-                      >
-                        {prj.status_progres.replace("_", " ")}
-                      </span>
+                      <div className="flex flex-col items-end gap-1 shrink-0">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase ${
+                            prj.status_progres === "selesai"
+                              ? "bg-emerald-100 text-emerald-800"
+                              : prj.status_progres === "terkendala"
+                              ? "bg-rose-100 text-rose-800"
+                              : "bg-amber-100 text-amber-900"
+                          }`}
+                        >
+                          {prj.status_progres.replace("_", " ")}
+                        </span>
+                        {prj.is_published !== false ? (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                            <Globe className="w-2.5 h-2.5 text-emerald-600" />
+                            <span>Publik</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[9px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200">
+                            <Lock className="w-2.5 h-2.5 text-amber-600" />
+                            <span>Internal</span>
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     {/* Progress Bar */}
@@ -613,6 +631,7 @@ export default function DocumentDetailPage() {
                           persentase_progres: prj.persentase_progres,
                           status_progres: (prj.status_progres === "belum_mulai" || !prj.status_progres ? "dalam_proses" : prj.status_progres) as "dalam_proses" | "selesai" | "terkendala",
                           realisasi_anggaran: prj.realisasi_anggaran,
+                          is_published: prj.is_published ?? true,
                         });
                       }}
                       className="flex-1 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
@@ -860,7 +879,20 @@ export default function DocumentDetailPage() {
                   min="0"
                   max="100"
                   value={updateProgresForm.persentase_progres}
-                  onChange={(e) => setUpdateProgresForm({ ...updateProgresForm, persentase_progres: Number(e.target.value) })}
+                  onChange={(e) => {
+                    const newProgress = Math.min(100, Math.max(0, Number(e.target.value)));
+                    let newStatus = updateProgresForm.status_progres;
+                    if (newProgress === 100 && newStatus !== "selesai") {
+                      newStatus = "selesai";
+                    } else if (newProgress < 100 && newStatus === "selesai") {
+                      newStatus = "dalam_proses";
+                    }
+                    setUpdateProgresForm({
+                      ...updateProgresForm,
+                      persentase_progres: newProgress,
+                      status_progres: newStatus,
+                    });
+                  }}
                   className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
                 />
               </div>
@@ -874,10 +906,111 @@ export default function DocumentDetailPage() {
                     { value: "terkendala", label: "Terkendala / Restrukturisasi" },
                   ]}
                   value={updateProgresForm.status_progres}
-                  onChange={(val) => setUpdateProgresForm({ ...updateProgresForm, status_progres: (val as any) || "dalam_proses" })}
+                  onChange={(val) => {
+                    const statusVal = (val as any) || "dalam_proses";
+                    let newProgress = updateProgresForm.persentase_progres;
+                    if (statusVal === "selesai" && newProgress < 100) {
+                      newProgress = 100;
+                    }
+                    setUpdateProgresForm({
+                      ...updateProgresForm,
+                      status_progres: statusVal,
+                      persentase_progres: newProgress,
+                    });
+                  }}
                   placeholder="Pilih status progres"
                 />
               </div>
+
+              {/* Pilihan Publikasi Proyek ketika Progres 100% atau Selesai */}
+              {(updateProgresForm.persentase_progres === 100 || updateProgresForm.status_progres === "selesai") && (
+                <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-50/90 via-teal-50/50 to-slate-50 border border-emerald-200/90 space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200">
+                      <Sparkles className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wide">
+                          Pilihan Publikasi Proyek
+                        </h4>
+                        <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          100% Selesai
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-emerald-800/80 font-medium mt-0.5 leading-snug">
+                        Proyek telah rampung 100%. Tentukan apakah data dan peta proyek ini siap dipublikasikan ke portal publik atau disimpan sebagai draft internal terlebih dahulu.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                    {/* Opsi 1: Publikasi ke Publik & WebGIS */}
+                    <button
+                      type="button"
+                      onClick={() => setUpdateProgresForm({ ...updateProgresForm, is_published: true })}
+                      className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                        updateProgresForm.is_published
+                          ? "bg-white border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs"
+                          : "bg-white/60 border-slate-200 hover:border-emerald-300 hover:bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                            updateProgresForm.is_published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            <Globe className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-xs font-black ${
+                            updateProgresForm.is_published ? "text-emerald-950" : "text-slate-700"
+                          }`}>
+                            Publikasikan
+                          </span>
+                        </div>
+                        {updateProgresForm.is_published && (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 leading-snug font-medium">
+                        Tampil di portal publik Halut, peta interaktif WebGIS, dan pencarian masyarakat.
+                      </p>
+                    </button>
+
+                    {/* Opsi 2: Draft Internal Saja */}
+                    <button
+                      type="button"
+                      onClick={() => setUpdateProgresForm({ ...updateProgresForm, is_published: false })}
+                      className={`p-3 rounded-xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
+                        !updateProgresForm.is_published
+                          ? "bg-white border-amber-500 ring-2 ring-amber-500/20 shadow-xs"
+                          : "bg-white/60 border-slate-200 hover:border-amber-300 hover:bg-white"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between w-full mb-1">
+                        <div className="flex items-center gap-1.5">
+                          <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${
+                            !updateProgresForm.is_published ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-500"
+                          }`}>
+                            <Lock className="w-3.5 h-3.5" />
+                          </div>
+                          <span className={`text-xs font-black ${
+                            !updateProgresForm.is_published ? "text-amber-950" : "text-slate-700"
+                          }`}>
+                            Draft Internal
+                          </span>
+                        </div>
+                        {!updateProgresForm.is_published && (
+                          <CheckCircle2 className="w-4 h-4 text-amber-600 shrink-0" />
+                        )}
+                      </div>
+                      <p className="text-[10.5px] text-slate-500 leading-snug font-medium">
+                        Hanya tersimpan di dashboard admin Bappeda. Disembunyikan dari portal publik.
+                      </p>
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <div>
                 <label className="text-xs font-bold text-slate-700 block mb-1">Realisasi Anggaran (Rp)</label>
