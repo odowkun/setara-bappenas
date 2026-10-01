@@ -116,3 +116,14 @@ Skeleton loader tabel wajib dirender di dalam elemen `<tbody>` dengan jumlah sel
     > *"Silakan Pilih Dokumen Induk Terlebih Dahulu"*
     > *"Pilih salah satu Dokumen Induk pada menu pencarian di atas untuk membuka Form Input Titik Geotagging Baru & Peta Interaktif Penentuan Lokasi Proyek."*
   - Form koordinat proyek dan peta interaktif Leaflet baru akan dimunculkan setelah pengguna memilih dokumen induk secara aktif.
+
+---
+
+## 6. Standar Tampilan Layar Memuat Sesi Global (`DashboardLoadingScreen`)
+
+Komponen layar memuat sesi (`DashboardLoadingScreen.tsx`) digunakan saat autentikasi global (`AuthContext.tsx`) dan routing dashboard:
+1. **Tipografi Bersih & Fokus**:
+   - Subtitle bersifat opsional (`subtitle = ""`) dan dirender secara kondisional (`{subtitle ? <p>{subtitle}</p> : null}`).
+   - Menghindari teks deskripsi berlebih (seperti singkronisasi izin modul/RBAC) agar tampilan loading kartu glassmorphic tetap bersih, ringkas, dan profesional.
+2. **Indikator Progres Dinamis**:
+   - Menampilkan lambang resmi BAPPEDA dengan animasi ring pulse, badge identitas kedinasan, bar progres berkilau (*shimmer progress bar*), dan status teks proses verifikasi hak akses portal.
