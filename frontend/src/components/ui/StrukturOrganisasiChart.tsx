@@ -18,6 +18,7 @@ import {
   Minimize2,
   Network,
   Target,
+  Users,
 } from "lucide-react";
 
 export interface OrgNode {
@@ -29,6 +30,15 @@ export interface OrgNode {
   pos_x?: number | null;
   pos_y?: number | null;
   children?: OrgNode[];
+}
+
+export interface PejabatFungsionalItem {
+  id: number;
+  name: string;
+  nip: string | null;
+  position: string;
+  avatar?: string | null;
+  order_index?: number;
 }
 
 export const defaultBappedaTree: OrgNode = {
@@ -174,9 +184,15 @@ export const defaultBappedaTree: OrgNode = {
 
 export const StrukturOrganisasiChart: React.FC<{
   data?: OrgNode | null;
+  fungsionalData?: PejabatFungsionalItem[];
   title?: string;
   showSaveButton?: boolean;
-}> = ({ data: rawData, title = "Struktur Organisasi BAPPEDA Halmahera Utara", showSaveButton = true }) => {
+}> = ({
+  data: rawData,
+  fungsionalData = [],
+  title = "Struktur Organisasi BAPPEDA Halmahera Utara",
+  showSaveButton = true,
+}) => {
   const data = rawData;
   // Default: Vertical (Bagan Memanjang) on mobile, easily toggled to horizontal canvas
   const [viewMode, setViewMode] = useState<"vertical" | "horizontal">("vertical");
@@ -237,6 +253,7 @@ export const StrukturOrganisasiChart: React.FC<{
   const canvasComponent = (
     <InteractiveCanvasOrgChart
       data={data}
+      fungsionalData={fungsionalData}
       zoomLevel={zoomLevel}
       handleZoomIn={handleZoomIn}
       handleZoomOut={handleZoomOut}
@@ -305,8 +322,99 @@ export const StrukturOrganisasiChart: React.FC<{
 
       {/* Mode 1: Vertical Stacked Tree Layout (Bagan Memanjang - Default) */}
       {viewMode === "vertical" && (
-        <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 space-y-4 sm:space-y-6">
+        <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-slate-50 border border-slate-200 space-y-6">
           <RenderVerticalNode node={data} isRoot />
+
+          {/* UNIFIED GROUPING SECTION: KELOMPOK JABATAN FUNGSIONAL (Image 2 Bagan Style) */}
+          <div className="relative pt-6 sm:pt-8">
+            {/* Connecting vertical hierarchy stem line from tree above */}
+            <div className="absolute left-6 sm:left-12 -top-0 w-0.5 h-6 sm:h-8 bg-blue-500 z-0" />
+
+            <div className="relative z-10 rounded-2xl sm:rounded-3xl bg-white border-2 border-blue-500 shadow-md p-4 sm:p-7 space-y-4">
+              {/* Header Box */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-blue-100 pb-3 sm:pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20 shrink-0">
+                    <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 uppercase tracking-wide">
+                        KELOMPOK JABATAN FUNGSIONAL
+                      </h3>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-black bg-blue-100 text-blue-800 border border-blue-200">
+                        {fungsionalData.length} Personel
+                      </span>
+                    </div>
+                    <p className="text-[11px] sm:text-xs text-slate-500 font-medium">
+                      Bagan gabungan tenaga fungsional tertentu dan fungsional umum BAPPEDA Halmahera Utara
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Functional Personnel Grid */}
+              {fungsionalData.length === 0 ? (
+                <div className="p-6 text-center text-xs font-bold text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+                  Belum ada personel jabatan fungsional yang ditambahkan.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                  {fungsionalData.map((person) => {
+                    const initials = person.name
+                      ? person.name
+                          .replace(/^(Dr\.|Drs\.|Ir\.|H\.|Hj\.)\s+/gi, "")
+                          .split(" ")
+                          .filter(Boolean)
+                          .slice(0, 2)
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                      : "?";
+
+                    return (
+                      <div
+                        key={person.id}
+                        className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-blue-50/40 border border-slate-200 hover:border-blue-400 hover:shadow-sm transition flex items-center gap-3"
+                      >
+                        {/* Avatar Photo or Initials Circle */}
+                        {person.avatar ? (
+                          <img
+                            src={
+                              person.avatar.startsWith("http")
+                                ? person.avatar
+                                : `${STORAGE_BASE_URL}${person.avatar}`
+                            }
+                            alt={person.name}
+                            className="w-11 h-11 rounded-xl object-cover border border-blue-200 shadow-xs shrink-0"
+                          />
+                        ) : (
+                          <div className="w-11 h-11 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
+                            {initials}
+                          </div>
+                        )}
+
+                        {/* Name, Jabatan/Position Badge, NIP */}
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <span className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200/80 max-w-full truncate">
+                            {person.position}
+                          </span>
+                          <h4 className="text-xs sm:text-[13px] font-black text-slate-900 break-words leading-tight">
+                            {person.name}
+                          </h4>
+                          {person.nip && (
+                            <p className="text-[10px] font-mono text-slate-500 font-medium">
+                              NIP: {person.nip}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -346,6 +454,7 @@ interface CanvasNode {
 // Interactive SVG Canvas Component with Bulletproof Save Positions Handler
 const InteractiveCanvasOrgChart: React.FC<{
   data: OrgNode;
+  fungsionalData?: PejabatFungsionalItem[];
   zoomLevel: number;
   handleZoomIn: () => void;
   handleZoomOut: () => void;
@@ -355,6 +464,7 @@ const InteractiveCanvasOrgChart: React.FC<{
   onToggleFullscreen?: () => void;
 }> = ({
   data,
+  fungsionalData = [],
   zoomLevel,
   handleZoomIn,
   handleZoomOut,
@@ -650,6 +760,23 @@ const InteractiveCanvasOrgChart: React.FC<{
     return connections;
   }, [nodes]);
 
+  // Unified Kelompok Jabatan Fungsional placement math for Canvas (Image 2 Style)
+  const lowestNodeY = useMemo(() => {
+    if (!nodes.length) return 800;
+    return Math.max(...nodes.map((n) => n.y + CARD_H));
+  }, [nodes]);
+
+  const centerX = useMemo(() => {
+    if (!nodes.length) return 700;
+    const minX = Math.min(...nodes.map((n) => n.x));
+    const maxX = Math.max(...nodes.map((n) => n.x + CARD_W));
+    return (minX + maxX) / 2;
+  }, [nodes]);
+
+  const fungsionalBoxWidth = Math.max(960, Math.min(1360, (fungsionalData.length || 1) * 280));
+  const fungsionalBoxX = Math.max(60, centerX - fungsionalBoxWidth / 2);
+  const fungsionalBoxY = lowestNodeY + 120;
+
   // Dynamically calculate canvas size based on node positions so no lines or cards are ever cut off!
   const canvasBounds = useMemo(() => {
     let maxX = 2800; // generous minimum canvas width
@@ -664,8 +791,17 @@ const InteractiveCanvasOrgChart: React.FC<{
       }
     });
 
+    const fungsionalBottom = fungsionalBoxY + 500;
+    if (fungsionalBottom + 300 > maxY) {
+      maxY = fungsionalBottom + 300;
+    }
+    const fungsionalRight = fungsionalBoxX + fungsionalBoxWidth + 300;
+    if (fungsionalRight > maxX) {
+      maxX = fungsionalRight;
+    }
+
     return { width: `${maxX}px`, height: `${maxY}px` };
-  }, [nodes]);
+  }, [nodes, fungsionalBoxX, fungsionalBoxY, fungsionalBoxWidth]);
 
   return (
     <div className="space-y-3 font-sans w-full max-w-full overflow-hidden flex flex-col h-full">
@@ -823,6 +959,17 @@ const InteractiveCanvasOrgChart: React.FC<{
                 strokeLinejoin="round"
               />
             ))}
+
+            {/* Orthogonal connector line to Kelompok Jabatan Fungsional Grouping Box (Image 2 Style) */}
+            <path
+              d={`M ${centerX} ${lowestNodeY} L ${centerX} ${fungsionalBoxY}`}
+              stroke="#2563eb"
+              strokeWidth="2.5"
+              strokeDasharray="6 4"
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
           </svg>
 
           {/* Render Interactive Drag Cards Matched to Blue Bidang Theme */}
@@ -931,6 +1078,98 @@ const InteractiveCanvasOrgChart: React.FC<{
               </div>
             );
           })}
+
+          {/* KELOMPOK JABATAN FUNGSIONAL UNIFIED GROUPING BOX (IMAGE 2 STYLE) */}
+          <div
+            style={{
+              position: "absolute",
+              left: `${fungsionalBoxX}px`,
+              top: `${fungsionalBoxY}px`,
+              width: `${fungsionalBoxWidth}px`,
+            }}
+            className="rounded-3xl bg-white border-2 border-blue-500 shadow-xl p-6 space-y-4 z-10 select-none font-sans"
+          >
+            {/* Header Box */}
+            <div className="flex items-center justify-between border-b border-blue-100 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold shadow-md shadow-blue-600/20 shrink-0">
+                  <Users className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-black text-slate-900 uppercase tracking-wide">
+                      KELOMPOK JABATAN FUNGSIONAL
+                    </h3>
+                    <span className="px-2.5 py-0.5 rounded-full text-xs font-black bg-blue-100 text-blue-800 border border-blue-200">
+                      {fungsionalData.length} Personel
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Bagan gabungan tenaga fungsional tertentu &amp; umum BAPPEDA Halmahera Utara
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Personnel Grid */}
+            {fungsionalData.length === 0 ? (
+              <div className="p-8 text-center text-xs font-bold text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
+                Belum ada personel jabatan fungsional yang terdaftar.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {fungsionalData.map((person) => {
+                  const initials = person.name
+                    ? person.name
+                        .replace(/^(Dr\.|Drs\.|Ir\.|H\.|Hj\.)\s+/gi, "")
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                    : "?";
+
+                  return (
+                    <div
+                      key={person.id}
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex items-center gap-3"
+                    >
+                      {person.avatar ? (
+                        <img
+                          src={
+                            person.avatar.startsWith("http")
+                              ? person.avatar
+                              : `${STORAGE_BASE_URL}${person.avatar}`
+                          }
+                          alt={person.name}
+                          className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-xs shrink-0"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-black text-xs flex items-center justify-center shrink-0">
+                          {initials}
+                        </div>
+                      )}
+
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <span className="inline-block px-2 py-0.5 rounded-md text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 max-w-full truncate">
+                          {person.position}
+                        </span>
+                        <h4 className="text-xs font-black text-slate-900 break-words leading-tight">
+                          {person.name}
+                        </h4>
+                        {person.nip && (
+                          <p className="text-[10px] font-mono text-slate-500 font-medium">
+                            NIP: {person.nip}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

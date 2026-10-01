@@ -100,3 +100,22 @@ Pada halaman editor struktur organisasi BAPPEDA Halmahera Utara (`/dashboard/pro
    - Saat sebuah cabang ditutup, seluruh rantai anak di bawahnya disembunyikan dan muncul pill interaktif `+{childCount} Bawahan (Tertutup)` yang dapat diklik langsung untuk membuka kembali cabang tersebut.
    - Posisi ujung (leaf node) diberikan dot spacer presisi agar perataan vertikal avatar tetap sejajar.
    - Berlaku pada Tab 1 (Posisi Jabatan) dan Tab 2 (Penugasan Pejabat Struktural). Opsi pemilih atasan pada modal pop-up tetap menyajikan daftar pohon lengkap (`fullTreeList`) agar seluruh posisi dapat dipilih sebagai atasan.
+
+## Standarisasi Kelompok Jabatan Fungsional Terpadu (Unified Grouping Box)
+
+Sesuai regulasi kelembagaan pemerintah (PermenPAN-RB), Jabatan Fungsional pada BAPPEDA tidak lagi disebar sebagai simpul hierarki struktural di bawah tiap Kasubag/Kabid, melainkan dikelompokkan menjadi satu bagan terpadu (**Kelompok Jabatan Fungsional**) di bagian bawah bagan organisasi:
+
+1. **Model Data Terpisah (`pejabat_fungsionals`)**:
+   - Tabel mandiri `pejabat_fungsionals` (`id`, `name`, `position`, `nip`, `avatar`, `order_index`, timestamps).
+   - Seluruh simpul lama posisi `FUNGSIONAL` yang sebelumnya menempel pada rantai `pejabats` telah dibersihkan secara otomatis via migrasi dan filter kueri backend.
+   - Endpoint CRUD mandiri: `/api/v1/pejabat-fungsional` dengan otentikasi Sanctum dan izin `manage_struktur`.
+
+2. **Visualisasi Bagan Terpadu (Image 2 Bagan Standard)**:
+   - **Bagan Vertikal (`RenderVerticalNode`)**: Kotak besar *Kelompok Jabatan Fungsional* ditempatkan di bagian bawah pohon dengan garis penghubung vertikal (`stem connector`), memuat kartu-kartu personel dengan foto/inisial, nama lengkap, NIP, serta badge jabatan fungsional (contoh: Perencana Ahli Muda, Analis Kebijakan).
+   - **Bagan Kanvas Interaktif (`InteractiveCanvasOrgChart`)**: Kotak lebar mandiri dirender di bagian bawah kanvas dengan garis vektor ortogonal putus-putus (`strokeDasharray="6 4"`) yang terhubung langsung dari pusat bawah pohon ke pucuk kotak kelompok fungsional.
+
+3. **Pengelolaan 3-Langkah di Dashboard (`/dashboard/profil/struktur`)**:
+   - **Langkah 1**: Susun Posisi Struktural (Kepala Badan, Sekretaris, Kasubag, Kabid, Subid).
+   - **Langkah 2**: Pejabat Struktural & NIP.
+   - **Langkah 3**: Kelompok Jabatan Fungsional (Tambah, Edit, Hapus personel fungsional dengan dialog konfirmasi SweetAlert2 `showDeleteConfirm` dan toast feedback).
+   - Placeholder input nama terstandarisasi `"Contoh: Agustino Hermanus, S.T."`.

@@ -19,6 +19,7 @@ use App\Http\Controllers\Api\KritikController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\NewsController;
 use App\Http\Controllers\Api\PejabatController;
+use App\Http\Controllers\Api\PejabatFungsionalController;
 use App\Http\Controllers\Api\ProfilController;
 use App\Http\Controllers\Api\ProyekDetailController;
 use App\Http\Controllers\Api\RunningTextController;
@@ -589,6 +590,22 @@ Route::prefix('v1')->group(function () {
     Route::delete('/pejabat/{id}', [PejabatController::class, 'destroy'])
         ->middleware(['auth:sanctum', 'permission:manage_profil', AuditAdminMutation::class])
         ->name('officials.destroy');
+
+    // Pejabat Fungsional (Kelompok Jabatan Fungsional)
+    Route::get('/pejabat-fungsional', [PejabatFungsionalController::class, 'index']);
+    Route::get('/pejabat-fungsional/{id}', [PejabatFungsionalController::class, 'show']);
+    Route::post('/pejabat-fungsional', [PejabatFungsionalController::class, 'store'])
+        ->middleware(['auth:sanctum', 'permission:manage_profil', AuditAdminMutation::class])
+        ->name('fungsional.store');
+    Route::put('/pejabat-fungsional/{id}', [PejabatFungsionalController::class, 'update'])
+        ->middleware(['auth:sanctum', 'permission:manage_profil', AuditAdminMutation::class])
+        ->name('fungsional.update');
+    Route::delete('/pejabat-fungsional/{id}', [PejabatFungsionalController::class, 'destroy'])
+        ->middleware(['auth:sanctum', 'permission:manage_profil', AuditAdminMutation::class])
+        ->name('fungsional.destroy');
+    Route::post('/pejabat-fungsional/cleanup-legacy', [PejabatFungsionalController::class, 'cleanupLegacy'])
+        ->middleware(['auth:sanctum', 'permission:manage_profil', AuditAdminMutation::class])
+        ->name('fungsional.cleanup');
 
     // Protected Endpoints (Sanctum Auth)
     Route::middleware(['auth:sanctum', AuditAdminMutation::class])->group(function () {

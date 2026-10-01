@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
-import { StrukturOrganisasiChart, OrgNode } from "@/components/ui/StrukturOrganisasiChart";
+import { StrukturOrganisasiChart, OrgNode, PejabatFungsionalItem } from "@/components/ui/StrukturOrganisasiChart";
 import {
   Plus,
   Edit2,
@@ -23,6 +23,7 @@ import {
   Check,
   X,
   AlertCircle,
+  Users,
 } from "lucide-react";
 import { showDeleteConfirm, toast } from "@/lib/swal";
 
@@ -59,8 +60,20 @@ export default function StrukturEditorPage() {
     setMounted(true);
   }, []);
 
-  // Active Management Tab: "step1-structure" vs "step2-pejabat"
-  const [mgmtTab, setMgmtTab] = useState<"step1-structure" | "step2-pejabat">("step1-structure");
+  // Active Management Tab: "step1-structure" vs "step2-pejabat" vs "step3-fungsional"
+  const [mgmtTab, setMgmtTab] = useState<"step1-structure" | "step2-pejabat" | "step3-fungsional">("step1-structure");
+  const [fungsionals, setFungsionals] = useState<PejabatFungsionalItem[]>([]);
+
+  // Modal State for Fungsional CRUD
+  const [showFungsionalModal, setShowFungsionalModal] = useState(false);
+  const [editingFungsional, setEditingFungsional] = useState<PejabatFungsionalItem | null>(null);
+  const [fungsionalForm, setFungsionalForm] = useState({
+    name: "",
+    position: "",
+    nip: "",
+  });
+  const [savingFungsional, setSavingFungsional] = useState(false);
+  const [fungsionalModalError, setFungsionalModalError] = useState<string | null>(null);
 
   // Modal State for Quick Add Position
   const [showAddModal, setShowAddModal] = useState(false);
@@ -78,7 +91,12 @@ export default function StrukturEditorPage() {
       if (res.ok) {
         const json = await res.json();
         setTreeData(json.data.tree);
-        setOfficials(json.data.flat);
+        // Ensure legacy fungsional records are never in the structural tree
+        const filteredFlat = (json.data.flat || []).filter(
+          (item: OfficialItem) => !item.position.toLowerCase().includes("fungsional")
+        );
+        setOfficials(filteredFlat);
+        setFungsionals(json.data.fungsional || []);
       }
     } catch (err) {
       console.error("Gagal memuat data pejabat dari database:", err);
@@ -90,6 +108,99 @@ export default function StrukturEditorPage() {
   useEffect(() => {
     fetchPejabatData();
   }, []);
+
+  // Handlers for Fungsional CRUD
+  const handleOpenAddFungsional = () => {
+    setEditingFungsional(null);
+    setFungsionalForm({ name: "", position: "", nip: "" });
+    setFungsionalModalError(null);
+    setShowFungsionalModal(true);
+  };
+
+  const handleOpenEditFungsional = (item: PejabatFungsionalItem) => {
+    setEditingFungsional(item);
+    setFungsionalForm({
+      name: item.name,
+      position: item.position,
+      nip: item.nip || "",
+    });
+    setFungsionalModalError(null);
+    setShowFungsionalModal(true);
+  };
+
+  const handleSaveFungsional = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!fungsionalForm.name.trim() || !fungsionalForm.position.trim()) return;
+
+    setSavingFungsional(true);
+    setFungsionalModalError(null);
+
+    try {
+      const url = editingFungsional ? `/pejabat-fungsional/${editingFungsional.id}` : "/pejabat-fungsional";
+      const method = editingFungsional ? "PUT" : "POST";
+
+      const res = await authenticatedFetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: JSON.stringify({
+          name: fungsionalForm.name,
+          position: fungsionalForm.position,
+          nip: fungsionalForm.nip || null,
+        }),
+      });
+
+      const json = await res.json();
+
+      if (res.ok && json.success) {
+        setShowFungsionalModal(false);
+        setSaved(true);
+        toast.success(
+          editingFungsional
+            ? `Data "${fungsionalForm.name}" berhasil diperbarui!`
+            : `Personel "${fungsionalForm.name}" berhasil ditambahkan ke Kelompok Jabatan Fungsional!`
+        );
+        await fetchPejabatData();
+        setTimeout(() => setSaved(false), 3500);
+      } else {
+        const errMsg = json.message || "Gagal menyimpan data fungsional.";
+        setFungsionalModalError(errMsg);
+        toast.error(errMsg);
+      }
+    } catch (err) {
+      console.error("Gagal menyimpan fungsional:", err);
+      const errMsg = "Terjadi kesalahan jaringan/server saat menyimpan data fungsional.";
+      setFungsionalModalError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      setSavingFungsional(false);
+    }
+  };
+
+  const handleDeleteFungsional = async (item: PejabatFungsionalItem) => {
+    const confirmRes = await showDeleteConfirm(item.name);
+    if (!confirmRes.isConfirmed) return;
+
+    try {
+      const res = await authenticatedFetch(`/pejabat-fungsional/${item.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        setSaved(true);
+        toast.success(`Personel "${item.name}" berhasil dihapus!`);
+        await fetchPejabatData();
+        setTimeout(() => setSaved(false), 3000);
+      } else {
+        toast.error(`Gagal menghapus personel "${item.name}".`);
+      }
+    } catch (err) {
+      console.error("Gagal menghapus fungsional:", err);
+      toast.error("Terjadi kesalahan koneksi saat menghapus!");
+    }
+  };
 
   // Handle Quick Add Position via Modal Popup
   const handleAddPositionSubmit = async (e: React.FormEvent) => {
@@ -308,8 +419,8 @@ export default function StrukturEditorPage() {
       {/* 1. MAIN CARD SECTION */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
 
-        {/* Tab Selector: Step 1 vs Step 2 */}
-        <div className="flex flex-col sm:flex-row rounded-2xl bg-slate-100 p-1.5 text-xs font-extrabold gap-1.5">
+        {/* Tab Selector: Step 1 vs Step 2 vs Step 3 */}
+        <div className="flex flex-col md:flex-row rounded-2xl bg-slate-100 p-1.5 text-xs font-extrabold gap-1.5">
           <button
             type="button"
             onClick={() => setMgmtTab("step1-structure")}
@@ -320,7 +431,7 @@ export default function StrukturEditorPage() {
             }`}
           >
             <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Langkah 1 — Susun Daftar Posisi Jabatan</span>
+            <span>Langkah 1 — Susun Posisi Struktural</span>
           </button>
 
           <button
@@ -333,7 +444,20 @@ export default function StrukturEditorPage() {
             }`}
           >
             <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Langkah 2 — Penugasan Pejabat &amp; NIP ({officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/{officials.length} Terisi)</span>
+            <span>Langkah 2 — Pejabat Struktural ({officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/{officials.length} Terisi)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setMgmtTab("step3-fungsional")}
+            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
+              mgmtTab === "step3-fungsional"
+                ? "bg-white text-blue-700 shadow-sm"
+                : "text-slate-600 hover:text-slate-900"
+            }`}
+          >
+            <Users className="w-4 h-4 text-blue-600 shrink-0" />
+            <span>Langkah 3 — Kelompok Fungsional ({fungsionals.length} Personel)</span>
           </button>
         </div>
 
@@ -753,12 +877,147 @@ export default function StrukturEditorPage() {
             )}
           </div>
         )}
+
+        {/* TAB 3: Step 3 — Kelompok Jabatan Fungsional Management */}
+        {mgmtTab === "step3-fungsional" && (
+          <div className="space-y-4 animate-in fade-in duration-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-blue-50 border border-blue-200 p-4 rounded-2xl text-xs text-blue-900 font-medium gap-3">
+              <div>
+                <p className="font-extrabold text-blue-950">👥 Kelompok Jabatan Fungsional (Bagan Gabungan)</p>
+                <p className="mt-0.5 text-blue-800">
+                  Tenaga fungsional dikelompokkan menjadi satu bagan terpadu di bagian bawah hirarki organisasi sesuai regulasi BAPPEDA.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleOpenAddFungsional}
+                className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs shadow-md shadow-blue-600/20 flex items-center justify-center gap-2 transition shrink-0 ml-0 sm:ml-4 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Personel Fungsional</span>
+              </button>
+            </div>
+
+            {loading ? (
+              <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+                {[1, 2, 3].map((n) => (
+                  <div key={n} className="py-4 px-6 flex items-center justify-between gap-4 animate-pulse">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-slate-200 shrink-0" />
+                      <div className="space-y-1.5">
+                        <div className="h-4 w-48 bg-slate-200 rounded" />
+                        <div className="h-3 w-28 bg-slate-100 rounded" />
+                      </div>
+                    </div>
+                    <div className="h-8 w-20 bg-slate-200 rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            ) : fungsionals.length === 0 ? (
+              <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
+                <Users className="w-10 h-10 text-slate-300 mx-auto" />
+                <p className="text-xs font-bold text-slate-500">
+                  Belum ada personel Kelompok Jabatan Fungsional yang ditambahkan.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleOpenAddFungsional}
+                  className="px-4 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold hover:bg-blue-700 transition cursor-pointer"
+                >
+                  Tambah Personel Sekarang
+                </button>
+              </div>
+            ) : (
+              <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
+                {fungsionals.map((person, idx) => {
+                  const initials = person.name
+                    ? person.name
+                        .replace(/^(Dr\.|Drs\.|Ir\.|H\.|Hj\.)\s+/gi, "")
+                        .split(" ")
+                        .filter(Boolean)
+                        .slice(0, 2)
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                    : "?";
+
+                  return (
+                    <div
+                      key={person.id}
+                      className="py-4 px-4 sm:px-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50/80 transition"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        {/* Number order */}
+                        <span className="w-6 text-center text-xs font-black text-slate-400">
+                          {idx + 1}.
+                        </span>
+
+                        {/* Avatar Image or Initials */}
+                        {person.avatar ? (
+                          <img
+                            src={
+                              person.avatar.startsWith("http")
+                                ? person.avatar
+                                : `${STORAGE_BASE_URL}${person.avatar}`
+                            }
+                            alt={person.name}
+                            className="w-10 h-10 rounded-2xl object-cover border border-blue-300 shadow-sm shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-900 font-extrabold text-xs flex items-center justify-center shrink-0 shadow-sm border border-blue-200">
+                            {initials}
+                          </div>
+                        )}
+
+                        <div className="min-w-0 space-y-0.5">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                              {person.position}
+                            </span>
+                          </div>
+                          <h4 className="text-xs sm:text-sm font-black text-slate-900 break-words">
+                            {person.name}
+                          </h4>
+                          <p className="text-[10px] sm:text-xs font-mono text-slate-500">
+                            {person.nip ? `NIP: ${person.nip}` : "NIP: (Belum diisi)"}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Actions: Edit & Hapus */}
+                      <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => handleOpenEditFungsional(person)}
+                          className="px-3 py-1.5 rounded-xl border border-slate-200 hover:border-blue-500 bg-white hover:bg-blue-50 text-slate-700 hover:text-blue-700 font-bold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                        >
+                          <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteFungsional(person)}
+                          className="p-1.5 rounded-xl border border-slate-200 hover:border-rose-400 bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition shadow-xs cursor-pointer"
+                          title="Hapus Personel Fungsional"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* 2. BOTTOM SECTION: Struktur Organisasi BAPPEDA Halmahera Utara */}
       <div className="p-3 sm:p-8 rounded-2xl sm:rounded-3xl bg-white border border-slate-200 shadow-sm space-y-4 sm:space-y-6">
         <StrukturOrganisasiChart
           data={treeData}
+          fungsionalData={fungsionals}
           title="Struktur Organisasi BAPPEDA Halmahera Utara"
         />
       </div>
@@ -891,6 +1150,111 @@ export default function StrukturEditorPage() {
                     className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition disabled:opacity-50"
                   >
                     {addingPosition ? "Menyimpan..." : "Simpan Posisi"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* Modal Pop Up: Tambah / Edit Personel Fungsional (Mounted via React Portal) */}
+      {showFungsionalModal &&
+        mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[999999] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150 font-sans">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full border border-slate-200 shadow-2xl space-y-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                <div>
+                  <h3 className="text-base font-black text-slate-900">
+                    {editingFungsional ? "Edit Personel Fungsional" : "Tambah Personel Fungsional"}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">
+                    Masukkan nama, jabatan fungsional, dan NIP personel.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowFungsionalModal(false)}
+                  className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {fungsionalModalError && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                  <span>{fungsionalModalError}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleSaveFungsional} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Nama Lengkap &amp; Gelar <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Agustino Hermanus, S.T."
+                    value={fungsionalForm.name}
+                    onChange={(e) =>
+                      setFungsionalForm({ ...fungsionalForm, name: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    Nama Jabatan Fungsional <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Perencana Ahli Muda"
+                    value={fungsionalForm.position}
+                    onChange={(e) =>
+                      setFungsionalForm({ ...fungsionalForm, position: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700">
+                    NIP (Nomor Induk Pegawai)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 198705122010011008"
+                    value={fungsionalForm.nip}
+                    onChange={(e) =>
+                      setFungsionalForm({ ...fungsionalForm, nip: e.target.value })
+                    }
+                    className="w-full px-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition"
+                  />
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowFungsionalModal(false)}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={savingFungsional}
+                    className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingFungsional
+                      ? "Menyimpan..."
+                      : editingFungsional
+                      ? "Perbarui Personel"
+                      : "Simpan Personel"}
                   </button>
                 </div>
               </form>

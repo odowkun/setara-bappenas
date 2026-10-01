@@ -12,7 +12,9 @@ class PejabatController extends Controller
     // GET /api/v1/pejabat -> Returns flat list & nested tree hierarchy
     public function index()
     {
-        $all = Pejabat::orderBy('order_index', 'asc')->get();
+        $all = Pejabat::whereRaw('LOWER(position) NOT LIKE ?', ['%fungsional%'])
+            ->orderBy('order_index', 'asc')
+            ->get();
 
         // Build nested tree structure for OrgChart
         $itemsByNodeId = [];
@@ -41,11 +43,16 @@ class PejabatController extends Controller
             }
         }
 
+        $fungsional = \App\Models\PejabatFungsional::orderBy('order_index', 'asc')
+            ->orderBy('id', 'asc')
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'flat' => $all,
                 'tree' => $tree,
+                'fungsional' => $fungsional,
             ],
         ]);
     }

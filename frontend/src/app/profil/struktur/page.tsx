@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { StrukturOrganisasiChart, OrgNode } from "@/components/ui/StrukturOrganisasiChart";
+import { StrukturOrganisasiChart, OrgNode, PejabatFungsionalItem } from "@/components/ui/StrukturOrganisasiChart";
 import { API_BASE_URL } from "@/lib/apiClient";
 import {
   ChevronRight,
@@ -11,6 +11,7 @@ import {
 
 export default function PublicStrukturPage() {
   const [treeData, setTreeData] = useState<OrgNode | undefined>(undefined);
+  const [fungsionalData, setFungsionalData] = useState<PejabatFungsionalItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -19,6 +20,7 @@ export default function PublicStrukturPage() {
       .then((jsonPejabat) => {
         if (jsonPejabat.success && jsonPejabat.data) {
           setTreeData(jsonPejabat.data.tree);
+          setFungsionalData(jsonPejabat.data.fungsional || []);
         }
       })
       .catch((err) => console.error("Gagal memuat bagan pejabat dari database:", err))
@@ -79,6 +81,7 @@ export default function PublicStrukturPage() {
               <div className="p-2 sm:p-6 rounded-xl sm:rounded-2xl bg-white border border-blue-100/60 shadow-sm overflow-hidden">
                 <StrukturOrganisasiChart
                   data={treeData}
+                  fungsionalData={fungsionalData}
                   title="Bagan Hirarki Kelembagaan BAPPEDA Halmahera Utara"
                   showSaveButton={false}
                 />
