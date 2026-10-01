@@ -131,4 +131,12 @@ Komponen layar memuat sesi (`DashboardLoadingScreen.tsx`) digunakan saat autenti
    - **Status Penyelesaian**: Saat mencapai 100%, bar bertransformasi dengan palet emerald (`bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500`) disertai ikon konfirmasi `CheckCircle2` ("Sesi Terverifikasi").
 3. **Kalibrasi Waktu Minimum UX (No Sudden Flashes)**:
    - Pada `AuthContext.tsx`, validasi sesi menerapkan batasan waktu minimum (`minLoadingDuration = 1350ms`) sebelum `setLoading(false)`. Hal ini mencegah antarmuka langsung hilang seketika saat respons API lokal/cepat (~50-100ms), memberikan umpan balik visual yang utuh dan nyaman bagi pengguna.
+4. **Mekanisme Fail-Fast & Feedback Keamanan (Security Reactive Binding)**:
+   - Jika verifikasi `/auth/me` mengembalikan HTTP 401 Unauthorized, token tidak sah, atau jaringan bermasalah:
+     - Seluruh timer progres sukses langsung dibatalkan (*aborted*).
+     - Ambient glow dan ring pulse bertransformasi ke aksen merah `bg-rose-500/20`.
+     - Bar progres berubah merah (`bg-gradient-to-r from-rose-500 to-red-600`) dengan label status `"Ditolak"`.
+     - Teks pesan error menampilkan alasan penolakan (`"Sesi kredensial tidak valid atau telah berakhir."`) disertai ikon peringatan `AlertCircle`.
+     - Pengguna diberi jeda 950ms untuk membaca umpan balik sebelum dipindahkan ke layar login, menghindari ilusi verifikasi sukses palsu.
+
 

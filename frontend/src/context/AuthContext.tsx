@@ -41,6 +41,7 @@ interface LoginResponse {
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionError, setSessionError] = useState<string | null>(null);
 
   useEffect(() => {
     const validateSession = async () => {
@@ -64,16 +65,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         const result = (await response.json()) as { data: User };
         setUser(result.data);
-      } catch {
-        setUser(null);
-        localStorage.removeItem(AUTH_USER_KEY);
-        localStorage.removeItem(AUTH_TOKEN_KEY);
-      } finally {
+
         const elapsed = Date.now() - startTime;
         const remainingDelay = Math.max(0, minLoadingDuration - elapsed);
         if (remainingDelay > 0) {
           await new Promise((resolve) => setTimeout(resolve, remainingDelay));
         }
+        setLoading(false);
+      } catch {
+        setUser(null);
+        localStorage.removeItem(AUTH_USER_KEY);
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        setSessionError("Sesi kredensial tidak valid atau telah berakhir.");
+        // Give 950ms so user clearly perceives the rejection state before unmounting
+        await new Promise((resolve) => setTimeout(resolve, 950));
         setLoading(false);
       }
     };
@@ -196,6 +201,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       <DashboardLoadingScreen
         title="Memuat Sesi Dashboard BAPPEDA"
         statusText="Memverifikasi hak akses portal..."
+        error={sessionError}
       />
     );
   }
