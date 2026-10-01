@@ -15,16 +15,19 @@ Dashboard terbagi dalam beberapa komponen utama:
 4. **Kepuasan Warga (IKM)**: Nilai Indeks Kepuasan Masyarakat dari survei online beserta predikat mutu pelayanan publik (A - Sangat Baik).
 5. **Kritik & Saran Warga**: Total kritik & saran masuk dari masyarakat dilengkapi badge indikator jumlah aduan yang **Belum Dijawab** (menunggu tindak lanjut) serta tautan langsung ke halaman manajemen tanggapan. Pada Admin Sidebar juga terpasang counter badge notifikasi otomatis.
 
-### B. Baris Grafik 1 (Makro APBD & Geotagging Operasional)
-- **Kiri (7 Kolom)**: Grafik Batang Kumulatif Realisasi Keuangan vs. Fisik Bulanan APBD (Januari - Juli). Dilengkapi indikator tooltip dan status kuartal aktif.
+### B. Baris Grafik 1 (Kinerja Sektoral Proyek Riil & Monitoring Geotagging)
+- **Kiri (7 Kolom)**: Kinerja Sektoral Proyek Riil per Bidang (Infrastruktur, Perekonomian, Sosial Budaya, Perencanaan). Menampilkan perbandingan Pagu vs Realisasi Keuangan dan Rata-rata Progres Fisik yang dihitung otomatis dari akumulasi titik proyek lapangan.
 - **Kanan (5 Kolom)**: Ringkasan Monitoring Proyek Geotagging Lapangan, meliputi pagu vs realisasi riil, progres rata-rata fisik (%), dan rincian status proyek (*Selesai, Dalam Proses, Belum Mulai, Terkendala*).
 
-### C. Baris Grafik 2 (Target Sektoral & Minat Publik)
-- **Kiri (6 Kolom)**: Progres Capaian Program Strategis Sektoral (Infrastruktur, Kesehatan/Stunting, Pendidikan, Pertanian/Perikanan, Pariwisata/Ekraf) dengan bar target vs realisasi.
-- **Kanan (6 Kolom)**: 5 Dokumen Perencanaan Paling Banyak Diunduh Warga (RPJPD, RPJMD, RKPD, P-RKPD, Data Sektoral) lengkap dengan progress bar proporsional dan jumlah unduhan.
+### C. Baris Grafik 2 (Distribusi Repositori Dokumen & Minat Publik)
+- **Kiri (6 Kolom)**: Distribusi Koleksi Dokumen Perencanaan per Kategori (RPJPD, RPJMD, RKPD, Renstra, Renja, LAKIP, Data Sektoral) lengkap dengan jumlah dokumen dan akumulasi unduhan warga.
+- **Kanan (6 Kolom)**: 5 Dokumen Perencanaan Paling Banyak Diunduh Warga lengkap dengan progress bar proporsional dan jumlah unduhan.
 
-### D. Modal Pengelolaan Grafik Dinamis (SuperAdmin)
-SuperAdmin dapat memperbarui nilai persentase realisasi bulanan dan target sektoral secara instan melalui modal portal terintegrasi tanpa perlu membuka database secara manual.
+### D. Baris Ringkasan Modul Publikasi Portal (Sub-Menu Publik)
+- 4 Kartu metrik cepat: Berita Daerah, Agenda Kegiatan, Galeri Foto/Video, dan Pengumuman & Edaran Resmi yang terhubung langsung ke sub-menu masing-masing.
+
+### E. Otomasi 100% (Tanpa Input Manual)
+- Seluruh grafik dan metrik ditarik secara dinamis dari tabel operasional database (`proyek_details`, `documents`, `surveys`, `kritiks`, `news`, `agendas`, `galleries`, `announcements`). Modal input manual persentase APBD telah dieliminasi demi integritas data tunggal (*single source of truth*).
 
 ---
 
@@ -32,56 +35,9 @@ SuperAdmin dapat memperbarui nilai persentase realisasi bulanan dan target sekto
 
 ### `GET /api/v1/dashboard/charts`
 - **Akses**: Publik / Admin
-- **Response Structure**:
-```json
-{
-  "status": "success",
-  "code": 200,
-  "data": {
-    "monthly_trends": [
-      { "id": 1, "month": "Jan", "keuangan": 24, "fisik": 28 }
-    ],
-    "program_performance": [
-      { "id": 1, "sector": "Infrastruktur & Aksesibilitas", "realisasi": 88, "target": 90, "color": "bg-blue-600", "textColor": "text-blue-700" }
-    ],
-    "projects_summary": {
-      "total_projects": 6,
-      "status_counts": { "selesai": 2, "dalam_proses": 3, "belum_mulai": 1, "terkendala": 0 },
-      "total_pagu": 4900000000,
-      "total_realisasi": 2355000000,
-      "serapan_persen": 48.1,
-      "avg_progress": 59.2,
-      "by_bidang": [ ... ]
-    },
-    "public_engagement": {
-      "total_downloads": 7266,
-      "top_documents": [ ... ],
-      "survey_count": 4,
-      "avg_ikm": 96,
-      "kritik_total": 5,
-      "kritik_pending": 2,
-      "kritik_responded": 3
-    },
-    "meta": {
-      "source_text": "Sistem Informasi Akuntansi Keuangan Daerah & Geotagging BAPPEDA Halut",
-      "status_text": "Q3 2026 Status: 89.4% (On-Track)",
-      "total_target_met": 5
-    }
-  }
-}
-```
+- **Struktur Response**:
+  - `projects_summary`: Total pagu, realisasi, serapan persen, avg progress fisik, dan breakdown riil `by_bidang`.
+  - `documents_by_type`: Koleksi dokumen per jenis dan akumulasi unduhannya.
+  - `portal_stats`: Jumlah artikel berita, agenda kegiatan, galeri dokumentasi, dan pengumuman resmi.
+  - `public_engagement`: Total unduhan dokumen, top 5 dokumen terpopuler, skor rata-rata IKM survei, dan status kritik saran.
 
-### `POST /api/v1/dashboard/charts/batch-update`
-- **Akses**: `auth:sanctum`, `permission:manage_dashboard`
-- **Audit**: Tercatat otomatis dalam `AuditAdminMutation`
-- **Payload**:
-```json
-{
-  "monthly": [
-    { "id": 1, "keuangan": 25, "fisik": 30 }
-  ],
-  "programs": [
-    { "id": 1, "realisasi": 89, "target": 90 }
-  ]
-}
-```

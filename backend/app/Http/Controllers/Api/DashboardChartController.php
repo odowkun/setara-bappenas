@@ -63,12 +63,39 @@ class DashboardChartController extends Controller
             ->where('status', 'Sudah Ditanggapi')
             ->count();
 
+        // 6. Dokumen Berdasarkan Kategori / Jenis (Sub-menu Dokumen Perencanaan)
+        $documentsByType = DB::table('documents')
+            ->selectRaw("coalesce(jenis, 'lainnya') as jenis, count(*) as count, sum(downloads) as total_downloads")
+            ->groupBy('jenis')
+            ->orderBy('count', 'desc')
+            ->get()
+            ->map(function ($d) {
+                return [
+                    'jenis' => $d->jenis,
+                    'count' => (int) $d->count,
+                    'total_downloads' => (int) $d->total_downloads,
+                ];
+            });
+
+        // 7. Modul Konten Publik (Berita, Agenda, Galeri, Pengumuman)
+        $totalBerita = DB::table('news')->where('is_published', true)->count();
+        $totalAgenda = DB::table('agendas')->count();
+        $totalGaleri = DB::table('galleries')->count();
+        $totalPengumuman = DB::table('announcements')->count();
+
         return response()->json([
             'status' => 'success',
             'code' => 200,
             'data' => [
                 'monthly_trends' => $monthlyTrends,
                 'program_performance' => $programPerformance,
+                'documents_by_type' => $documentsByType,
+                'portal_stats' => [
+                    'berita' => $totalBerita,
+                    'agenda' => $totalAgenda,
+                    'galeri' => $totalGaleri,
+                    'pengumuman' => $totalPengumuman,
+                ],
                 'projects_summary' => [
                     'total_projects' => $projectCount,
                     'status_counts' => [
@@ -93,8 +120,8 @@ class DashboardChartController extends Controller
                     'kritik_responded' => $kritikResponded,
                 ],
                 'meta' => [
-                    'source_text' => 'Sistem Informasi Akuntansi Keuangan Daerah & Geotagging BAPPEDA Halut',
-                    'status_text' => 'Q3 2026 Status: 89.4% (On-Track)',
+                    'source_text' => 'Integrasi Riil Database Sub-Menu BAPPEDA Halmahera Utara',
+                    'status_text' => 'Otomatis Terhubung',
                     'total_target_met' => count($programPerformance),
                 ],
             ],

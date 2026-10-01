@@ -1,13 +1,11 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
-import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
+import { API_BASE_URL } from "@/lib/apiClient";
 import { AuditLog } from "@/types/auth";
-import { toast } from "@/lib/swal";
 import { getIkmGrade, fetchPublicKritikList } from "@/services/surveyService";
 import {
   Users,
@@ -15,43 +13,20 @@ import {
   ArrowUpRight,
   ShieldCheck,
   MapPin,
-  Compass,
   Layers,
-  Activity,
-  TrendingUp,
   BarChart3,
   CheckCircle2,
-  Clock,
-  Briefcase,
-  Layers3,
   HeartHandshake,
   DownloadCloud,
-  SlidersHorizontal,
-  Save,
-  X,
-  Loader2,
-  Building2,
-  AlertCircle,
-  HelpCircle,
   MessageSquare,
   ExternalLink,
+  Newspaper,
+  Calendar,
+  Image as ImageIcon,
+  Megaphone,
+  Briefcase,
+  TrendingUp,
 } from "lucide-react";
-
-interface MonthlyTrendItem {
-  id: number;
-  month: string;
-  keuangan: number;
-  fisik: number;
-}
-
-interface ProgramPerformanceItem {
-  id: number;
-  sector: string;
-  realisasi: number;
-  target: number;
-  color: string;
-  textColor: string;
-}
 
 interface ProjectsSummary {
   total_projects: number;
@@ -72,6 +47,19 @@ interface ProjectsSummary {
     total_pagu: number;
     total_realisasi: number;
   }[];
+}
+
+interface DocumentTypeStat {
+  jenis: string;
+  count: number;
+  total_downloads: number;
+}
+
+interface PortalStats {
+  berita: number;
+  agenda: number;
+  galeri: number;
+  pengumuman: number;
 }
 
 interface PublicEngagement {
@@ -101,80 +89,72 @@ const formatRupiah = (val: number) => {
   return `Rp ${val.toLocaleString("id-ID")}`;
 };
 
+const getBidangName = (slug: string) => {
+  const map: Record<string, string> = {
+    infrastruktur: "Bidang Infrastruktur & Kewilayahan",
+    perekonomian: "Bidang Perekonomian & SDA",
+    sosial_budaya: "Bidang Sosial & Budaya",
+    perencanaan: "Bidang Perencanaan, Pengendalian & Evaluasi",
+    sekretariat: "Sekretariat BAPPEDA",
+  };
+  return map[slug?.toLowerCase()] || (slug ? `Bidang ${slug.replace(/_/g, " ").toUpperCase()}` : "Bidang Umum");
+};
+
+const getDocumentTypeLabel = (jenis: string) => {
+  const map: Record<string, string> = {
+    rpjpd: "RPJPD (Rencana Jangka Panjang)",
+    rpjmd_kab: "RPJMD Kabupaten",
+    rkpd: "RKPD Tahunan",
+    renstra: "Rencana Strategis (Renstra)",
+    renja: "Rencana Kerja (Renja)",
+    data_sektoral: "Data Sektoral Pembangunan",
+    dik_sektoral: "Dokumen Informasi Kinerja (DIK)",
+    lakip: "LAKIP / SAKIP Daerah",
+  };
+  return map[jenis?.toLowerCase()] || (jenis ? jenis.replace(/_/g, " ").toUpperCase() : "Dokumen Lainnya");
+};
+
 export default function DashboardPage() {
   const { user, hasRole } = useAuth();
   const isSuperAdmin = hasRole(["superadmin"]);
-  const [mounted, setMounted] = useState(false);
   const [usersCount, setUsersCount] = useState(0);
   const [docsCount, setDocsCount] = useState(0);
   const [logs, setLogs] = useState<AuditLog[]>([]);
 
-  // Chart Data State
-  const [programPerformance, setProgramPerformance] = useState<ProgramPerformanceItem[]>([]);
-  const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendItem[]>([]);
+  // Real Sub-Menu Chart Data
   const [projectsSummary, setProjectsSummary] = useState<ProjectsSummary | null>(null);
+  const [documentsByType, setDocumentsByType] = useState<DocumentTypeStat[]>([]);
+  const [portalStats, setPortalStats] = useState<PortalStats | null>(null);
   const [publicEngagement, setPublicEngagement] = useState<PublicEngagement | null>(null);
   const [kritikStats, setKritikStats] = useState<{ total: number; pending: number }>({
     total: 0,
     pending: 0,
   });
-  const [chartMeta, setChartMeta] = useState({
-    source_text: "Sistem Informasi Keuangan Daerah & Geotagging BAPPEDA Halut",
-    status_text: "Q3 2026 Status: 89.4% (On-Track)",
-    total_target_met: 5,
-  });
-
-  // Edit Modal State (For SuperAdmin)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"monthly" | "programs">("monthly");
-  const [editMonthly, setEditMonthly] = useState<MonthlyTrendItem[]>([]);
-  const [editPrograms, setEditPrograms] = useState<ProgramPerformanceItem[]>([]);
-  const [savingCharts, setSavingCharts] = useState(false);
 
   const fetchCharts = async () => {
     try {
       const res = await fetch(`${API_BASE_URL}/dashboard/charts`);
       const json = await res.json();
       if (json.status === "success" && json.data) {
-        if (Array.isArray(json.data.monthly_trends)) {
-          const mData = json.data.monthly_trends.map((item: any) => ({
-            id: item.id,
-            month: item.month,
-            keuangan: Number(item.keuangan),
-            fisik: Number(item.fisik),
-          }));
-          setMonthlyTrends(mData);
-          setEditMonthly(mData);
-        }
-        if (Array.isArray(json.data.program_performance)) {
-          const pData = json.data.program_performance.map((item: any) => ({
-            id: item.id,
-            sector: item.sector,
-            realisasi: Number(item.realisasi),
-            target: Number(item.target),
-            color: item.color || "bg-blue-600",
-            textColor: item.textColor || "text-blue-700",
-          }));
-          setProgramPerformance(pData);
-          setEditPrograms(pData);
-        }
         if (json.data.projects_summary) {
           setProjectsSummary(json.data.projects_summary);
+        }
+        if (Array.isArray(json.data.documents_by_type)) {
+          setDocumentsByType(json.data.documents_by_type);
+        }
+        if (json.data.portal_stats) {
+          setPortalStats(json.data.portal_stats);
         }
         if (json.data.public_engagement) {
           setPublicEngagement(json.data.public_engagement);
         }
-        if (json.data.meta) {
-          setChartMeta(json.data.meta);
-        }
       }
     } catch (err) {
-      console.error("Data chart database gagal dimuat:", err);
+      console.error("Data chart riil sub-menu gagal dimuat:", err);
     }
   };
 
   useEffect(() => {
-    setMounted(true);
     Promise.all([
       adminService.fetchUsers(),
       adminService.fetchDocuments(user?.bidang, user?.role),
@@ -195,32 +175,6 @@ export default function DashboardPage() {
     });
   }, [user]);
 
-  const handleSaveCharts = async () => {
-    setSavingCharts(true);
-    try {
-      const res = await authenticatedFetch("/dashboard/charts/batch-update", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          monthly: editMonthly,
-          programs: editPrograms,
-        }),
-      });
-      const json = await res.json();
-      if (json.status === "success") {
-        toast.success("Data grafik dashboard berhasil diperbarui!");
-        setIsEditModalOpen(false);
-        fetchCharts();
-      } else {
-        toast.error(json.message || "Gagal menyimpan data grafik.");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Terjadi kesalahan saat menyimpan data grafik.");
-    } finally {
-      setSavingCharts(false);
-    }
-  };
-
   const getRoleDisplayName = () => {
     if (!user) return "";
     switch (user.role) {
@@ -240,24 +194,33 @@ export default function DashboardPage() {
       {/* 1. TOP WELCOME BANNER */}
       <div className="p-6 sm:p-8 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
         <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/70 text-blue-800 text-[11px] font-bold">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+              <span>{getRoleDisplayName()}</span>
+            </span>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-800 text-[11px] font-bold">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Sinkronisasi Otomatis Sub-Menu</span>
+            </span>
+          </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Selamat Datang, <span className="text-blue-700">{user?.name}</span> 👋
           </h1>
           <p className="text-xs text-slate-600 font-medium leading-relaxed max-w-3xl">
-            Ikhtisar Pusat Kendali Sistem Informasi &amp; Geotagging Pembangunan Daerah BAPPEDA Kabupaten Halmahera Utara.
+            Ikhtisar Pusat Kendali Sistem Informasi &amp; Geotagging Pembangunan Daerah BAPPEDA Kabupaten Halmahera Utara. Seluruh grafik dan metrik dikalkulasi secara otomatis langsung dari sub-menu operasional.
           </p>
         </div>
 
-        {isSuperAdmin && (
-          <button
-            type="button"
-            onClick={() => setIsEditModalOpen(true)}
-            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 text-xs font-extrabold shadow-xs transition active:scale-95 flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+        <div className="flex items-center gap-3 shrink-0">
+          <Link
+            href="/dashboard/geotagging-proyek"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white text-xs font-extrabold shadow-sm shadow-blue-700/20 transition active:scale-95 flex items-center justify-center gap-2 shrink-0"
           >
-            <SlidersHorizontal className="w-4 h-4 text-blue-600" />
-            <span>Kelola Data APBD &amp; Target</span>
-          </button>
-        )}
+            <MapPin className="w-4 h-4" />
+            <span>Peta Geotagging Proyek</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. OVERVIEW METRIC CARDS GRID (5 CARDS) */}
@@ -328,10 +291,10 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-2xl font-black text-slate-900">
-                    {projectsSummary ? `${projectsSummary.total_projects} Titik Proyek` : "6 Titik Proyek"}
+                    {projectsSummary?.total_projects ?? 0} Titik Proyek
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium mt-0.5">
-                    {projectsSummary ? `Serapan: ${projectsSummary.serapan_persen}% (${formatRupiah(projectsSummary.total_realisasi)})` : "Sinkron ESRI ArcGIS"}
+                    {projectsSummary ? `Serapan: ${projectsSummary.serapan_persen}% (${formatRupiah(projectsSummary.total_realisasi)})` : "Peta & Pemantauan Fisik"}
                   </p>
                 </div>
               </div>
@@ -339,12 +302,12 @@ export default function DashboardPage() {
                 href="/dashboard/update-progres"
                 className="text-xs font-bold text-indigo-700 hover:underline inline-flex items-center gap-1 pt-1"
               >
-                <span>Progres Sektoral</span>
+                <span>Update Progres</span>
                 <ArrowUpRight className="w-3.5 h-3.5" />
               </Link>
             </div>
 
-            {/* Card 4: IKM Kepuasan Warga */}
+            {/* Card 4: Kepuasan Warga (IKM) */}
             <div className="p-5 rounded-3xl bg-white border border-slate-200/90 shadow-xs space-y-3 relative overflow-hidden group hover:border-amber-300 transition flex flex-col justify-between">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -421,61 +384,104 @@ export default function DashboardPage() {
         );
       })()}
 
-      {/* 3. CHARTS ROW 1: TREN APBD BULANAN & SEBARAN PROYEK GEOTAGGING RIIL */}
+      {/* 3. CHARTS ROW 1: KINERJA SEKTORAL PROYEK RIIL & MONITORING OPERASIONAL GEOTAGGING */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left (7 Cols): Bar Chart Realisasi Anggaran APBD Monthly Trend */}
+        {/* Left (7 Cols): Serapan Anggaran & Progres Fisik Riil per Bidang */}
         <div className="lg:col-span-7 p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
             <div>
               <span className="text-[11px] font-extrabold text-blue-700 uppercase tracking-wider flex items-center gap-1.5">
-                <BarChart3 className="w-4 h-4" /> Realisasi Anggaran Makro APBD 2026
+                <BarChart3 className="w-4 h-4" /> Kinerja Sektoral Proyek Riil
               </span>
               <h3 className="text-base font-black text-slate-900 mt-0.5">
-                Progres Kumulatif Bulanan BAPPEDA Halmahera Utara
+                Realisasi Anggaran &amp; Progres Fisik per Bidang
               </h3>
             </div>
             <div className="flex items-center gap-4 text-xs font-bold shrink-0">
               <span className="flex items-center gap-1.5 text-blue-700">
-                <span className="w-3 h-3 rounded-full bg-blue-600" /> Keuangan
+                <span className="w-3 h-3 rounded-full bg-blue-600" /> Serapan Keuangan
               </span>
               <span className="flex items-center gap-1.5 text-emerald-700">
-                <span className="w-3 h-3 rounded-full bg-emerald-500" /> Fisik
+                <span className="w-3 h-3 rounded-full bg-emerald-500" /> Progres Fisik
               </span>
             </div>
           </div>
 
-          {/* SVG Visual Bar Chart */}
-          <div className="space-y-4 pt-2 flex-1 flex flex-col justify-between">
-            <div className="h-48 w-full flex items-end justify-between gap-2.5 px-2 pt-6 border-b border-slate-200 relative">
-              {monthlyTrends.map((t, idx) => (
-                <div key={idx} className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative">
-                  {/* Tooltip Hover */}
-                  <div className="absolute -top-10 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900 text-white text-[10px] font-extrabold py-1 px-2.5 rounded-lg whitespace-nowrap z-20 pointer-events-none shadow-md">
-                    {t.month}: Keuangan {t.keuangan}% | Fisik {t.fisik}%
+          {/* Dynamic List / Bar Chart per Bidang */}
+          <div className="space-y-4 pt-1 flex-1">
+            {projectsSummary?.by_bidang && projectsSummary.by_bidang.length > 0 ? (
+              projectsSummary.by_bidang.map((b, idx) => {
+                const serapan = b.total_pagu > 0 ? Math.round((b.total_realisasi / b.total_pagu) * 100) : 0;
+                const fisik = Number(b.avg_progres) || 0;
+
+                return (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-2.5 hover:border-blue-300 transition"
+                  >
+                    <div className="flex items-center justify-between gap-2 text-xs">
+                      <div className="flex items-center gap-2">
+                        <Briefcase className="w-4 h-4 text-slate-500 shrink-0" />
+                        <span className="font-extrabold text-slate-900">{getBidangName(b.bidang)}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-700">
+                          {b.total_proyek} Proyek
+                        </span>
+                        <span className="text-[11px] font-black text-slate-900">
+                          {formatRupiah(b.total_realisasi)} / {formatRupiah(b.total_pagu)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Progress Double Bars */}
+                    <div className="space-y-1.5 pt-0.5">
+                      {/* Bar 1: Serapan Keuangan */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-500">Serapan Keuangan:</span>
+                          <span className="text-blue-700 font-extrabold">{serapan}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-blue-700 to-blue-500 h-full rounded-full transition-all duration-700"
+                            style={{ width: `${Math.min(serapan, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Bar 2: Progres Fisik Lapangan */}
+                      <div className="space-y-1">
+                        <div className="flex items-center justify-between text-[11px] font-bold">
+                          <span className="text-slate-500">Rata-rata Fisik Lapangan:</span>
+                          <span className="text-emerald-700 font-extrabold">{fisik}%</span>
+                        </div>
+                        <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="bg-gradient-to-r from-emerald-600 to-emerald-400 h-full rounded-full transition-all duration-700"
+                            style={{ width: `${Math.min(fisik, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-xs text-slate-400 font-bold">
+                Memuat data kinerja sektoral per bidang...
+              </div>
+            )}
+          </div>
 
-                  <div className="w-full flex items-end justify-center gap-1.5 h-full">
-                    {/* Keuangan Bar */}
-                    <div
-                      style={{ height: `${t.keuangan}%` }}
-                      className="w-1/2 bg-gradient-to-t from-blue-700 to-blue-500 rounded-t-lg transition-all duration-500 group-hover:brightness-110"
-                    />
-                    {/* Fisik Bar */}
-                    <div
-                      style={{ height: `${t.fisik}%` }}
-                      className="w-1/2 bg-gradient-to-t from-emerald-600 to-emerald-400 rounded-t-lg transition-all duration-500 group-hover:brightness-110"
-                    />
-                  </div>
-
-                  <span className="text-[11px] font-bold text-slate-500 mt-2">{t.month}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500 font-medium px-2 pt-2">
-              <span className="truncate">Sumber Data: {chartMeta.source_text}</span>
-              <span className="font-bold text-slate-700 shrink-0">{chartMeta.status_text}</span>
-            </div>
+          <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
+            <span className="flex items-center gap-1.5 text-emerald-700">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Dihitung otomatis dari akumulasi titik proyek riil</span>
+            </span>
+            <Link href="/dashboard/update-progres" className="text-blue-700 hover:underline">
+              Kelola Proyek Sektoral &rarr;
+            </Link>
           </div>
         </div>
 
@@ -503,13 +509,13 @@ export default function DashboardPage() {
             {/* Real Budget Absorption Summary */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-600">Total Pagu:</span>
+                <span className="font-bold text-slate-600">Total Pagu Keseluruhan:</span>
                 <span className="font-black text-slate-900">
                   {projectsSummary ? formatRupiah(projectsSummary.total_pagu) : "Rp 4,90 M"}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-600">Realisasi Keuangan Proyek:</span>
+                <span className="font-bold text-slate-600">Realisasi Keuangan Terserap:</span>
                 <span className="font-black text-emerald-700">
                   {projectsSummary ? formatRupiah(projectsSummary.total_realisasi) : "Rp 2,35 M"}
                 </span>
@@ -531,19 +537,19 @@ export default function DashboardPage() {
               <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-emerald-800">Selesai</span>
                 <span className="text-xs font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.selesai ?? 2}
+                  {projectsSummary?.status_counts.selesai ?? 0}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-blue-800">Dalam Proses</span>
                 <span className="text-xs font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.dalam_proses ?? 3}
+                  {projectsSummary?.status_counts.dalam_proses ?? 0}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-700">Belum Mulai</span>
                 <span className="text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.belum_mulai ?? 1}
+                  {projectsSummary?.status_counts.belum_mulai ?? 0}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between">
@@ -559,64 +565,80 @@ export default function DashboardPage() {
             <span className="flex items-center gap-1 text-indigo-700">
               <CheckCircle2 className="w-3.5 h-3.5" /> Terintegrasi ESRI REST
             </span>
-            <Link href="/dashboard/update-progres" className="text-blue-700 hover:underline">
-              Kelola Proyek Sektoral &rarr;
+            <Link href="/dashboard/geotagging-proyek" className="text-blue-700 hover:underline">
+              Buka Peta Lokasi &rarr;
             </Link>
           </div>
         </div>
       </div>
 
-      {/* 4. CHARTS ROW 2: TARGET PROGRAM SEKTOAL MAKRO & TOP DOKUMEN PERENCANAAN TERPOPULER */}
+      {/* 4. CHARTS ROW 2: DISTRIBUSI REPOSITORI DOKUMEN & TOP DOKUMEN DIUNDUH WARGA */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-        {/* Left (6 Cols): Target Program Sektoral Makro */}
+        {/* Left (6 Cols): Distribusi Dokumen Perencanaan per Kategori */}
         <div className="lg:col-span-6 p-6 rounded-3xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between space-y-5">
           <div className="border-b border-slate-100 pb-4 flex items-center justify-between gap-2">
             <div>
-              <span className="text-[11px] font-extrabold text-amber-700 uppercase tracking-wider flex items-center gap-1.5">
-                <TrendingUp className="w-4 h-4" /> Target Program Strategis Sektoral
+              <span className="text-[11px] font-extrabold text-indigo-700 uppercase tracking-wider flex items-center gap-1.5">
+                <Layers className="w-4 h-4" /> Repositori Perencanaan Daerah
               </span>
               <h3 className="text-base font-black text-slate-900 mt-0.5">
-                Capaian Target Fisik Per-Bidang BAPPEDA
+                Distribusi Dokumen per Kategori
               </h3>
             </div>
+            <Link
+              href="/dashboard/dokumen"
+              className="text-xs font-bold text-indigo-700 hover:underline shrink-0"
+            >
+              Lihat Semua
+            </Link>
           </div>
 
-          <div className="space-y-4 flex-1">
-            {programPerformance.map((p, idx) => (
-              <div key={idx} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs font-bold">
-                  <span className="text-slate-800 line-clamp-1">{p.sector}</span>
-                  <span className={p.textColor}>
-                    {p.realisasi}% / {p.target}%
-                  </span>
-                </div>
+          <div className="space-y-3 flex-1">
+            {documentsByType.length > 0 ? (
+              documentsByType.map((item, idx) => {
+                const maxCount = documentsByType[0]?.count || 1;
+                const ratio = Math.max(12, Math.round((item.count / maxCount) * 100));
 
-                <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden relative">
+                return (
                   <div
-                    style={{ width: `${p.realisasi}%` }}
-                    className={`h-full ${p.color} rounded-full transition-all duration-700`}
-                  />
-                </div>
+                    key={idx}
+                    className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5 hover:border-indigo-300 transition"
+                  >
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-extrabold text-slate-900">{getDocumentTypeLabel(item.jenis)}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-black text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md">
+                          {item.count} Dokumen
+                        </span>
+                        <span className="text-[10px] text-slate-500 font-bold">
+                          {item.total_downloads.toLocaleString("id-ID")}x unduh
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-full bg-slate-200/80 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-gradient-to-r from-indigo-600 to-blue-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${ratio}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="p-8 text-center text-xs text-slate-400 font-bold">
+                Memuat data kategori dokumen...
               </div>
-            ))}
+            )}
           </div>
 
           <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-bold">
-            <span className="flex items-center gap-1 text-emerald-700">
-              <CheckCircle2 className="w-3.5 h-3.5" /> {chartMeta.total_target_met} Program Utama Memenuhi Target
+            <span className="flex items-center gap-1.5 text-slate-600">
+              <FileText className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Total Dokumen: {docsCount} Berkas Terdaftar</span>
             </span>
-            {isSuperAdmin && (
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveTab("programs");
-                  setIsEditModalOpen(true);
-                }}
-                className="text-blue-700 hover:underline cursor-pointer"
-              >
-                Ubah Target &rarr;
-              </button>
-            )}
+            <Link href="/dashboard/dokumen/jenis-dokumen" className="text-blue-700 hover:underline">
+              Master Jenis Dokumen &rarr;
+            </Link>
           </div>
         </div>
 
@@ -646,24 +668,27 @@ export default function DashboardPage() {
                 const ratio = Math.max(10, Math.round((doc.downloads / maxDownloads) * 100));
 
                 return (
-                  <div key={doc.id || idx} className="space-y-1 p-2.5 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition">
+                  <div
+                    key={doc.id || idx}
+                    className="space-y-1.5 p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-emerald-300 transition"
+                  >
                     <div className="flex items-center justify-between gap-2 text-xs">
                       <div className="flex items-center gap-2 min-w-0">
-                        <span className="w-5 h-5 rounded-lg bg-blue-100 text-blue-800 text-[10px] font-black flex items-center justify-center shrink-0">
+                        <span className="w-5 h-5 rounded-lg bg-emerald-100 text-emerald-800 text-[10px] font-black flex items-center justify-center shrink-0">
                           #{idx + 1}
                         </span>
                         <span className="font-bold text-slate-900 truncate" title={doc.title}>
                           {doc.title}
                         </span>
                       </div>
-                      <span className="text-[11px] font-black text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md shrink-0">
+                      <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md shrink-0">
                         {doc.downloads.toLocaleString("id-ID")}x unduh
                       </span>
                     </div>
 
                     <div className="w-full bg-slate-200/80 h-1.5 rounded-full overflow-hidden">
                       <div
-                        className="bg-gradient-to-r from-blue-600 to-indigo-500 h-full rounded-full transition-all duration-500"
+                        className="bg-gradient-to-r from-emerald-600 to-teal-500 h-full rounded-full transition-all duration-500"
                         style={{ width: `${ratio}%` }}
                       />
                     </div>
@@ -689,7 +714,74 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 5. RECENT ACTIVITY (AUDIT LOGS) */}
+      {/* 5. PORTAL CONTENT MODULES QUICK CARDS (Sub-menu Berita, Agenda, Galeri, Pengumuman) */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {/* Berita */}
+        <Link
+          href="/dashboard/berita"
+          className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-blue-400 transition flex items-center gap-3.5 group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-blue-50 text-blue-700 flex items-center justify-center font-bold border border-blue-100 shrink-0 group-hover:scale-105 transition">
+            <Newspaper className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-500 block truncate">Berita Daerah</span>
+            <span className="text-base font-black text-slate-900 block">
+              {portalStats?.berita ?? 0} Artikel
+            </span>
+          </div>
+        </Link>
+
+        {/* Agenda */}
+        <Link
+          href="/dashboard/agenda"
+          className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-indigo-400 transition flex items-center gap-3.5 group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center font-bold border border-indigo-100 shrink-0 group-hover:scale-105 transition">
+            <Calendar className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-500 block truncate">Agenda Kegiatan</span>
+            <span className="text-base font-black text-slate-900 block">
+              {portalStats?.agenda ?? 0} Terjadwal
+            </span>
+          </div>
+        </Link>
+
+        {/* Galeri */}
+        <Link
+          href="/dashboard/galeri"
+          className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-emerald-400 transition flex items-center gap-3.5 group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold border border-emerald-100 shrink-0 group-hover:scale-105 transition">
+            <ImageIcon className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-500 block truncate">Galeri Foto/Video</span>
+            <span className="text-base font-black text-slate-900 block">
+              {portalStats?.galeri ?? 0} Media
+            </span>
+          </div>
+        </Link>
+
+        {/* Pengumuman */}
+        <Link
+          href="/dashboard/pengumuman"
+          className="p-4 rounded-3xl bg-white border border-slate-200 shadow-xs hover:border-amber-400 transition flex items-center gap-3.5 group"
+        >
+          <div className="w-11 h-11 rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center font-bold border border-amber-100 shrink-0 group-hover:scale-105 transition">
+            <Megaphone className="w-5 h-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[11px] font-bold text-slate-500 block truncate">Pengumuman &amp; Surat</span>
+            <span className="text-base font-black text-slate-900 block">
+              {portalStats?.pengumuman ?? 0} Publikasi
+            </span>
+          </div>
+        </Link>
+      </div>
+
+      {/* 6. RECENT ACTIVITY (AUDIT LOGS) */}
       <div className="p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
@@ -726,182 +818,6 @@ export default function DashboardPage() {
           ))}
         </div>
       </div>
-
-      {/* 6. MODAL KELOLA DATA APBD & PROGRAM SEKTOAL (PORTAL) */}
-      {mounted && isEditModalOpen && createPortal(
-        <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150"
-            onClick={() => !savingCharts && setIsEditModalOpen(false)}
-          />
-          <div className="relative w-full max-w-2xl bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-7 space-y-5 animate-in zoom-in-95 duration-200 font-sans max-h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="flex items-start justify-between gap-3 border-b border-slate-100 pb-3.5 shrink-0">
-              <div>
-                <h2 className="text-lg font-black text-slate-900">Kelola Nilai Grafik Dashboard</h2>
-                <p className="text-xs text-slate-500 font-medium mt-0.5">
-                  Perbarui persentase realisasi APBD bulanan dan capaian program sektoral langsung ke database.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditModalOpen(false)}
-                className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition shrink-0"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Tab Selector */}
-            <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-slate-100 shrink-0">
-              <button
-                type="button"
-                onClick={() => setActiveTab("monthly")}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
-                  activeTab === "monthly"
-                    ? "bg-white text-blue-700 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Tren APBD Bulanan ({editMonthly.length} Bulan)
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab("programs")}
-                className={`flex-1 py-2 rounded-xl text-xs font-bold transition ${
-                  activeTab === "programs"
-                    ? "bg-white text-blue-700 shadow-xs"
-                    : "text-slate-600 hover:text-slate-900"
-                }`}
-              >
-                Target Sektoral ({editPrograms.length} Bidang)
-              </button>
-            </div>
-
-            {/* Modal Scrollable Body */}
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-              {activeTab === "monthly" ? (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-12 text-[11px] font-black uppercase text-slate-400 px-3">
-                    <span className="col-span-4">Bulan</span>
-                    <span className="col-span-4 text-center">Keuangan (%)</span>
-                    <span className="col-span-4 text-center">Fisik (%)</span>
-                  </div>
-                  {editMonthly.map((m, idx) => (
-                    <div
-                      key={m.id || idx}
-                      className="grid grid-cols-12 items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80"
-                    >
-                      <span className="col-span-4 text-xs font-bold text-slate-900">{m.month}</span>
-                      <div className="col-span-4">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={m.keuangan}
-                          onChange={(e) => {
-                            const val = Math.min(100, Math.max(0, Number(e.target.value)));
-                            setEditMonthly((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, keuangan: val } : item))
-                            );
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-center text-blue-700 focus:outline-none focus:border-blue-600"
-                        />
-                      </div>
-                      <div className="col-span-4">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={m.fisik}
-                          onChange={(e) => {
-                            const val = Math.min(100, Math.max(0, Number(e.target.value)));
-                            setEditMonthly((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, fisik: val } : item))
-                            );
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-center text-emerald-700 focus:outline-none focus:border-emerald-600"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-12 text-[11px] font-black uppercase text-slate-400 px-3">
-                    <span className="col-span-6">Sektor Program</span>
-                    <span className="col-span-3 text-center">Realisasi (%)</span>
-                    <span className="col-span-3 text-center">Target (%)</span>
-                  </div>
-                  {editPrograms.map((p, idx) => (
-                    <div
-                      key={p.id || idx}
-                      className="grid grid-cols-12 items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200/80"
-                    >
-                      <span className="col-span-6 text-xs font-bold text-slate-900 line-clamp-1" title={p.sector}>
-                        {p.sector}
-                      </span>
-                      <div className="col-span-3">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={p.realisasi}
-                          onChange={(e) => {
-                            const val = Math.min(100, Math.max(0, Number(e.target.value)));
-                            setEditPrograms((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, realisasi: val } : item))
-                            );
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-center text-blue-700 focus:outline-none focus:border-blue-600"
-                        />
-                      </div>
-                      <div className="col-span-3">
-                        <input
-                          type="number"
-                          min={0}
-                          max={100}
-                          value={p.target}
-                          onChange={(e) => {
-                            const val = Math.min(100, Math.max(0, Number(e.target.value)));
-                            setEditPrograms((prev) =>
-                              prev.map((item, i) => (i === idx ? { ...item, target: val } : item))
-                            );
-                          }}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-200 text-xs font-bold text-center text-slate-700 focus:outline-none focus:border-slate-600"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Footer Actions */}
-            <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 shrink-0">
-              <button
-                type="button"
-                disabled={savingCharts}
-                onClick={() => setIsEditModalOpen(false)}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition text-center justify-center flex items-center cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                disabled={savingCharts}
-                onClick={handleSaveCharts}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white text-xs font-extrabold shadow-md shadow-blue-600/20 transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
-              >
-                {savingCharts ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                <span>{savingCharts ? "Menyimpan..." : "Simpan Perubahan Data"}</span>
-              </button>
-            </div>
-          </div>
-        </div>,
-        document.body
-      )}
     </div>
   );
 }
-
