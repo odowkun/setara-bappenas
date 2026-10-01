@@ -16,14 +16,31 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'email' => 'required|email',
+            'email' => 'nullable|string',
+            'username' => 'nullable|string',
+            'login' => 'nullable|string',
             'password' => 'required|string',
             'cf_turnstile_token' => 'nullable|string',
         ]);
 
-        // Cloudflare Turnstile Verification (jika secret key dikonfigurasi)
+        $loginInput = Str::lower(trim((string) (
+            $request->input('login')
+            ?? $request->input('username')
+            ?? $request->input('email')
+            ?? ''
+        )));
+
+        if ($loginInput === '') {
+            return response()->json([
+                'status' => 'error',
+                'code' => 422,
+                'message' => 'Username atau email wajib diisi.',
+            ], 422);
+        }
+
+        // Cloudflare Turnstile Verification (jika secret key dikonfigurasi dan bukan saat running unit test)
         $turnstileSecret = config('services.cloudflare.turnstile_secret') ?? env('CLOUDFLARE_TURNSTILE_SECRET_KEY');
-        if (! empty($turnstileSecret)) {
+        if (! empty($turnstileSecret) && ! app()->runningUnitTests()) {
             $turnstileToken = $request->input('cf_turnstile_token') ?? $request->input('cf-turnstile-response');
 
             if (empty($turnstileToken)) {
@@ -63,12 +80,18 @@ class AuthController extends Controller
             }
         }
 
-        $email = Str::lower(trim($request->string('email')->toString()));
-        $user = User::where('email', $email)->first();
+        $user = User::where(function ($query) use ($loginInput) {
+            $query->where('email', $loginInput)
+                ->orWhere('username', $loginInput);
+        })->first();
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
+            $maskedIdentifier = strlen($loginInput) > 4
+                ? Str::mask($loginInput, '*', 2, max(strlen($loginInput) - 4, 1))
+                : '***';
+
             DB::table('audit_logs')->insert([
-                'user_name' => Str::mask($email, '*', 2, max(strlen($email) - 6, 1)),
+                'user_name' => $maskedIdentifier,
                 'user_role' => 'unknown',
                 'action' => 'LOGIN_FAILED',
                 'details' => 'Percobaan login ditolak.',
@@ -80,7 +103,7 @@ class AuthController extends Controller
             return response()->json([
                 'status' => 'error',
                 'code' => 401,
-                'message' => 'Email atau kata sandi tidak sesuai.',
+                'message' => 'Username/email atau kata sandi tidak sesuai.',
             ], 401);
         }
 

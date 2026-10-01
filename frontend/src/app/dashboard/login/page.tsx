@@ -9,7 +9,7 @@ import CloudflareTurnstile from "@/components/ui/CloudflareTurnstile";
 export default function DashboardLoginPage() {
   const router = useRouter();
   const { login } = useAuth();
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
@@ -21,11 +21,11 @@ export default function DashboardLoginPage() {
     setError("");
     setSubmitting(true);
 
-    const res = await login(email, password, turnstileToken || undefined);
+    const res = await login(identifier, password, turnstileToken || undefined);
     if (res.success) {
       router.push("/dashboard");
     } else {
-      setError(res.message || "Email atau kata sandi tidak terdaftar di direktori akun.");
+      setError(res.message || "Username/email atau kata sandi tidak terdaftar di direktori akun.");
     }
     setSubmitting(false);
   };
@@ -67,16 +67,16 @@ export default function DashboardLoginPage() {
         <form onSubmit={handleLoginSubmit} className="space-y-4">
           <div>
             <label className="block text-xs font-extrabold text-slate-700 mb-1.5">
-              Alamat Email Kedinasan
+              Username atau Email Kedinasan
             </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
-                type="email"
+                type="text"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="nama@halmaherautarakab.go.id"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Username atau email resmi (contoh: admin)"
                 className="w-full pl-10 pr-4 py-3 rounded-2xl bg-slate-50 border border-slate-200 focus:border-blue-700 focus:bg-white text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600/20 transition shadow-2xs"
               />
             </div>

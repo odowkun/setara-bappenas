@@ -29,13 +29,37 @@ class UserController extends Controller
 
     public function store(Request $request)
     {
+        $explicitUsername = $request->filled('username');
+        $usernameInput = trim((string) ($request->input('username') ?? ''));
+        $emailInput = trim((string) ($request->input('email') ?? ''));
+
+        if (! $explicitUsername) {
+            if ($emailInput !== '') {
+                $baseUser = preg_replace('/[^a-zA-Z0-9_.-]/', '', explode('@', $emailInput)[0]);
+                $usernameInput = Str::lower($baseUser ?: 'user' . time());
+            } elseif ($request->has('name')) {
+                $baseUser = preg_replace('/[^a-zA-Z0-9_.-]/', '', Str::slug($request->string('name')->toString(), '.'));
+                $usernameInput = Str::lower($baseUser ?: 'user' . time());
+            }
+
+            if ($usernameInput !== '' && User::where('username', $usernameInput)->exists()) {
+                $suffix = 1;
+                while (User::where('username', "{$usernameInput}{$suffix}")->exists()) {
+                    $suffix++;
+                }
+                $usernameInput = "{$usernameInput}{$suffix}";
+            }
+        }
+
         $request->merge([
-            'email' => Str::lower(trim($request->string('email')->toString())),
+            'username' => $usernameInput !== '' ? Str::lower($usernameInput) : null,
+            'email' => $emailInput !== '' ? Str::lower($emailInput) : null,
         ]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'username' => ['required', 'string', 'min:3', 'max:50', 'regex:/^[a-zA-Z0-9_.-]+$/', 'unique:users,username'],
+            'email' => ['nullable', 'email', 'max:255', 'unique:users,email'],
             'password' => [
                 'required',
                 'confirmed',
@@ -49,6 +73,9 @@ class UserController extends Controller
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
             'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
+        ], [
+            'username.regex' => 'Username hanya boleh berupa huruf, angka, titik, strip (-), dan garis bawah (_).',
+            'username.unique' => 'Username ini sudah digunakan oleh akun lain.',
         ]);
 
         $this->validateBidangForRole($validated);
@@ -56,7 +83,8 @@ class UserController extends Controller
         $user = DB::transaction(function () use ($validated): User {
             $user = User::create([
                 'name' => $validated['name'],
-                'email' => Str::lower(trim($validated['email'])),
+                'username' => $validated['username'],
+                'email' => $validated['email'] ?? null,
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
                 'bidang' => $validated['role'] === 'admin_bidang' ? $validated['bidang'] : null,
@@ -83,15 +111,27 @@ class UserController extends Controller
     public function update(Request $request, string $id)
     {
         $user = User::findOrFail($id);
+        if ($request->has('username')) {
+            $uVal = trim((string) $request->input('username'));
+            $request->merge(['username' => $uVal !== '' ? Str::lower($uVal) : null]);
+        }
         if ($request->has('email')) {
-            $request->merge([
-                'email' => Str::lower(trim($request->string('email')->toString())),
-            ]);
+            $eVal = trim((string) $request->input('email'));
+            $request->merge(['email' => $eVal !== '' ? Str::lower($eVal) : null]);
         }
 
         $validated = $request->validate([
             'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
+            'username' => [
+                'sometimes',
+                'required',
+                'string',
+                'min:3',
+                'max:50',
+                'regex:/^[a-zA-Z0-9_.-]+$/',
+                Rule::unique('users', 'username')->ignore($user->id),
+            ],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->id)],
             'password' => [
                 'nullable',
                 'confirmed',
@@ -105,6 +145,9 @@ class UserController extends Controller
             'permissions.*' => ['string', Rule::exists('permissions', 'name')],
             'allowed_document_permissions' => ['sometimes', 'nullable', 'array'],
             'allowed_document_permissions.*' => ['string', Rule::in($this->documentPermissionNames())],
+        ], [
+            'username.regex' => 'Username hanya boleh berupa huruf, angka, titik, strip (-), dan garis bawah (_).',
+            'username.unique' => 'Username ini sudah digunakan oleh akun lain.',
         ]);
 
         $role = $validated['role'] ?? $user->role;
@@ -135,7 +178,7 @@ class UserController extends Controller
 
         DB::transaction(function () use ($user, $validated, $role): void {
             $attributes = collect($validated)
-                ->only(['name', 'email', 'nip', 'jabatan', 'allowed_document_permissions'])
+                ->only(['name', 'username', 'email', 'nip', 'jabatan', 'allowed_document_permissions'])
                 ->all();
 
             if (isset($attributes['email'])) {

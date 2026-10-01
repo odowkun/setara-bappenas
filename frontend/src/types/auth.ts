@@ -10,7 +10,8 @@ export type BidangType =
 export interface User {
   id: string;
   name: string;
-  email: string;
+  username?: string;
+  email?: string;
   role: Role;
   bidang?: BidangType; // Spesifik untuk admin_bidang
   nip?: string;

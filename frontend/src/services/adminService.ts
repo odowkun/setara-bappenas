@@ -32,7 +32,8 @@ export function getThumbnailUrl(url?: string | null): string {
 
 interface UserMutationInput extends Partial<User> {
   name: string;
-  email: string;
+  username?: string;
+  email?: string;
   role: User["role"];
   password?: string;
   passwordConfirmation?: string;

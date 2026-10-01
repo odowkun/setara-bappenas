@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
 import { Role, BidangType, JenisDokumenItem } from "@/types/auth";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { API_BASE_URL } from "@/lib/apiClient";
 import { toast } from "@/lib/swal";
 import {
   ArrowLeft,
@@ -43,6 +44,12 @@ import {
   TemplatePresetOption,
 } from "@/constants/permissions";
 
+interface OrgPersonnel {
+  name: string;
+  nip: string;
+  position: string;
+}
+
 export default function TambahUserPage() {
   const router = useRouter();
   const { hasRole } = useAuth();
@@ -54,6 +61,7 @@ export default function TambahUserPage() {
 
   // Form Fields State
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<Role>("admin_bidang");
   const [bidang, setBidang] = useState<BidangType>("infrastruktur");
@@ -62,6 +70,9 @@ export default function TambahUserPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Data Pejabat dari Struktur Organisasi
+  const [orgPersonnelList, setOrgPersonnelList] = useState<OrgPersonnel[]>([]);
 
   // Master Dokumen dari Database
   const [allDocTypes, setAllDocTypes] = useState<JenisDokumenItem[]>([]);
@@ -104,6 +115,58 @@ export default function TambahUserPage() {
         console.warn("Gagal memuat jenis dokumen master:", err);
       });
   }, []);
+
+  // Muat data pejabat dari Struktur Organisasi
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/pejabat`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!json?.data) return;
+        const flatList: any[] = json.data.flat || [];
+        const fungsionalList: any[] = json.data.fungsional || [];
+        const allItems: OrgPersonnel[] = [];
+        const seenNames = new Set<string>();
+
+        [...flatList, ...fungsionalList].forEach((item) => {
+          const rawName = (item.name || "").trim();
+          if (rawName && !rawName.includes("(Belum Ditentukan)") && !seenNames.has(rawName)) {
+            seenNames.add(rawName);
+            allItems.push({
+              name: rawName,
+              nip: (item.nip || "").trim(),
+              position: (item.position || "").trim(),
+            });
+          }
+        });
+        setOrgPersonnelList(allItems);
+      })
+      .catch((err) => console.warn("Gagal memuat data pejabat struktur:", err));
+  }, []);
+
+  const handleSelectPersonnel = (selectedName: string) => {
+    setName(selectedName);
+    const found = orgPersonnelList.find((p) => p.name === selectedName);
+    if (found) {
+      if (found.nip) {
+        setNip(found.nip);
+      }
+      if (found.position) {
+        setJabatan(found.position);
+      }
+    }
+    if (!username.trim() && selectedName.trim()) {
+      const clean = selectedName
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, "")
+        .trim()
+        .split(/\s+/)
+        .slice(0, 2)
+        .join(".");
+      if (clean) {
+        setUsername(clean);
+      }
+    }
+  };
 
   // Hitung izin dokumen default otomatis berdasarkan role dan bidang
   const computeDefaultDocPermissions = (currentRole: Role, currentBidang: BidangType, docs: JenisDokumenItem[]): string[] => {
@@ -193,8 +256,15 @@ export default function TambahUserPage() {
     e.preventDefault();
     setErrorMessage("");
 
-    if (!name.trim() || !email.trim()) {
-      const msg = "Nama lengkap dan email kedinasan wajib diisi!";
+    if (!name.trim()) {
+      const msg = "Nama lengkap wajib diisi!";
+      setErrorMessage(msg);
+      toast.error(msg);
+      return;
+    }
+
+    if (!username.trim()) {
+      const msg = "Username akun login wajib diisi!";
       setErrorMessage(msg);
       toast.error(msg);
       return;
@@ -221,13 +291,14 @@ export default function TambahUserPage() {
 
     try {
       await adminService.addUser({
-        name,
-        email,
+        name: name.trim(),
+        username: username.trim().toLowerCase(),
+        email: email.trim() || undefined,
         password,
         passwordConfirmation: confirmPassword,
         role,
         bidang: role === "admin_bidang" ? bidang : undefined,
-        nip,
+        nip: nip.trim() || undefined,
         jabatan: jabatan || pejabatPositions[0],
         permissions: selectedPermissions,
         allowedDocumentPermissions: allowedDocPermissions,
@@ -609,28 +680,55 @@ export default function TambahUserPage() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Nama Lengkap &amp; Gelar *
                 </label>
-                <input
-                  type="text"
-                  required
+                <SearchableSelect
+                  options={orgPersonnelList.map((p) => ({
+                    value: p.name,
+                    label: p.name,
+                    sublabel: [p.position, p.nip ? `NIP. ${p.nip}` : ""].filter(Boolean).join(" • "),
+                  }))}
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Contoh: Agustino Hermanus"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs"
+                  onChange={(val) => handleSelectPersonnel(String(val))}
+                  placeholder="-- Pilih Pegawai dari Struktur Organisasi --"
+                  searchPlaceholder="Cari nama pegawai atau ketik nama baru..."
+                  creatable={true}
+                  createLabelPrefix="Gunakan nama baru:"
+                  onCreateOption={(newName) => {
+                    const trimmed = newName.trim();
+                    if (!trimmed) return;
+                    setName(trimmed);
+                    if (!username.trim()) {
+                      const clean = trimmed
+                        .toLowerCase()
+                        .replace(/[^a-z0-9\s]/g, "")
+                        .trim()
+                        .split(/\s+/)
+                        .slice(0, 2)
+                        .join(".");
+                      if (clean) setUsername(clean);
+                    }
+                    toast.success(`Nama "${trimmed}" dipilih.`);
+                  }}
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Pilih dari data struktur organisasi untuk auto-fill nama &amp; NIP, atau ketik nama baru.
+                </p>
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Kedinasan Official *
+                  Username Akun Login *
                 </label>
                 <input
-                  type="email"
+                  type="text"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nofrendy@halmaherautarakab.go.id"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_.-]/g, ""))}
+                  placeholder="Contoh: agustino.hermanus"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs font-mono"
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Digunakan untuk masuk sistem (huruf kecil, angka, titik, atau strip).
+                </p>
               </div>
 
               <div>
@@ -642,11 +740,30 @@ export default function TambahUserPage() {
                   value={nip}
                   onChange={(e) => setNip(e.target.value)}
                   placeholder="198103202006041002"
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs font-mono"
                 />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Otomatis terisi jika nama pegawai dipilih dari struktur organisasi.
+                </p>
               </div>
 
               <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Email Kedinasan (Opsional)
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@halmaherautarakab.go.id"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 focus:outline-none transition shadow-2xs"
+                />
+                <p className="mt-1 text-[11px] text-slate-400">
+                  Sebagai tautan akun. Pengguna dapat login menggunakan username atau email.
+                </p>
+              </div>
+
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Jabatan Struktural BAPPEDA *
                 </label>

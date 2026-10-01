@@ -87,12 +87,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (
-    email: string,
+    loginIdentifier: string,
     password: string,
     cfTurnstileToken?: string
   ): Promise<{ success: boolean; message?: string }> => {
     try {
-      const payload: Record<string, string> = { email, password };
+      const payload: Record<string, string> = {
+        login: loginIdentifier.trim(),
+        username: loginIdentifier.trim(),
+        email: loginIdentifier.trim(),
+        password,
+      };
       if (cfTurnstileToken) {
         payload.cf_turnstile_token = cfTurnstileToken;
       }

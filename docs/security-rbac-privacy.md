@@ -260,6 +260,26 @@ Sebagai pemenuhan standar SPBE tertinggi dan pengamanan terhadap risiko pencuria
 4. **Proteksi Sesi Terverifikasi (Fail-Fast)**:
    - Jika cookie atau token kedaluwarsa/ditolak (HTTP 401), sistem frontend langsung menghentikan animasi loading, mengubah indikator menjadi merah ("Ditolak"), dan membersihkan sesi.
 
+## Autentikasi Fleksibel & Integrasi Struktur Organisasi (Username / Email & Auto-Fill Kepegawaian)
+
+Status implementasi: Oktober 2026.
+
+Untuk mempermudah login aparatur sipil negara dan staf BAPPEDA tanpa mewajibkan email dinas resmi pada setiap akun:
+1. **Dukungan Kolom Username & Email Opsional**:
+   - Tabel `users` dilengkapi kolom `username` unik (`regex:/^[a-zA-Z0-9_.-]+$/`).
+   - Kolom `email` bersifat opsional (`nullable`), difungsikan sebagai tautan verifikasi atau kontak kedinasan.
+2. **Dual-Identifier Login Mechanism**:
+   - Endpoint autentikasi `/api/v1/auth/login` mendukung login hibrida menggunakan `username` ATAU `email`.
+   - Frontend login (`/dashboard/login`) menyediakan input adaptif *"Username atau Email Kedinasan"* yang fleksibel.
+3. **Auto-Fill Data Pegawai dari Struktur Organisasi**:
+   - Formulir tambah dan edit pengguna (`/dashboard/users/tambah` & `/dashboard/users/edit/[id]`) memanfaatkan komponen `SearchableSelect` dengan `creatable={true}` yang tersinkronisasi langsung dengan master kepegawaian BAPPEDA (`/api/v1/pejabat` - menggabungkan pejabat struktural dan fungsional).
+   - Memilih nama pegawai yang telah terdaftar di struktur organisasi akan otomatis mengisi:
+     - Nama Lengkap & Gelar Resmi.
+     - NIP Kedinasan (18 digit).
+     - Jabatan Struktural / Fungsional.
+     - Saran Username unik berbasis nama pejabat (contoh: `agustino.hermanus`).
+   - Apabila staf atau tenaga kontrak belum terdaftar pada struktur organisasi, admin dapat langsung mengetikkan nama baru (*creatable option*) secara mandiri.
+
 ## Risiko tersisa
 
 - Belum ada kebijakan retensi formal untuk survei, kritik/saran, email unduhan, dan audit log. Durasi penghapusan harus ditetapkan pejabat pengendali data sebelum job penghapusan otomatis diaktifkan.

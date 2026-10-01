@@ -211,7 +211,9 @@ export default function UserManagementPage() {
   const filteredUsers = users.filter(
     (u) =>
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (u.username && u.username.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (u.email && u.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (u.nip && u.nip.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (u.jabatan && u.jabatan.toLowerCase().includes(searchTerm.toLowerCase())) ||
       u.role.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -270,7 +272,7 @@ export default function UserManagementPage() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Cari berdasarkan nama, email, NIP, atau jabatan..."
+            placeholder="Cari berdasarkan nama, username, email, NIP, atau jabatan..."
             className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-200 focus:border-blue-600 text-xs font-bold text-slate-900 placeholder-slate-400 focus:outline-none transition shadow-2xs"
           />
         </div>
@@ -284,7 +286,7 @@ export default function UserManagementPage() {
             <thead className="bg-slate-50/80 text-slate-600 font-black uppercase text-[10px] tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 whitespace-nowrap">Pengguna &amp; Jabatan Struktural</th>
-                <th className="px-6 py-4 whitespace-nowrap">Email Official</th>
+                <th className="px-6 py-4 whitespace-nowrap">Username &amp; Kontak</th>
                 <th className="px-6 py-4 whitespace-nowrap">Role Spatie</th>
                 <th className="px-6 py-4 whitespace-nowrap">Hak Akses Modul</th>
                 <th className="px-6 py-4 whitespace-nowrap text-right">Aksi Manajemen</th>
@@ -338,7 +340,18 @@ export default function UserManagementPage() {
                       </div>
                     </td>
 
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-700 font-mono font-bold text-xs">{u.email}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-1">
+                        {u.username && (
+                          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-blue-50 border border-blue-200 text-blue-700 font-mono font-bold text-xs shadow-2xs">
+                            <span>@{u.username}</span>
+                          </div>
+                        )}
+                        <div className="text-slate-600 font-mono text-xs">
+                          {u.email ? u.email : <span className="text-slate-400 italic text-[11px]">(Tanpa email)</span>}
+                        </div>
+                      </div>
+                    </td>
 
                     <td className="px-6 py-4 whitespace-nowrap">
                       {u.role === "superadmin" && (
@@ -456,8 +469,16 @@ export default function UserManagementPage() {
 
                 <div className="space-y-1.5 pt-1 text-xs">
                   <div className="flex items-center justify-between text-slate-600">
+                    <span className="text-slate-400 font-bold">Username:</span>
+                    <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                      @{u.username || "-"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-slate-600">
                     <span className="text-slate-400 font-bold">Email:</span>
-                    <span className="font-mono font-bold text-slate-800">{u.email}</span>
+                    <span className="font-mono font-bold text-slate-800">
+                      {u.email || <span className="text-slate-400 italic font-sans font-normal">(Tidak ditautkan)</span>}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 font-bold">Role:</span>
