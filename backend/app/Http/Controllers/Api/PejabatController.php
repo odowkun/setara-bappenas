@@ -47,12 +47,16 @@ class PejabatController extends Controller
             ->orderBy('id', 'asc')
             ->get();
 
+        $fungsionalPosRecord = \App\Models\Profil::where('key', 'struktur_fungsional_pos')->first();
+        $fungsionalPos = $fungsionalPosRecord ? json_decode($fungsionalPosRecord->content, true) : null;
+
         return response()->json([
             'success' => true,
             'data' => [
                 'flat' => $all,
                 'tree' => $tree,
                 'fungsional' => $fungsional,
+                'fungsional_pos' => $fungsionalPos,
             ],
         ]);
     }
@@ -182,10 +186,23 @@ class PejabatController extends Controller
 
         foreach ($positions as $item) {
             if (isset($item['node_id'])) {
-                Pejabat::where('node_id', $item['node_id'])->update([
-                    'pos_x' => (int) $item['x'],
-                    'pos_y' => (int) $item['y'],
-                ]);
+                if ($item['node_id'] === 'fungsional-box') {
+                    \App\Models\Profil::updateOrCreate(
+                        ['key' => 'struktur_fungsional_pos'],
+                        [
+                            'title' => 'Posisi Kotak Fungsional',
+                            'content' => json_encode([
+                                'x' => (int) $item['x'],
+                                'y' => (int) $item['y'],
+                            ]),
+                        ]
+                    );
+                } else {
+                    Pejabat::where('node_id', $item['node_id'])->update([
+                        'pos_x' => (int) $item['x'],
+                        'pos_y' => (int) $item['y'],
+                    ]);
+                }
             }
         }
 

@@ -12,6 +12,7 @@ import {
 export default function PublicStrukturPage() {
   const [treeData, setTreeData] = useState<OrgNode | undefined>(undefined);
   const [fungsionalData, setFungsionalData] = useState<PejabatFungsionalItem[]>([]);
+  const [fungsionalPos, setFungsionalPos] = useState<{ x: number; y: number } | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -21,6 +22,7 @@ export default function PublicStrukturPage() {
         if (jsonPejabat.success && jsonPejabat.data) {
           setTreeData(jsonPejabat.data.tree);
           setFungsionalData(jsonPejabat.data.fungsional || []);
+          setFungsionalPos(jsonPejabat.data.fungsional_pos || null);
         }
       })
       .catch((err) => console.error("Gagal memuat bagan pejabat dari database:", err))
@@ -82,6 +84,7 @@ export default function PublicStrukturPage() {
                 <StrukturOrganisasiChart
                   data={treeData}
                   fungsionalData={fungsionalData}
+                  fungsionalPos={fungsionalPos}
                   title="Bagan Hirarki Kelembagaan BAPPEDA Halmahera Utara"
                   showSaveButton={false}
                 />

@@ -187,11 +187,13 @@ export const defaultBappedaTree: OrgNode = {
 export const StrukturOrganisasiChart: React.FC<{
   data?: OrgNode | null;
   fungsionalData?: PejabatFungsionalItem[];
+  fungsionalPos?: { x: number; y: number } | null;
   title?: string;
   showSaveButton?: boolean;
 }> = ({
   data: rawData,
   fungsionalData = [],
+  fungsionalPos = null,
   title = "Struktur Organisasi BAPPEDA Halmahera Utara",
   showSaveButton = true,
 }) => {
@@ -256,6 +258,7 @@ export const StrukturOrganisasiChart: React.FC<{
     <InteractiveCanvasOrgChart
       data={data}
       fungsionalData={fungsionalData}
+      fungsionalPos={fungsionalPos}
       zoomLevel={zoomLevel}
       handleZoomIn={handleZoomIn}
       handleZoomOut={handleZoomOut}
@@ -591,6 +594,7 @@ export function computeCanonicalBappedaLayout(data: OrgNode): CanvasNode[] {
 const InteractiveCanvasOrgChart: React.FC<{
   data: OrgNode;
   fungsionalData?: PejabatFungsionalItem[];
+  fungsionalPos?: { x: number; y: number } | null;
   zoomLevel: number;
   handleZoomIn: () => void;
   handleZoomOut: () => void;
@@ -601,6 +605,7 @@ const InteractiveCanvasOrgChart: React.FC<{
 }> = ({
   data,
   fungsionalData = [],
+  fungsionalPos = null,
   zoomLevel,
   handleZoomIn,
   handleZoomOut,
@@ -612,6 +617,15 @@ const InteractiveCanvasOrgChart: React.FC<{
   const containerRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [fungsionalBoxPos, setFungsionalBoxPos] = useState<{ x: number; y: number } | null>(
+    fungsionalPos ?? null
+  );
+
+  useEffect(() => {
+    if (fungsionalPos) {
+      setFungsionalBoxPos(fungsionalPos);
+    }
+  }, [fungsionalPos]);
 
   // Generate initial coordinates recursively for ALL tree nodes with canonical fallback
   const initialNodes = useMemo<CanvasNode[]>(() => {
@@ -653,6 +667,7 @@ const InteractiveCanvasOrgChart: React.FC<{
     if (!data) return;
     const cleanNodes = computeCanonicalBappedaLayout(data);
     setNodes(cleanNodes);
+    setFungsionalBoxPos(null);
     toast.success("Bagan berhasil ditata rapi secara otomatis! Klik 'Simpan Tata Letak' untuk menerapkan ke server.");
     setTimeout(() => {
       centerOnRoot();
@@ -669,6 +684,13 @@ const InteractiveCanvasOrgChart: React.FC<{
         x: Math.round(n.x),
         y: Math.round(n.y),
       }));
+
+      // Include fungsional box coordinates
+      positionsToSave.push({
+        node_id: "fungsional-box",
+        x: Math.round(fungsionalBoxX),
+        y: Math.round(fungsionalBoxY),
+      });
 
       const res = await authenticatedFetch("/pejabat/save-positions", {
         method: "POST",
@@ -764,9 +786,13 @@ const InteractiveCanvasOrgChart: React.FC<{
     const snappedX = Math.max(20, Math.round(rawX / GRID_SIZE) * GRID_SIZE);
     const snappedY = Math.max(20, Math.round(rawY / GRID_SIZE) * GRID_SIZE);
 
-    setNodes((prev) =>
-      prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
-    );
+    if (draggingId === "fungsional-box") {
+      setFungsionalBoxPos({ x: snappedX, y: snappedY });
+    } else {
+      setNodes((prev) =>
+        prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
+      );
+    }
   };
 
   const handleMouseUp = () => {
@@ -796,9 +822,13 @@ const InteractiveCanvasOrgChart: React.FC<{
     const snappedX = Math.max(20, Math.round(rawX / GRID_SIZE) * GRID_SIZE);
     const snappedY = Math.max(20, Math.round(rawY / GRID_SIZE) * GRID_SIZE);
 
-    setNodes((prev) =>
-      prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
-    );
+    if (draggingId === "fungsional-box") {
+      setFungsionalBoxPos({ x: snappedX, y: snappedY });
+    } else {
+      setNodes((prev) =>
+        prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
+      );
+    }
   };
 
   const handleTouchEnd = () => {
@@ -908,14 +938,22 @@ const InteractiveCanvasOrgChart: React.FC<{
     return (minX + maxX) / 2;
   }, [nodes]);
 
-  // Horizontal corridor in whitespace below all structural cards
-  const fungsionalCorridorY = lowestStructuralBottom + 45;
-  const fungsionalBoxY = fungsionalCorridorY + 55; // 100px total gap below lowest structural unit
-
   // Standardized width & centered X position for Kelompok Jabatan Fungsional
   const fungsionalBoxWidth = 880;
-  const fungsionalBoxX = Math.max(60, overallCenterX - fungsionalBoxWidth / 2);
+  const defaultFungsionalBoxX = Math.max(60, overallCenterX - fungsionalBoxWidth / 2);
+  const defaultFungsionalBoxY = lowestStructuralBottom + 100;
+
+  const fungsionalBoxX = fungsionalBoxPos?.x ?? defaultFungsionalBoxX;
+  const fungsionalBoxY = fungsionalBoxPos?.y ?? defaultFungsionalBoxY;
   const fungsionalTopCenterX = fungsionalBoxX + fungsionalBoxWidth / 2;
+
+  // Horizontal corridor in whitespace below all structural cards, dynamically positioned between cards and fungsional box
+  const fungsionalCorridorY = useMemo(() => {
+    if (fungsionalBoxY > lowestStructuralBottom + 30) {
+      return lowestStructuralBottom + Math.max(25, Math.min(50, (fungsionalBoxY - lowestStructuralBottom) / 2));
+    }
+    return lowestStructuralBottom + 35;
+  }, [lowestStructuralBottom, fungsionalBoxY]);
 
   // Generate vector paths connecting Kelompok Jabatan Fungsional to ALL structural units
   const fungsionalConnections = useMemo(() => {
@@ -1267,20 +1305,33 @@ const InteractiveCanvasOrgChart: React.FC<{
 
           {/* KELOMPOK JABATAN FUNGSIONAL UNIFIED GROUPING BOX (IMAGE 2 STYLE) */}
           <div
+            onMouseDown={showSaveButton ? (e) => handleMouseDown(e, "fungsional-box", fungsionalBoxX, fungsionalBoxY) : undefined}
+            onTouchStart={showSaveButton ? (e) => handleTouchStart(e, "fungsional-box", fungsionalBoxX, fungsionalBoxY) : undefined}
             style={{
               position: "absolute",
               left: `${fungsionalBoxX}px`,
               top: `${fungsionalBoxY}px`,
               width: `${fungsionalBoxWidth}px`,
             }}
-            className="rounded-3xl bg-white border-2 border-blue-500 shadow-xl p-6 space-y-4 z-10 select-none font-sans"
+            className={`rounded-3xl bg-white border-2 border-blue-500 shadow-xl p-6 space-y-4 z-10 select-none font-sans transition-shadow ${
+              showSaveButton ? "cursor-grab active:cursor-grabbing touch-none" : "cursor-default"
+            } ${
+              draggingId === "fungsional-box" ? "shadow-2xl scale-[1.01] ring-4 ring-blue-500/40 z-50 border-blue-600" : ""
+            }`}
           >
-            {/* Header Box: No Icon, Personel badge on the far right */}
+            {/* Header Box: Personel badge & Drag hint */}
             <div className="flex items-center justify-between gap-3 border-b border-blue-100 pb-3">
               <div className="min-w-0 flex-1 space-y-0.5">
-                <h3 className="text-base font-black text-slate-900 uppercase tracking-wide leading-tight">
-                  KELOMPOK JABATAN FUNGSIONAL
-                </h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-base font-black text-slate-900 uppercase tracking-wide leading-tight">
+                    KELOMPOK JABATAN FUNGSIONAL
+                  </h3>
+                  {showSaveButton && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200/90 px-2 py-0.5 rounded-lg shadow-2xs">
+                      <Move className="w-3 h-3 text-blue-600" /> Geser Bebas
+                    </span>
+                  )}
+                </div>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed">
                   Bagan gabungan tenaga fungsional tertentu &amp; umum BAPPEDA Halmahera Utara
                 </p>

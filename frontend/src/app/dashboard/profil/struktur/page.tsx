@@ -64,6 +64,7 @@ export default function StrukturEditorPage() {
   // Active Management Tab: "step1-structure" vs "step2-pejabat" vs "step3-fungsional"
   const [mgmtTab, setMgmtTab] = useState<"step1-structure" | "step2-pejabat" | "step3-fungsional">("step1-structure");
   const [fungsionals, setFungsionals] = useState<PejabatFungsionalItem[]>([]);
+  const [fungsionalPos, setFungsionalPos] = useState<{ x: number; y: number } | null>(null);
 
   // Modal State for Fungsional CRUD
   const [showFungsionalModal, setShowFungsionalModal] = useState(false);
@@ -98,6 +99,7 @@ export default function StrukturEditorPage() {
         );
         setOfficials(filteredFlat);
         setFungsionals(json.data.fungsional || []);
+        setFungsionalPos(json.data.fungsional_pos || null);
       }
     } catch (err) {
       console.error("Gagal memuat data pejabat dari database:", err);
@@ -1011,6 +1013,7 @@ export default function StrukturEditorPage() {
         <StrukturOrganisasiChart
           data={treeData}
           fungsionalData={fungsionals}
+          fungsionalPos={fungsionalPos}
           title="Struktur Organisasi BAPPEDA Halmahera Utara"
         />
       </div>

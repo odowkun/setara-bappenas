@@ -159,4 +159,11 @@ Pada bagan kanvas interaktif (`InteractiveCanvasOrgChart`), implementasi sistem 
      - Dari titik tengah bus horizontal tersebut, garis putus-putus utama turun tegak lurus (`M ${fungsionalTopCenterX} ${fungsionalCorridorY} V ${fungsionalBoxY}`) tepat ke pucuk atas kotak **KELOMPOK JABATAN FUNGSIONAL**.
    - Secara visual dan fungsional menggambarkan kedudukan tenaga fungsional BAPPEDA yang berkoordinasi dan memberikan dukungan keahlian teknis kepada **seluruh unit struktural** organisasi.
 
+5. **Interaktivitas Geser Bebas Kelompok Jabatan Fungsional (Draggable Functional Box)**:
+   - **Fitur Drag & Drop**: Kotak besar Kelompok Jabatan Fungsional kini mendukung drag & drop menggunakan mouse atau layar sentuh sama seperti kartu pejabat struktural lainnya.
+   - **Snap-to-Grid Terintegrasi**: Mengikuti kelipatan `20px` (`GRID_SIZE = 20`) agar posisi tetap tegak lurus dan simetris terhadap struktur pohon.
+   - **Garis Bus Adaptif Real-time**: Jalur bus horizontal dan garis drop vertikal mengikuti pergeseran koordinat kotak secara dinamis (*real-time reactive*) tanpa putus.
+   - **Penyimpanan Koordinat ke Database**: Posisi `fungsional-box` disimpan ke database Laravel via endpoint `/api/v1/pejabat/save-positions` dan dimuat kembali secara otomatis pada portal publik maupun halaman editor admin.
+
+
 
