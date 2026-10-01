@@ -114,8 +114,11 @@ export interface KritikSaranItem {
   pesan: string;
   status: string;
   catatan_balasan?: string;
+  dijawab_oleh?: string | null;
+  tgl_dijawab?: string | null;
   is_hidden?: boolean;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface IkmDistributionStats {

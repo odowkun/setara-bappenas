@@ -17,6 +17,8 @@ class Kritik extends Model
         'pesan',
         'status',
         'catatan_balasan',
+        'dijawab_oleh',
+        'tgl_dijawab',
         'is_hidden',
     ];
 
@@ -29,6 +31,7 @@ class Kritik extends Model
             'subjek' => 'encrypted',
             'pesan' => 'encrypted',
             'catatan_balasan' => 'encrypted',
+            'tgl_dijawab' => 'datetime',
             'is_hidden' => 'boolean',
         ];
     }

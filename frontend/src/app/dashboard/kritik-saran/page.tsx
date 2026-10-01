@@ -22,6 +22,8 @@ import {
   Settings,
   ListFilter,
   Filter,
+  FileSpreadsheet,
+  Download,
 } from "lucide-react";
 import { showConfirm, showDeleteConfirm, toast } from "@/lib/swal";
 import {
@@ -44,6 +46,7 @@ export default function DashboardKritikSaranPage() {
   const [services, setServices] = useState<SurveyServiceItem[]>([]);
 
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [visibilityFilter, setVisibilityFilter] = useState<"all" | "visible" | "hidden">("all");
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +59,7 @@ export default function DashboardKritikSaranPage() {
   // Reply Modal State
   const [activeKritikModal, setActiveKritikModal] = useState<KritikSaranItem | null>(null);
   const [catatanBalasan, setCatatanBalasan] = useState("");
+  const [dijawabOleh, setDijawabOleh] = useState("");
   const [statusBalasan, setStatusBalasan] = useState("Sudah Ditanggapi");
   const [isHiddenBalasan, setIsHiddenBalasan] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -158,6 +162,7 @@ export default function DashboardKritikSaranPage() {
         body: JSON.stringify({
           status: statusBalasan,
           catatan_balasan: catatanBalasan,
+          dijawab_oleh: dijawabOleh.trim() || undefined,
           is_hidden: isHiddenBalasan,
         }),
       });
@@ -173,6 +178,299 @@ export default function DashboardKritikSaranPage() {
     toast.success("Tanggapan kritik & saran publik berhasil disimpan!");
     setActiveKritikModal(null);
     loadData();
+  };
+
+  const handleExportExcel = async (exportAll = false) => {
+    try {
+      setExporting(true);
+      toast.loading("Mempersiapkan lembar kerja Excel...", { id: "export-excel" });
+
+      const dataToExport = exportAll ? kritikList : filteredKritik;
+
+      if (dataToExport.length === 0) {
+        toast.error("Tidak ada data kritik & saran untuk diekspor.", { id: "export-excel" });
+        setExporting(false);
+        return;
+      }
+
+      const ExcelJS = (await import("exceljs")).default;
+      const workbook = new ExcelJS.Workbook();
+      workbook.creator = "BAPPEDA Kabupaten Halmahera Utara";
+      workbook.lastModifiedBy = "Admin BAPPEDA Halut";
+      workbook.created = new Date();
+      workbook.modified = new Date();
+
+      const worksheet = workbook.addWorksheet("Rekapitulasi Saran", {
+        views: [{ showGridLines: true }],
+        pageSetup: {
+          paperSize: 9, // A4
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+        },
+      });
+
+      // 1. KOP RESMI LAPORAN (Row 1-4)
+      worksheet.mergeCells("A1:M1");
+      const title1 = worksheet.getCell("A1");
+      title1.value = "PEMERINTAH KABUPATEN HALMAHERA UTARA";
+      title1.font = { name: "Arial", size: 14, bold: true, color: { argb: "FF1E3A8A" } };
+      title1.alignment = { horizontal: "center", vertical: "middle" };
+      worksheet.getRow(1).height = 25;
+
+      worksheet.mergeCells("A2:M2");
+      const title2 = worksheet.getCell("A2");
+      title2.value = "BADAN PERENCANAAN PEMBANGUNAN DAERAH (BAPPEDA)";
+      title2.font = { name: "Arial", size: 12, bold: true, color: { argb: "FF0F172A" } };
+      title2.alignment = { horizontal: "center", vertical: "middle" };
+      worksheet.getRow(2).height = 20;
+
+      worksheet.mergeCells("A3:M3");
+      const title3 = worksheet.getCell("A3");
+      title3.value = "REKAPITULASI LAPORAN KRITIK, SARAN & ASPIRASI MASYARAKAT";
+      title3.font = { name: "Arial", size: 11, bold: true, color: { argb: "FF1E3A8A" } };
+      title3.alignment = { horizontal: "center", vertical: "middle" };
+      worksheet.getRow(3).height = 22;
+
+      worksheet.mergeCells("A4:M4");
+      const metaCell = worksheet.getCell("A4");
+      const nowFormatted = new Intl.DateTimeFormat("id-ID", {
+        dateStyle: "full",
+        timeStyle: "short",
+      }).format(new Date());
+      metaCell.value = `Diekspor pada: ${nowFormatted} WIT | Filter: ${
+        exportAll ? "Semua Data" : visibilityFilter === "visible" ? "Tayang Publik" : visibilityFilter === "hidden" ? "Disembunyikan (SARA)" : "Semua Filter"
+      } | Total: ${dataToExport.length} Pesan Masukan`;
+      metaCell.font = { name: "Arial", size: 9, italic: true, color: { argb: "FF64748B" } };
+      metaCell.alignment = { horizontal: "center", vertical: "middle" };
+      worksheet.getRow(4).height = 18;
+
+      // Spacer
+      worksheet.getRow(5).height = 10;
+
+      // 2. HEADER TABEL (Row 6)
+      const headers = [
+        "NO",
+        "TANGGAL MASUK",
+        "NAMA PENGIRIM",
+        "EMAIL",
+        "NO. TELEPON / WA",
+        "UNIT SKPD TUJUAN\n(PENANGGUNG JAWAB)",
+        "SUBJEK MASUKAN",
+        "ISI PESAN KRITIK & SARAN",
+        "STATUS TINDAK LANJUT",
+        "PETUGAS / PEJABAT PENJAWAB",
+        "ISI JAWABAN / TANGGAPAN RESMI",
+        "TANGGAL DIJAWAB",
+        "VISIBILITAS PUBLIK",
+      ];
+
+      const headerRow = worksheet.getRow(6);
+      headerRow.height = 34;
+
+      headers.forEach((h, idx) => {
+        const cell = headerRow.getCell(idx + 1);
+        cell.value = h;
+        cell.font = { name: "Arial", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FF1E3A8A" }, // Navy Blue Bappeda
+        };
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true,
+        };
+        cell.border = {
+          top: { style: "medium", color: { argb: "FF0F172A" } },
+          bottom: { style: "medium", color: { argb: "FF0F172A" } },
+          left: { style: "thin", color: { argb: "FF3B82F6" } },
+          right: { style: "thin", color: { argb: "FF3B82F6" } },
+        };
+      });
+
+      // 3. SET LEBAR KOLOM EXCEL AGAR RAPI DAN TIDAK TERPOTONG
+      worksheet.columns = [
+        { width: 6 },  // A: NO
+        { width: 18 }, // B: TANGGAL MASUK
+        { width: 22 }, // C: NAMA PENGIRIM
+        { width: 26 }, // D: EMAIL
+        { width: 18 }, // E: NO TELEPON
+        { width: 30 }, // F: UNIT SKPD TUJUAN
+        { width: 30 }, // G: SUBJEK
+        { width: 45 }, // H: ISI PESAN KRITIK & SARAN
+        { width: 22 }, // I: STATUS TINDAK LANJUT
+        { width: 26 }, // J: PETUGAS PENJAWAB
+        { width: 45 }, // K: ISI TANGGAPAN RESMI
+        { width: 18 }, // L: TANGGAL DIJAWAB
+        { width: 20 }, // M: VISIBILITAS PUBLIK
+      ];
+
+      // 4. BARIS DATA
+      dataToExport.forEach((item, index) => {
+        const rowNumber = index + 7;
+        const row = worksheet.getRow(rowNumber);
+        const isZebra = index % 2 === 1;
+        const rowBg = isZebra ? "FFF8FAFC" : "FFFFFFFF";
+
+        const tglMasuk = item.created_at
+          ? new Intl.DateTimeFormat("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(new Date(item.created_at))
+          : "-";
+
+        const tglJawab = item.tgl_dijawab
+          ? new Intl.DateTimeFormat("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(new Date(item.tgl_dijawab))
+          : item.catatan_balasan && item.updated_at
+          ? new Intl.DateTimeFormat("id-ID", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(new Date(item.updated_at))
+          : "-";
+
+        const responder =
+          item.dijawab_oleh ||
+          (item.catatan_balasan
+            ? "Tim Admin BAPPEDA Halut"
+            : `Menunggu Respons (${item.skpd_tujuan || "SKPD"})`);
+
+        const answerText = item.catatan_balasan || "(Belum ada tanggapan resmi)";
+        const visibilitasText = item.is_hidden
+          ? "Disembunyikan (SARA/Spam)"
+          : "Tayang Publik";
+
+        const values = [
+          index + 1,
+          tglMasuk,
+          item.nama,
+          item.email || "-",
+          item.telepon || "-",
+          item.skpd_tujuan || "BAPPEDA Halmahera Utara",
+          item.subjek,
+          item.pesan,
+          item.status,
+          responder,
+          answerText,
+          tglJawab,
+          visibilitasText,
+        ];
+
+        values.forEach((val, colIdx) => {
+          const cell = row.getCell(colIdx + 1);
+          cell.value = val;
+          cell.font = { name: "Arial", size: 9, color: { argb: "FF1E293B" } };
+          cell.border = {
+            top: { style: "thin", color: { argb: "FFE2E8F0" } },
+            bottom: { style: "thin", color: { argb: "FFE2E8F0" } },
+            left: { style: "thin", color: { argb: "FFE2E8F0" } },
+            right: { style: "thin", color: { argb: "FFE2E8F0" } },
+          };
+
+          // Alignment logic
+          if (colIdx === 0 || colIdx === 1 || colIdx === 4 || colIdx === 11) {
+            cell.alignment = { horizontal: "center", vertical: "top" };
+          } else if (colIdx === 7 || colIdx === 10) {
+            cell.alignment = { horizontal: "left", vertical: "top", wrapText: true };
+          } else {
+            cell.alignment = { horizontal: "left", vertical: "top" };
+          }
+
+          // Row background
+          cell.fill = {
+            type: "pattern",
+            pattern: "solid",
+            fgColor: { argb: rowBg },
+          };
+
+          // Status Badge Style
+          if (colIdx === 8) {
+            cell.alignment = { horizontal: "center", vertical: "top" };
+            if (item.status === "Sudah Ditanggapi") {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFD1FAE5" } };
+              cell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF065F46" } };
+            } else if (
+              item.status === "Dalam Proses Tindak Lanjut" ||
+              item.status === "Dalam Proses"
+            ) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE0F2FE" } };
+              cell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF0369A1" } };
+            } else {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEF3C7" } };
+              cell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF92400E" } };
+            }
+          }
+
+          // Visibilitas Style
+          if (colIdx === 12) {
+            cell.alignment = { horizontal: "center", vertical: "top" };
+            if (item.is_hidden) {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFEE2E2" } };
+              cell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF991B1B" } };
+            } else {
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFDCFCE7" } };
+              cell.font = { name: "Arial", size: 9, bold: true, color: { argb: "FF166534" } };
+            }
+          }
+        });
+      });
+
+      // 5. SUMMARY FOOTER
+      const summaryStartRow = dataToExport.length + 8;
+      worksheet.getRow(summaryStartRow - 1).height = 10;
+
+      worksheet.mergeCells(`A${summaryStartRow}:E${summaryStartRow}`);
+      const sumCell = worksheet.getCell(`A${summaryStartRow}`);
+      sumCell.value = "RINGKASAN STATUS REKAPITULASI:";
+      sumCell.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF1E3A8A" } };
+      sumCell.alignment = { horizontal: "left", vertical: "middle" };
+
+      const cSudah = dataToExport.filter((x) => x.status === "Sudah Ditanggapi").length;
+      const cProses = dataToExport.filter(
+        (x) => x.status === "Dalam Proses Tindak Lanjut" || x.status === "Dalam Proses"
+      ).length;
+      const cPending = dataToExport.filter((x) => x.status === "Menunggu Tanggapan").length;
+
+      worksheet.getCell(`F${summaryStartRow}`).value = `Sudah Ditanggapi: ${cSudah} | Dalam Proses: ${cProses} | Menunggu: ${cPending}`;
+      worksheet.getCell(`F${summaryStartRow}`).font = { name: "Arial", size: 9, bold: true, color: { argb: "FF334155" } };
+      worksheet.mergeCells(`F${summaryStartRow}:M${summaryStartRow}`);
+
+      // Export to Buffer & Browser Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = window.URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      const dateSlug = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      anchor.href = url;
+      anchor.download = `Rekapitulasi_Kritik_Saran_BAPPEDA_HALUT_${dateSlug}.xlsx`;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("File Excel berhasil diunduh!", { id: "export-excel" });
+    } catch (err) {
+      console.error("Gagal export excel:", err);
+      toast.error("Gagal mengekspor file Excel.", { id: "export-excel" });
+    } finally {
+      setExporting(false);
+    }
   };
 
   const handleToggleHide = async (item: KritikSaranItem) => {
@@ -259,6 +557,16 @@ export default function DashboardKritikSaranPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <button
+            type="button"
+            onClick={() => handleExportExcel(false)}
+            disabled={exporting || kritikList.length === 0}
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 transition active:scale-95 shadow-md shadow-emerald-600/20 shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <FileSpreadsheet className="w-4 h-4" />
+            <span>{exporting ? "Mengekspor..." : "Export Excel Rekapitulasi"}</span>
+          </button>
+
           <Link
             href="/kritik-saran"
             target="_blank"
@@ -405,18 +713,31 @@ export default function DashboardKritikSaranPage() {
                 </button>
               </div>
 
-              <div className="relative w-full md:w-72">
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Cari pengirim / subjek / isi pesan..."
-                  className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
-                />
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+              <div className="flex items-center gap-2 w-full md:w-auto">
+                <div className="relative flex-1 md:w-72">
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => {
+                      setSearch(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Cari pengirim / subjek / isi pesan..."
+                    className="w-full pl-9 pr-4 py-2 rounded-2xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
+                  />
+                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleExportExcel(false)}
+                  disabled={exporting || filteredKritik.length === 0}
+                  title="Ekspor data masukan sesuai filter saat ini ke file Excel"
+                  className="px-3.5 py-2 rounded-2xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-700 font-extrabold text-xs flex items-center gap-1.5 transition active:scale-95 shrink-0 cursor-pointer disabled:opacity-40"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                  <span className="hidden sm:inline">Export Excel</span>
+                </button>
               </div>
             </div>
 
@@ -464,15 +785,37 @@ export default function DashboardKritikSaranPage() {
                             <div className="text-[10px] text-slate-400 font-normal">{item.telepon}</div>
                           )}
                         </td>
-                        <td className="py-4 px-6 font-bold text-slate-700 whitespace-nowrap">
-                          {item.skpd_tujuan}
+                        <td className="py-4 px-6 whitespace-nowrap">
+                          <div className="font-bold text-slate-800">{item.skpd_tujuan}</div>
+                          <div className="text-[10px] text-blue-600 font-semibold mt-0.5 flex items-center gap-1">
+                            <Building2 className="w-3 h-3 text-blue-500 shrink-0" />
+                            <span>SKPD Penanggung Jawab</span>
+                          </div>
                         </td>
                         <td className="py-4 px-6 max-w-xs">
                           <div className="font-extrabold text-slate-900 truncate">{item.subjek}</div>
                           <div className="text-[11px] text-slate-500 line-clamp-2 mt-0.5">{item.pesan}</div>
                           {item.catatan_balasan && (
-                            <div className="mt-2 p-2 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-900 font-medium">
-                              <strong>Balasan Admin:</strong> {item.catatan_balasan}
+                            <div className="mt-2 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 text-[10px] text-emerald-950 font-medium space-y-1">
+                              <div className="font-extrabold text-emerald-800 flex items-center gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                                <span>Tanggapan Resmi:</span>
+                              </div>
+                              <div className="text-slate-700 italic leading-relaxed">{item.catatan_balasan}</div>
+                              {item.dijawab_oleh && (
+                                <div className="text-[9px] text-slate-500 font-semibold pt-1 border-t border-emerald-100 flex items-center justify-between">
+                                  <span>Dijawab oleh: <strong className="text-slate-800">{item.dijawab_oleh}</strong></span>
+                                  {item.tgl_dijawab && (
+                                    <span className="text-slate-400">
+                                      {new Date(item.tgl_dijawab).toLocaleDateString("id-ID", {
+                                        day: "numeric",
+                                        month: "short",
+                                        year: "numeric",
+                                      })}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           )}
                         </td>
@@ -514,6 +857,7 @@ export default function DashboardKritikSaranPage() {
                               onClick={() => {
                                 setActiveKritikModal(item);
                                 setCatatanBalasan(item.catatan_balasan || "");
+                                setDijawabOleh(item.dijawab_oleh || "Tim Admin BAPPEDA Halut");
                                 setIsHiddenBalasan(Boolean(item.is_hidden));
                                 setStatusBalasan(
                                   item.status === "Dalam Proses Tindak Lanjut" || item.status === "Dalam Proses"
@@ -687,10 +1031,19 @@ export default function DashboardKritikSaranPage() {
             </div>
 
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-              <div className="font-bold text-slate-900">
-                Dari: {activeKritikModal.nama} ({activeKritikModal.email})
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                <span className="font-bold text-slate-900">
+                  Dari: {activeKritikModal.nama} ({activeKritikModal.email})
+                </span>
+                {activeKritikModal.telepon && (
+                  <span className="text-slate-500 font-medium">WA: {activeKritikModal.telepon}</span>
+                )}
               </div>
-              <p className="text-slate-700 italic">"{activeKritikModal.pesan}"</p>
+              <div className="text-[11px] font-bold text-blue-700 flex items-center gap-1.5">
+                <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>Unit SKPD Penanggung Jawab: {activeKritikModal.skpd_tujuan}</span>
+              </div>
+              <p className="text-slate-700 italic border-t border-slate-200/60 pt-2">"{activeKritikModal.pesan}"</p>
             </div>
 
             <form onSubmit={handleSaveTanggapan} className="space-y-4">
@@ -707,6 +1060,23 @@ export default function DashboardKritikSaranPage() {
                   ]}
                   placeholder="-- Pilih Status Tanggapan --"
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black uppercase text-slate-700 mb-1.5 flex items-center justify-between">
+                  <span>Petugas / Pejabat Penjawab *</span>
+                  <span className="text-[10px] text-blue-600 font-semibold lowercase">Admin / Pejabat yang merespons</span>
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={dijawabOleh}
+                    onChange={(e) => setDijawabOleh(e.target.value)}
+                    placeholder="Contoh: Admin Tim Perencanaan BAPPEDA / Ir. H. Samsul"
+                    className="w-full pl-9 pr-4 py-2.5 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600 transition"
+                  />
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                </div>
               </div>
 
               <div>

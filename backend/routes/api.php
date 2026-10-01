@@ -231,6 +231,8 @@ Route::prefix('v1')->group(function () {
     Route::post('/surveys', [SurveyController::class, 'store'])
         ->middleware('throttle:10,1');
     Route::get('/kritik/public', [KritikController::class, 'publicFeed']);
+    Route::get('/kritik/export-excel', [KritikController::class, 'exportExcel'])
+        ->middleware(['auth:sanctum', 'permission:manage_kritik']);
     Route::get('/kritik', [KritikController::class, 'index'])
         ->middleware(['auth:sanctum', 'permission:manage_kritik']);
     Route::post('/kritik', [KritikController::class, 'store'])
