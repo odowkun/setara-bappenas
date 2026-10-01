@@ -142,12 +142,21 @@ Pada bagan kanvas interaktif (`InteractiveCanvasOrgChart`), implementasi sistem 
    - Menghasilkan penataan kartu yang lurus presisi, sejajar, dan simetris tanpa goyangan offset beberapa piksel.
 
 3. **Mesin Tata Letak Kanonis & Tombol "Rapikan Bagan" (`computeCanonicalBappedaLayout`)**:
-   - Menghitung posisi hierarkis ideal secara otomatis:
-     - **Tingkat 1**: Kepala Badan di bagian tengah atas (`y: 40`).
-     - **Tingkat 2**: Sekretaris Badan (`y: 190`).
-     - **Tingkat 3**: 3 Kasubag di bawah Sekretariat (`y: 360`, spasi 310px).
-     - **Tingkat 4**: 4 Kepala Bidang berjejer horizontal (`y: 560`, spasi 310px).
-     - **Tingkat 5**: Sub-bidang tersusun vertikal ke bawah di bawah masing-masing Bidang (`y: 720, 860, 1000`).
+   - Menghitung posisi hierarkis ideal secara otomatis sesuai tata letak resmi BAPPEDA (Dua Pilar: Teknis & Sekretariat):
+     - **Pucuk Pimpinan**: Kepala Badan di bagian tengah atas (`y: 40`).
+     - **Pilar Kiri**: 4 Kepala Bidang Teknis berjejer rapi horizontal (`y: 360`, `x: 60, 380, 700, 1020`).
+     - **Pilar Kanan**: Sekretaris Badan (`y: 190`, `x: 1710`), menaungi 3 Kasubag di bawahnya pada tier yang sejajar persis dengan para Kabid (`y: 360`, `x: 1390, 1710, 2030`).
+     - **Sub-bidang**: Tersusun vertikal ke bawah di bawah masing-masing Bidang (`y: 520, 660, ...`).
    - Tombol **"Rapikan Bagan"** (`Sparkles`) pada toolbar kanvas admin memungkinkan reset posisi 1-klik kembali ke tata letak simetris resmi BAPPEDA, disertai notifikasi toast dan kamera otomatis memusat ke Kepala Badan.
    - Tombol **"Simpan Tata Letak"** (`Save`) mengirimkan array koordinat final ke endpoint `/pejabat/save-positions` untuk disinkronkan ke database publik.
+
+4. **Sistem Bus Koordinasi Penuh ke Seluruh Struktural (Full-Structural Coordination Bus)**:
+   - **Eliminasi Garis Menggantung**: Menghilangkan bug garis putus-putus tunggal yang sebelumnya melayang di ruang hampa antara Kabid 4 dan Kasubag 1 tanpa terhubung ke kartu pejabat mana pun.
+   - **Koneksi Menyeluruh ke Seluruh Unit Struktural**:
+     - Mengidentifikasi seluruh simpul struktural unit kerja yang berhadapan ke bawah (`structuralLeafNodes`: 4 Kepala Bidang dan 3 Kasubag).
+     - Dari bagian tengah bawah setiap kartu unit kerja struktural, ditarik garis *feeder* putus-putus vertikal (`M ${leafCenterX} ${leafBottom} V ${fungsionalCorridorY}`).
+     - Seluruh garis *feeder* bermuara ke sebuah garis bus koordinasi horizontal (`fungsional-horizontal-bus`) yang membentang di koridor aman antar-tingkat dari ujung kiri struktural (`minLeafCenterX`) hingga ujung kanan struktural (`maxLeafCenterX`).
+     - Dari titik tengah bus horizontal tersebut, garis putus-putus utama turun tegak lurus (`M ${fungsionalTopCenterX} ${fungsionalCorridorY} V ${fungsionalBoxY}`) tepat ke pucuk atas kotak **KELOMPOK JABATAN FUNGSIONAL**.
+   - Secara visual dan fungsional menggambarkan kedudukan tenaga fungsional BAPPEDA yang berkoordinasi dan memberikan dukungan keahlian teknis kepada **seluruh unit struktural** organisasi.
+
 

@@ -476,36 +476,67 @@ export function computeCanonicalBappedaLayout(data: OrgNode): CanvasNode[] {
     (c) => !c.position || !c.position.toUpperCase().includes("SEKRETARIS")
   );
 
-  // Calculate horizontal balance
-  const totalBidangWidth =
+  const subags = sekretarisNode && Array.isArray(sekretarisNode.children)
+    ? sekretarisNode.children.filter(Boolean)
+    : [];
+
+  const cardGap = 30;
+  const sectionGap = 80;
+
+  const totalBidangW =
     bidangNodes.length > 0
-      ? bidangNodes.length * CARD_W + (bidangNodes.length - 1) * 40
-      : 800;
-  const canvasCenterX = Math.max(900, 80 + totalBidangWidth / 2);
+      ? bidangNodes.length * CARD_W + (bidangNodes.length - 1) * cardGap
+      : 0;
 
-  // 1. Root: Kepala Badan (Center Top)
-  const rootX = canvasCenterX - CARD_W / 2;
-  const rootY = 40;
+  const totalSubagW =
+    subags.length > 0
+      ? subags.length * CARD_W + (subags.length - 1) * cardGap
+      : CARD_W;
 
-  nodes.push({
-    id: data.id,
-    parentId: null,
-    name: data.name,
-    position: data.position,
-    nip: data.nip,
-    avatar: data.avatar,
-    x: Math.round(rootX),
-    y: rootY,
-    type: "root",
+  const startX = 60;
+  const tierY = 360; // All 4 Bidang & 3 Kasubag sit aligned on the exact same clean horizontal tier
+
+  // 1. Left Section: 4 Bidang Teknis
+  bidangNodes.forEach((bidang, bIdx) => {
+    const bX = startX + bIdx * (CARD_W + cardGap);
+    nodes.push({
+      id: bidang.id,
+      parentId: data.id,
+      name: bidang.name,
+      position: bidang.position,
+      nip: bidang.nip,
+      avatar: bidang.avatar,
+      x: Math.round(bX),
+      y: tierY,
+      type: "bidang",
+    });
+
+    // Subids under each Bidang (stack vertically downwards)
+    const subids = Array.isArray(bidang.children)
+      ? bidang.children.filter(Boolean)
+      : [];
+    subids.forEach((subid, sIdx) => {
+      nodes.push({
+        id: subid.id,
+        parentId: bidang.id,
+        name: subid.name,
+        position: subid.position,
+        nip: subid.nip,
+        avatar: subid.avatar,
+        x: Math.round(bX),
+        y: tierY + 160 + sIdx * 140,
+        type: "subid",
+      });
+    });
   });
 
-  // 2. Sekretaris & Subag (Tingkat 2 & 3)
-  if (sekretarisNode) {
-    const subags = Array.isArray(sekretarisNode.children)
-      ? sekretarisNode.children.filter(Boolean)
-      : [];
+  // 2. Right Section: Sekretariat (Sekretaris at y = 190, 3 Kasubags at y = 360)
+  const subagStartX =
+    startX + totalBidangW + (bidangNodes.length > 0 && subags.length > 0 ? sectionGap : 0);
 
-    const sekX = rootX + 270; // offset slightly to the right of Kepala
+  if (sekretarisNode) {
+    const sekCenter = subagStartX + totalSubagW / 2;
+    const sekX = sekCenter - CARD_W / 2;
     const sekY = 190;
 
     nodes.push({
@@ -520,72 +551,38 @@ export function computeCanonicalBappedaLayout(data: OrgNode): CanvasNode[] {
       type: "sekretaris",
     });
 
-    if (subags.length > 0) {
-      const subagGap = 30;
-      const totalSubagW =
-        subags.length * CARD_W + (subags.length - 1) * subagGap;
-      const subagStartX = sekX + CARD_W / 2 - totalSubagW / 2;
-      const subagY = 360;
-
-      subags.forEach((sub, idx) => {
-        nodes.push({
-          id: sub.id,
-          parentId: sekretarisNode.id,
-          name: sub.name,
-          position: sub.position,
-          nip: sub.nip,
-          avatar: sub.avatar,
-          x: Math.round(subagStartX + idx * (CARD_W + subagGap)),
-          y: subagY,
-          type: "subag",
-        });
-      });
-    }
-  }
-
-  // 3. Bidang-Bidang Teknis (Tingkat 4: Horisontal Sejajar di bawah Kasubag)
-  if (bidangNodes.length > 0) {
-    const bidangGap = 40;
-    const totalW =
-      bidangNodes.length * CARD_W + (bidangNodes.length - 1) * bidangGap;
-    const startX = Math.max(60, canvasCenterX - totalW / 2);
-    const bidangY = 560;
-
-    bidangNodes.forEach((bidang, bIdx) => {
-      const bX = startX + bIdx * (CARD_W + bidangGap);
-      const bY = bidangY;
-
+    subags.forEach((sub, idx) => {
       nodes.push({
-        id: bidang.id,
-        parentId: data.id,
-        name: bidang.name,
-        position: bidang.position,
-        nip: bidang.nip,
-        avatar: bidang.avatar,
-        x: Math.round(bX),
-        y: bY,
-        type: "bidang",
-      });
-
-      // Subids under each Bidang (Tingkat 5: Susun vertikal ke bawah)
-      const subids = Array.isArray(bidang.children)
-        ? bidang.children.filter(Boolean)
-        : [];
-      subids.forEach((subid, sIdx) => {
-        nodes.push({
-          id: subid.id,
-          parentId: bidang.id,
-          name: subid.name,
-          position: subid.position,
-          nip: subid.nip,
-          avatar: subid.avatar,
-          x: Math.round(bX),
-          y: bY + 160 + sIdx * 140,
-          type: "subid",
-        });
+        id: sub.id,
+        parentId: sekretarisNode.id,
+        name: sub.name,
+        position: sub.position,
+        nip: sub.nip,
+        avatar: sub.avatar,
+        x: Math.round(subagStartX + idx * (CARD_W + cardGap)),
+        y: tierY,
+        type: "subag",
       });
     });
   }
+
+  // 3. Root: Kepala Badan (Centered above the entire organization)
+  const rightmostX = subags.length > 0 ? subagStartX + totalSubagW : startX + totalBidangW;
+  const overallCenterX = (startX + rightmostX) / 2;
+  const rootX = overallCenterX - CARD_W / 2;
+  const rootY = 40;
+
+  nodes.unshift({
+    id: data.id,
+    parentId: null,
+    name: data.name,
+    position: data.position,
+    nip: data.nip,
+    avatar: data.avatar,
+    x: Math.round(rootX),
+    y: rootY,
+    type: "root",
+  });
 
   return nodes;
 }
@@ -816,6 +813,21 @@ const InteractiveCanvasOrgChart: React.FC<{
     const nodeMap = new Map<string, CanvasNode>();
     nodes.forEach((n) => nodeMap.set(n.id, n));
 
+    // Calculate a single shared horizontal corridor Y for children below the same parent
+    const parentCorridorMap = new Map<string, number>();
+    nodes.forEach((parent) => {
+      const childrenBelow = nodes.filter(
+        (c) => c.parentId === parent.id && c.y >= parent.y + CARD_H - 20
+      );
+      if (childrenBelow.length > 0) {
+        const pBottom = parent.y + CARD_H;
+        const minChildTop = Math.min(...childrenBelow.map((c) => c.y));
+        const verticalGap = Math.max(0, minChildTop - pBottom);
+        const corridorY = pBottom + Math.max(15, Math.min(verticalGap / 2, 45));
+        parentCorridorMap.set(parent.id, corridorY);
+      }
+    });
+
     const connections: { id: string; d: string }[] = [];
 
     nodes.forEach((child) => {
@@ -835,14 +847,10 @@ const InteractiveCanvasOrgChart: React.FC<{
 
       // 1. Standard Hierarchical Top-to-Bottom Flow: Child is below Parent
       if (cTop >= pBottom - 20) {
-        // Calculate clear horizontal corridor Y strictly in whitespace between parent level and child level
-        const verticalGap = cTop - pBottom;
-        const corridorY = pBottom + Math.max(25, Math.min(verticalGap / 2, 45));
-
-        // Draw clean orthogonal Draw.io path: Parent Bottom -> Down to Corridor -> Horizontal to Child X -> Down to Child Top
+        const corridorY = parentCorridorMap.get(parent.id) ?? (pBottom + 25);
         d = `M ${pCenterX} ${pBottom} V ${corridorY} H ${cCenterX} V ${cTop}`;
       } else if (cBottom <= pTop + 20) {
-        // 2. Inverted: Child is above Parent (e.g. dragged above)
+        // 2. Inverted: Child is above Parent
         const verticalGap = pTop - cBottom;
         const corridorY = cBottom + Math.max(25, Math.min(verticalGap / 2, 45));
         d = `M ${pCenterX} ${pTop} V ${corridorY} H ${cCenterX} V ${cBottom}`;
@@ -852,15 +860,12 @@ const InteractiveCanvasOrgChart: React.FC<{
         const cCenterY = child.y + CARD_H / 2;
 
         if (child.x >= parent.x + CARD_W) {
-          // Child to right of parent
           const midX = (parent.x + CARD_W + child.x) / 2;
           d = `M ${parent.x + CARD_W} ${pCenterY} H ${midX} V ${cCenterY} H ${child.x}`;
         } else if (child.x + CARD_W <= parent.x) {
-          // Child to left of parent
           const midX = (child.x + CARD_W + parent.x) / 2;
           d = `M ${parent.x} ${pCenterY} H ${midX} V ${cCenterY} H ${child.x + CARD_W}`;
         } else {
-          // Overlapping: direct vertical corridor
           const midY = (pBottom + cTop) / 2;
           d = `M ${pCenterX} ${pBottom} V ${midY} H ${cCenterX} V ${cTop}`;
         }
@@ -872,23 +877,85 @@ const InteractiveCanvasOrgChart: React.FC<{
     return connections;
   }, [nodes]);
 
-  // Unified Kelompok Jabatan Fungsional placement math for Canvas (Image 2 Style)
-  const lowestNodeY = useMemo(() => {
-    if (!nodes.length) return 800;
-    return Math.max(...nodes.map((n) => n.y + CARD_H));
+  // Unified Kelompok Jabatan Fungsional placement math & Full-Structural Bus Routing
+  // Identifies all bottom-facing structural units (leaves of the hierarchy tree: all Bidang/Subid and Kasubag)
+  const structuralLeafNodes = useMemo(() => {
+    if (!nodes.length) return [];
+    const parentIdSet = new Set(nodes.map((n) => n.parentId).filter(Boolean));
+    const leaves = nodes.filter((n) => !parentIdSet.has(n.id));
+    return leaves.length > 0 ? leaves : nodes;
   }, [nodes]);
 
-  const centerX = useMemo(() => {
-    if (!nodes.length) return 700;
+  const lowestStructuralBottom = useMemo(() => {
+    if (!structuralLeafNodes.length) return 600;
+    return Math.max(...structuralLeafNodes.map((n) => n.y + CARD_H));
+  }, [structuralLeafNodes]);
+
+  const minLeafCenterX = useMemo(() => {
+    if (!structuralLeafNodes.length) return 300;
+    return Math.min(...structuralLeafNodes.map((n) => n.x + CARD_W / 2));
+  }, [structuralLeafNodes]);
+
+  const maxLeafCenterX = useMemo(() => {
+    if (!structuralLeafNodes.length) return 1800;
+    return Math.max(...structuralLeafNodes.map((n) => n.x + CARD_W / 2));
+  }, [structuralLeafNodes]);
+
+  const overallCenterX = useMemo(() => {
+    if (!nodes.length) return 900;
     const minX = Math.min(...nodes.map((n) => n.x));
     const maxX = Math.max(...nodes.map((n) => n.x + CARD_W));
     return (minX + maxX) / 2;
   }, [nodes]);
 
-  // Standardized width for fungsional personnel cards stacked downwards as a clean list
+  // Horizontal corridor in whitespace below all structural cards
+  const fungsionalCorridorY = lowestStructuralBottom + 45;
+  const fungsionalBoxY = fungsionalCorridorY + 55; // 100px total gap below lowest structural unit
+
+  // Standardized width & centered X position for Kelompok Jabatan Fungsional
   const fungsionalBoxWidth = 880;
-  const fungsionalBoxX = Math.max(60, centerX - fungsionalBoxWidth / 2);
-  const fungsionalBoxY = lowestNodeY + 100;
+  const fungsionalBoxX = Math.max(60, overallCenterX - fungsionalBoxWidth / 2);
+  const fungsionalTopCenterX = fungsionalBoxX + fungsionalBoxWidth / 2;
+
+  // Generate vector paths connecting Kelompok Jabatan Fungsional to ALL structural units
+  const fungsionalConnections = useMemo(() => {
+    if (!structuralLeafNodes.length) return [];
+
+    const paths: { id: string; d: string }[] = [];
+
+    // A. Vertical dashed feeder line from the bottom center of EACH structural unit down to the corridor
+    structuralLeafNodes.forEach((leaf) => {
+      const leafCenterX = leaf.x + CARD_W / 2;
+      const leafBottom = leaf.y + CARD_H;
+      paths.push({
+        id: `fungsional-feeder-${leaf.id}`,
+        d: `M ${leafCenterX} ${leafBottom} V ${fungsionalCorridorY}`,
+      });
+    });
+
+    // B. Horizontal coordination bus line spanning across ALL structural units & Fungsional center
+    const busLeft = Math.min(minLeafCenterX, fungsionalTopCenterX);
+    const busRight = Math.max(maxLeafCenterX, fungsionalTopCenterX);
+    paths.push({
+      id: "fungsional-horizontal-bus",
+      d: `M ${busLeft} ${fungsionalCorridorY} H ${busRight}`,
+    });
+
+    // C. Vertical drop-line from the horizontal bus down into the top center of Kelompok Jabatan Fungsional
+    paths.push({
+      id: "fungsional-main-drop",
+      d: `M ${fungsionalTopCenterX} ${fungsionalCorridorY} V ${fungsionalBoxY}`,
+    });
+
+    return paths;
+  }, [
+    structuralLeafNodes,
+    fungsionalCorridorY,
+    minLeafCenterX,
+    maxLeafCenterX,
+    fungsionalTopCenterX,
+    fungsionalBoxY,
+  ]);
 
   // Dynamically calculate canvas size based on node positions so no lines or cards are ever cut off!
   const canvasBounds = useMemo(() => {
@@ -1076,16 +1143,19 @@ const InteractiveCanvasOrgChart: React.FC<{
               />
             ))}
 
-            {/* Orthogonal connector line to Kelompok Jabatan Fungsional Grouping Box (Image 2 Style) */}
-            <path
-              d={`M ${centerX} ${lowestNodeY} L ${centerX} ${fungsionalBoxY}`}
-              stroke="#2563eb"
-              strokeWidth="2.5"
-              strokeDasharray="6 4"
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+            {/* Orthogonal Coordination Bus Lines connecting Kelompok Jabatan Fungsional to ALL structural units */}
+            {fungsionalConnections.map((c) => (
+              <path
+                key={c.id}
+                d={c.d}
+                stroke="#2563eb"
+                strokeWidth="2.5"
+                strokeDasharray="6 4"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            ))}
           </svg>
 
           {/* Render Interactive Drag Cards Matched to Blue Bidang Theme */}
