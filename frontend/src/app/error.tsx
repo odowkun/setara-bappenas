@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import React, { useEffect } from "react";
+import { AlertCircle, RefreshCw, Home } from "lucide-react";
+import Link from "next/link";
 
-export default function Error({
+export default function RootError({
   error,
   reset,
 }: {
@@ -11,49 +12,64 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("App Error Boundary caught error:", error);
-
-    // If chunk load error occurs due to new deployment, reload to fetch latest assets
+    const errorMsg = error?.message || "";
     const isChunkError =
-      error?.name === "ChunkLoadError" ||
-      error?.message?.includes("Loading chunk") ||
-      error?.message?.includes("failed to fetch dynamically imported module") ||
-      error?.message?.includes("Load failed");
+      errorMsg.includes("Loading chunk") ||
+      errorMsg.includes("Failed to fetch dynamically imported module") ||
+      error?.name === "ChunkLoadError";
 
     if (isChunkError && typeof window !== "undefined") {
-      const storageKey = `chunk_reload_${window.location.pathname}`;
+      const storageKey = `public_chunk_reload_${window.location.pathname}`;
       const lastReload = sessionStorage.getItem(storageKey);
       const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
         sessionStorage.setItem(storageKey, String(now));
         window.location.reload();
       }
     }
   }, [error]);
 
-  const handleReload = () => {
-    if (typeof window !== "undefined") {
-      window.location.reload();
-    } else {
-      reset();
-    }
-  };
-
   return (
-    <div className="min-h-screen min-h-[100dvh] flex-1 w-full flex flex-col items-center justify-center p-6 text-center font-sans">
-      <div className="w-16 h-16 rounded-full bg-amber-100 border border-amber-300 text-amber-600 flex items-center justify-center mb-4 shadow-sm">
-        <AlertTriangle className="w-8 h-8" />
+    <div className="min-h-[70vh] flex items-center justify-center p-4 sm:p-6 font-sans">
+      <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl max-w-md w-full text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        <div className="w-16 h-16 rounded-2xl bg-rose-50 border border-rose-100 flex items-center justify-center mx-auto text-rose-600">
+          <AlertCircle className="w-8 h-8" />
+        </div>
+
+        <div className="space-y-1.5">
+          <h1 className="text-xl font-black text-slate-900 tracking-tight">
+            Sinkronisasi Layanan Portal
+          </h1>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed">
+            Terjadi pembaruan berkas sistem. Silakan muat ulang halaman untuk mendapatkan data terbaru.
+          </p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                window.location.reload();
+              } else {
+                reset();
+              }
+            }}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Segarkan Halaman</span>
+          </button>
+
+          <Link
+            href="/"
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-2"
+          >
+            <Home className="w-4 h-4" />
+            <span>Beranda</span>
+          </Link>
+        </div>
       </div>
-      <h2 className="text-xl font-extrabold text-slate-900 mb-2">Terjadi Kendala Memuat Aplikasi</h2>
-      <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-        Sistem mendeteksi pembaruan versi aplikasi atau kendala rendering data di peramban Anda (Koneksi server utama aktif). Silakan tekan tombol di bawah untuk menyegarkan kembali.
-      </p>
-      <button
-        onClick={handleReload}
-        className="px-6 py-3 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-md transition flex items-center gap-2 cursor-pointer active:scale-95"
-      >
-        <RefreshCw className="w-4 h-4" /> Segarkan Halaman
-      </button>
     </div>
   );
 }

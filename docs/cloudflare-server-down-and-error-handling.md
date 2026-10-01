@@ -41,3 +41,9 @@ Kedua tampilan mengadopsi standar visual minimalis seragam yang identik:
    - Lokasi: `frontend/src/app/error.tsx`
 4. **Next.js Dashboard Error Boundary**:
    - Lokasi: `frontend/src/app/dashboard/error.tsx`
+5. **Next.js Global Root Fallback & Fail-Safe Styling**:
+   - Lokasi: `frontend/src/app/global-error.tsx`
+   - Menggunakan fail-safe inline styling lengkap (`style={{...}}`) dengan logo resmi Halut agar tidak pernah tampil teks polos (*unstyled*) saat bundle CSS terputus.
+6. **Global ChunkLoadError Interceptor**:
+   - Lokasi: `frontend/src/components/layout/ClientLayoutWrapper.tsx`
+   - Menangkap `Loading chunk failed` pasca-deploy baru secara otomatis dan melakukan auto-reload instan (maksimal 1x per 10 detik) tanpa memunculkan layar error ke pengguna.

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { RefreshCw, AlertTriangle } from "lucide-react";
+import Image from "next/image";
+import { RotateCw, AlertTriangle, Home, RefreshCw } from "lucide-react";
 
 export default function DashboardError({
   error,
@@ -11,26 +12,25 @@ export default function DashboardError({
   reset: () => void;
 }) {
   useEffect(() => {
-    console.error("Dashboard Error Boundary caught error:", error);
-
+    // Otomatis refresh jika error disebabkan pembaruan chunk deploy baru
+    const errorMsg = error?.message || "";
     const isChunkError =
-      error?.name === "ChunkLoadError" ||
-      error?.message?.includes("Loading chunk") ||
-      error?.message?.includes("failed to fetch dynamically imported module") ||
-      error?.message?.includes("Load failed");
+      errorMsg.includes("Loading chunk") ||
+      errorMsg.includes("Failed to fetch dynamically imported module") ||
+      error?.name === "ChunkLoadError";
 
     if (isChunkError && typeof window !== "undefined") {
-      const storageKey = `chunk_reload_${window.location.pathname}`;
+      const storageKey = `dashboard_chunk_reload_${window.location.pathname}`;
       const lastReload = sessionStorage.getItem(storageKey);
       const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
         sessionStorage.setItem(storageKey, String(now));
         window.location.reload();
       }
     }
   }, [error]);
 
-  const handleReload = () => {
+  const handleHardReload = () => {
     if (typeof window !== "undefined") {
       window.location.reload();
     } else {
@@ -39,20 +39,56 @@ export default function DashboardError({
   };
 
   return (
-    <div className="min-h-[calc(100vh-10rem)] min-h-[calc(100dvh-10rem)] flex-1 w-full flex flex-col items-center justify-center p-6 text-center font-sans my-auto">
-      <div className="w-16 h-16 rounded-full bg-amber-100 border border-amber-300 text-amber-600 flex items-center justify-center mb-4 shadow-sm">
-        <AlertTriangle className="w-8 h-8" />
+    <div className="w-full min-h-[60vh] flex items-center justify-center p-4 sm:p-6 font-sans">
+      <div className="p-8 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xl max-w-lg w-full text-center space-y-6 animate-in fade-in zoom-in-95 duration-200">
+        {/* Emblem & Icon */}
+        <div className="relative flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 border border-amber-200/80 shadow-xs flex items-center justify-center text-amber-600">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
+        </div>
+
+        {/* Agency Badge */}
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-700 text-[11px] font-black tracking-wide uppercase">
+          <span>SISTEM INFORMASI BAPPEDA</span>
+        </div>
+
+        {/* Headings */}
+        <div className="space-y-1.5">
+          <h2 className="text-lg font-black text-slate-900 tracking-tight">
+            Sinkronisasi Halaman Dashboard
+          </h2>
+          <p className="text-xs text-slate-500 font-medium leading-relaxed max-w-sm mx-auto">
+            Halaman memerlukan penyegaran aset atau koneksi terbaru dari server. Data Anda tetap aman.
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={reset}
+            className="w-full sm:w-auto px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <RotateCw className="w-4 h-4" />
+            <span>Coba Lagi</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleHardReload}
+            className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/25 flex items-center justify-center gap-2 transition cursor-pointer active:scale-95"
+          >
+            <RefreshCw className="w-4 h-4" />
+            <span>Segarkan Halaman Penuh</span>
+          </button>
+        </div>
+
+        {/* Footer */}
+        <div className="pt-3 border-t border-slate-100 text-[11px] text-slate-400 font-medium">
+          Kabupaten Halmahera Utara &bull; Ruang Kerja Dashboard
+        </div>
       </div>
-      <h2 className="text-xl font-extrabold text-slate-900 mb-2">Terjadi Kendala Memuat Modul Dashboard</h2>
-      <p className="text-sm text-slate-600 max-w-md mb-6 leading-relaxed">
-        Sistem mendeteksi pembaruan modul atau kendala rendering data di peramban Anda (Koneksi server utama aktif). Silakan tekan tombol di bawah untuk menyegarkan kembali.
-      </p>
-      <button
-        onClick={handleReload}
-        className="px-6 py-3 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-sm shadow-md transition flex items-center gap-2 cursor-pointer active:scale-95"
-      >
-        <RefreshCw className="w-4 h-4" /> Segarkan Halaman
-      </button>
     </div>
   );
 }
