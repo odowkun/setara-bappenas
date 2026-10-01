@@ -633,7 +633,7 @@ export default function PublicPengumumanPage() {
 
               {activeDoc.content && (
                 <div
-                  className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs sm:text-sm font-medium text-slate-700 leading-relaxed prose prose-slate max-w-none [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                  className="p-5 sm:p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 text-sm font-medium text-slate-700 leading-relaxed article-content prose max-w-none"
                   dangerouslySetInnerHTML={{ __html: activeDoc.content }}
                 />
               )}

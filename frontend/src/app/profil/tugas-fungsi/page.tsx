@@ -88,7 +88,7 @@ export default function PublicTugasFungsiPage() {
 
               <div className="p-6 sm:p-8 rounded-2xl bg-white border border-blue-100/60 shadow-sm">
                 <div
-                  className="prose prose-slate max-w-none text-xs sm:text-sm font-medium text-slate-800 leading-relaxed [&_p]:leading-relaxed [&_p]:my-1.5 [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                  className="article-content prose max-w-none text-sm font-medium text-slate-800 leading-relaxed"
                   dangerouslySetInnerHTML={{
                     __html: data?.content || "<p>Data tugas pokok belum tersedia.</p>",
                   }}

@@ -203,8 +203,9 @@ export default function PublicNewsDetailPage() {
         )}
 
         {/* ARTICLE BODY READER */}
-        <div className="p-6 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xs prose max-w-none text-slate-800">
+        <div className="p-6 sm:p-10 rounded-3xl bg-white border border-slate-200 shadow-xs">
           <div
+            className="article-content prose max-w-none text-slate-800 font-sans"
             dangerouslySetInnerHTML={{
               __html: displayData.content || "",
             }}

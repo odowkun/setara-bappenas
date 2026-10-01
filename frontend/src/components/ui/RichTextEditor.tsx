@@ -13,7 +13,7 @@ import Subscript from "@tiptap/extension-subscript";
 import Superscript from "@tiptap/extension-superscript";
 import Image from "@tiptap/extension-image";
 import { authenticatedFetch } from "@/lib/apiClient";
-import { toast } from "@/lib/swal";
+import { toast, showPrompt } from "@/lib/swal";
 
 import {
   RotateCcw,
@@ -126,6 +126,11 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
   }, [isFullscreen, showImageModal]);
 
   const editor = useEditor({
+    editorProps: {
+      attributes: {
+        class: "article-content prose max-w-none focus:outline-none min-h-[inherit]",
+      },
+    },
     extensions: [
       StarterKit.configure({
         heading: {
@@ -239,12 +244,20 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     }
   };
 
-  const setLink = () => {
-    const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("Masukkan URL Link:", previousUrl);
+  const setLink = async () => {
+    const previousUrl = editor.getAttributes("link").href || "";
+    const res = await showPrompt({
+      title: "Sisipkan Link URL",
+      text: "Masukkan URL web lengkap:",
+      inputValue: previousUrl,
+      inputPlaceholder: "https://example.com",
+      confirmButtonText: "Tautkan Link",
+      cancelButtonText: "Batal",
+    });
 
-    if (url === null) return;
-    if (url === "") {
+    if (!res.isConfirmed) return;
+    const url = res.value?.trim();
+    if (!url) {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }

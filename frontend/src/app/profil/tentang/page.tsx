@@ -126,7 +126,7 @@ export default function PublicTentangPage() {
 
               <div className="p-6 sm:p-8 rounded-2xl bg-white border border-blue-100/60 shadow-sm">
                 <div
-                  className="prose prose-slate max-w-none text-xs sm:text-sm text-slate-700 font-medium leading-relaxed space-y-4"
+                  className="article-content prose max-w-none text-sm text-slate-700 font-medium leading-relaxed"
                   dangerouslySetInnerHTML={{
                     __html: tentangData?.content || "<p>Data profil belum tersedia.</p>",
                   }}

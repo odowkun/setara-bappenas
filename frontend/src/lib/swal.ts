@@ -84,4 +84,36 @@ export const showErrorSwal = (title: string, text?: string) => {
   });
 };
 
+export const showPrompt = async (options: {
+  title: string;
+  text?: string;
+  inputPlaceholder?: string;
+  inputValue?: string;
+  confirmButtonText?: string;
+  cancelButtonText?: string;
+}) => {
+  return await Swal.fire({
+    title: options.title,
+    text: options.text,
+    input: "text",
+    inputValue: options.inputValue || "",
+    inputPlaceholder: options.inputPlaceholder || "",
+    showCancelButton: true,
+    confirmButtonText: options.confirmButtonText || "Simpan",
+    cancelButtonText: options.cancelButtonText || "Batal",
+    customClass: {
+      popup: "rounded-3xl p-6 font-sans border border-slate-200 shadow-2xl bg-white",
+      title: "text-base font-black text-slate-900",
+      htmlContainer: "text-xs font-medium text-slate-600 mt-2",
+      input: "w-full px-4 py-2.5 rounded-xl border border-slate-200 text-sm font-medium focus:outline-none focus:border-blue-600",
+      confirmButton:
+        "px-5 py-2.5 rounded-2xl bg-blue-700 hover:bg-blue-800 text-white font-extrabold text-xs shadow-md shadow-blue-700/20 mr-2 transition cursor-pointer",
+      cancelButton:
+        "px-5 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs transition cursor-pointer",
+    },
+    buttonsStyling: false,
+  });
+};
+
 export { toast };
+

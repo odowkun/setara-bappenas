@@ -192,5 +192,8 @@ Status implementasi: 21 September 2026.
    - Route `PUT /admin/hero-video` mendukung permission `manage_galeri|manage_dashboard` dan diaudit oleh `AuditAdminMutation`.
    - Validasi dan pembersihan data (`trim`, handling nullable poster dengan benar).
 
+## Standar Tipografi & Visual Parity Rich Text
+Detail panduan tipografi terpadu, sinkronisasi margin paragraf Tiptap, dan penayangan artikel publik dapat dilihat pada [Standar Tipografi Rich Text Editor](rich-text-typography-standard.md).
+
 
 
