@@ -93,3 +93,10 @@ Pada halaman editor struktur organisasi BAPPEDA Halmahera Utara (`/dashboard/pro
    - Seluruh posisi bawahan (`depth > 0`) dilengkapi ikon percabangan hierarki `CornerDownRight` (`↳`) berwarna biru sebelum avatar posisi/pejabat.
    - Ditambahkan badge tingkatan hierarki (`Tingkat {depth}`) berdampingan dengan badge atasan langsung (`Atasan: [Nama Posisi Atasan]`).
    - Posisi pimpinan utama (`depth === 0`) diberikan aksen gradient biru transparan (`bg-gradient-to-r from-blue-50/50 via-white to-transparent`) serta badge `Root (Pimpinan Utama)` agar langsung terbaca sebagai simpul pucuk tertinggi.
+
+3. **Fitur Buka-Tutup Cabang Hierarki (Expand / Collapse Accordion Tree)**:
+   - Dilengkapi bilah kontrol atas: tombol **Buka Semua** (`ChevronsDown`) dan **Tutup Semua** (`ChevronsUp`) beserta indikator jumlah posisi terlihat dan jumlah cabang yang sedang ditutup.
+   - Setiap node yang memiliki bawahan (`hasChildren: true`) memiliki tombol chevron interaktif (`ChevronDown` saat terbuka dan `ChevronRight` dengan aksen biru terang saat tertutup).
+   - Saat sebuah cabang ditutup, seluruh rantai anak di bawahnya disembunyikan dan muncul pill interaktif `+{childCount} Bawahan (Tertutup)` yang dapat diklik langsung untuk membuka kembali cabang tersebut.
+   - Posisi ujung (leaf node) diberikan dot spacer presisi agar perataan vertikal avatar tetap sejajar.
+   - Berlaku pada Tab 1 (Posisi Jabatan) dan Tab 2 (Penugasan Pejabat Struktural). Opsi pemilih atasan pada modal pop-up tetap menyajikan daftar pohon lengkap (`fullTreeList`) agar seluruh posisi dapat dipilih sebagai atasan.

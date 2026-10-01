@@ -16,6 +16,9 @@ import {
   UserCheck,
   Building2,
   ChevronDown,
+  ChevronRight,
+  ChevronsDown,
+  ChevronsUp,
   CornerDownRight,
   Check,
   X,
@@ -36,6 +39,9 @@ interface OfficialItem {
 interface HierarchicalTreeItem {
   item: OfficialItem;
   depth: number;
+  hasChildren: boolean;
+  childCount: number;
+  isCollapsed: boolean;
 }
 
 export default function StrukturEditorPage() {
@@ -134,9 +140,36 @@ export default function StrukturEditorPage() {
     }
   };
 
+  // Set of collapsed node_ids for collapsible tree
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
+
+  const toggleCollapse = (nodeId: string) => {
+    setCollapsedNodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(nodeId)) {
+        next.delete(nodeId);
+      } else {
+        next.add(nodeId);
+      }
+      return next;
+    });
+  };
+
+  const expandAll = () => setCollapsedNodes(new Set());
+
+  const collapseAll = () => {
+    const parentNodeIds = new Set<string>();
+    officials.forEach((o) => {
+      if (o.parent_id) {
+        parentNodeIds.add(o.parent_id);
+      }
+    });
+    setCollapsedNodes(parentNodeIds);
+  };
+
   // Ordered Hierarchical Tree Items for clean List view (Root -> Children -> Subchildren)
-  const hierarchicalTreeList = useMemo<HierarchicalTreeItem[]>(() => {
-    if (!officials.length) return [];
+  const { visibleTreeList, fullTreeList } = useMemo(() => {
+    if (!officials.length) return { visibleTreeList: [], fullTreeList: [] };
 
     const map = new Map<string, OfficialItem & { children: any[] }>();
     officials.forEach((item) => {
@@ -152,17 +185,50 @@ export default function StrukturEditorPage() {
       }
     });
 
-    const list: HierarchicalTreeItem[] = [];
-    const traverse = (node: any, depth = 0) => {
-      list.push({ item: node, depth });
+    const fullList: HierarchicalTreeItem[] = [];
+    const traverseFull = (node: any, depth = 0) => {
+      const hasChildren = Boolean(node.children && node.children.length > 0);
+      const childCount = node.children ? node.children.length : 0;
+      fullList.push({
+        item: node,
+        depth,
+        hasChildren,
+        childCount,
+        isCollapsed: collapsedNodes.has(node.node_id),
+      });
       if (node.children) {
-        node.children.forEach((c: any) => traverse(c, depth + 1));
+        node.children.forEach((c: any) => traverseFull(c, depth + 1));
       }
     };
 
-    roots.forEach((r) => traverse(r, 0));
-    return list;
-  }, [officials]);
+    const visibleList: HierarchicalTreeItem[] = [];
+    const traverseVisible = (node: any, depth = 0) => {
+      const hasChildren = Boolean(node.children && node.children.length > 0);
+      const childCount = node.children ? node.children.length : 0;
+      const isCollapsed = collapsedNodes.has(node.node_id);
+
+      visibleList.push({
+        item: node,
+        depth,
+        hasChildren,
+        childCount,
+        isCollapsed,
+      });
+
+      if (hasChildren && !isCollapsed) {
+        node.children.forEach((c: any) => traverseVisible(c, depth + 1));
+      }
+    };
+
+    roots.forEach((r) => {
+      traverseFull(r, 0);
+      traverseVisible(r, 0);
+    });
+
+    return { visibleTreeList: visibleList, fullTreeList: fullList };
+  }, [officials, collapsedNodes]);
+
+  const hierarchicalTreeList = visibleTreeList;
 
   // Delete Position Node
   const handleDeletePosition = async (id: number, position: string) => {
@@ -295,6 +361,37 @@ export default function StrukturEditorPage() {
               </button>
             </div>
 
+            {/* Control Bar: Expand/Collapse All + Status */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs">
+              <div className="flex items-center gap-2 text-slate-500 font-bold">
+                <span className="text-slate-800 font-extrabold">{hierarchicalTreeList.length} dari {officials.length} posisi terlihat</span>
+                {collapsedNodes.size > 0 && (
+                  <span className="text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 text-[11px] font-black animate-in fade-in">
+                    {collapsedNodes.size} cabang ditutup
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={expandAll}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <ChevronsDown className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Buka Semua</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={collapseAll}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <ChevronsUp className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Tutup Semua</span>
+                </button>
+              </div>
+            </div>
+
             {loading ? (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
                 {[1, 2, 3, 4, 5].map((n) => (
@@ -315,7 +412,7 @@ export default function StrukturEditorPage() {
               </div>
             ) : (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
-                {hierarchicalTreeList.map(({ item, depth }) => {
+                {hierarchicalTreeList.map(({ item, depth, hasChildren, childCount, isCollapsed }) => {
                   const isAssigned = item.name && item.name !== "(Belum Ditentukan)";
                   const parentItem = officials.find((o) => o.node_id === item.parent_id);
 
@@ -326,15 +423,45 @@ export default function StrukturEditorPage() {
                       className={`py-4 pr-4 sm:pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition ${
                         depth === 0
                           ? "bg-gradient-to-r from-blue-50/50 via-white to-transparent hover:bg-blue-50/70"
+                          : isCollapsed
+                          ? "bg-slate-50/70 hover:bg-slate-100/70"
                           : "hover:bg-slate-50/80"
                       }`}
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        {/* Branch Indicator for Subordinates */}
                         {depth > 0 && (
                           <div className="flex items-center gap-1 shrink-0 select-none">
                             <CornerDownRight className="w-4 h-4 text-blue-600/80 shrink-0" />
                           </div>
                         )}
+
+                        {/* Expand/Collapse Toggle Button for Nodes with Children */}
+                        {hasChildren ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCollapse(item.node_id);
+                            }}
+                            title={isCollapsed ? `Klik untuk membuka ${childCount} bawahan` : `Klik untuk menutup ${childCount} bawahan`}
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition cursor-pointer ${
+                              isCollapsed
+                                ? "bg-blue-600 text-white shadow-xs shadow-blue-600/30 hover:bg-blue-700"
+                                : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {isCollapsed ? (
+                              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ) : depth > 0 ? (
+                          <div className="w-7 shrink-0 flex items-center justify-center select-none opacity-40">
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          </div>
+                        ) : null}
 
                         {/* Avatar Image or Initials */}
                         {item.avatar ? (
@@ -367,6 +494,17 @@ export default function StrukturEditorPage() {
                                   Atasan: {parentItem?.position || item.parent_id}
                                 </span>
                               </div>
+                            )}
+
+                            {/* Collapsed Pill Badge */}
+                            {hasChildren && isCollapsed && (
+                              <button
+                                type="button"
+                                onClick={() => toggleCollapse(item.node_id)}
+                                className="px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-black hover:bg-blue-100 transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>+{childCount} Bawahan (Tertutup)</span>
+                              </button>
                             )}
                           </div>
 
@@ -422,6 +560,37 @@ export default function StrukturEditorPage() {
               </p>
             </div>
 
+            {/* Control Bar: Expand/Collapse All + Status */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 px-1 text-xs">
+              <div className="flex items-center gap-2 text-slate-500 font-bold">
+                <span className="text-slate-800 font-extrabold">{hierarchicalTreeList.length} dari {officials.length} posisi terlihat</span>
+                {collapsedNodes.size > 0 && (
+                  <span className="text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200 text-[11px] font-black animate-in fade-in">
+                    {collapsedNodes.size} cabang ditutup
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2 self-start sm:self-auto">
+                <button
+                  type="button"
+                  onClick={expandAll}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <ChevronsDown className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Buka Semua</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={collapseAll}
+                  className="px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-extrabold text-xs flex items-center gap-1.5 transition shadow-xs cursor-pointer"
+                >
+                  <ChevronsUp className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Tutup Semua</span>
+                </button>
+              </div>
+            </div>
+
             {loading ? (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
                 {[1, 2, 3, 4, 5].map((n) => (
@@ -439,7 +608,7 @@ export default function StrukturEditorPage() {
               </div>
             ) : (
               <div className="bg-white rounded-3xl border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
-                {hierarchicalTreeList.map(({ item, depth }) => {
+                {hierarchicalTreeList.map(({ item, depth, hasChildren, childCount, isCollapsed }) => {
                   const isAssigned = item.name && item.name !== "(Belum Ditentukan)";
                   const parentItem = officials.find((o) => o.node_id === item.parent_id);
 
@@ -450,17 +619,46 @@ export default function StrukturEditorPage() {
                       className={`py-4 pr-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition ${
                         depth === 0
                           ? "bg-gradient-to-r from-blue-50/50 via-white to-transparent hover:bg-blue-50/70"
+                          : isCollapsed
+                          ? "bg-slate-50/70 hover:bg-slate-100/70"
                           : isAssigned
                           ? "hover:bg-slate-50/80"
                           : "bg-slate-50/60 hover:bg-slate-100/60"
                       }`}
                     >
-                      <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="flex items-center gap-2 sm:gap-3.5 min-w-0">
                         {depth > 0 && (
                           <div className="flex items-center gap-1 shrink-0 select-none">
                             <CornerDownRight className="w-4 h-4 text-blue-600/80 shrink-0" />
                           </div>
                         )}
+
+                        {/* Expand/Collapse Toggle Button for Nodes with Children */}
+                        {hasChildren ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleCollapse(item.node_id);
+                            }}
+                            title={isCollapsed ? `Klik untuk membuka ${childCount} bawahan` : `Klik untuk menutup ${childCount} bawahan`}
+                            className={`w-7 h-7 rounded-xl flex items-center justify-center shrink-0 transition cursor-pointer ${
+                              isCollapsed
+                                ? "bg-blue-600 text-white shadow-xs shadow-blue-600/30 hover:bg-blue-700"
+                                : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                            }`}
+                          >
+                            {isCollapsed ? (
+                              <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                            ) : (
+                              <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                            )}
+                          </button>
+                        ) : depth > 0 ? (
+                          <div className="w-7 shrink-0 flex items-center justify-center select-none opacity-40">
+                            <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                          </div>
+                        ) : null}
 
                         {/* Avatar Image or Initials Circle */}
                         {item.avatar ? (
@@ -502,6 +700,17 @@ export default function StrukturEditorPage() {
                                   </span>
                                 )}
                               </div>
+                            )}
+
+                            {/* Collapsed Pill Badge */}
+                            {hasChildren && isCollapsed && (
+                              <button
+                                type="button"
+                                onClick={() => toggleCollapse(item.node_id)}
+                                className="px-2 py-0.5 rounded-full bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-black hover:bg-blue-100 transition flex items-center gap-1 cursor-pointer"
+                              >
+                                <span>+{childCount} Bawahan (Tertutup)</span>
+                              </button>
                             )}
                           </div>
                           <div className="flex items-center gap-2">
@@ -638,7 +847,7 @@ export default function StrukturEditorPage() {
 
                       <div className="border-t border-slate-100 my-1" />
 
-                      {hierarchicalTreeList.map(({ item, depth }) => {
+                      {fullTreeList.map(({ item, depth }) => {
                         const isSelected = modalParentId === item.node_id;
 
                         return (
