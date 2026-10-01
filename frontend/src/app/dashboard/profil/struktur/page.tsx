@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { authenticatedFetch, API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
 import { StrukturOrganisasiChart, OrgNode, PejabatFungsionalItem } from "@/components/ui/StrukturOrganisasiChart";
+import StepWizardNav from "@/components/ui/StepWizardNav";
 import {
   Plus,
   Edit2,
@@ -416,50 +417,42 @@ export default function StrukturEditorPage() {
         )}
       </div>
 
+      {/* 3-STEP WIZARD PROGRESS BAR */}
+      <StepWizardNav
+        activeStep={mgmtTab === "step1-structure" ? 1 : mgmtTab === "step2-pejabat" ? 2 : 3}
+        steps={[
+          {
+            id: "step1-structure",
+            stepNumber: 1,
+            label: "LANGKAH 1",
+            title: "Susun Posisi Struktural",
+            subtitle: `${officials.length} Posisi Terdaftar`,
+            isCompleted: mgmtTab !== "step1-structure",
+          },
+          {
+            id: "step2-pejabat",
+            stepNumber: 2,
+            label: "LANGKAH 2",
+            title: "Pejabat Struktural",
+            subtitle: `${officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/${officials.length} Terisi`,
+            isCompleted: mgmtTab === "step3-fungsional",
+          },
+          {
+            id: "step3-fungsional",
+            stepNumber: 3,
+            label: "LANGKAH 3",
+            title: "Kelompok Fungsional",
+            subtitle: `${fungsionals.length} Personel Terdaftar`,
+            isCompleted: false,
+          },
+        ]}
+        onStepClick={(step) => {
+          setMgmtTab(step.id as "step1-structure" | "step2-pejabat" | "step3-fungsional");
+        }}
+      />
+
       {/* 1. MAIN CARD SECTION */}
       <div className="p-5 sm:p-6 rounded-3xl bg-white border border-slate-200 shadow-xs space-y-5">
-
-        {/* Tab Selector: Step 1 vs Step 2 vs Step 3 */}
-        <div className="flex flex-col md:flex-row rounded-2xl bg-slate-100 p-1.5 text-xs font-extrabold gap-1.5">
-          <button
-            type="button"
-            onClick={() => setMgmtTab("step1-structure")}
-            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
-              mgmtTab === "step1-structure"
-                ? "bg-white text-blue-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Building2 className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Langkah 1 — Susun Posisi Struktural</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMgmtTab("step2-pejabat")}
-            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
-              mgmtTab === "step2-pejabat"
-                ? "bg-white text-blue-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <UserCheck className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Langkah 2 — Pejabat Struktural ({officials.filter((o) => o.name && o.name !== "(Belum Ditentukan)").length}/{officials.length} Terisi)</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setMgmtTab("step3-fungsional")}
-            className={`flex-1 py-3 px-3 rounded-xl flex items-center justify-center gap-2 transition ${
-              mgmtTab === "step3-fungsional"
-                ? "bg-white text-blue-700 shadow-sm"
-                : "text-slate-600 hover:text-slate-900"
-            }`}
-          >
-            <Users className="w-4 h-4 text-blue-600 shrink-0" />
-            <span>Langkah 3 — Kelompok Fungsional ({fungsionals.length} Personel)</span>
-          </button>
-        </div>
 
         {/* TAB 1: Step 1 — Clean Hierarchical List of Positions */}
         {mgmtTab === "step1-structure" && (

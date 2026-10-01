@@ -153,3 +153,50 @@ Komponen ini digunakan di:
 - `frontend/src/context/AuthContext.tsx` (saat validasi token sesi `/auth/me`).
 - `frontend/src/app/dashboard/layout.tsx` (saat pengalihan login tidak terautentikasi).
 - `frontend/src/app/dashboard/loading.tsx` (Suspense fallback bawaan Next.js App Router).
+
+---
+
+## 6. Standar Komponen Stepper & Multi-Step Flow (`StepWizardNav`)
+Untuk memastikan seluruh antarmuka yang menerapkan alur bertahap (*multi-step wizard* / "langkah-langkah") memiliki konsistensi visual 100% tanpa perbedaan desain, portal BAPPEDA menetapkan komponen standar `StepWizardNav`:
+
+```tsx
+import StepWizardNav, { StepWizardItem } from "@/components/ui/StepWizardNav";
+
+<StepWizardNav
+  activeStep={currentStepNumber}
+  steps={[
+    {
+      id: "step1",
+      stepNumber: 1,
+      label: "LANGKAH 1",
+      title: "Judul Langkah Pertama",
+      subtitle: "Deskripsi singkat / counter data",
+    },
+    {
+      id: "step2",
+      stepNumber: 2,
+      label: "LANGKAH 2",
+      title: "Judul Langkah Kedua",
+    },
+  ]}
+  onStepClick={(step) => handleStepChange(step)}
+/>
+```
+
+### Standar Anatomi Visual & Status Langkah:
+1. **Langkah Aktif (*Current Active Step*)**:
+   - Kontainer kartu: `bg-white border-blue-600 shadow-sm ring-2 ring-blue-500/10 rounded-2xl p-4`.
+   - Badge nomor: `w-9 h-9 rounded-xl bg-blue-600 text-white font-black text-sm shadow-xs`.
+   - Label & judul: `LANGKAH N` (text-[10px] font-black uppercase text-slate-400) + Judul (text-xs sm:text-sm font-black text-slate-900).
+2. **Langkah Selesai (*Completed Step*)**:
+   - Kontainer kartu: `bg-white/70 border-slate-200 hover:bg-white text-slate-700 rounded-2xl p-4`.
+   - Badge: `w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 font-bold` memuat ikon centang hijau `<Check className="w-5 h-5 text-emerald-600" />`.
+3. **Langkah Mendatang (*Upcoming / Inactive Step*)**:
+   - Kontainer kartu: `bg-white/70 border-slate-200 hover:bg-white text-slate-600 rounded-2xl p-4`.
+   - Badge: `w-9 h-9 rounded-xl bg-slate-100 text-slate-500 font-bold` memuat nomor langkah.
+
+### Modul yang Menggunakan `StepWizardNav`:
+- `/dashboard/users/tambah` (Langkah 1: Template Penugasan ➔ Langkah 2: Lengkapi Biodata & Hak Akses Akun)
+- `/dashboard/users/edit/[id]` (Langkah 1: Template Penugasan ➔ Langkah 2: Lengkapi Biodata & Hak Akses Akun)
+- `/dashboard/profil/struktur` (Langkah 1: Susun Posisi ➔ Langkah 2: Pejabat Struktural ➔ Langkah 3: Kelompok Fungsional)
+

@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
 import { Role, BidangType, JenisDokumenItem } from "@/types/auth";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import StepWizardNav from "@/components/ui/StepWizardNav";
 import { toast } from "@/lib/swal";
 import { API_BASE_URL } from "@/lib/apiClient";
 import {
@@ -444,61 +445,30 @@ export default function EditUserPage() {
       )}
 
       {/* 2-STEP WIZARD PROGRESS BAR */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        {/* Step 1 Button */}
-        <button
-          type="button"
-          onClick={() => setActiveStep(1)}
-          className={`p-4 rounded-2xl border text-left transition flex items-center gap-3.5 cursor-pointer ${
-            activeStep === 1
-              ? "bg-white border-blue-600 shadow-sm ring-2 ring-blue-500/10"
-              : "bg-white/70 border-slate-200 hover:bg-white text-slate-600"
-          }`}
-        >
-          <div
-            className={`w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center shrink-0 ${
-              activeStep === 1
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-600 font-bold"
-            }`}
-          >
-            {activeStep === 2 ? <Sparkles className="w-4 h-4 text-amber-500" /> : "1"}
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Pilihan Template</p>
-            <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">
-              Pilih Profil / Template Penugasan
-            </h2>
-          </div>
-        </button>
-
-        {/* Step 2 Button */}
-        <button
-          type="button"
-          onClick={() => setActiveStep(2)}
-          className={`p-4 rounded-2xl border text-left transition flex items-center gap-3.5 cursor-pointer ${
-            activeStep === 2
-              ? "bg-white border-blue-600 shadow-sm ring-2 ring-blue-500/10"
-              : "bg-white/70 border-slate-200 hover:bg-white text-slate-600"
-          }`}
-        >
-          <div
-            className={`w-9 h-9 rounded-xl font-black text-sm flex items-center justify-center shrink-0 ${
-              activeStep === 2
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-slate-100 text-slate-500 font-bold"
-            }`}
-          >
-            2
-          </div>
-          <div className="min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">Formulir Akun</p>
-            <h2 className="text-xs sm:text-sm font-black text-slate-900 truncate">
-              Kelola Biodata &amp; Rincian Hak Akses
-            </h2>
-          </div>
-        </button>
-      </div>
+      <StepWizardNav
+        activeStep={activeStep}
+        steps={[
+          {
+            id: "step1",
+            stepNumber: 1,
+            label: "LANGKAH 1",
+            title: "Pilih Profil / Template Penugasan",
+          },
+          {
+            id: "step2",
+            stepNumber: 2,
+            label: "LANGKAH 2",
+            title: "Lengkapi Biodata & Hak Akses Akun",
+          },
+        ]}
+        onStepClick={(step) => {
+          if (step.stepNumber === 1) {
+            setActiveStep(1);
+          } else {
+            handleProceedToStep2();
+          }
+        }}
+      />
 
       {/* ========================================================================= */}
       {/* STEP 1: PEMILIHAN TEMPLATE PENUGASAN (FOKUS UTAMA)                         */}
