@@ -370,7 +370,7 @@ export const StrukturOrganisasiChart: React.FC<{
                         key={person.id}
                         className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/70 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/30 transition flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 shadow-2xs"
                       >
-                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0">
+                        <div className="flex items-center gap-2.5 sm:gap-4 min-w-0 flex-1">
                           {/* Index numbering badge */}
                           <span className="w-5 sm:w-6 text-center text-xs font-black text-slate-400 shrink-0 select-none">
                             {idx + 1}.
@@ -394,7 +394,7 @@ export const StrukturOrganisasiChart: React.FC<{
                           )}
 
                           {/* Name & NIP */}
-                          <div className="min-w-0 space-y-0.5">
+                          <div className="min-w-0 flex-1 space-y-0.5">
                             <h4 className="text-xs sm:text-sm font-black text-slate-900 break-words leading-tight">
                               {person.name}
                             </h4>
@@ -411,8 +411,8 @@ export const StrukturOrganisasiChart: React.FC<{
                         </div>
 
                         {/* Jabatan / Position Badge - Full text on mobile aligned with name */}
-                        <div className="shrink-0 pl-7 sm:pl-0 self-start sm:self-auto">
-                          <span className="inline-flex items-center px-2.5 sm:px-3 py-1 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                        <div className="shrink-0 pl-7 sm:pl-0 self-start sm:self-auto max-w-full sm:max-w-[48%]">
+                          <span className="inline-block px-2.5 sm:px-3 py-1.5 rounded-lg sm:rounded-xl text-[10px] sm:text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 whitespace-normal break-words leading-snug text-left">
                             {person.position}
                           </span>
                         </div>
@@ -781,9 +781,10 @@ const InteractiveCanvasOrgChart: React.FC<{
     return (minX + maxX) / 2;
   }, [nodes]);
 
-  const fungsionalBoxWidth = Math.max(960, Math.min(1360, (fungsionalData.length || 1) * 280));
+  // Standardized width for fungsional personnel cards stacked downwards as a clean list
+  const fungsionalBoxWidth = 880;
   const fungsionalBoxX = Math.max(60, centerX - fungsionalBoxWidth / 2);
-  const fungsionalBoxY = lowestNodeY + 120;
+  const fungsionalBoxY = lowestNodeY + 100;
 
   // Dynamically calculate canvas size based on node positions so no lines or cards are ever cut off!
   const canvasBounds = useMemo(() => {
@@ -799,7 +800,8 @@ const InteractiveCanvasOrgChart: React.FC<{
       }
     });
 
-    const fungsionalBottom = fungsionalBoxY + 500;
+    const fungsionalEstimatedHeight = 140 + Math.max(1, fungsionalData.length) * 85;
+    const fungsionalBottom = fungsionalBoxY + fungsionalEstimatedHeight;
     if (fungsionalBottom + 300 > maxY) {
       maxY = fungsionalBottom + 300;
     }
@@ -809,7 +811,7 @@ const InteractiveCanvasOrgChart: React.FC<{
     }
 
     return { width: `${maxX}px`, height: `${maxY}px` };
-  }, [nodes, fungsionalBoxX, fungsionalBoxY, fungsionalBoxWidth]);
+  }, [nodes, fungsionalBoxX, fungsionalBoxY, fungsionalBoxWidth, fungsionalData.length]);
 
   return (
     <div className="space-y-3 font-sans w-full max-w-full overflow-hidden flex flex-col h-full">
@@ -1115,14 +1117,14 @@ const InteractiveCanvasOrgChart: React.FC<{
               </div>
             </div>
 
-            {/* Personnel Grid */}
+            {/* Personnel List (List Ke Bawah Layout) */}
             {fungsionalData.length === 0 ? (
               <div className="p-8 text-center text-xs font-bold text-slate-400 bg-slate-50 rounded-2xl border border-slate-100">
                 Belum ada personel jabatan fungsional yang terdaftar.
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                {fungsionalData.map((person) => {
+              <div className="space-y-3">
+                {fungsionalData.map((person, idx) => {
                   const initials = person.name
                     ? person.name
                         .replace(/^(Dr\.|Drs\.|Ir\.|H\.|Hj\.)\s+/gi, "")
@@ -1137,9 +1139,15 @@ const InteractiveCanvasOrgChart: React.FC<{
                   return (
                     <div
                       key={person.id}
-                      className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs flex items-center justify-between gap-3"
+                      className="p-3.5 sm:p-4 rounded-2xl bg-slate-50/80 border border-slate-200 hover:border-blue-400 hover:bg-blue-50/40 transition flex items-center justify-between gap-4 shadow-2xs"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex items-center gap-3.5 min-w-0 flex-1">
+                        {/* Numbering Index */}
+                        <span className="w-6 text-center text-xs font-black text-slate-400 shrink-0 select-none">
+                          {idx + 1}.
+                        </span>
+
+                        {/* Avatar Image or Initials Badge */}
                         {person.avatar ? (
                           <img
                             src={
@@ -1148,28 +1156,34 @@ const InteractiveCanvasOrgChart: React.FC<{
                                 : `${STORAGE_BASE_URL}${person.avatar}`
                             }
                             alt={person.name}
-                            className="w-10 h-10 rounded-xl object-cover border border-blue-300 shadow-xs shrink-0"
+                            className="w-11 h-11 rounded-xl object-cover border border-blue-200 shadow-xs shrink-0"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-black text-xs flex items-center justify-center shrink-0">
+                          <div className="w-11 h-11 rounded-xl bg-blue-100 border border-blue-200 text-blue-900 font-extrabold text-xs flex items-center justify-center shrink-0 shadow-xs">
                             {initials}
                           </div>
                         )}
 
-                        <div className="min-w-0 space-y-0.5">
-                          <h4 className="text-xs font-black text-slate-900 break-words leading-tight">
+                        {/* Name & NIP */}
+                        <div className="min-w-0 flex-1 space-y-0.5">
+                          <h4 className="text-sm font-black text-slate-900 leading-tight">
                             {person.name}
                           </h4>
-                          {person.nip && (
-                            <p className="text-[10px] font-mono text-slate-500 font-medium">
+                          {person.nip ? (
+                            <p className="text-xs font-mono text-slate-500 font-medium">
                               NIP: {person.nip}
+                            </p>
+                          ) : (
+                            <p className="text-xs font-mono text-slate-400 italic">
+                              NIP: -
                             </p>
                           )}
                         </div>
                       </div>
 
-                      <div className="shrink-0">
-                        <span className="inline-block px-2.5 py-1 rounded-lg text-[9.5px] font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200">
+                      {/* Jabatan Fungsional Position Badge */}
+                      <div className="shrink-0 max-w-[50%] text-right">
+                        <span className="inline-block px-3 py-1.5 rounded-xl text-xs font-black uppercase tracking-wider bg-blue-100 text-blue-800 border border-blue-200 text-left whitespace-normal leading-snug break-words">
                           {person.position}
                         </span>
                       </div>

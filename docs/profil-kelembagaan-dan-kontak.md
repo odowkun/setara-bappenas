@@ -110,9 +110,13 @@ Sesuai regulasi kelembagaan pemerintah (PermenPAN-RB), Jabatan Fungsional pada B
    - Seluruh simpul lama posisi `FUNGSIONAL` yang sebelumnya menempel pada rantai `pejabats` telah dibersihkan secara otomatis via migrasi dan filter kueri backend.
    - Endpoint CRUD mandiri: `/api/v1/pejabat-fungsional` dengan otentikasi Sanctum dan izin `manage_struktur`.
 
-2. **Visualisasi Bagan Terpadu (Image 2 Bagan Standard)**:
-   - **Bagan Vertikal (`RenderVerticalNode`)**: Kotak besar *Kelompok Jabatan Fungsional* ditempatkan mandiri terpisah di bagian bawah (tanpa garis panah/stem connector hierarki struktural), memuat daftar personel per baris (*row list*) lengkap dengan nomor urut, foto/inisial, nama lengkap, NIP, serta badge nama jabatan fungsional utuh tanpa terpotong.
-   - **Bagan Kanvas Interaktif (`InteractiveCanvasOrgChart`)**: Kotak lebar mandiri dirender di bagian bawah kanvas dengan garis vektor ortogonal putus-putus (`strokeDasharray="6 4"`) yang terhubung langsung dari pusat bawah pohon ke pucuk kotak kelompok fungsional.
+2. **Visualisasi Bagan Terpadu & Standar Tata Letak List ke Bawah**:
+   - **Bagan Vertikal (`RenderVerticalNode`)**: Kotak mandiri *Kelompok Jabatan Fungsional* ditempatkan di bagian bawah hirarki, memuat daftar personel per baris vertikal (*vertical row list ke bawah*) lengkap dengan nomor urut, foto/inisial ber-badge kontras tinggi, nama lengkap, NIP, serta badge nama jabatan fungsional adaptif (`max-w-[48%]`, `whitespace-normal break-words`).
+   - **Bagan Kanvas Interaktif (`InteractiveCanvasOrgChart`)**:
+     - Menggunakan tata letak **List ke Bawah (`space-y-3`)** dengan lebar terstandarisasi (`880px`) menggantikan tata letak grid multi-kolom yang sebelumnya dapat menekan teks nama menjadi 1 karakter vertikal saat judul jabatan fungsional panjang.
+     - Setiap baris personel membentang penuh (*full-width row item*) dengan nomor urut (`idx + 1`), avatar/initials dengan ukuran tetap (`shrink-0`), nama pejabat tebal dan NIP (`flex-1 min-w-0`), serta badge jabatan fungsional biru yang melipat kata secara rapi (`whitespace-normal break-words max-w-[50%]`).
+     - Tinggi kanvas dihitung dinamis (`canvasBounds`) menyesuaikan jumlah personel fungsional (`fungsionalEstimatedHeight = 140 + length * 85`) agar tidak ada kartu atau garis vektor yang terpotong.
+   - Terhubung dengan garis vektor ortogonal putus-putus biru (`strokeDasharray="6 4"`) dari pusat bawah pohon ke pucuk kotak kelompok fungsional.
 
 3. **Pengelolaan 3-Langkah di Dashboard (`/dashboard/profil/struktur`)**:
    - **Langkah 1**: Susun Posisi Struktural (Kepala Badan, Sekretaris, Kasubag, Kabid, Subid).
