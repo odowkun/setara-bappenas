@@ -90,4 +90,26 @@ class IkmSurveyStatsTest extends TestCase
             'jenis_layanan' => 'Layanan Informasi Publik & Portal Website BAPPEDA',
         ]);
     }
+
+    public function test_admin_with_manage_survey_permission_can_delete_survey_response(): void
+    {
+        $survey = Survey::query()->create([
+            'nama_responden' => 'Responden Test',
+            'ikm_score' => 85.0,
+            'jenis_layanan' => 'Layanan Publik',
+            'u1_persyaratan' => 4, 'u2_prosedur' => 4, 'u3_kecepatan' => 4, 'u4_produk' => 4, 'u5_sikap' => 5,
+        ]);
+
+        $admin = \App\Models\User::factory()->create();
+        $admin->givePermissionTo('manage_survey');
+
+        $response = $this->actingAs($admin)->deleteJson("/api/v1/surveys/{$survey->id}");
+
+        $response->assertOk()
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('message', 'Data tanggapan survei kepuasan berhasil dihapus.');
+
+        $this->assertDatabaseMissing('surveys', ['id' => $survey->id]);
+    }
 }
+

@@ -34,6 +34,7 @@ import {
   reorderSurveyQuestions,
   addSurveyService,
   deleteSurveyService,
+  deleteSurvey,
   SurveyResponseItem,
   SurveySummaryData,
   SurveyQuestionItem,
@@ -210,6 +211,18 @@ export default function DashboardSurveyPage() {
     loadData();
   };
 
+  const handleDeleteSurvey = async (id: number, respondentName: string) => {
+    const res = await showDeleteConfirm(`tanggapan survei dari ${respondentName || "responden"}`);
+    if (!res.isConfirmed) return;
+    const success = await deleteSurvey(id);
+    if (success) {
+      toast.success("Tanggapan survei berhasil dihapus!");
+      loadData();
+    } else {
+      toast.error("Gagal menghapus tanggapan survei.");
+    }
+  };
+
   // Filter Data
   const filteredSurveys = surveys.filter(
     (s) =>
@@ -368,7 +381,7 @@ export default function DashboardSurveyPage() {
                   <th className="py-4 px-6">Jenis Layanan BAPPEDA</th>
                   <th className="py-4 px-6">Nilai & Mutu IKM</th>
                   <th className="py-4 px-6">Tanggal Submit</th>
-                  <th className="py-4 px-6 text-right">Aksi Detail</th>
+                  <th className="py-4 px-6 text-right">Aksi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-800">
@@ -435,14 +448,25 @@ export default function DashboardSurveyPage() {
                           {formatDateWIT(item.created_at)}
                         </td>
                         <td className="py-4 px-6 text-right whitespace-nowrap">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedDetail(item)}
-                            className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
-                          >
-                            <Eye className="w-3.5 h-3.5 text-blue-600" />
-                            <span>Lihat Detail</span>
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedDetail(item)}
+                              className="px-3.5 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold border border-blue-200 transition inline-flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                              title="Lihat Detail Tanggapan"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Lihat Detail</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteSurvey(item.id, item.nama_responden)}
+                              className="p-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 transition inline-flex items-center justify-center cursor-pointer shadow-2xs"
+                              title="Hapus Tanggapan Survei"
+                            >
+                              <Trash2 className="w-4 h-4 text-rose-600" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -990,7 +1014,21 @@ export default function DashboardSurveyPage() {
             </div>
 
             {/* MODAL FOOTER */}
-            <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+            <div className="px-6 py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  const id = selectedDetail.id;
+                  const name = selectedDetail.nama_responden;
+                  setSelectedDetail(null);
+                  handleDeleteSurvey(id, name);
+                }}
+                className="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs border border-rose-200 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                title="Hapus Tanggapan Ini"
+              >
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Hapus Tanggapan</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setSelectedDetail(null)}

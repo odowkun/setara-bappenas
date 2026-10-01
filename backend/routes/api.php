@@ -203,6 +203,9 @@ Route::prefix('v1')->group(function () {
     Route::get('/surveys/summary', [SurveyController::class, 'publicSummary']);
     Route::get('/surveys', [SurveyController::class, 'index'])
         ->middleware(['auth:sanctum', 'permission:manage_survey']);
+    Route::delete('/surveys/{id}', [SurveyController::class, 'destroy'])
+        ->middleware(['auth:sanctum', 'permission:manage_survey', AuditAdminMutation::class])
+        ->name('surveys.destroy');
     Route::get('/surveys/config', [SurveyController::class, 'getConfig']);
     Route::post('/surveys/questions', [SurveyController::class, 'storeQuestion'])
         ->middleware(['auth:sanctum', 'permission:manage_survey', AuditAdminMutation::class])

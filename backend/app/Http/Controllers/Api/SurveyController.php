@@ -293,6 +293,27 @@ class SurveyController extends Controller
         ], 201);
     }
 
+    public function destroy($id)
+    {
+        $survey = Survey::query()->find($id);
+
+        if (! $survey) {
+            return response()->json([
+                'status' => 'error',
+                'code' => 404,
+                'message' => 'Data tanggapan survei tidak ditemukan.',
+            ], 404);
+        }
+
+        $survey->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'code' => 200,
+            'message' => 'Data tanggapan survei kepuasan berhasil dihapus.',
+        ]);
+    }
+
     public function calculateStats($surveys = null): array
     {
         if ($surveys === null) {

@@ -44,3 +44,11 @@ Ketika responden mengisi pertanyaan dengan rating acak (misalnya 1, 2, 3, 4 bint
      - Pengunjung dapat langsung memberikan penilaian cepat dengan mengklik emoji di beranda website.
      - Penilaian "Kurang Memuaskan" memicu modal feedback masukan perbaikan yang tersimpan otomatis ke database backend secara aman (nama responden anonim & masukan terenkripsi).
      - Persentase kartu dan jumlah total responden terupdate secara realtime bagi pengunjung.
+
+## 6. Manajemen & Penghapusan Tanggapan Survei (`DELETE /api/v1/surveys/{id}`)
+- Pengelola portal dengan izin `manage_survey` kini dapat menghapus data tanggapan survei (misal untuk memoderasi spam atau data uji coba).
+- Dilindungi proteksi autentikasi Sanctum, Spatie RBAC permission, dan middleware `AuditAdminMutation`.
+- Frontend dashboard (`/dashboard/survey-kepuasan`) menyediakan tombol hapus di dua titik akses:
+  - Tombol tong sampah merah pada kolom aksi tabel daftar responden.
+  - Tombol "Hapus Tanggapan" di bagian kiri footer modal rincian nilai responden.
+- Seluruh aksi penghapusan wajib melalui konfirmasi dialog SweetAlert2 (`showDeleteConfirm()`) dan memberikan notifikasi Toast standar (`toast.success()`).

@@ -264,6 +264,16 @@ export async function deleteSurveyService(id: number): Promise<boolean> {
   return false;
 }
 
+export async function deleteSurvey(id: number): Promise<boolean> {
+  try {
+    const res = await authenticatedFetch(`${API_BASE}/surveys/${id}`, { method: "DELETE" });
+    if (res.ok) return true;
+  } catch (e) {
+    console.warn("API delete survey response failed:", e);
+  }
+  return false;
+}
+
 export async function fetchSurveysSummary(): Promise<{ surveys: SurveyResponseItem[]; summary: SurveySummaryData }> {
   try {
     const res = await authenticatedFetch(`${API_BASE}/surveys`, { cache: "no-store" });
