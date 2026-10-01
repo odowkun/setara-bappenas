@@ -76,3 +76,20 @@ Pada halaman Editor Dasar Hukum (`/dashboard/profil/dasar-hukum`), dropdown pemi
    - Admin dapat langsung mengetik kategori baru di bilah pencarian jika nama kategori khusus belum tersedia di opsi default.
    - Kategori kustom yang baru ditambahkan secara otomatis disimpan ke state `kategoriOptions` dan dirender langsung di badge halaman publik `/profil/dasar-hukum`.
    - Data kategori kustom tersimpan persisten di database Laravel melalui kolom JSON `meta_json.regulasi` pada tabel `profils`.
+
+## Standarisasi Tampilan Daftar Hierarki Posisi & Pejabat (`/dashboard/profil/struktur`)
+
+Pada halaman editor struktur organisasi BAPPEDA Halmahera Utara (`/dashboard/profil/struktur`), tampilan daftar posisi (Tab 1) dan penugasan pejabat (Tab 2) menerapkan prinsip visual hierarki berjenjang (stair-step tree hierarchy):
+
+1. **Indentasi Bertingkat Dinamis Bebas-Klem (Dynamic Hierarchy Indentation)**:
+   - Indentasi kiri (`paddingLeft`) dihitung dinamis berdasarkan kedalaman hierarki node (`depth`):
+     ```tsx
+     style={{ paddingLeft: `calc(1.25rem + ${Math.min(depth, 6)} * clamp(28px, 4vw, 52px))` }}
+     ```
+   - Menghilangkan pembatasan statis (clamp 48px lama) yang sebelumnya menyebabkan posisi Kasubag dan Fungsional berada di garis vertikal yang sama dengan Sekretaris.
+   - Di desktop, setiap level bawahan bergeser 52px lebih ke kanan (Level 0: 20px, Level 1: 72px, Level 2: 124px, Level 3: 176px). Pada layar mobile/tablet, nilai clamp (28px - 44px) memastikan tata letak tetap proporsional tanpa terpotong.
+
+2. **Indikator Visual Percabangan Subordinat**:
+   - Seluruh posisi bawahan (`depth > 0`) dilengkapi ikon percabangan hierarki `CornerDownRight` (`↳`) berwarna biru sebelum avatar posisi/pejabat.
+   - Ditambahkan badge tingkatan hierarki (`Tingkat {depth}`) berdampingan dengan badge atasan langsung (`Atasan: [Nama Posisi Atasan]`).
+   - Posisi pimpinan utama (`depth === 0`) diberikan aksen gradient biru transparan (`bg-gradient-to-r from-blue-50/50 via-white to-transparent`) serta badge `Root (Pimpinan Utama)` agar langsung terbaca sebagai simpul pucuk tertinggi.
