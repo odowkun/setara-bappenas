@@ -51,8 +51,11 @@ interface OrgPersonnel {
   position: string;
 }
 
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
+
 export default function TambahUserPage() {
   const router = useRouter();
+  const { markClean } = useUnsavedChanges();
   const { hasRole } = useAuth();
   const isSuperAdmin = hasRole(["superadmin"]);
 
@@ -307,6 +310,7 @@ export default function TambahUserPage() {
 
       toast.success(`Pengguna baru ${name} berhasil ditambahkan!`);
       setIsSaved(true);
+      markClean();
       setTimeout(() => {
         router.push("/dashboard/users");
       }, 1500);

@@ -21,10 +21,12 @@ import { officialContentService } from "@/services/officialContentService";
 import { adminService } from "@/services/adminService";
 import { toast } from "@/lib/swal";
 import SearchableSelect from "@/components/ui/SearchableSelect";
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 
 export default function TambahBeritaPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { markClean } = useUnsavedChanges();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [categoryList, setCategoryList] = useState<string[]>([]);
@@ -186,6 +188,7 @@ export default function TambahBeritaPage() {
       toast.success(publish
         ? "Artikel tersimpan dan diterbitkan."
         : "Artikel tersimpan sebagai draf.");
+      markClean();
       router.push("/dashboard/berita");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Artikel berita gagal disimpan.");

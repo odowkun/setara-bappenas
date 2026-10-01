@@ -25,9 +25,11 @@ import {
   officialContentService,
   type TaxonomyItem,
 } from "@/services/officialContentService";
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 
 export default function TambahAgendaPage() {
   const router = useRouter();
+  const { markClean } = useUnsavedChanges();
   const searchParams = useSearchParams();
   const dateParam = searchParams.get("date");
 
@@ -186,6 +188,7 @@ export default function TambahAgendaPage() {
       toast.success(publish
         ? "Agenda tersimpan dan diterbitkan."
         : "Agenda tersimpan sebagai draf.");
+      markClean();
       router.push("/dashboard/agenda");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Agenda gagal disimpan.");

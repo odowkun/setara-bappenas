@@ -28,9 +28,11 @@ import {
   type TaxonomyItem,
 } from "@/services/officialContentService";
 import { toast } from "@/lib/swal";
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 
 export default function TambahPengumumanPage() {
   const router = useRouter();
+  const { markClean } = useUnsavedChanges();
 
   const [title, setTitle] = useState("");
   const [typeItems, setTypeItems] = useState<TaxonomyItem[]>([]);
@@ -147,6 +149,7 @@ export default function TambahPengumumanPage() {
       toast.success(publish
         ? "Pengumuman tersimpan dan diterbitkan."
         : "Pengumuman tersimpan sebagai draf.");
+      markClean();
       router.push("/dashboard/pengumuman");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Pengumuman gagal disimpan.");

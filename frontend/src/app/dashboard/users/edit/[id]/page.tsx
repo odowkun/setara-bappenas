@@ -49,8 +49,11 @@ interface OrgPersonnel {
   position: string;
 }
 
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
+
 export default function EditUserPage() {
   const router = useRouter();
+  const { markClean } = useUnsavedChanges();
   const params = useParams();
   const userId = params?.id as string;
 
@@ -350,6 +353,7 @@ export default function EditUserPage() {
 
       toast.success(`Data pengguna ${name} berhasil diperbarui!`);
       setIsSaved(true);
+      markClean();
       setTimeout(() => {
         router.push("/dashboard/users");
       }, 1500);

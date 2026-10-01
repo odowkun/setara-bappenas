@@ -13,10 +13,12 @@ import { DateRangePlanner } from "@/components/ui/DateRangePlanner";
 import { ArrowLeft, Save, CheckCircle2, Lock, Plus, X, FileUp } from "lucide-react";
 import SearchableSelect from "@/components/ui/SearchableSelect";
 import { showSuccessSwal, showErrorSwal, toast } from "@/lib/swal";
+import { useUnsavedChanges } from "@/context/UnsavedChangesContext";
 
 export default function TambahDokumenPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const { markClean } = useUnsavedChanges();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -204,6 +206,7 @@ export default function TambahDokumenPage() {
           ? "Reviewer resmi akan memeriksa checksum, klasifikasi, dan metadata sebelum publikasi."
           : "Versi pertama dan checksum tersimpan di storage privat; dokumen belum tampil ke publik."
       );
+      markClean();
       router.push("/dashboard/dokumen");
     } catch (err: any) {
       showErrorSwal(

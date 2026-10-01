@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { UnsavedChangesProvider } from "@/context/UnsavedChangesContext";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import DashboardLoadingScreen from "@/components/ui/DashboardLoadingScreen";
@@ -164,7 +165,9 @@ function DashboardContent({ children }: { children: React.ReactNode }) {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <DashboardContent>{children}</DashboardContent>
+      <UnsavedChangesProvider>
+        <DashboardContent>{children}</DashboardContent>
+      </UnsavedChangesProvider>
     </AuthProvider>
   );
 }
