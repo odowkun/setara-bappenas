@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { authenticatedFetch, STORAGE_BASE_URL } from "@/lib/apiClient";
+import { toast } from "@/lib/swal";
 import { createPortal } from "react-dom";
 import {
   LayoutGrid,
@@ -19,6 +20,7 @@ import {
   Network,
   Target,
   Users,
+  Sparkles,
 } from "lucide-react";
 
 export interface OrgNode {
@@ -459,6 +461,135 @@ interface CanvasNode {
   type: "root" | "sekretaris" | "subag" | "bidang" | "subid";
 }
 
+// Pure function to calculate balanced, symmetrical official BAPPEDA hierarchy layout
+export function computeCanonicalBappedaLayout(data: OrgNode): CanvasNode[] {
+  if (!data) return [];
+  const nodes: CanvasNode[] = [];
+
+  const CARD_W = 290;
+  const children = Array.isArray(data.children) ? data.children.filter(Boolean) : [];
+
+  const sekretarisNode = children.find(
+    (c) => c.position && c.position.toUpperCase().includes("SEKRETARIS")
+  );
+  const bidangNodes = children.filter(
+    (c) => !c.position || !c.position.toUpperCase().includes("SEKRETARIS")
+  );
+
+  // Calculate horizontal balance
+  const totalBidangWidth =
+    bidangNodes.length > 0
+      ? bidangNodes.length * CARD_W + (bidangNodes.length - 1) * 40
+      : 800;
+  const canvasCenterX = Math.max(900, 80 + totalBidangWidth / 2);
+
+  // 1. Root: Kepala Badan (Center Top)
+  const rootX = canvasCenterX - CARD_W / 2;
+  const rootY = 40;
+
+  nodes.push({
+    id: data.id,
+    parentId: null,
+    name: data.name,
+    position: data.position,
+    nip: data.nip,
+    avatar: data.avatar,
+    x: Math.round(rootX),
+    y: rootY,
+    type: "root",
+  });
+
+  // 2. Sekretaris & Subag (Tingkat 2 & 3)
+  if (sekretarisNode) {
+    const subags = Array.isArray(sekretarisNode.children)
+      ? sekretarisNode.children.filter(Boolean)
+      : [];
+
+    const sekX = rootX + 270; // offset slightly to the right of Kepala
+    const sekY = 190;
+
+    nodes.push({
+      id: sekretarisNode.id,
+      parentId: data.id,
+      name: sekretarisNode.name,
+      position: sekretarisNode.position,
+      nip: sekretarisNode.nip,
+      avatar: sekretarisNode.avatar,
+      x: Math.round(sekX),
+      y: sekY,
+      type: "sekretaris",
+    });
+
+    if (subags.length > 0) {
+      const subagGap = 30;
+      const totalSubagW =
+        subags.length * CARD_W + (subags.length - 1) * subagGap;
+      const subagStartX = sekX + CARD_W / 2 - totalSubagW / 2;
+      const subagY = 360;
+
+      subags.forEach((sub, idx) => {
+        nodes.push({
+          id: sub.id,
+          parentId: sekretarisNode.id,
+          name: sub.name,
+          position: sub.position,
+          nip: sub.nip,
+          avatar: sub.avatar,
+          x: Math.round(subagStartX + idx * (CARD_W + subagGap)),
+          y: subagY,
+          type: "subag",
+        });
+      });
+    }
+  }
+
+  // 3. Bidang-Bidang Teknis (Tingkat 4: Horisontal Sejajar di bawah Kasubag)
+  if (bidangNodes.length > 0) {
+    const bidangGap = 40;
+    const totalW =
+      bidangNodes.length * CARD_W + (bidangNodes.length - 1) * bidangGap;
+    const startX = Math.max(60, canvasCenterX - totalW / 2);
+    const bidangY = 560;
+
+    bidangNodes.forEach((bidang, bIdx) => {
+      const bX = startX + bIdx * (CARD_W + bidangGap);
+      const bY = bidangY;
+
+      nodes.push({
+        id: bidang.id,
+        parentId: data.id,
+        name: bidang.name,
+        position: bidang.position,
+        nip: bidang.nip,
+        avatar: bidang.avatar,
+        x: Math.round(bX),
+        y: bY,
+        type: "bidang",
+      });
+
+      // Subids under each Bidang (Tingkat 5: Susun vertikal ke bawah)
+      const subids = Array.isArray(bidang.children)
+        ? bidang.children.filter(Boolean)
+        : [];
+      subids.forEach((subid, sIdx) => {
+        nodes.push({
+          id: subid.id,
+          parentId: bidang.id,
+          name: subid.name,
+          position: subid.position,
+          nip: subid.nip,
+          avatar: subid.avatar,
+          x: Math.round(bX),
+          y: bY + 160 + sIdx * 140,
+          type: "subid",
+        });
+      });
+    });
+  }
+
+  return nodes;
+}
+
 // Interactive SVG Canvas Component with Bulletproof Save Positions Handler
 const InteractiveCanvasOrgChart: React.FC<{
   data: OrgNode;
@@ -485,79 +616,31 @@ const InteractiveCanvasOrgChart: React.FC<{
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
-  // Generate initial coordinates recursively for ALL tree nodes at any depth
+  // Generate initial coordinates recursively for ALL tree nodes with canonical fallback
   const initialNodes = useMemo<CanvasNode[]>(() => {
     if (!data) return [];
 
-    const nodes: CanvasNode[] = [];
+    const canonical = computeCanonicalBappedaLayout(data);
+    const nodeMap = new Map<string, OrgNode>();
 
-    // Helper function to recursively flatten tree nodes into canvas items with smart default XY positions
-    const traverse = (
-      node: OrgNode,
-      parentId: string | null = null,
-      depth = 0,
-      indexInParent = 0,
-      parentX = 700,
-      parentY = 40
-    ) => {
-      if (!node) return;
-      let defaultX = parentX;
-      let defaultY = parentY;
-
-      if (depth === 0) {
-        defaultX = 700;
-        defaultY = 40;
-      } else if (depth === 1) {
-        // Level 1 (Sekretaris & Bidang): spread horizontally
-        const isSekretaris = node.position.toUpperCase().includes("SEKRETARIS");
-        if (isSekretaris) {
-          defaultX = 1050;
-          defaultY = 180;
-        } else {
-          defaultX = 150 + indexInParent * 310;
-          defaultY = 520;
-        }
-      } else if (depth === 2) {
-        // Level 2 (Subag / Subid): offset relative to parent
-        defaultX = parentX;
-        defaultY = parentY + 140 + indexInParent * 130;
-      } else {
-        // Level 3+: stack vertically under parent
-        defaultX = parentX + 20;
-        defaultY = parentY + 140 + indexInParent * 130;
-      }
-
-      const x = node.pos_x != null ? node.pos_x : defaultX;
-      const y = node.pos_y != null ? node.pos_y : defaultY;
-
-      let type: "root" | "sekretaris" | "subag" | "bidang" | "subid" = "subid";
-      if (depth === 0) type = "root";
-      else if (node.position.toUpperCase().includes("SEKRETARIS")) type = "sekretaris";
-      else if (node.position.toUpperCase().includes("BIDANG")) type = "bidang";
-      else if (node.position.toUpperCase().includes("SUBAG")) type = "subag";
-
-      nodes.push({
-        id: node.id,
-        parentId,
-        name: node.name,
-        position: node.position,
-        nip: node.nip,
-        avatar: node.avatar,
-        x,
-        y,
-        type,
-      });
-
-      if (node.children && node.children.length > 0) {
-        node.children.forEach((child, childIdx) => {
-          traverse(child, node.id, depth + 1, childIdx, x, y);
-        });
-      }
+    const collectNodes = (n: OrgNode) => {
+      nodeMap.set(n.id, n);
+      if (n.children) n.children.forEach(collectNodes);
     };
+    collectNodes(data);
 
-    traverse(data);
-
-    return nodes;
+    // If node has pos_x/pos_y from database, use it; otherwise fallback to clean canonical layout
+    return canonical.map((canon) => {
+      const orig = nodeMap.get(canon.id);
+      if (orig && orig.pos_x != null && orig.pos_y != null) {
+        return {
+          ...canon,
+          x: orig.pos_x,
+          y: orig.pos_y,
+        };
+      }
+      return canon;
+    });
   }, [data]);
 
   const [nodes, setNodes] = useState<CanvasNode[]>(initialNodes);
@@ -567,6 +650,17 @@ const InteractiveCanvasOrgChart: React.FC<{
   useEffect(() => {
     setNodes(initialNodes);
   }, [initialNodes]);
+
+  // Reset / Auto-Align layout to official symmetrical BAPPEDA standard
+  const handleAutoAlignLayout = () => {
+    if (!data) return;
+    const cleanNodes = computeCanonicalBappedaLayout(data);
+    setNodes(cleanNodes);
+    toast.success("Bagan berhasil ditata rapi secara otomatis! Klik 'Simpan Tata Letak' untuk menerapkan ke server.");
+    setTimeout(() => {
+      centerOnRoot();
+    }, 200);
+  };
 
   // Save updated node XY coordinates to Laravel REST API Database
   const handleSavePositionsToDB = async () => {
@@ -601,7 +695,7 @@ const InteractiveCanvasOrgChart: React.FC<{
   };
 
   const handleResetPositions = () => {
-    setNodes(initialNodes);
+    handleAutoAlignLayout();
   };
 
   // Handle mouse wheel & trackpad scrolling directly on the canvas container
@@ -661,15 +755,20 @@ const InteractiveCanvasOrgChart: React.FC<{
     };
   };
 
+  const GRID_SIZE = 20;
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!draggingId) return;
 
     const scale = zoomLevel / 100;
-    const newX = (e.clientX - dragOffset.current.x) / scale;
-    const newY = (e.clientY - dragOffset.current.y) / scale;
+    const rawX = (e.clientX - dragOffset.current.x) / scale;
+    const rawY = (e.clientY - dragOffset.current.y) / scale;
+
+    const snappedX = Math.max(20, Math.round(rawX / GRID_SIZE) * GRID_SIZE);
+    const snappedY = Math.max(20, Math.round(rawY / GRID_SIZE) * GRID_SIZE);
 
     setNodes((prev) =>
-      prev.map((n) => (n.id === draggingId ? { ...n, x: Math.max(10, newX), y: Math.max(10, newY) } : n))
+      prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
     );
   };
 
@@ -694,11 +793,14 @@ const InteractiveCanvasOrgChart: React.FC<{
     if (!touch) return;
 
     const scale = zoomLevel / 100;
-    const newX = (touch.clientX - dragOffset.current.x) / scale;
-    const newY = (touch.clientY - dragOffset.current.y) / scale;
+    const rawX = (touch.clientX - dragOffset.current.x) / scale;
+    const rawY = (touch.clientY - dragOffset.current.y) / scale;
+
+    const snappedX = Math.max(20, Math.round(rawX / GRID_SIZE) * GRID_SIZE);
+    const snappedY = Math.max(20, Math.round(rawY / GRID_SIZE) * GRID_SIZE);
 
     setNodes((prev) =>
-      prev.map((n) => (n.id === draggingId ? { ...n, x: Math.max(10, newX), y: Math.max(10, newY) } : n))
+      prev.map((n) => (n.id === draggingId ? { ...n, x: snappedX, y: snappedY } : n))
     );
   };
 
@@ -706,7 +808,7 @@ const InteractiveCanvasOrgChart: React.FC<{
     setDraggingId(null);
   };
 
-  // SVG Connection Lines Map
+  // Smart Orthogonal Bus Corridor Routing Map (Draw.io Hierarchy Style)
   const CARD_W = 290;
   const CARD_H = 124;
 
@@ -721,45 +823,47 @@ const InteractiveCanvasOrgChart: React.FC<{
       const parent = nodeMap.get(child.parentId);
       if (!parent) return;
 
-      let startX: number;
-      let startY: number;
-      let endX: number;
-      let endY: number;
+      const pCenterX = parent.x + CARD_W / 2;
+      const pBottom = parent.y + CARD_H;
+      const pTop = parent.y;
+
+      const cCenterX = child.x + CARD_W / 2;
+      const cTop = child.y;
+      const cBottom = child.y + CARD_H;
+
       let d: string;
 
-      const isRightSide = child.x >= parent.x + CARD_W - 40;
-      const isLeftSide = child.x <= parent.x - CARD_W + 40;
+      // 1. Standard Hierarchical Top-to-Bottom Flow: Child is below Parent
+      if (cTop >= pBottom - 20) {
+        // Calculate clear horizontal corridor Y strictly in whitespace between parent level and child level
+        const verticalGap = cTop - pBottom;
+        const corridorY = pBottom + Math.max(25, Math.min(verticalGap / 2, 45));
 
-      if (isRightSide) {
-        // Child is placed to the RIGHT of Parent -> Connect Parent Right Edge to Child Left Edge
-        startX = parent.x + CARD_W;
-        startY = parent.y + CARD_H / 2;
-
-        endX = child.x;
-        endY = child.y + CARD_H / 2;
-
-        const midX = (startX + endX) / 2;
-        d = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
-      } else if (isLeftSide) {
-        // Child is placed to the LEFT of Parent -> Connect Parent Left Edge to Child Right Edge
-        startX = parent.x;
-        startY = parent.y + CARD_H / 2;
-
-        endX = child.x + CARD_W;
-        endY = child.y + CARD_H / 2;
-
-        const midX = (startX + endX) / 2;
-        d = `M ${startX} ${startY} H ${midX} V ${endY} H ${endX}`;
+        // Draw clean orthogonal Draw.io path: Parent Bottom -> Down to Corridor -> Horizontal to Child X -> Down to Child Top
+        d = `M ${pCenterX} ${pBottom} V ${corridorY} H ${cCenterX} V ${cTop}`;
+      } else if (cBottom <= pTop + 20) {
+        // 2. Inverted: Child is above Parent (e.g. dragged above)
+        const verticalGap = pTop - cBottom;
+        const corridorY = cBottom + Math.max(25, Math.min(verticalGap / 2, 45));
+        d = `M ${pCenterX} ${pTop} V ${corridorY} H ${cCenterX} V ${cBottom}`;
       } else {
-        // Child is placed BELOW Parent -> Connect Parent Bottom Edge to Child Top Edge
-        startX = parent.x + CARD_W / 2;
-        startY = parent.y + CARD_H;
+        // 3. Side-by-Side: Child is roughly level with Parent
+        const pCenterY = parent.y + CARD_H / 2;
+        const cCenterY = child.y + CARD_H / 2;
 
-        endX = child.x + CARD_W / 2;
-        endY = child.y;
-
-        const midY = (startY + endY) / 2;
-        d = `M ${startX} ${startY} V ${midY} H ${endX} V ${endY}`;
+        if (child.x >= parent.x + CARD_W) {
+          // Child to right of parent
+          const midX = (parent.x + CARD_W + child.x) / 2;
+          d = `M ${parent.x + CARD_W} ${pCenterY} H ${midX} V ${cCenterY} H ${child.x}`;
+        } else if (child.x + CARD_W <= parent.x) {
+          // Child to left of parent
+          const midX = (child.x + CARD_W + parent.x) / 2;
+          d = `M ${parent.x} ${pCenterY} H ${midX} V ${cCenterY} H ${child.x + CARD_W}`;
+        } else {
+          // Overlapping: direct vertical corridor
+          const midY = (pBottom + cTop) / 2;
+          d = `M ${pCenterX} ${pBottom} V ${midY} H ${cCenterX} V ${cTop}`;
+        }
       }
 
       connections.push({ id: `${parent.id}-${child.id}`, d });
@@ -871,15 +975,16 @@ const InteractiveCanvasOrgChart: React.FC<{
             </button>
           </div>
 
-          {/* Reset Positions Button (Admin Dashboard Only) */}
+          {/* Auto-Align / Rapikan Bagan Button (Admin Dashboard Only) */}
           {showSaveButton && (
             <button
               type="button"
-              onClick={handleResetPositions}
-              title="Reset Posisi Default"
-              className="p-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition shadow-sm"
+              onClick={handleAutoAlignLayout}
+              title="Rapikan Tata Letak Bagan Otomatis (Standar BAPPEDA)"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-semibold text-xs flex items-center gap-1.5 transition shadow-sm active:scale-95"
             >
-              <RotateCcw className="w-4 h-4" />
+              <Sparkles className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+              <span className="hidden sm:inline">Rapikan Bagan</span>
             </button>
           )}
 
@@ -889,10 +994,11 @@ const InteractiveCanvasOrgChart: React.FC<{
               type="button"
               onClick={handleSavePositionsToDB}
               disabled={saving}
-              title="Simpan Posisi Bagan ke DB"
-              className="p-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-600/20 transition disabled:opacity-50"
+              title="Simpan Tata Letak Bagan ke Database Publik"
+              className="px-2.5 sm:px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center gap-1.5 shadow-md shadow-blue-600/20 transition disabled:opacity-50 active:scale-95"
             >
-              <Save className="w-4 h-4" />
+              <Save className="w-3.5 h-3.5 shrink-0" />
+              <span className="hidden sm:inline">{saving ? "Menyimpan..." : "Simpan Tata Letak"}</span>
             </button>
           )}
 

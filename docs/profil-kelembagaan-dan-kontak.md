@@ -123,3 +123,31 @@ Sesuai regulasi kelembagaan pemerintah (PermenPAN-RB), Jabatan Fungsional pada B
    - **Langkah 2**: Pejabat Struktural & NIP.
    - **Langkah 3**: Kelompok Jabatan Fungsional (Tambah, Edit, Hapus personel fungsional dengan dialog konfirmasi SweetAlert2 `showDeleteConfirm` dan toast feedback).
    - Placeholder input nama terstandarisasi `"Contoh: Agustino Hermanus, S.T."`.
+
+## Standarisasi Kanvas Interaktif: Smart Routing Ortogonal, Snap-to-Grid & Auto-Align
+
+Pada bagan kanvas interaktif (`InteractiveCanvasOrgChart`), implementasi sistem routing garis dan penataan posisi dirancang menyerupai standar diagramming profesional (Draw.io / Lucidchart):
+
+1. **Smart Orthogonal Bus Corridor Routing (Garis Ortogonal Bebas Tabrakan)**:
+   - **Masalah Lama**: Jalur garis lama menghubungkan sisi kiri parent ke sisi kanan child secara horizontal melintang, sehingga garis menembus langsung di tengah-tengah kartu Kabid lain di antara keduanya.
+   - **Solusi Koridor Bebas**:
+     - Titik keluar: Bagian tengah bawah kartu atasan (`pCenterX, pBottom`).
+     - Jalur vertikal: Garis turun lurus ke area koridor kosong (`corridorY = pBottom + Math.max(25, Math.min(verticalGap / 2, 45))`).
+     - Jalur horizontal (Bus corridor): Garis bergerak mendatar di ruang hampa antar-tingkat hierarki tanpa pernah memotong kartu pejabat mana pun.
+     - Titik masuk: Garis turun tegak lurus (90 derajat ortogonal) ke bagian tengah atas kartu bawahan (`cCenterX, cTop`).
+     - Jalur vektor SVG: `M ${pCenterX} ${pBottom} V ${corridorY} H ${cCenterX} V ${cTop}`.
+
+2. **Snap-to-Grid Otomatis (Grid 20px)**:
+   - Pada saat admin melakukan drag & drop kartu menggunakan mouse maupun layar sentuh mobile/tablet, koordinat `x` dan `y` otomatis dikunci ke kelipatan terdekat dari `GRID_SIZE = 20px` (`Math.round(raw / 20) * 20`).
+   - Menghasilkan penataan kartu yang lurus presisi, sejajar, dan simetris tanpa goyangan offset beberapa piksel.
+
+3. **Mesin Tata Letak Kanonis & Tombol "Rapikan Bagan" (`computeCanonicalBappedaLayout`)**:
+   - Menghitung posisi hierarkis ideal secara otomatis:
+     - **Tingkat 1**: Kepala Badan di bagian tengah atas (`y: 40`).
+     - **Tingkat 2**: Sekretaris Badan (`y: 190`).
+     - **Tingkat 3**: 3 Kasubag di bawah Sekretariat (`y: 360`, spasi 310px).
+     - **Tingkat 4**: 4 Kepala Bidang berjejer horizontal (`y: 560`, spasi 310px).
+     - **Tingkat 5**: Sub-bidang tersusun vertikal ke bawah di bawah masing-masing Bidang (`y: 720, 860, 1000`).
+   - Tombol **"Rapikan Bagan"** (`Sparkles`) pada toolbar kanvas admin memungkinkan reset posisi 1-klik kembali ke tata letak simetris resmi BAPPEDA, disertai notifikasi toast dan kamera otomatis memusat ke Kepala Badan.
+   - Tombol **"Simpan Tata Letak"** (`Save`) mengirimkan array koordinat final ke endpoint `/pejabat/save-positions` untuk disinkronkan ke database publik.
+
