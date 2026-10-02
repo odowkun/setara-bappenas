@@ -345,4 +345,28 @@ Sebelumnya, penentuan koordinat proyek pembangunan fisik hanya mengandalkan klik
 4. **Fallback & Sanitasi Aman**:
    - Saat input kehilangan fokus (`onBlur`), jika nilai kosong atau bukan angka valid (`NaN`), sistem secara otomatis mengembalikan nilai ke koordinat valid terakhir tanpa merusak form atau menimbulkan exception.
 
+---
+
+## 16. Standarisasi OPD Default & Sumber Pendanaan Proyek (02 Oktober 2026)
+
+### A. Latar Belakang & Kebutuhan
+Dalam operasional penginputan geotagging proyek Bappeda, mayoritas dokumen induk dan proyek dikoordinasikan langsung oleh Bappeda Halmahera Utara. Oleh karena itu, opsi *"Gunakan Bappeda Kabupaten Halmahera Utara"* distandarkan aktif/tercentang secara *default* guna menghemat klik operator. Selain itu, diperlukan klasifikasi penganggaran resmi (*Sumber Dana*) yang dinamis.
+
+### B. Arsitektur Database & Backend
+1. **Migrasi `proyek_details`**:
+   - File migrasi `2026_10_02_000001_add_sumber_dana_to_proyek_details_table.php` menambahkan kolom `sumber_dana` (`string(100)`, `nullable`, terletak setelah `opd_penanggung_jawab`).
+2. **Model & Controller**:
+   - Model `ProyekDetail.php`: Menambahkan `sumber_dana` ke dalam `$fillable`.
+   - `ProyekDetailController.php`: Validasi `sumber_dana => nullable|string|max:100`, tersimpan ke database, dan didukung pada query filter `sumber_dana`.
+
+### C. Antarmuka Frontend & Creatable Dropdown
+1. **Default OPD Bappeda**:
+   - State `isBappedaOpd` terinisialisasi `true`, dan form otomatis mengisi `"Bappeda Kabupaten Halmahera Utara"`. Jika pengguna ingin menginput OPD lain (misal Dinas PUPR), centang cukup dimatikan untuk membuka input teks.
+2. **Pilihan Sumber Dana Standar**:
+   - Opsi bawaan: `APBN`, `APBD 1`, `APBD 2`, `Dana Hibah`.
+3. **Penambahan Opsi Baru Dinamis (`creatable={true}`)**:
+   - Memanfaatkan `SearchableSelect` dengan kapabilitas pencarian real-time dan penambahan opsi baru.
+   - Opsi tambahan kustom yang diketik pengguna (misal: `"DAK Fisik"`, `"CSR Perusahaan"`, `"Dana Desa"`) langsung disimpan ke `localStorage` (`bappeda_custom_sumber_dana`) dan otomatis di-merge dari data proyek database, sehingga opsi baru tersebut selalu tersedia untuk input berikutnya.
+
+
 

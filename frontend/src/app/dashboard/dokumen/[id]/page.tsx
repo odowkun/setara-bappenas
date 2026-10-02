@@ -63,10 +63,45 @@ export default function DocumentDetailPage() {
     latitude: 1.7289,
     longitude: 128.0054,
     pagu_anggaran: 0,
-    opd_penanggung_jawab: "",
+    opd_penanggung_jawab: "Bappeda Kabupaten Halmahera Utara",
+    sumber_dana: "APBN",
   });
   const [newProjectLatInput, setNewProjectLatInput] = useState<string>("1.7289");
   const [newProjectLngInput, setNewProjectLngInput] = useState<string>("128.0054");
+
+  const DEFAULT_SUMBER_DANA = ["APBN", "APBD 1", "APBD 2", "Dana Hibah"];
+  const [sumberDanaOptions, setSumberDanaOptions] = useState<string[]>(DEFAULT_SUMBER_DANA);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bappeda_custom_sumber_dana");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setSumberDanaOptions(Array.from(new Set([...DEFAULT_SUMBER_DANA, ...parsed])));
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  const handleAddSumberDana = (newOption: string) => {
+    const trimmed = newOption.trim();
+    if (!trimmed) return;
+    setSumberDanaOptions((prev) => {
+      if (prev.includes(trimmed)) return prev;
+      const next = [...prev, trimmed];
+      try {
+        localStorage.setItem("bappeda_custom_sumber_dana", JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to persist custom sumber dana:", e);
+      }
+      return next;
+    });
+    setNewProjectForm((prev) => ({ ...prev, sumber_dana: trimmed }));
+    toast.success(`Opsi "${trimmed}" berhasil ditambahkan ke Sumber Dana.`);
+  };
 
   const parseCoordinatePair = (text: string): [number, number] | null => {
     const parts = text.trim().split(/[\s,;]+/).filter(Boolean);
@@ -224,6 +259,7 @@ export default function DocumentDetailPage() {
     if (!newProjectForm.bidang) return toast.error("Bidang penanggung jawab wajib dipilih!");
     if (!newProjectForm.kecamatan.trim()) return toast.error("Kecamatan wajib diisi!");
     if (!newProjectForm.opd_penanggung_jawab.trim()) return toast.error("OPD penanggung jawab wajib diisi!");
+    if (!newProjectForm.sumber_dana?.trim()) return toast.error("Sumber Dana wajib dipilih!");
     if (!hasSelectedGeotagLocation) return toast.error("Pilih titik proyek pada peta!");
     setSubmittingGeotag(true);
 
@@ -252,6 +288,18 @@ export default function DocumentDetailPage() {
         setHasSelectedGeotagLocation(false);
         setNewProjectLatInput(String(newProjectForm.latitude));
         setNewProjectLngInput(String(newProjectForm.longitude));
+        setNewProjectForm({
+          nama_proyek: "",
+          bidang: "",
+          kecamatan: "",
+          desa_kelurahan: "",
+          lokasi_deskripsi: "",
+          latitude: 1.7289,
+          longitude: 128.0054,
+          pagu_anggaran: 0,
+          opd_penanggung_jawab: "Bappeda Kabupaten Halmahera Utara",
+          sumber_dana: "APBN",
+        });
         const updatedList = await proyekService.getProjects(docId, undefined, true);
         setProjects(updatedList);
       }
@@ -848,6 +896,28 @@ export default function DocumentDetailPage() {
                       }
                       placeholder="Masukkan nama OPD sesuai dokumen resmi"
                       className="w-full px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-200 text-xs font-bold text-slate-900 focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+
+                  {/* Sumber Dana Select with Creatable Feature */}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-slate-700 block">
+                        Sumber Dana *
+                      </label>
+                      <span className="text-[10px] text-slate-400">
+                        Bisa ketik opsi baru bila belum ada
+                      </span>
+                    </div>
+                    <SearchableSelect
+                      options={sumberDanaOptions}
+                      value={newProjectForm.sumber_dana}
+                      onChange={(val) => setNewProjectForm({ ...newProjectForm, sumber_dana: String(val) })}
+                      placeholder="-- Pilih Sumber Dana --"
+                      searchPlaceholder="Cari atau ketik sumber dana baru..."
+                      creatable={true}
+                      createLabelPrefix="Tambah sumber dana baru:"
+                      onCreateOption={handleAddSumberDana}
                     />
                   </div>
 

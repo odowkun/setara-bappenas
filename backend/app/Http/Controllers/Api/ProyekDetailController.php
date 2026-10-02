@@ -100,6 +100,10 @@ class ProyekDetailController extends Controller
         if ($request->has('is_published') && $request->is_published !== 'semua') {
             $query->where('is_published', $request->boolean('is_published'));
         }
+
+        if ($request->has('sumber_dana') && $request->sumber_dana !== 'semua') {
+            $query->where('sumber_dana', $request->sumber_dana);
+        }
     }
 
     /**
@@ -120,6 +124,7 @@ class ProyekDetailController extends Controller
             'desa_kelurahan' => 'nullable|string|max:150',
             'lokasi_deskripsi' => 'nullable|string|max:2000',
             'opd_penanggung_jawab' => 'required|string|max:255',
+            'sumber_dana' => 'nullable|string|max:100',
             'delineasi_geojson' => 'nullable|array',
             'tipe_geometri' => 'nullable|string|in:point,polygon,polyline,circle',
             'luas_area_ha' => 'nullable|numeric|min:0',
@@ -158,6 +163,7 @@ class ProyekDetailController extends Controller
             'luas_area_ha' => $validated['luas_area_ha'] ?? null,
             'panjang_km' => $validated['panjang_km'] ?? null,
             'opd_penanggung_jawab' => $validated['opd_penanggung_jawab'],
+            'sumber_dana' => $validated['sumber_dana'] ?? null,
             'created_by' => $actor->name,
             'esri_sync_status' => 'pending',
         ]);

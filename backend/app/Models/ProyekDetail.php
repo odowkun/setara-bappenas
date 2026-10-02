@@ -36,6 +36,7 @@ class ProyekDetail extends Model
         'luas_area_ha',
         'panjang_km',
         'opd_penanggung_jawab',
+        'sumber_dana',
         'created_by',
         'updated_by',
     ];

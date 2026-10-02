@@ -37,6 +37,7 @@ export interface ProyekDetail {
   is_published?: boolean;
   published_at?: string;
   opd_penanggung_jawab?: string;
+  sumber_dana?: string;
   created_by?: string;
   created_at?: string;
   document?: {

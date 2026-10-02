@@ -62,9 +62,13 @@ export default function GeotaggingProyekPage() {
       });
   }, [user, paramDocId]);
 
-  // OPD Checkbox toggle state
-  const [isBappedaOpd, setIsBappedaOpd] = useState(false);
+  // OPD Checkbox toggle state (default true: Gunakan Bappeda Kabupaten Halmahera Utara)
+  const [isBappedaOpd, setIsBappedaOpd] = useState(true);
   const [hasSelectedLocation, setHasSelectedLocation] = useState(false);
+
+  // Sumber Dana state with default options & local persistence
+  const DEFAULT_SUMBER_DANA = ["APBN", "APBD 1", "APBD 2", "Dana Hibah"];
+  const [sumberDanaOptions, setSumberDanaOptions] = useState<string[]>(DEFAULT_SUMBER_DANA);
 
   // Form State
   const [form, setForm] = useState({
@@ -76,7 +80,8 @@ export default function GeotaggingProyekPage() {
     latitude: 1.7289,
     longitude: 128.0054,
     pagu_anggaran: 0,
-    opd_penanggung_jawab: "",
+    opd_penanggung_jawab: "Bappeda Kabupaten Halmahera Utara",
+    sumber_dana: "APBN",
   });
 
   const [latInput, setLatInput] = useState<string>("1.7289");
@@ -150,6 +155,50 @@ export default function GeotaggingProyekPage() {
     } else {
       setLngInput(String(parsed));
     }
+  };
+
+  // Load custom options from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("bappeda_custom_sumber_dana");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          setSumberDanaOptions(Array.from(new Set([...DEFAULT_SUMBER_DANA, ...parsed])));
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
+
+  // Auto-discover unique sumber_dana from existing projects
+  useEffect(() => {
+    if (projects.length > 0) {
+      const fromDb = projects
+        .map((p) => p.sumber_dana)
+        .filter((s): s is string => Boolean(s && s.trim()));
+      if (fromDb.length > 0) {
+        setSumberDanaOptions((prev) => Array.from(new Set([...prev, ...fromDb])));
+      }
+    }
+  }, [projects]);
+
+  const handleAddSumberDana = (newOption: string) => {
+    const trimmed = newOption.trim();
+    if (!trimmed) return;
+    setSumberDanaOptions((prev) => {
+      if (prev.includes(trimmed)) return prev;
+      const next = [...prev, trimmed];
+      try {
+        localStorage.setItem("bappeda_custom_sumber_dana", JSON.stringify(next));
+      } catch (e) {
+        console.warn("Failed to persist custom sumber dana:", e);
+      }
+      return next;
+    });
+    setForm((prev) => ({ ...prev, sumber_dana: trimmed }));
+    toast.success(`Opsi "${trimmed}" berhasil ditambahkan ke Sumber Dana.`);
   };
 
   const [displayPagu, setDisplayPagu] = useState<string>("");
@@ -273,6 +322,7 @@ export default function GeotaggingProyekPage() {
     if (!hasSelectedLocation) return toast.error("Pilih titik lokasi proyek pada peta!");
     if (!displayPagu) return toast.error("Pagu anggaran wajib diisi, gunakan Rp 0 bila belum dialokasikan.");
     if (!form.opd_penanggung_jawab.trim()) return toast.error("OPD Penanggung Jawab wajib diisi!");
+    if (!form.sumber_dana?.trim()) return toast.error("Sumber Dana wajib dipilih!");
     setSubmitting(true);
 
     try {
@@ -311,6 +361,7 @@ export default function GeotaggingProyekPage() {
             : `Data resmi tersimpan di database. ${res.esri_status?.message || "Sinkronisasi ESRI belum tersedia."}`
         );
         
+        setIsBappedaOpd(true);
         setForm((prev) => ({
           ...prev,
           nama_proyek: "",
@@ -318,6 +369,8 @@ export default function GeotaggingProyekPage() {
           desa_kelurahan: "",
           lokasi_deskripsi: "",
           pagu_anggaran: 0,
+          opd_penanggung_jawab: "Bappeda Kabupaten Halmahera Utara",
+          sumber_dana: "APBN",
         }));
         setDisplayPagu("");
         setHasSelectedLocation(false);
@@ -601,6 +654,28 @@ export default function GeotaggingProyekPage() {
                 )}
               </div>
 
+              {/* Sumber Dana Select with Creatable Feature */}
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-bold text-slate-700 block text-xs">
+                    Sumber Dana *
+                  </label>
+                  <span className="text-[10px] font-medium text-slate-400">
+                    Bisa ketik opsi baru bila belum ada
+                  </span>
+                </div>
+                <SearchableSelect
+                  options={sumberDanaOptions}
+                  value={form.sumber_dana}
+                  onChange={(val) => setForm({ ...form, sumber_dana: String(val) })}
+                  placeholder="-- Pilih Sumber Dana --"
+                  searchPlaceholder="Cari atau ketik sumber dana baru..."
+                  creatable={true}
+                  createLabelPrefix="Tambah sumber dana baru:"
+                  onCreateOption={handleAddSumberDana}
+                />
+              </div>
+
               {/* Clean Light-Theme Captured Coordinates Inputs */}
               <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 text-blue-950 space-y-2 shadow-2xs">
                 <div className="flex items-center justify-between">
@@ -729,6 +804,12 @@ export default function GeotaggingProyekPage() {
                         <span className="text-[10px] font-mono font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded shrink-0">
                           OBJECTID: #{prj.esri_objectid || "None"}
                         </span>
+
+                        {prj.sumber_dana && (
+                          <span className="text-[9.5px] font-extrabold text-indigo-800 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full shrink-0">
+                            {prj.sumber_dana}
+                          </span>
+                        )}
                         
                         {/* Honest ESRI Sync Status Badge */}
                         {prj.esri_sync_status === "synced" && (
