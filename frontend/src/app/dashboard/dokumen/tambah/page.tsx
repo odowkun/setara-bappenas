@@ -46,17 +46,6 @@ export default function TambahDokumenPage() {
   const [fileSizeStr, setFileSizeStr] = useState("");
   const [skipWatermark, setSkipWatermark] = useState(false);
   const [description, setDescription] = useState("");
-  const [documentNumber, setDocumentNumber] = useState("");
-  const [ownerOpd, setOwnerOpd] = useState(
-    "BAPPEDA Kabupaten Halmahera Utara"
-  );
-  const [classification, setClassification] = useState<
-    "public" | "internal" | "confidential" | "restricted"
-  >("public");
-  const [retentionPolicy, setRetentionPolicy] = useState<
-    "permanent" | "active_5_years" | "active_10_years" | "custom"
-  >("permanent");
-  const [keywords, setKeywords] = useState("");
   const [isSaved, setIsSaved] = useState(false);
 
   // Dynamic Custom Jenis Dokumen Modal (Superadmin Only)
@@ -179,15 +168,12 @@ export default function TambahDokumenPage() {
         ukuran: fileSizeStr,
         fileUrl,
         isPublic: submitForReview,
-        documentNumber,
-        ownerOpd,
-        keywords: keywords
-          .split(",")
-          .map((keyword) => keyword.trim())
-          .filter(Boolean),
+        documentNumber: undefined,
+        ownerOpd: "BAPPEDA Kabupaten Halmahera Utara",
+        keywords: [],
         classification:
-          user.role === "admin_bidang" ? "internal" : classification,
-        retentionPolicy,
+          user.role === "admin_bidang" ? "internal" : "public",
+        retentionPolicy: "permanent",
         uploadedBy: `${user.name} (${user.role})`,
         skipWatermark,
       });
@@ -348,104 +334,6 @@ export default function TambahDokumenPage() {
               setTahun(yearStr);
             }}
           />
-
-          <div className="space-y-4 rounded-3xl border border-blue-100 bg-blue-50/50 p-5">
-            <div>
-              <h2 className="text-sm font-black text-slate-900">
-                Tata Kelola Arsip
-              </h2>
-              <p className="mt-1 text-[11px] font-medium text-slate-600">
-                Tentukan kepemilikan, klasifikasi akses, dan masa retensi sejak versi pertama.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">
-                  Nomor Dokumen Resmi
-                </label>
-                <input
-                  type="text"
-                  value={documentNumber}
-                  onChange={(event) => setDocumentNumber(event.target.value)}
-                  placeholder="Contoh: 000.7/123/BAPPEDA/2026"
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">
-                  OPD Pemilik Arsip *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={ownerOpd}
-                  onChange={(event) => setOwnerOpd(event.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">
-                  Klasifikasi Akses
-                </label>
-                {user?.role === "admin_bidang" ? (
-                  <div className="flex min-h-11 items-center gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 text-xs font-bold text-amber-900">
-                    <Lock className="h-4 w-4" />
-                    Internal — reviewer menentukan akses publik
-                  </div>
-                ) : (
-                  <SearchableSelect
-                    options={[
-                      { value: "internal", label: "Internal" },
-                      { value: "public", label: "Publik" },
-                      { value: "confidential", label: "Rahasia" },
-                      { value: "restricted", label: "Terbatas" },
-                    ]}
-                    value={classification}
-                    onChange={(value) =>
-                      setClassification(value as typeof classification)
-                    }
-                    placeholder="Pilih klasifikasi"
-                    searchPlaceholder="Cari klasifikasi..."
-                  />
-                )}
-              </div>
-
-              <div>
-                <label className="mb-2 block text-xs font-extrabold text-slate-700">
-                  Kebijakan Retensi
-                </label>
-                <SearchableSelect
-                  options={[
-                    { value: "permanent", label: "Permanen" },
-                    { value: "active_5_years", label: "Aktif 5 tahun" },
-                    { value: "active_10_years", label: "Aktif 10 tahun" },
-                    { value: "custom", label: "Tanggal khusus (atur setelah simpan)" },
-                  ]}
-                  value={retentionPolicy}
-                  onChange={(value) =>
-                    setRetentionPolicy(value as typeof retentionPolicy)
-                  }
-                  placeholder="Pilih kebijakan retensi"
-                  searchPlaceholder="Cari kebijakan..."
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="mb-2 block text-xs font-extrabold text-slate-700">
-                Kata Kunci Pencarian
-              </label>
-              <input
-                type="text"
-                value={keywords}
-                onChange={(event) => setKeywords(event.target.value)}
-                placeholder="Pisahkan dengan koma, contoh: RKPD, infrastruktur, Galela"
-                className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-xs font-bold text-slate-900 outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/15"
-              />
-            </div>
-          </div>
 
           {/* Resumable Chunked File Uploader Component */}
           <div className="space-y-3">

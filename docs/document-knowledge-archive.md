@@ -148,6 +148,10 @@ is_public=true dan tampil pada katalog/search publik
 
 Flag legacy `is_public=true` pada saat create tidak melewati review; backend hanya mengubahnya menjadi permintaan submit.
 
+> [!NOTE]
+> **Penyederhanaan Formulir Unggah Dokumen (02 Oktober 2026)**:
+> Bagian input *Tata Kelola Arsip* (Nomor Dokumen, OPD Pemilik, Klasifikasi Akses, Kebijakan Retensi, Kata Kunci) telah disederhanakan dan dihilangkan dari antarmuka formulir `/dashboard/dokumen/tambah`. Sistem secara otomatis mengisi nilai default aman (`owner_opd: BAPPEDA Halut`, `classification: public/internal`, `retention_policy: permanent`, `keywords: []`) di sisi frontend dan backend sehingga operator tidak terbebani input kearsipan teknis yang rumit. Penyesuaian tata kelola khusus tetap dapat dilakukan pada halaman kelola arsip reviewer jika sewaktu-waktu dibutuhkan.
+
 ### Revisi
 
 1. Berkas revisi diproses melalui pipeline watermark yang sama.
