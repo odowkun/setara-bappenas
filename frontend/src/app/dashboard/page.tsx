@@ -26,6 +26,7 @@ import {
   Megaphone,
   Briefcase,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 
 interface ProjectsSummary {
@@ -124,6 +125,7 @@ export default function DashboardPage() {
   const [logs, setLogs] = useState<AuditLog[]>([]);
 
   // Real Sub-Menu Chart Data
+  const [chartsLoading, setChartsLoading] = useState(true);
   const [projectsSummary, setProjectsSummary] = useState<ProjectsSummary | null>(null);
   const [documentsByType, setDocumentsByType] = useState<DocumentTypeStat[]>([]);
   const [portalStats, setPortalStats] = useState<PortalStats | null>(null);
@@ -134,25 +136,27 @@ export default function DashboardPage() {
   });
 
   const fetchCharts = async () => {
+    setChartsLoading(true);
     try {
-      const res = await authenticatedFetch("/dashboard/charts", { cache: "no-store" });
-      const json = await res.json();
-      if (json.status === "success" && json.data) {
-        if (json.data.projects_summary) {
-          setProjectsSummary(json.data.projects_summary);
+      const data = await adminService.fetchDashboardCharts();
+      if (data) {
+        if (data.projects_summary) {
+          setProjectsSummary(data.projects_summary);
         }
-        if (Array.isArray(json.data.documents_by_type)) {
-          setDocumentsByType(json.data.documents_by_type);
+        if (Array.isArray(data.documents_by_type)) {
+          setDocumentsByType(data.documents_by_type);
         }
-        if (json.data.portal_stats) {
-          setPortalStats(json.data.portal_stats);
+        if (data.portal_stats) {
+          setPortalStats(data.portal_stats);
         }
-        if (json.data.public_engagement) {
-          setPublicEngagement(json.data.public_engagement);
+        if (data.public_engagement) {
+          setPublicEngagement(data.public_engagement);
         }
       }
     } catch (err) {
       console.error("Data chart riil sub-menu gagal dimuat:", err);
+    } finally {
+      setChartsLoading(false);
     }
   };
 
@@ -201,10 +205,15 @@ export default function DashboardPage() {
               <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
               <span>{getRoleDisplayName()}</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200/70 text-emerald-800 text-[11px] font-bold">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Sinkronisasi Otomatis Sub-Menu</span>
-            </span>
+            <button
+              onClick={fetchCharts}
+              disabled={chartsLoading}
+              title="Klik untuk menyinkronkan data metrik sub-menu"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/70 text-emerald-800 text-[11px] font-bold transition cursor-pointer disabled:opacity-60"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 text-emerald-600 ${chartsLoading ? "animate-spin" : ""}`} />
+              <span>{chartsLoading ? "Menyinkronkan..." : "Sinkronisasi Otomatis Sub-Menu"}</span>
+            </button>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
             Selamat Datang, <span className="text-blue-700">{user?.name}</span> 👋
@@ -293,7 +302,13 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <div className="text-2xl font-black text-slate-900">
-                    {projectsSummary?.total_projects ?? 0} Titik Proyek
+                    {projectsSummary ? (
+                      `${projectsSummary.total_projects} Titik Proyek`
+                    ) : chartsLoading ? (
+                      <span className="inline-block w-28 h-7 bg-slate-200 animate-pulse rounded-lg" />
+                    ) : (
+                      "0 Titik Proyek"
+                    )}
                   </div>
                   <p className="text-[11px] text-slate-500 font-medium mt-0.5">
                     {projectsSummary ? `Serapan: ${projectsSummary.serapan_persen}% (${formatRupiah(projectsSummary.total_realisasi)})` : "Peta & Pemantauan Fisik"}
@@ -542,26 +557,50 @@ export default function DashboardPage() {
             <div className="grid grid-cols-2 gap-2">
               <div className="p-2.5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-emerald-800">Selesai</span>
-                <span className="text-xs font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.selesai ?? 0}
+                <span className="text-xs font-black text-emerald-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs min-w-[24px] text-center">
+                  {projectsSummary ? (
+                    projectsSummary.status_counts.selesai
+                  ) : chartsLoading ? (
+                    <span className="inline-block w-3 h-3 bg-emerald-200 animate-pulse rounded" />
+                  ) : (
+                    0
+                  )}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-blue-800">Dalam Proses</span>
-                <span className="text-xs font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.dalam_proses ?? 0}
+                <span className="text-xs font-black text-blue-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs min-w-[24px] text-center">
+                  {projectsSummary ? (
+                    projectsSummary.status_counts.dalam_proses
+                  ) : chartsLoading ? (
+                    <span className="inline-block w-3 h-3 bg-blue-200 animate-pulse rounded" />
+                  ) : (
+                    0
+                  )}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-slate-700">Belum Mulai</span>
-                <span className="text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.belum_mulai ?? 0}
+                <span className="text-xs font-black text-slate-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs min-w-[24px] text-center">
+                  {projectsSummary ? (
+                    projectsSummary.status_counts.belum_mulai
+                  ) : chartsLoading ? (
+                    <span className="inline-block w-3 h-3 bg-slate-300 animate-pulse rounded" />
+                  ) : (
+                    0
+                  )}
                 </span>
               </div>
               <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between">
                 <span className="text-[11px] font-bold text-rose-800">Terkendala</span>
-                <span className="text-xs font-black text-rose-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs">
-                  {projectsSummary?.status_counts.terkendala ?? 0}
+                <span className="text-xs font-black text-rose-900 bg-white px-2 py-0.5 rounded-lg shadow-2xs min-w-[24px] text-center">
+                  {projectsSummary ? (
+                    projectsSummary.status_counts.terkendala
+                  ) : chartsLoading ? (
+                    <span className="inline-block w-3 h-3 bg-rose-200 animate-pulse rounded" />
+                  ) : (
+                    0
+                  )}
                 </span>
               </div>
             </div>
@@ -630,9 +669,13 @@ export default function DashboardPage() {
                   </div>
                 );
               })
+            ) : chartsLoading ? (
+              <div className="p-8 text-center text-xs text-slate-400 font-bold animate-pulse">
+                Memuat data kategori dokumen...
+              </div>
             ) : (
               <div className="p-8 text-center text-xs text-slate-400 font-bold">
-                Memuat data kategori dokumen...
+                Belum ada data kategori dokumen.
               </div>
             )}
           </div>
@@ -701,9 +744,13 @@ export default function DashboardPage() {
                   </div>
                 );
               })
+            ) : chartsLoading ? (
+              <div className="p-8 text-center text-xs text-slate-400 font-bold animate-pulse">
+                Memuat riwayat unduhan dokumen...
+              </div>
             ) : (
               <div className="p-8 text-center text-xs text-slate-400 font-bold">
-                Memuat riwayat unduhan dokumen...
+                Belum ada data unduhan dokumen.
               </div>
             )}
           </div>
@@ -733,7 +780,13 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <span className="text-[11px] font-bold text-slate-500 block truncate">Berita Daerah</span>
             <span className="text-base font-black text-slate-900 block">
-              {portalStats?.berita ?? 0} Artikel
+              {portalStats ? (
+                `${portalStats.berita} Artikel`
+              ) : chartsLoading ? (
+                <span className="inline-block w-14 h-5 bg-slate-200 animate-pulse rounded-md" />
+              ) : (
+                "0 Artikel"
+              )}
             </span>
           </div>
         </Link>
@@ -749,7 +802,13 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <span className="text-[11px] font-bold text-slate-500 block truncate">Agenda Kegiatan</span>
             <span className="text-base font-black text-slate-900 block">
-              {portalStats?.agenda ?? 0} Terjadwal
+              {portalStats ? (
+                `${portalStats.agenda} Terjadwal`
+              ) : chartsLoading ? (
+                <span className="inline-block w-14 h-5 bg-slate-200 animate-pulse rounded-md" />
+              ) : (
+                "0 Terjadwal"
+              )}
             </span>
           </div>
         </Link>
@@ -765,7 +824,13 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <span className="text-[11px] font-bold text-slate-500 block truncate">Galeri Foto/Video</span>
             <span className="text-base font-black text-slate-900 block">
-              {portalStats?.galeri ?? 0} Media
+              {portalStats ? (
+                `${portalStats.galeri} Media`
+              ) : chartsLoading ? (
+                <span className="inline-block w-14 h-5 bg-slate-200 animate-pulse rounded-md" />
+              ) : (
+                "0 Media"
+              )}
             </span>
           </div>
         </Link>
@@ -781,7 +846,13 @@ export default function DashboardPage() {
           <div className="min-w-0">
             <span className="text-[11px] font-bold text-slate-500 block truncate">Pengumuman &amp; Surat</span>
             <span className="text-base font-black text-slate-900 block">
-              {portalStats?.pengumuman ?? 0} Publikasi
+              {portalStats ? (
+                `${portalStats.pengumuman} Publikasi`
+              ) : chartsLoading ? (
+                <span className="inline-block w-14 h-5 bg-slate-200 animate-pulse rounded-md" />
+              ) : (
+                "0 Publikasi"
+              )}
             </span>
           </div>
         </Link>

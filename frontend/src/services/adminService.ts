@@ -425,4 +425,17 @@ export const adminService = {
   getLogs: (): AuditLog[] => [],
 
   addLog: () => undefined,
+
+  // DASHBOARD CHARTS & REAL-TIME SUMMARY
+  fetchDashboardCharts: async () => {
+    try {
+      const res = await adminService.apiFetch("/dashboard/charts", { cache: "no-store" });
+      if (res && res.status === "success" && res.data) {
+        return res.data;
+      }
+    } catch (e) {
+      console.warn("[adminService] Failed to fetch dashboard charts:", e);
+    }
+    return null;
+  },
 };

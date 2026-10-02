@@ -57,4 +57,24 @@ Dashboard terbagi dalam beberapa komponen utama:
    - Menghilangkan angka hardcoded fallback, menggantinya dengan state reaktif murni dari database.
    - Menambahkan pemetaan nama bidang untuk `sosbud` (*Bidang Pemerintahan & Pembangunan Manusia*) dan `renval` (*Bidang Perencanaan, Pengendalian & Evaluasi*).
 
+---
+
+## 5. Standardisasi Resiliensi Ikhtisar Portal & Routing Alias (02 Oktober 2026)
+
+### A. Latar Belakang Kendala Angka 0 pada Modul Konten Publik
+Kartu ringkasan modul publikasi (*Berita Daerah, Agenda Kegiatan, Galeri Foto/Video, Pengumuman & Surat*) sempat menampilkan angka `0` saat data masih dalam proses pengambilan awal atau bila endpoint belum selesai dimuat.
+
+### B. Tindakan Perbaikan Komprehensif
+1. **Global Route Alias di Backend (`routes/api.php`)**:
+   - Menambahkan alias rute langsung `GET /api/dashboard/charts` di samping `GET /api/v1/dashboard/charts` sehingga seluruh variasi URL dasar klien (baik yang berakhiran `/api` maupun `/api/v1`) selalu merespons sukses 200 OK.
+   - Menghitung total seluruh artikel berita yang dikelola di CMS (`DB::table('news')->count()`).
+2. **Normalisasi Otomatis URL Dasar (`apiClient.ts`)**:
+   - Menambahkan fungsi helper `normalizeApiBaseUrl` agar konfigurasi variabel lingkungan yang hanya mencantumkan `/api` secara otomatis dinormalisasi ke `/api/v1`.
+3. **Metode Terpusat `adminService.fetchDashboardCharts()`**:
+   - Mengintegrasikan penarikan data chart ke dalam `adminService.ts` dengan skema parsing error seragam bersama service lainnya.
+4. **State Skeleton Loading & Tombol Sinkronisasi Interaktif**:
+   - Menghilangkan angka statis `0` saat data masih dalam proses pengambilan; digantikan dengan animasi skeleton pulse.
+   - Menambahkan tombol interaktif berputar (*RefreshCw*) pada banner selamat datang bertuliskan *"Sinkronisasi Otomatis Sub-Menu"* yang memungkinkan admin memicu refresh metrik secara instan tanpa perlu reload halaman penuh.
+
+
 

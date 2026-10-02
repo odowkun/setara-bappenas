@@ -78,7 +78,7 @@ class DashboardChartController extends Controller
             });
 
         // 7. Modul Konten Publik (Berita, Agenda, Galeri, Pengumuman)
-        $totalBerita = DB::table('news')->where('is_published', true)->count();
+        $totalBerita = DB::table('news')->count();
         $totalAgenda = DB::table('agendas')->count();
         $totalGaleri = DB::table('galeri')->count();
         $totalPengumuman = DB::table('announcements')->count();

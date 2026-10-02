@@ -34,6 +34,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
+// Global Route Alias (Dapat diakses langsung via /api/dashboard/charts maupun /api/v1/dashboard/charts)
+Route::get('/dashboard/charts', [DashboardChartController::class, 'index']);
 
 Route::prefix('v1')->group(function () {
     // Geo Settings Endpoints

@@ -66,5 +66,11 @@ class DashboardChartTest extends TestCase
             ->assertJsonPath('data.projects_summary.status_counts.dalam_proses', 1)
             ->assertJsonPath('data.projects_summary.total_pagu', 1500000000)
             ->assertJsonPath('data.projects_summary.total_realisasi', 1250000000);
+
+        // Test global alias endpoint without v1
+        $aliasResponse = $this->getJson('/api/dashboard/charts');
+        $aliasResponse->assertStatus(200)
+            ->assertJsonPath('status', 'success')
+            ->assertJsonPath('data.projects_summary.total_projects', 2);
     }
 }

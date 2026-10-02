@@ -1,7 +1,18 @@
-export const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ||
-  process.env.NEXT_PUBLIC_API_URL ||
-  (typeof window !== "undefined" ? "/api/v1" : "http://localhost:8000/api/v1");
+function normalizeApiBaseUrl(rawUrl?: string): string {
+  if (!rawUrl || !rawUrl.trim()) {
+    return typeof window !== "undefined" ? "/api/v1" : "http://localhost:8000/api/v1";
+  }
+  let clean = rawUrl.trim().replace(/\/+$/, "");
+  // If configured as .../api without /v1, automatically append /v1
+  if (clean.endsWith("/api")) {
+    clean = `${clean}/v1`;
+  }
+  return clean;
+}
+
+export const API_BASE_URL = normalizeApiBaseUrl(
+  process.env.NEXT_PUBLIC_API_BASE_URL || process.env.NEXT_PUBLIC_API_URL
+);
 
 export const STORAGE_BASE_URL =
   typeof window !== "undefined" && API_BASE_URL.startsWith("/")
