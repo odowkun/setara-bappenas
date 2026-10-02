@@ -324,3 +324,25 @@ Ketika proyek pembangunan fisik telah mencapai progres 100% (selesai), administr
    - Kolom Status pada tabel Monev kini menampilkan badge `Publik` (hijau) atau `Draft Internal` (amber).
    - Filter dropdown status menyediakan opsi filter langsung `🌐 Publik (Ditampilkan)` dan `🔒 Draft Internal (Tersembunyi)`.
 
+---
+
+## 15. Opsi Fleksibel Input Koordinat Proyek (Leaflet Pin & Ketik Manual LAT/LNG)
+
+Status implementasi: 02 Oktober 2026.
+
+### A. Latar Belakang & Kebutuhan Pengguna
+Sebelumnya, penentuan koordinat proyek pembangunan fisik hanya mengandalkan klik/tap interaktif pada peta Leaflet, sedangkan badge `LAT (Y):` dan `LNG (X):` bersifat read-only. Pengguna/operator yang sudah mengantongi angka koordinat presisi (dari dokumen RAB/DED, survei lapangan GPS Garmin, atau Google Maps) membutuhkan kemudahan untuk mengetik atau menempelkan (*paste*) nilai Latitude dan Longitude secara langsung tanpa harus mencari titik manual di peta.
+
+### B. Mekanisme & Fitur Antarmuka
+1. **Editable Input Kolom LAT (Y) & LNG (X)**:
+   - Mengubah badge statis menjadi input interaktif berdesain bersih (Clean Light-Theme) dengan `inputMode="decimal"` dan `font-mono`.
+   - Terintegrasi pada halaman utama `/dashboard/geotagging-proyek` dan modal tambah proyek `/dashboard/dokumen/[id]`.
+2. **Sinkronisasi Dua Arah (Bidirectional Sync)**:
+   - **Klik Peta**: Saat pengguna mengklik peta, input teks `LAT` dan `LNG` terisi otomatis dengan angka desimal presisi 6 digit.
+   - **Ketik Manual**: Saat pengguna mengetik angka di kolom LAT atau LNG, sistem langsung memperbarui state koordinat dan menggerakkan pin peta (`markerRef.current.setLatLng`) serta memusatkan tampilan (`mapRef.current.flyTo`) secara mulus.
+3. **Pasted Coordinate Pair Detection**:
+   - Pengguna dapat langsung menempelkan teks pasangan koordinat seperti `"1.7289, 128.0054"` atau `"1.7289 128.0054"` ke salah satu kolom input; sistem otomatis memecah (*split & parse*) dan mengisi kedua kolom LAT dan LNG secara instan.
+4. **Fallback & Sanitasi Aman**:
+   - Saat input kehilangan fokus (`onBlur`), jika nilai kosong atau bukan angka valid (`NaN`), sistem secara otomatis mengembalikan nilai ke koordinat valid terakhir tanpa merusak form atau menimbulkan exception.
+
+

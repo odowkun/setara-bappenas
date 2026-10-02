@@ -79,6 +79,79 @@ export default function GeotaggingProyekPage() {
     opd_penanggung_jawab: "",
   });
 
+  const [latInput, setLatInput] = useState<string>("1.7289");
+  const [lngInput, setLngInput] = useState<string>("128.0054");
+
+  const parseCoordinatePair = (text: string): [number, number] | null => {
+    const parts = text.trim().split(/[\s,;]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+        return [lat, lng];
+      }
+    }
+    return null;
+  };
+
+  const handleLatChange = (val: string) => {
+    const pair = parseCoordinatePair(val);
+    if (pair) {
+      const [lat, lng] = pair;
+      setLatInput(String(lat));
+      setLngInput(String(lng));
+      setForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+      setHasSelectedLocation(true);
+      setLocationWarning(null);
+      return;
+    }
+    setLatInput(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      setForm((prev) => ({ ...prev, latitude: parsed }));
+      setHasSelectedLocation(true);
+      setLocationWarning(null);
+    }
+  };
+
+  const handleLatBlur = () => {
+    const parsed = parseFloat(latInput);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      setLatInput(String(form.latitude));
+    } else {
+      setLatInput(String(parsed));
+    }
+  };
+
+  const handleLngChange = (val: string) => {
+    const pair = parseCoordinatePair(val);
+    if (pair) {
+      const [lat, lng] = pair;
+      setLatInput(String(lat));
+      setLngInput(String(lng));
+      setForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+      setHasSelectedLocation(true);
+      setLocationWarning(null);
+      return;
+    }
+    setLngInput(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      setForm((prev) => ({ ...prev, longitude: parsed }));
+      setHasSelectedLocation(true);
+      setLocationWarning(null);
+    }
+  };
+
+  const handleLngBlur = () => {
+    const parsed = parseFloat(lngInput);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      setLngInput(String(form.longitude));
+    } else {
+      setLngInput(String(parsed));
+    }
+  };
+
   const [displayPagu, setDisplayPagu] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -116,6 +189,8 @@ export default function GeotaggingProyekPage() {
       latitude: lat,
       longitude: lng,
     }));
+    setLatInput(lat.toFixed(6));
+    setLngInput(lng.toFixed(6));
     toast.success(`Titik pin ditentukan (${lat.toFixed(5)}, ${lng.toFixed(5)}). Silakan pilih Kecamatan & Desa.`);
   };
 
@@ -162,6 +237,10 @@ export default function GeotaggingProyekPage() {
             longitude: kecObj ? kecObj.lng : prev.longitude,
           }),
     }));
+    if (!hasSelectedLocation && kecObj) {
+      setLatInput(String(kecObj.lat));
+      setLngInput(String(kecObj.lng));
+    }
   };
 
   // Handle Desa Change & Keep Pin if Already Selected
@@ -179,6 +258,10 @@ export default function GeotaggingProyekPage() {
             longitude: desaObj ? desaObj.lng : prev.longitude,
           }),
     }));
+    if (!hasSelectedLocation && desaObj) {
+      setLatInput(String(desaObj.lat));
+      setLngInput(String(desaObj.lng));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -238,6 +321,8 @@ export default function GeotaggingProyekPage() {
         }));
         setDisplayPagu("");
         setHasSelectedLocation(false);
+        setLatInput(String(form.latitude));
+        setLngInput(String(form.longitude));
         
         const updatedList = await proyekService.getProjects(selectedDocId, undefined, true);
         setProjects(updatedList);
@@ -516,19 +601,48 @@ export default function GeotaggingProyekPage() {
                 )}
               </div>
 
-              {/* Clean Light-Theme Captured Coordinates Badge */}
-              <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 text-blue-950 space-y-1.5 shadow-2xs">
-                <span className="text-[10px] font-black text-blue-900 block uppercase tracking-wider flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-rose-500" />
-                  <span>Koordinat Tertangkap Peta (Leaflet Pin):</span>
-                </span>
+              {/* Clean Light-Theme Captured Coordinates Inputs */}
+              <div className="p-3.5 rounded-2xl bg-blue-50/80 border border-blue-200/80 text-blue-950 space-y-2 shadow-2xs">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-black text-blue-900 uppercase tracking-wider flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-rose-500" />
+                    <span>Koordinat Tertangkap Peta (Leaflet Pin):</span>
+                  </span>
+                  <span className="text-[10px] font-bold text-slate-500 hidden sm:inline">
+                    Klik peta / ketik koordinat
+                  </span>
+                </div>
                 <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 text-xs font-mono font-bold">
-                  <span className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs text-center sm:text-left">
-                    LAT (Y): <code className="text-blue-700 font-extrabold">{form.latitude}</code>
-                  </span>
-                  <span className="px-2.5 py-1.5 rounded-lg bg-white border border-blue-200 text-slate-800 shadow-2xs text-center sm:text-left">
-                    LNG (X): <code className="text-blue-700 font-extrabold">{form.longitude}</code>
-                  </span>
+                  <div className="flex-1 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-blue-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/15 transition shadow-2xs">
+                    <label htmlFor="geo-lat-input" className="text-[11px] font-mono font-black text-slate-700 whitespace-nowrap cursor-pointer select-none">
+                      LAT (Y):
+                    </label>
+                    <input
+                      id="geo-lat-input"
+                      type="text"
+                      inputMode="decimal"
+                      value={latInput}
+                      onChange={(e) => handleLatChange(e.target.value)}
+                      onBlur={handleLatBlur}
+                      placeholder="1.7289"
+                      className="w-full bg-transparent font-mono font-extrabold text-xs text-blue-700 focus:outline-none"
+                    />
+                  </div>
+                  <div className="flex-1 flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white border border-blue-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/15 transition shadow-2xs">
+                    <label htmlFor="geo-lng-input" className="text-[11px] font-mono font-black text-slate-700 whitespace-nowrap cursor-pointer select-none">
+                      LNG (X):
+                    </label>
+                    <input
+                      id="geo-lng-input"
+                      type="text"
+                      inputMode="decimal"
+                      value={lngInput}
+                      onChange={(e) => handleLngChange(e.target.value)}
+                      onBlur={handleLngBlur}
+                      placeholder="128.0054"
+                      className="w-full bg-transparent font-mono font-extrabold text-xs text-blue-700 focus:outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 

@@ -65,6 +65,75 @@ export default function DocumentDetailPage() {
     pagu_anggaran: 0,
     opd_penanggung_jawab: "",
   });
+  const [newProjectLatInput, setNewProjectLatInput] = useState<string>("1.7289");
+  const [newProjectLngInput, setNewProjectLngInput] = useState<string>("128.0054");
+
+  const parseCoordinatePair = (text: string): [number, number] | null => {
+    const parts = text.trim().split(/[\s,;]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      const lat = parseFloat(parts[0]);
+      const lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng) && isFinite(lat) && isFinite(lng)) {
+        return [lat, lng];
+      }
+    }
+    return null;
+  };
+
+  const handleNewProjectLatChange = (val: string) => {
+    const pair = parseCoordinatePair(val);
+    if (pair) {
+      const [lat, lng] = pair;
+      setNewProjectLatInput(String(lat));
+      setNewProjectLngInput(String(lng));
+      setNewProjectForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+      setHasSelectedGeotagLocation(true);
+      return;
+    }
+    setNewProjectLatInput(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      setNewProjectForm((prev) => ({ ...prev, latitude: parsed }));
+      setHasSelectedGeotagLocation(true);
+    }
+  };
+
+  const handleNewProjectLatBlur = () => {
+    const parsed = parseFloat(newProjectLatInput);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      setNewProjectLatInput(String(newProjectForm.latitude));
+    } else {
+      setNewProjectLatInput(String(parsed));
+    }
+  };
+
+  const handleNewProjectLngChange = (val: string) => {
+    const pair = parseCoordinatePair(val);
+    if (pair) {
+      const [lat, lng] = pair;
+      setNewProjectLatInput(String(lat));
+      setNewProjectLngInput(String(lng));
+      setNewProjectForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+      setHasSelectedGeotagLocation(true);
+      return;
+    }
+    setNewProjectLngInput(val);
+    const parsed = parseFloat(val);
+    if (!isNaN(parsed) && isFinite(parsed)) {
+      setNewProjectForm((prev) => ({ ...prev, longitude: parsed }));
+      setHasSelectedGeotagLocation(true);
+    }
+  };
+
+  const handleNewProjectLngBlur = () => {
+    const parsed = parseFloat(newProjectLngInput);
+    if (isNaN(parsed) || !isFinite(parsed)) {
+      setNewProjectLngInput(String(newProjectForm.longitude));
+    } else {
+      setNewProjectLngInput(String(parsed));
+    }
+  };
+
   const [hasSelectedGeotagLocation, setHasSelectedGeotagLocation] = useState(false);
   const [submittingGeotag, setSubmittingGeotag] = useState(false);
 
@@ -181,6 +250,8 @@ export default function DocumentDetailPage() {
         );
         setIsGeotagModalOpen(false);
         setHasSelectedGeotagLocation(false);
+        setNewProjectLatInput(String(newProjectForm.latitude));
+        setNewProjectLngInput(String(newProjectForm.longitude));
         const updatedList = await proyekService.getProjects(docId, undefined, true);
         setProjects(updatedList);
       }
@@ -795,9 +866,42 @@ export default function DocumentDetailPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-bold text-slate-700">Pilih Koordinat di Peta *</label>
-                    <span className="text-[10px] font-mono bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded">
-                      {newProjectForm.latitude.toFixed(5)}, {newProjectForm.longitude.toFixed(5)}
+                    <span className="text-[10px] font-bold text-slate-500">
+                      Klik peta atau ketik koordinat
                     </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono font-bold">
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/15 transition">
+                      <label htmlFor="modal-geo-lat" className="text-[10px] font-mono font-black text-slate-700 whitespace-nowrap cursor-pointer select-none">
+                        LAT (Y):
+                      </label>
+                      <input
+                        id="modal-geo-lat"
+                        type="text"
+                        inputMode="decimal"
+                        value={newProjectLatInput}
+                        onChange={(e) => handleNewProjectLatChange(e.target.value)}
+                        onBlur={handleNewProjectLatBlur}
+                        placeholder="1.7289"
+                        className="w-full bg-transparent font-mono font-extrabold text-xs text-blue-700 focus:outline-none"
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-600/15 transition">
+                      <label htmlFor="modal-geo-lng" className="text-[10px] font-mono font-black text-slate-700 whitespace-nowrap cursor-pointer select-none">
+                        LNG (X):
+                      </label>
+                      <input
+                        id="modal-geo-lng"
+                        type="text"
+                        inputMode="decimal"
+                        value={newProjectLngInput}
+                        onChange={(e) => handleNewProjectLngChange(e.target.value)}
+                        onBlur={handleNewProjectLngBlur}
+                        placeholder="128.0054"
+                        className="w-full bg-transparent font-mono font-extrabold text-xs text-blue-700 focus:outline-none"
+                      />
+                    </div>
                   </div>
 
                   <GeotaggingMapPicker
@@ -805,12 +909,14 @@ export default function DocumentDetailPage() {
                     selectedLng={newProjectForm.longitude}
                     onLocationSelect={(lat, lng) => {
                       setNewProjectForm((prev) => ({ ...prev, latitude: lat, longitude: lng }));
+                      setNewProjectLatInput(lat.toFixed(6));
+                      setNewProjectLngInput(lng.toFixed(6));
                       setHasSelectedGeotagLocation(true);
                     }}
                   />
 
                   <p className="text-[10px] text-slate-500 italic">
-                    * Klik langsung pada peta Halmahera Utara di atas untuk menentukan titik lokasi presisi.
+                    * Klik langsung pada peta Halmahera Utara di atas atau ketik angka koordinat di kolom LAT/LNG.
                   </p>
                 </div>
               </div>
