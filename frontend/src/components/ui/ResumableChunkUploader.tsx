@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { authenticatedFetch } from "@/lib/apiClient";
-import { toast } from "@/lib/swal";
+import { toast, showConfirm } from "@/lib/swal";
 import {
   UploadCloud,
   CheckCircle2,
@@ -26,13 +26,58 @@ export const calculateDynamicChunkSizeMB = (fileSizeBytes: number): number => {
   return 40;                     // 3GB-5GB: chunk 40MB (75-125 irisan, high throughput & aman batas 100MB proxy)
 };
 
+export const checkPdfWatermarkIndicators = async (
+  file: File
+): Promise<{ detected: boolean; reason?: string }> => {
+  if (!file.name.toLowerCase().endsWith(".pdf")) {
+    return { detected: false };
+  }
+
+  try {
+    const headSlice = file.slice(0, Math.min(file.size, 1024 * 1024));
+    const headText = await headSlice.text();
+
+    if (/\/Subtype\s*\/\s*Watermark/i.test(headText)) {
+      return { detected: true, reason: "objek watermark resmi (/Subtype /Watermark)" };
+    }
+
+    if (/\/Type\s*\/\s*OCG/i.test(headText) && /watermark|stempel|stamp/i.test(headText)) {
+      return { detected: true, reason: "layer/stempel dokumen resmi (OCG Watermark)" };
+    }
+
+    if (/WATERMARK|SALINAN\s+RESMI|DRAFT\s+RESMI|BAPPEDA\s+HALUT|STEMPEL\s+RESMI|CONFIDENTIAL/i.test(headText)) {
+      return { detected: true, reason: "teks penanda watermark / cap instansi pada berkas" };
+    }
+
+    if (/\/Encrypt/i.test(headText)) {
+      return { detected: true, reason: "proteksi enkripsi hak cipta berkas PDF" };
+    }
+
+    if (file.size > 1024 * 1024) {
+      const tailSlice = file.slice(Math.max(0, file.size - 131072), file.size);
+      const tailText = await tailSlice.text();
+      if (/\/Subtype\s*\/\s*Watermark/i.test(tailText)) {
+        return { detected: true, reason: "metadata watermark pada struktur penutup berkas" };
+      }
+      if (/WATERMARK|SALINAN\s+RESMI/i.test(tailText)) {
+        return { detected: true, reason: "teks watermark terdeteksi pada struktur berkas" };
+      }
+    }
+  } catch (e) {
+    console.warn("[ResumableChunkUploader] Watermark inspection warning:", e);
+  }
+
+  return { detected: false };
+};
+
 interface ResumableChunkUploaderProps {
-  onUploadSuccess: (fileUrl: string, fileSizeStr: string, fileName?: string) => void;
+  onUploadSuccess: (fileUrl: string, fileSizeStr: string, fileName?: string, skipWatermarkUsed?: boolean) => void;
   acceptedTypes?: string;
   chunkSizeMB?: number | "dynamic"; // default "dynamic"
   maxSizeGB?: number; // default 5GB
   maxSizeMB?: number; // optional, e.g. 500 for 500MB
   skipWatermark?: boolean; // optional: lewati watermark otomatis sistem
+  autoDetectWatermark?: boolean; // default true
 }
 
 import { API_BASE_URL, STORAGE_BASE_URL } from "@/lib/apiClient";
@@ -54,10 +99,12 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
   maxSizeGB = 5,
   maxSizeMB,
   skipWatermark = false,
+  autoDetectWatermark = true,
 }) => {
   const effectiveMaxSizeLabel = maxSizeMB ? `${maxSizeMB} MB` : `${maxSizeGB} GB`;
   const effectiveMaxSizeBytes = maxSizeMB ? maxSizeMB * 1024 * 1024 : maxSizeGB * 1024 * 1024 * 1024;
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [internalSkipWatermark, setInternalSkipWatermark] = useState<boolean>(skipWatermark);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [currentChunk, setCurrentChunk] = useState(0);
@@ -76,7 +123,11 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
     return calculateDynamicChunkSizeMB(fileSizeBytes);
   };
 
-  const startResumableUploadForFile = async (fileToUpload: File, initialChunkIndex: number = 0) => {
+  const startResumableUploadForFile = async (
+    fileToUpload: File,
+    initialChunkIndex: number = 0,
+    skipWatermarkActive: boolean = internalSkipWatermark
+  ) => {
     setUploading(true);
     setNetworkError(false);
     isAbortedRef.current = false;
@@ -98,7 +149,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       formData.append("file", chunkBlob, file.name);
       formData.append("chunk", i.toString());
       formData.append("chunks", chunksCount.toString());
-      if (skipWatermark) {
+      if (skipWatermarkActive) {
         formData.append("skip_watermark", "1");
       }
 
@@ -134,13 +185,14 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
               const sizeStr = data.file_size || formatFileSize(file.size);
               setCompletedUrl(finalUrl);
-              if (data.watermark_applied === false || data.watermark_bypassed === true) {
-                setStatusText("✅ Berkas dokumen resmi tersimpan aman (watermark sistem dilewati / sudah ber-watermark).");
+              const isBypassed = data.watermark_bypassed === true || skipWatermarkActive;
+              if (isBypassed) {
+                setStatusText("✅ Berkas dokumen resmi tersimpan aman (berkas asli dipertahankan tanpa penimpaan watermark).");
               } else {
                 setStatusText("✅ Berkas dokumen resmi berhasil tersimpan aman di server!");
               }
               localStorage.removeItem(fileKey);
-              onUploadSuccess(finalUrl, sizeStr, file.name);
+              onUploadSuccess(finalUrl, sizeStr, file.name, isBypassed);
               setUploading(false);
               return;
             }
@@ -189,7 +241,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
     }
   };
 
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = async (file: File) => {
     // Validasi ekstensi berkas jika dibatasi (misal: hanya .pdf)
     const fileExt = `.${file.name.split(".").pop()?.toLowerCase()}`;
     const allowed = acceptedTypes
@@ -226,6 +278,33 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
       return;
     }
 
+    let activeSkipWatermark = skipWatermark;
+
+    if (autoDetectWatermark && file.name.toLowerCase().endsWith(".pdf")) {
+      setStatusText(`Memeriksa integritas & watermark berkas "${file.name}"...`);
+      const detection = await checkPdfWatermarkIndicators(file);
+
+      if (detection.detected) {
+        const swalRes = await showConfirm({
+          title: "Terdeteksi Dokumen Ber-Watermark / Resmi",
+          text: `Berkas "${file.name}" terindikasi sudah memiliki stempel atau watermark resmi instansi (${detection.reason}).\n\nApakah Anda ingin melanjutkan upload dengan mempertahankan berkas asli (tanpa menimpa watermark sistem baru)?`,
+          icon: "info",
+          confirmButtonText: "Ya, Gunakan Berkas Asli",
+          cancelButtonText: "Tetap Beri Watermark Sistem",
+        });
+
+        if (swalRes.isConfirmed) {
+          activeSkipWatermark = true;
+          toast.success("Mode Berkas Asli Aktif: Watermark sistem BAPPEDA dilewati.");
+        } else {
+          activeSkipWatermark = false;
+          toast.info("Mode Watermark Sistem Aktif: Watermark resmi BAPPEDA akan diterapkan.");
+        }
+      }
+    }
+
+    setInternalSkipWatermark(activeSkipWatermark);
+
     const effectiveChunkMB = getEffectiveChunkSizeMB(file.size);
     const chunkSize = effectiveChunkMB * 1024 * 1024;
     const chunks = Math.ceil(file.size / chunkSize);
@@ -254,7 +333,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
     // Auto trigger chunk upload
     setTimeout(() => {
-      startResumableUploadForFile(file, startChunkIndex);
+      startResumableUploadForFile(file, startChunkIndex, activeSkipWatermark);
     }, 100);
   };
 
@@ -274,7 +353,7 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
 
   const startResumableUpload = async () => {
     if (!selectedFile) return;
-    await startResumableUploadForFile(selectedFile, currentChunk);
+    await startResumableUploadForFile(selectedFile, currentChunk, internalSkipWatermark);
   };
 
   const handlePause = () => {
@@ -407,6 +486,15 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
                       irisan)
                     </span>
                   </span>
+                  {internalSkipWatermark ? (
+                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-200">
+                      Berkas Asli (Watermark Dilewati)
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-200">
+                      Watermark BAPPEDA Aktif
+                    </span>
+                  )}
                 </div>
               </div>
             </div>

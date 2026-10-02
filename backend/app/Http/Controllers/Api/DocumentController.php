@@ -378,6 +378,7 @@ class DocumentController extends Controller
                 'file_size' => $this->formatFileSize($processedDocument['file_size_bytes']),
                 'watermark_applied' => $watermarkApplied,
                 'watermark_bypassed' => $watermarkBypassed,
+                'watermark_detected' => (bool) ($processedDocument['watermark_detected'] ?? false),
             ]);
         } catch (Throwable $exception) {
             Log::error('Document watermark processing failed.', [

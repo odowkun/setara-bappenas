@@ -62,3 +62,29 @@ Solusi menggabungkan **kontrol eksplisit pengelola** dengan **toleransi kesalaha
    - `DocumentStoreWatermarkTest`: 4 tests, 14 assertions lolos 100%.
 2. **Next.js Production Build**:
    - `npm run build` sukses 100% (seluruh 66 route app terkompilasi tanpa error TypeScript maupun linting).
+
+---
+
+## 4. Evolusi: Deteksi Otomatis & Dialog Konfirmasi Cerdas (02 Oktober 2026)
+
+### A. Alasan Penyempurnaan
+Kotak centang manual *"Dokumen Sudah Ber-watermark Resmi / Lewati Watermark Otomatis"* sebelumnya mengharuskan operator menebak-nebak apakah berkas PDF yang diunggah perlu dicentang atau tidak.
+
+### B. Mekanisme Baru: Full Auto-Detection & SweetAlert2 Confirmation
+1. **Peniadaan Checkbox Manual**:
+   - Checkbox manual di atas dropzone unggah berkas telah dihapus bersih dari formulir `/dashboard/dokumen/tambah`.
+2. **Auto-Inspection Client-Side (`checkPdfWatermarkIndicators`)**:
+   - Saat operator memilih berkas (file selection / drag & drop), sistem langsung memeriksa struktur awal dan penutup berkas PDF (hingga 1 MB pertama dan 128 KB penutup) secara asinkron sebelum chunking dimulai.
+   - Indikator yang diperiksa mencakup:
+     - Tag PDF resmi: `/Subtype /Watermark`
+     - Layer dokumen resmi: `/Type /OCG` dengan nama watermark/stempel
+     - Kata kunci penanda: `WATERMARK`, `SALINAN RESMI`, `DRAFT RESMI`, `BAPPEDA HALUT`, `STEMPEL RESMI`, `CONFIDENTIAL`
+     - Proteksi enkripsi: `/Encrypt`
+3. **Pop-up Konfirmasi Interaktif (SweetAlert2)**:
+   - Jika terdeteksi indikator watermark/stempel resmi, sistem memunculkan konfirmasi elegan:
+     - **Pilihan 1**: *"Ya, Gunakan Berkas Asli"* -> Otomatis mengaktifkan `skip_watermark: true`.
+     - **Pilihan 2**: *"Tetap Beri Watermark Sistem"* -> Tetap menempelkan watermark BAPPEDA HALUT (`skip_watermark: false`).
+4. **Server-Side Fallback & Inspection (`detectWatermarkInPdf`)**:
+   - Backend `DocumentWatermarkService` juga memindai stream PDF dan mengembalikan status `'watermark_detected' => true/false`.
+   - Auto-fallback FPDI tetap aktif melindungi berkas dari kegagalan proses parser.
+

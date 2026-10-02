@@ -33,6 +33,8 @@ class DocumentWatermarkService
         $fileSizeBytes = $file->getSize();
         $maxWatermarkBytes = (int) config('document-watermark.max_file_size_bytes', 150 * 1024 * 1024);
 
+        $watermarkDetected = $extension === 'pdf' && $this->detectWatermarkInPdf($file->getRealPath());
+
         // Bypass FPDI jika diminta user (skipWatermark) ATAU dokumen berukuran raksasa (>150MB s/d 5GB)
         if ($skipWatermark || ($extension === 'pdf' && $fileSizeBytes > $maxWatermarkBytes)) {
             $baseName = $this->sanitizeBaseName($file->getClientOriginalName());
@@ -60,6 +62,7 @@ class DocumentWatermarkService
                 'file_size_bytes' => Storage::disk('local')->size($relativePath),
                 'watermark_applied' => ! $skipWatermark,
                 'watermark_bypassed' => $skipWatermark,
+                'watermark_detected' => $watermarkDetected,
             ];
         }
 
@@ -95,6 +98,7 @@ class DocumentWatermarkService
                 'file_size_bytes' => Storage::disk('local')->size($relativePath),
                 'watermark_applied' => $watermarkApplied,
                 'watermark_bypassed' => ! $watermarkApplied,
+                'watermark_detected' => $watermarkDetected,
             ];
         } catch (Throwable $exception) {
             if (is_string($relativePath)) {
@@ -319,5 +323,35 @@ class DocumentWatermarkService
         $sanitizedName = preg_replace('/[^A-Za-z0-9_-]+/', '_', $baseName) ?: 'dokumen';
 
         return trim(Str::limit($sanitizedName, 70, ''), '_') ?: 'dokumen';
+    }
+
+    public function detectWatermarkInPdf(string $sourcePath): bool
+    {
+        if (! File::isFile($sourcePath)) {
+            return false;
+        }
+
+        $handle = @fopen($sourcePath, 'rb');
+        if (! $handle) {
+            return false;
+        }
+        $header = fread($handle, 1048576);
+        fclose($handle);
+
+        if (! is_string($header)) {
+            return false;
+        }
+
+        if (preg_match('/\/Subtype\s*\/\s*Watermark/i', $header)) {
+            return true;
+        }
+        if (preg_match('/\/Type\s*\/\s*OCG/i', $header) && preg_match('/watermark|stempel|stamp/i', $header)) {
+            return true;
+        }
+        if (preg_match('/WATERMARK|SALINAN\s+RESMI|DRAFT\s+RESMI|BAPPEDA\s+HALUT|STEMPEL\s+RESMI/i', $header)) {
+            return true;
+        }
+
+        return false;
     }
 }

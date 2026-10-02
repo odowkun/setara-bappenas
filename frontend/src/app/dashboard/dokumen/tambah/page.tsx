@@ -111,9 +111,17 @@ export default function TambahDokumenPage() {
     }
   };
 
-  const handleUploadSuccess = (uploadedUrl: string, uploadedSize: string, fileName?: string) => {
+  const handleUploadSuccess = (
+    uploadedUrl: string,
+    uploadedSize: string,
+    fileName?: string,
+    bypassedWatermark?: boolean
+  ) => {
     setFileUrl(uploadedUrl);
     setFileSizeStr(uploadedSize);
+    if (bypassedWatermark !== undefined) {
+      setSkipWatermark(bypassedWatermark);
+    }
     if (fileName && !title.trim()) {
       const cleanTitle = fileName
         .replace(/\.[^/.]+$/, "")
@@ -349,39 +357,12 @@ export default function TambahDokumenPage() {
               Format resmi kearsipan: <strong>PDF (*.pdf)</strong>. Maksimal ukuran berkas: <strong>5 GB</strong>. Didukung teknologi <em>resumable chunked upload</em> dengan ukuran irisan dinamis otomatis (1 MB - 40 MB) menyesuaikan besar dokumen untuk keandalan dan kecepatan transfer jaringan.
             </p>
 
-            {/* Opsi Bypass Watermark (Dokumen Manual / Pra-Watermark) */}
-            <div className="p-3.5 rounded-2xl bg-amber-50/70 border border-amber-200/80 transition shadow-2xs">
-              <label className="flex items-start gap-3 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={skipWatermark}
-                  onChange={(e) => setSkipWatermark(e.target.checked)}
-                  className="mt-0.5 w-4 h-4 text-blue-600 rounded border-amber-300 focus:ring-blue-500 cursor-pointer shrink-0"
-                />
-                <div className="space-y-0.5 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-black text-slate-900">
-                      Dokumen Sudah Ber-watermark Resmi / Lewati Watermark Otomatis
-                    </span>
-                    {skipWatermark && (
-                      <span className="px-2 py-0.5 rounded-full bg-amber-200/80 text-amber-900 text-[10px] font-black uppercase tracking-wider">
-                        Watermark Sistem Dilewati
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-[11px] font-medium text-slate-600 leading-relaxed">
-                    Centang jika berkas PDF Anda sudah memiliki stempel/cap/watermark manual resmi dari instansi, atau memiliki proteksi tata letak (PDF terenkripsi/terkompresi). Sistem akan menyimpan berkas asli seutuhnya tanpa penimpaan watermark otomatis.
-                  </p>
-                </div>
-              </label>
-            </div>
-
             <ResumableChunkUploader
               acceptedTypes=".pdf"
               onUploadSuccess={handleUploadSuccess}
               chunkSizeMB="dynamic"
               maxSizeGB={5}
-              skipWatermark={skipWatermark}
+              autoDetectWatermark={true}
             />
           </div>
 
