@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { adminService } from "@/services/adminService";
-import { API_BASE_URL } from "@/lib/apiClient";
+import { API_BASE_URL, authenticatedFetch } from "@/lib/apiClient";
 import { AuditLog } from "@/types/auth";
 import { getIkmGrade, fetchPublicKritikList } from "@/services/surveyService";
 import {
@@ -93,7 +93,9 @@ const getBidangName = (slug: string) => {
   const map: Record<string, string> = {
     infrastruktur: "Bidang Infrastruktur & Kewilayahan",
     perekonomian: "Bidang Perekonomian & SDA",
-    sosial_budaya: "Bidang Sosial & Budaya",
+    sosbud: "Bidang Pemerintahan & Pembangunan Manusia",
+    sosial_budaya: "Bidang Pemerintahan & Pembangunan Manusia",
+    renval: "Bidang Perencanaan, Pengendalian & Evaluasi",
     perencanaan: "Bidang Perencanaan, Pengendalian & Evaluasi",
     sekretariat: "Sekretariat BAPPEDA",
   };
@@ -133,7 +135,7 @@ export default function DashboardPage() {
 
   const fetchCharts = async () => {
     try {
-      const res = await fetch(`${API_BASE_URL}/dashboard/charts`);
+      const res = await authenticatedFetch("/dashboard/charts", { cache: "no-store" });
       const json = await res.json();
       if (json.status === "success" && json.data) {
         if (json.data.projects_summary) {
@@ -467,8 +469,12 @@ export default function DashboardPage() {
                   </div>
                 );
               })
-            ) : (
+            ) : projectsSummary ? (
               <div className="p-8 text-center text-xs text-slate-400 font-bold">
+                Belum ada data proyek sektoral per bidang.
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-slate-400 font-bold animate-pulse">
                 Memuat data kinerja sektoral per bidang...
               </div>
             )}
@@ -511,24 +517,24 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-600">Total Pagu Keseluruhan:</span>
                 <span className="font-black text-slate-900">
-                  {projectsSummary ? formatRupiah(projectsSummary.total_pagu) : "Rp 4,90 M"}
+                  {projectsSummary ? formatRupiah(projectsSummary.total_pagu) : "Memuat..."}
                 </span>
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="font-bold text-slate-600">Realisasi Keuangan Terserap:</span>
                 <span className="font-black text-emerald-700">
-                  {projectsSummary ? formatRupiah(projectsSummary.total_realisasi) : "Rp 2,35 M"}
+                  {projectsSummary ? formatRupiah(projectsSummary.total_realisasi) : "Memuat..."}
                 </span>
               </div>
               <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mt-1.5">
                 <div
                   className="bg-emerald-600 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${projectsSummary ? projectsSummary.serapan_persen : 48.1}%` }}
+                  style={{ width: `${projectsSummary ? Math.min(projectsSummary.serapan_persen, 100) : 0}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-[11px] font-bold text-slate-400 pt-0.5">
-                <span>Rasio Serapan: {projectsSummary ? projectsSummary.serapan_persen : 48.1}%</span>
-                <span>Rata-rata Fisik: {projectsSummary ? projectsSummary.avg_progress : 59.2}%</span>
+                <span>Rasio Serapan: {projectsSummary ? `${projectsSummary.serapan_persen}%` : "0%"}</span>
+                <span>Rata-rata Fisik: {projectsSummary ? `${projectsSummary.avg_progress}%` : "0%"}</span>
               </div>
             </div>
 
