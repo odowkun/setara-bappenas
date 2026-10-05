@@ -298,7 +298,9 @@ export const ResumableChunkUploader: React.FC<ResumableChunkUploaderProps> = ({
           toast.success("Mode Berkas Asli Aktif: Watermark sistem BAPPEDA dilewati.");
         } else {
           activeSkipWatermark = false;
-          toast.info("Mode Watermark Sistem Aktif: Watermark resmi BAPPEDA akan diterapkan.");
+          toast("Mode Watermark Sistem Aktif: Watermark resmi BAPPEDA akan diterapkan.", {
+            icon: "ℹ️",
+          });
         }
       }
     }

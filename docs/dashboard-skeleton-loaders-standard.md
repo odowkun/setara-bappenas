@@ -139,4 +139,26 @@ Komponen layar memuat sesi (`DashboardLoadingScreen.tsx`) digunakan saat autenti
      - Teks pesan error menampilkan alasan penolakan (`"Sesi kredensial tidak valid atau telah berakhir."`) disertai ikon peringatan `AlertCircle`.
      - Pengguna diberi jeda 950ms untuk membaca umpan balik sebelum dipindahkan ke layar login, menghindari ilusi verifikasi sukses palsu.
 
+---
+
+## 7. Standar Skeleton Loader Video Utama Beranda (`HeroSection.tsx`)
+
+Pada bagian beranda publik (*landing page*), video sambutan pembukaan dipanggil secara asinkron dari API `/api/v1/hero-video`.
+
+### Masalah yang Dihindari (*Layout Shift & Dummy Flash*):
+Sebelumnya, saat halaman di-refresh, antarmuka sempat menampilkan fallback statis berupa gambar berita lama (FGD Akses Keuangan Daerah) sebelum data sebenarnya dari API selesai diunduh. Hal ini menimbulkan *flash of wrong content* yang membingungkan pengunjung.
+
+### Spesifikasi Solusi (*Zero-Shift Shimmer Skeleton*):
+1. **Status Pemuatan (`isLoading`)**:
+   - Selama data video sedang diunduh dari API, komponen merender **Skeleton Loader** dengan rasio aspek persis `aspect-video` dan kurvatur bingkai yang identik (`rounded-2xl sm:rounded-[32px]`).
+   - Warna latar: `bg-slate-950` dengan gradien gelap shimmer `bg-gradient-to-tr from-slate-900 via-slate-950 to-blue-950/50`.
+   - Menggunakan animasi shimmer Tailwind `animate-pulse` dan lintasan cahaya.
+2. **Placeholder Geometris Elemen Dalam**:
+   - **Badge Header**: Skeleton pil atas kiri (`w-40 sm:w-52`) dan kanan (`w-32 sm:w-40`).
+   - **Tombol Putar Tengah**: Lingkaran tengah proporsional (`w-14 h-14 sm:w-20 sm:h-20`) beraksen amber lembut `bg-amber-400/20`.
+   - **Metadata Bawah**: Bar judul tiruan (`h-4 sm:h-6 w-3/4`) dan dua baris deskripsi (`w-5/6` dan `w-1/2`).
+3. **Penyajian Data Riil**:
+   - Begitu data selesai dimuat (`isLoading: false`), card video asli dimunculkan secara instan jika `is_active: true`.
+   - Menghapus ketergantungan fallback ke gambar statis lama yang tidak relevan.
+
 

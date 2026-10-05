@@ -33,24 +33,36 @@ export const HeroSection: React.FC = () => {
   const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [heroVideo, setHeroVideo] = useState<HeroVideoSetting | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   React.useEffect(() => {
+    let isMounted = true;
     heroVideoService
       .getHeroVideo()
       .then((data) => {
-        if (data) setHeroVideo(data);
+        if (isMounted) {
+          if (data) setHeroVideo(data);
+          setIsLoading(false);
+        }
       })
       .catch((err) => {
         console.warn("[HeroSection] Gagal memuat hero video setting:", err);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  const currentVideoUrl = heroVideo?.video_url || "/videos/sambutan-bappenas.mp4";
+  const currentVideoUrl = heroVideo?.video_url || "";
   const youtubeId = extractYouTubeId(currentVideoUrl);
   const isYouTube = Boolean(youtubeId);
   const effectivePoster =
     heroVideo?.poster_url ||
-    (youtubeId ? getYouTubeThumbnailUrl(youtubeId, "maxres") : "/images/bappeda/fgd-keuangan.png");
+    (youtubeId ? getYouTubeThumbnailUrl(youtubeId, "maxres") : "");
 
   const togglePlay = async () => {
     if (isYouTube) {
@@ -109,8 +121,36 @@ export const HeroSection: React.FC = () => {
 
         <DocumentQuickMenu floatingOnScroll showTicker />
 
-        {/* SINGLE PROPORTIONAL HERO OPENING VIDEO PRESENTATION CARD */}
-        {(heroVideo?.is_active ?? true) && (
+        {/* SINGLE PROPORTIONAL HERO OPENING VIDEO PRESENTATION CARD OR SKELETON */}
+        {isLoading ? (
+          <div className="max-w-3xl lg:max-w-4xl mx-auto pt-1 sm:pt-3">
+            <div className="relative rounded-2xl sm:rounded-[32px] overflow-hidden border-2 sm:border-4 border-white/80 shadow-2xl bg-slate-950 aspect-video flex flex-col justify-between p-4 sm:p-6 select-none animate-pulse">
+              {/* Animated Shimmer Background */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-slate-900 via-slate-950 to-blue-950/50 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] pointer-events-none" />
+
+              {/* Header Badge Skeleton */}
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="h-6 sm:h-7.5 w-40 sm:w-52 rounded-full bg-slate-800/80 border border-white/10 backdrop-blur-md" />
+                <div className="hidden sm:block h-6 sm:h-7.5 w-32 sm:w-40 rounded-full bg-slate-800/80 border border-white/10 backdrop-blur-md" />
+              </div>
+
+              {/* Center Interactive Play Button Skeleton */}
+              <div className="relative z-10 self-center">
+                <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full bg-amber-400/20 border-2 sm:border-4 border-white/20 flex items-center justify-center shadow-lg">
+                  <div className="w-5 h-5 sm:w-8 sm:h-8 rounded-full bg-amber-400/40 ml-0.5" />
+                </div>
+              </div>
+
+              {/* Bottom Metadata & Control Bar Skeleton */}
+              <div className="relative z-10 space-y-2 max-w-xl sm:max-w-2xl">
+                <div className="h-4 sm:h-6 w-3/4 rounded-lg bg-slate-800/90 border border-white/5" />
+                <div className="h-3 sm:h-3.5 w-5/6 rounded bg-slate-800/60" />
+                <div className="h-3 sm:h-3.5 w-1/2 rounded bg-slate-800/40" />
+              </div>
+            </div>
+          </div>
+        ) : (heroVideo?.is_active ?? true) && currentVideoUrl ? (
           <div className="max-w-3xl lg:max-w-4xl mx-auto pt-1 sm:pt-3">
             <div className="relative rounded-2xl sm:rounded-[32px] overflow-hidden border-2 sm:border-4 border-white/90 shadow-2xl bg-slate-950 aspect-video group">
               {isYouTube ? (
@@ -141,7 +181,7 @@ export const HeroSection: React.FC = () => {
                   ref={videoRef}
                   key={currentVideoUrl}
                   src={currentVideoUrl}
-                  poster={effectivePoster}
+                  poster={effectivePoster || undefined}
                   playsInline
                   loop
                   muted={isMuted}
@@ -154,12 +194,14 @@ export const HeroSection: React.FC = () => {
               {/* Poster Skeleton Fallback if video isn't playing */}
               {!isPlaying && (
                 <div className="absolute inset-0 pointer-events-none">
-                  <SkeletonImage
-                    src={effectivePoster}
-                    alt="Video Sambutan Pembukaan"
-                    containerClassName="w-full h-full"
-                    className="w-full h-full object-cover opacity-90"
-                  />
+                  {effectivePoster ? (
+                    <SkeletonImage
+                      src={effectivePoster}
+                      alt={heroVideo?.title || "Video Sambutan Pembukaan"}
+                      containerClassName="w-full h-full"
+                      className="w-full h-full object-cover opacity-90"
+                    />
+                  ) : null}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/40 to-slate-950/20" />
                 </div>
               )}
@@ -242,7 +284,7 @@ export const HeroSection: React.FC = () => {
               )}
             </div>
           </div>
-        )}
+        ) : null}
       </div>
     </section>
   );
