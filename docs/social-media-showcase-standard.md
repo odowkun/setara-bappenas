@@ -108,3 +108,16 @@ Saat komponen `SocialMediaSection` berada dalam fase pemuatan (`loading === true
    - Wadah pemutar video (`aspect-video rounded-xl sm:rounded-2xl`) menggunakan `flex items-center justify-center relative overflow-hidden`.
    - Tombol skeleton Play YouTube (`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-300/80`) dan ikon placeholder Instagram (`w-6 h-6 text-slate-300/80`) diberi atribut `relative z-10` sehingga terpusat sempurna di titik tengah geometris kartu di atas lapisan efek shimmer.
 
+---
+
+## 7. Standar Avatar Profil & Resolusi Lambang (Anti-Dark Clash & 1:1 Emblem Ratio)
+
+Untuk mencegah logo tidak terlihat atau mengalami distorsi/penyusutan ukuran pada avatar profil akun YouTube dan Instagram:
+1. **Latar Belakang Putih Kontras Tinggi (`bg-white p-1`)**:
+   - Seluruh inner circle avatar wajib menggunakan latar belakang putih bersih (`bg-white p-1 rounded-full flex items-center justify-center shadow-xs`).
+   - Mencegah logo berteks hitam atau berformat transparan tenggelam/tidak terbaca saat dirender di atas latar belakang modal gelap (`bg-slate-900`).
+2. **Penggunaan Lambang Bujur Sangkar 1:1 (`favicon-bappeda.png`)**:
+   - Format avatar profil media sosial wajib mengadopsi lambang resmi berbentuk bujur sangkar 1:1 (`/images/bappeda/favicon-bappeda.png`), bukan banner horizontal kop surat (`logo-halut.png` rasio 2.6:1).
+   - Helper `getAvatarUrl` memastikan fallback cerdas otomatis mengalihkan tautan `logo-halut.png` ke lambang 1:1 agar gambar tampil proporsional, padat, dan terpusat di dalam cincin gradien.
+
+

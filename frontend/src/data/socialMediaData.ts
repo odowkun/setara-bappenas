@@ -51,7 +51,7 @@ export const OFFICIAL_INSTAGRAM_PROFILE: InstagramProfileData = {
   handle: "@bappeda_halut",
   displayName: "BAPPEDA HALUT",
   tagline: "Sinergi Lokal, Solusi Global — Halmahera Utara Hebat",
-  avatarUrl: "/images/bappeda/logo-halut.png",
+  avatarUrl: "/images/bappeda/favicon-bappeda.png",
   profileUrl: "https://www.instagram.com/bappeda_halut",
   followersCount: "3.4K",
   postsCount: 128,

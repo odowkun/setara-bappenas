@@ -31,6 +31,13 @@ import {
   type YouTubeVideoData,
 } from "@/data/socialMediaData";
 
+const getAvatarUrl = (url?: string) => {
+  if (!url || url === "/images/bappeda/logo-halut.png") {
+    return "/images/bappeda/favicon-bappeda.png";
+  }
+  return url;
+};
+
 export const SocialMediaSection: React.FC = () => {
   const [mounted, setMounted] = useState(false);
   const [selectedPost, setSelectedPost] = useState<InstagramPostData | null>(null);
@@ -233,9 +240,9 @@ export const SocialMediaSection: React.FC = () => {
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 shadow-md shrink-0">
-                    <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                    <div className="w-full h-full rounded-full bg-white p-1 flex items-center justify-center overflow-hidden">
                       <img
-                        src={instagramProfile.avatarUrl || "/images/bappeda/logo-halut.png"}
+                        src={getAvatarUrl(instagramProfile.avatarUrl)}
                         alt={youtubeData.channelTitle}
                         className="w-full h-full object-contain"
                       />
@@ -349,9 +356,9 @@ export const SocialMediaSection: React.FC = () => {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shadow-md shrink-0">
-                  <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-full rounded-full bg-white p-1 flex items-center justify-center overflow-hidden shadow-xs">
                     <img
-                      src={instagramProfile.avatarUrl}
+                      src={getAvatarUrl(instagramProfile.avatarUrl)}
                       alt={instagramProfile.displayName}
                       className="w-full h-full object-contain"
                     />
@@ -575,9 +582,9 @@ export const SocialMediaSection: React.FC = () => {
                       <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 shrink-0">
-                            <div className="w-full h-full rounded-full bg-slate-900 p-0.5 flex items-center justify-center overflow-hidden">
+                            <div className="w-full h-full rounded-full bg-white p-1 flex items-center justify-center overflow-hidden shadow-xs">
                               <img
-                                src={instagramProfile.avatarUrl}
+                                src={getAvatarUrl(instagramProfile.avatarUrl)}
                                 alt={instagramProfile.displayName}
                                 className="w-full h-full object-contain"
                               />
