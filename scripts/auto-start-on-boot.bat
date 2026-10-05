@@ -25,8 +25,17 @@ if %ERRORLEVEL% equ 0 (
     echo [INFO] cloudflared sudah berjalan atau sedang disiapkan.
 )
 
-:: 3. Jalankan Reload PM2 (Next.js Frontend & Laravel Backend API)
-echo [3/3] Menjalankan layanan PM2...
+:: 3. Pastikan GitHub Actions Runner Aktif (CI/CD)
+echo [3/4] Memeriksa status GitHub Actions Runner...
+if exist "C:\actions-runner\svc.cmd" (
+    cd /d C:\actions-runner
+    call .\svc.cmd start >nul 2>&1
+) else (
+    schtasks /Run /TN "GitHub_Actions_Runner" >nul 2>&1
+)
+
+:: 4. Jalankan Reload PM2 (Next.js Frontend & Laravel Backend API)
+echo [4/4] Menjalankan layanan PM2...
 if exist "C:\bappeda-halut\scripts\reload-pm2.bat" (
     call "C:\bappeda-halut\scripts\reload-pm2.bat"
 ) else (
