@@ -94,3 +94,17 @@ Untuk menjaga konsistensi visual dan memastikan seluruh konten grafis (seperti k
    - **Badge Multi-Slide pada Beranda & Dashboard**:
      - Kartu beranda menampilkan badge transparan `1/N` dengan ikon `Layers`.
      - Panel dashboard menampilkan strip pratinjau seluruh slide (*thumbnail strip*) agar administrator dapat memverifikasi kelengkapan slide sebelum disimpan.
+
+---
+
+## 6. Standar Skeleton Loaders & Presisi Posisi Ikon (Shimmer Layering)
+
+Saat komponen `SocialMediaSection` berada dalam fase pemuatan (`loading === true`), struktur kartu skeleton YouTube dan Instagram wajib mempertahankan geometri dan perataan ikon:
+1. **Pencegahan Dislokasi Ikon Akibat Shimmer (*Anti-Flex-Displacement*)**:
+   - Efek animasi gradien kilau (*shimmer effect*) wajib menggunakan positioning absolut penuh:
+     `absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite] pointer-events-none`.
+   - Hindari meletakkan `div` shimmer dalam flow flex biasa (`w-full h-full` tanpa `absolute`) karena akan mendominasi lebar container dan mendesak/memotong elemen ikon (seperti tombol Play atau ikon Instagram) ke tepi kanan container.
+2. **Perataan Presisi Ikon Tengah (*Dead-Center Icon Alignment*)**:
+   - Wadah pemutar video (`aspect-video rounded-xl sm:rounded-2xl`) menggunakan `flex items-center justify-center relative overflow-hidden`.
+   - Tombol skeleton Play YouTube (`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-300/80`) dan ikon placeholder Instagram (`w-6 h-6 text-slate-300/80`) diberi atribut `relative z-10` sehingga terpusat sempurna di titik tengah geometris kartu di atas lapisan efek shimmer.
+

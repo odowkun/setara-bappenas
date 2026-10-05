@@ -178,8 +178,8 @@ export const SocialMediaSection: React.FC = () => {
               </div>
 
               <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl bg-slate-200/80 flex items-center justify-center overflow-hidden flex-1">
-                <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-300/80 flex items-center justify-center shadow-md">
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite] pointer-events-none" />
+                <div className="relative z-10 w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-300/80 flex items-center justify-center shadow-md">
                   <Play className="w-6 h-6 sm:w-7 sm:h-7 text-white fill-white ml-0.5 opacity-50" />
                 </div>
               </div>
@@ -205,8 +205,9 @@ export const SocialMediaSection: React.FC = () => {
               <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
                 {[1, 2].map((i) => (
                   <div key={i} className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-100 p-2 sm:p-2.5 space-y-2">
-                    <div className="w-full aspect-square rounded-lg sm:rounded-xl bg-slate-200/80 relative overflow-hidden">
-                      <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                    <div className="w-full aspect-square rounded-lg sm:rounded-xl bg-slate-200/80 relative overflow-hidden flex items-center justify-center">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite] pointer-events-none" />
+                      <Instagram className="w-6 h-6 text-slate-300/80 relative z-10" />
                     </div>
                     <div className="space-y-1.5 pt-1">
                       <div className="h-3 w-3/4 bg-slate-200 rounded" />

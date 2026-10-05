@@ -174,6 +174,9 @@ Sebelumnya, saat halaman di-refresh, antarmuka sempat menampilkan fallback stati
    - Kolom kiri (YouTube) dan kolom kanan (Instagram) masing-masing menampilkan placeholder shimmer beranimasi (`animate-pulse`) yang mencerminkan proporsi kartu asli: header avatar akun bulat `w-10 h-10`, frame video 16:9 widescreen pada kiri, dan 2 kotak kartu foto bujur sangkar pada kanan.
 3. **Fallback Terarah Resmi**:
    - Jika tidak ada `youtubeId` yang disetel pada pengaturan profil instansi, komponen menampilkan kartu kanal resmi BAPPEDA Halmahera Utara (`@bappedahalut`) lengkap dengan tombol tautan langsung ke YouTube resmi, bukan video klip acak.
+4. **Presisi Penempatan Shimmer & Ikon Tengah (*Absolute Layering*)**:
+   - Lapisan animasi kilau (*shimmer*) diatur `absolute inset-0 pointer-events-none` agar tidak mendesak posisi elemen ikon ke tepi kanan akibat layout flex flow biasa.
+   - Tombol Play YouTube dan ikon Instagram pada skeleton diberi `relative z-10` sehingga terpusat persis di titik tengah geometris (*dead-center*).
 
 ### 8.2. Kartu Pengumuman Pinned Beranda (`GeospatialSection.tsx`)
 1. **Masalah Flash Renstra Statis**:
