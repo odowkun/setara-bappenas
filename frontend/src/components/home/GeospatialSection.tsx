@@ -72,6 +72,7 @@ export const GeospatialSection: React.FC = () => {
   });
 
   const [pinnedAnnouncement, setPinnedAnnouncement] = useState<AnnouncementItem | null>(null);
+  const [loadingAnnouncement, setLoadingAnnouncement] = useState(true);
 
   React.useEffect(() => {
     Promise.all([
@@ -93,6 +94,9 @@ export const GeospatialSection: React.FC = () => {
         (Array.isArray(announcements) && announcements[0]) ||
         null;
       setPinnedAnnouncement(pinned);
+      setLoadingAnnouncement(false);
+    }).catch(() => {
+      setLoadingAnnouncement(false);
     });
   }, []);
 
@@ -405,54 +409,65 @@ export const GeospatialSection: React.FC = () => {
         {/* MEDIA SOSIAL RESMI: YOUTUBE & INSTAGRAM SHOWCASE */}
         <SocialMediaSection />
 
-        {/* TOP INDEPENDENT CARD 1: Pengumuman Resmi Perencanaan Daerah */}
-        <div className="p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
-          <div className="max-w-3xl space-y-3 relative z-10">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black shadow-md border border-amber-300">
-              <Bell className="w-3.5 h-3.5 text-blue-950 animate-bounce" />{" "}
-              {pinnedAnnouncement ? (pinnedAnnouncement.type || "Pengumuman Resmi") : "Pengumuman Resmi Perencanaan Daerah"}
+        {/* TOP INDEPENDENT CARD 1: Pengumuman Resmi Perencanaan Daerah OR SKELETON */}
+        {loadingAnnouncement ? (
+          <div className="p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-white/10 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 animate-pulse select-none">
+            <div className="max-w-3xl space-y-3 relative z-10 w-full">
+              <div className="h-6 w-36 rounded-full bg-white/20" />
+              <div className="h-8 w-3/4 rounded-lg bg-white/20" />
+              <div className="space-y-1.5 pt-1">
+                <div className="h-3.5 w-full rounded bg-white/10" />
+                <div className="h-3.5 w-5/6 rounded bg-white/10" />
+              </div>
             </div>
-            <h3 className="text-lg sm:text-3xl font-extrabold text-white leading-tight">
-              {pinnedAnnouncement ? pinnedAnnouncement.title : "Penyusunan Renstra PD (Perangkat Daerah) Tahun 2025–2029"}
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium line-clamp-3">
-              {pinnedAnnouncement ? (
-                pinnedAnnouncement.content
-              ) : (
-                <>
-                  Berdasarkan <strong className="text-amber-300 font-bold">PERMENDAGRI 86 Tahun 2017</strong> tentang tata cara perencanaan, pengendalian dan Evaluasi Daerah serta <strong className="text-amber-300 font-bold">INMENDAGRI Nomor 2 Tahun 2025</strong> tentang Pedoman Penyusunan Rencana Strategis Perangkat Daerah Kabupaten Halmahera Utara.
-                </>
-              )}
-            </p>
+            <div className="flex items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
+              <div className="h-12 w-40 rounded-full bg-white/20" />
+              <div className="h-12 w-36 rounded-full bg-white/10" />
+            </div>
           </div>
+        ) : pinnedAnnouncement ? (
+          <div className="p-5 sm:p-8 lg:p-10 rounded-2xl sm:rounded-[28px] bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 border border-amber-400/30 shadow-2xl relative overflow-hidden flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 text-white">
+            <div className="max-w-3xl space-y-3 relative z-10">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-blue-950 text-xs font-black shadow-md border border-amber-300">
+                <Bell className="w-3.5 h-3.5 text-blue-950 animate-bounce" />{" "}
+                {pinnedAnnouncement.type || "Pengumuman Resmi"}
+              </div>
+              <h3 className="text-lg sm:text-3xl font-extrabold text-white leading-tight">
+                {pinnedAnnouncement.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-200 leading-relaxed font-medium line-clamp-3">
+                {pinnedAnnouncement.content}
+              </p>
+            </div>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
-            {pinnedAnnouncement?.pdfUrl ? (
-              <a
-                href={`${pinnedAnnouncement.pdfUrl}?download=1`}
-                target="_blank"
-                rel="noreferrer"
-                className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
-              >
-                <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Lampiran
-              </a>
-            ) : (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 relative z-10 w-full sm:w-auto">
+              {pinnedAnnouncement?.pdfUrl ? (
+                <a
+                  href={`${pinnedAnnouncement.pdfUrl}?download=1`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
+                >
+                  <FileCheck className="w-4 h-4 text-blue-950 shrink-0" /> Unduh Berkas Lampiran
+                </a>
+              ) : (
+                <Link
+                  href="/pengumuman"
+                  className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
+                >
+                  <FileText className="w-4 h-4 text-blue-950 shrink-0" />
+                  <span>Buka Detail Pengumuman</span>
+                </Link>
+              )}
               <Link
                 href="/pengumuman"
-                className="w-full sm:w-auto h-12 px-6 rounded-full bg-amber-400 hover:bg-amber-300 text-blue-950 font-black text-xs shadow-xl flex items-center justify-center gap-2 border border-amber-300 transition transform hover:scale-105 whitespace-nowrap cursor-pointer"
+                className="w-full sm:w-auto h-12 px-6 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/20 backdrop-blur-md shadow-sm transition whitespace-nowrap"
               >
-                <FileText className="w-4 h-4 text-blue-950 shrink-0" />
-                <span>{pinnedAnnouncement ? "Buka Detail Pengumuman" : "Unduh Berkas Renstra"}</span>
+                Arsip Pengumuman <ExternalLink className="w-3.5 h-3.5 text-slate-300 shrink-0" />
               </Link>
-            )}
-            <Link
-              href="/pengumuman"
-              className="w-full sm:w-auto h-12 px-6 rounded-full bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center justify-center gap-2 border border-white/20 backdrop-blur-md shadow-sm transition whitespace-nowrap"
-            >
-              Arsip Pengumuman <ExternalLink className="w-3.5 h-3.5 text-slate-300 shrink-0" />
-            </Link>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         {/* MOBILE ONLY: Sleek Segmented Controller Switcher (< lg screens) */}
         <div className="flex lg:hidden items-center justify-between p-1 bg-slate-100 border border-slate-200/80 rounded-2xl shadow-inner">

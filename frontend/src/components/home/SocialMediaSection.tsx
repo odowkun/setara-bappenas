@@ -36,6 +36,7 @@ export const SocialMediaSection: React.FC = () => {
   const [selectedPost, setSelectedPost] = useState<InstagramPostData | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isPlayingVideo, setIsPlayingVideo] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [youtubeData, setYoutubeData] = useState<YouTubeVideoData>(OFFICIAL_YOUTUBE_VIDEO);
   const [instagramPosts, setInstagramPosts] = useState<InstagramPostData[]>(OFFICIAL_INSTAGRAM_POSTS);
   const [instagramProfile, setInstagramProfile] = useState<InstagramProfileData>(OFFICIAL_INSTAGRAM_PROFILE);
@@ -47,43 +48,51 @@ export const SocialMediaSection: React.FC = () => {
   // Fetch dynamic YouTube video & Instagram settings from backend if available
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
     fetch(`${API_BASE_URL}/profil/tentang`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((json) => {
-        if (!isMounted || !json?.data?.meta_json) return;
-        const meta = json.data.meta_json;
-        if (meta.youtube_featured_url) {
-          const ytId = extractYouTubeId(meta.youtube_featured_url);
-          if (ytId) {
-            setYoutubeData({
-              id: "yt-dynamic",
-              youtubeId: ytId,
-              videoUrl: meta.youtube_featured_url,
-              title: meta.youtube_featured_title || OFFICIAL_YOUTUBE_VIDEO.title,
-              description: meta.youtube_featured_desc || OFFICIAL_YOUTUBE_VIDEO.description,
-              date: meta.youtube_featured_date || OFFICIAL_YOUTUBE_VIDEO.date,
-              location: meta.youtube_featured_location || OFFICIAL_YOUTUBE_VIDEO.location,
-              badge: meta.youtube_featured_badge || "Siaran Resmi BAPPEDA HALUT",
-              channelTitle: meta.youtube_featured_channel || OFFICIAL_YOUTUBE_VIDEO.channelTitle,
-              channelUrl: meta.youtube || OFFICIAL_YOUTUBE_VIDEO.channelUrl,
-            });
+        if (!isMounted) return;
+        const meta = json?.data?.meta_json;
+        if (meta) {
+          if (meta.youtube_featured_url) {
+            const ytId = extractYouTubeId(meta.youtube_featured_url);
+            if (ytId) {
+              setYoutubeData({
+                id: "yt-dynamic",
+                youtubeId: ytId,
+                videoUrl: meta.youtube_featured_url,
+                title: meta.youtube_featured_title || "Siaran & Dokumentasi BAPPEDA Halmahera Utara",
+                description: meta.youtube_featured_desc || "",
+                date: meta.youtube_featured_date || "",
+                location: meta.youtube_featured_location || "Tobelo, Halmahera Utara",
+                badge: meta.youtube_featured_badge || "Siaran Resmi BAPPEDA HALUT",
+                channelTitle: meta.youtube_featured_channel || "Bappeda Halmahera Utara Official",
+                channelUrl: meta.youtube || "https://www.youtube.com/@bappedahalut",
+              });
+            }
+          }
+
+          // Dynamic Instagram posts from dashboard (Exactly 2 posts)
+          if (Array.isArray(meta.instagram_posts) && meta.instagram_posts.length > 0) {
+            setInstagramPosts(meta.instagram_posts.slice(0, 2));
+          }
+
+          // Dynamic Instagram profile from dashboard
+          if (meta.instagram_profile) {
+            setInstagramProfile((prev) => ({
+              ...prev,
+              ...meta.instagram_profile,
+            }));
           }
         }
-
-        // Dynamic Instagram posts from dashboard (Exactly 2 posts)
-        if (Array.isArray(meta.instagram_posts) && meta.instagram_posts.length > 0) {
-          setInstagramPosts(meta.instagram_posts.slice(0, 2));
-        }
-
-        // Dynamic Instagram profile from dashboard
-        if (meta.instagram_profile) {
-          setInstagramProfile((prev) => ({
-            ...prev,
-            ...meta.instagram_profile,
-          }));
-        }
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.warn("[SocialMediaSection] Gagal memuat data:", err);
+      })
+      .finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -154,93 +163,182 @@ export const SocialMediaSection: React.FC = () => {
         </div>
 
         {/* 2-COLUMN BALANCED SHOWCASE (YOUTUBE PURE VIDEO ON LEFT + INSTAGRAM FEED ON RIGHT) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-          {/* ========================================================================= */}
-          {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO (WITH MATCHING HEADER BRANDING) */}
-          {/* ========================================================================= */}
-          <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full">
-            {/* YOUTUBE HEADER BRANDING (Matching Instagram's Header Exactly) */}
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 shadow-md shrink-0">
-                  <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
-                    <img
-                      src={instagramProfile.avatarUrl || "/images/bappeda/logo-halut.png"}
-                      alt={youtubeData.channelTitle}
-                      className="w-full h-full object-contain"
-                    />
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            {/* LEFT COLUMN: YOUTUBE SKELETON */}
+            <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full animate-pulse select-none">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-36 sm:w-44 bg-slate-200 rounded-md" />
+                    <div className="h-3 w-48 sm:w-60 bg-slate-100 rounded-md" />
                   </div>
                 </div>
+              </div>
 
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
-                      {youtubeData.channelTitle || "BAPPEDA HALUT OFFICIAL"}
-                    </h3>
-                    <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black" title="Kanal Resmi Terverifikasi">
-                      ✓
-                    </span>
-                  </div>
-                  <p className="text-[11px] font-medium text-slate-500 line-clamp-1">
-                    Kanal Video Dokumentasi &amp; Siaran Resmi BAPPEDA
-                  </p>
+              <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl bg-slate-200/80 flex items-center justify-center overflow-hidden flex-1">
+                <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-slate-300/80 flex items-center justify-center shadow-md">
+                  <Play className="w-6 h-6 sm:w-7 sm:h-7 text-white fill-white ml-0.5 opacity-50" />
                 </div>
+              </div>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <div className="h-3.5 w-40 sm:w-56 bg-slate-100 rounded" />
+                <div className="h-3.5 w-24 bg-slate-200 rounded" />
               </div>
             </div>
 
-            {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
-            <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-black shadow-md border border-slate-200/80 group/video flex-1">
-              {isPlayingVideo ? (
-                <iframe
-                  src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
-                  title={youtubeData.title}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full h-full border-0 absolute inset-0"
-                />
-              ) : (
-                <div
-                  onClick={() => setIsPlayingVideo(true)}
-                  className="relative w-full h-full cursor-pointer"
-                >
-                  {/* Video Poster Thumbnail (True 16:9 aspect ratio, 0% squish or crop) */}
-                  <ProgressiveImage
-                    src={`https://img.youtube.com/vi/${youtubeData.youtubeId}/maxresdefault.jpg`}
-                    alt={youtubeData.title}
-                    fallbackSrc="/images/bappeda/fgd-keuangan.png"
-                    className="w-full h-full object-cover group-hover/video:scale-103 transition-transform duration-700 ease-out opacity-95 group-hover/video:opacity-100"
-                    containerClassName="w-full h-full absolute inset-0"
-                  />
-
-                  {/* Subtle Dark Vignette for contrast on video overlay elements */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
-
-                  {/* Big Play Button in Center */}
-                  <div className="absolute inset-0 flex items-center justify-center z-10">
-                    <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/70 group-hover/video:scale-110 group-hover/video:bg-red-500 transition-all duration-300 ring-4 ring-white/25">
-                      <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
-                    </div>
+            {/* RIGHT COLUMN: INSTAGRAM SKELETON */}
+            <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full animate-pulse select-none">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-slate-200 shrink-0" />
+                  <div className="space-y-1.5">
+                    <div className="h-4 w-32 sm:w-40 bg-slate-200 rounded-md" />
+                    <div className="h-3 w-44 sm:w-52 bg-slate-100 rounded-md" />
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
 
-            {/* YOUTUBE FOOTER LINK (Matching Instagram's Footer Exactly) */}
-            <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
-              <span className="text-[11px] truncate max-w-[200px] sm:max-w-xs">
-                Siaran: <strong className="text-slate-800 font-bold">{youtubeData.title}</strong>
-              </span>
-              <a
-                href={youtubeData.videoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-red-600 hover:text-red-700 font-bold inline-flex items-center gap-1 text-xs transition shrink-0"
-              >
-                <span>Tonton di YouTube</span>
-                <ExternalLink className="w-3 h-3" />
-              </a>
+              <div className="grid grid-cols-2 gap-3 sm:gap-4 flex-1">
+                {[1, 2].map((i) => (
+                  <div key={i} className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-slate-100 p-2 sm:p-2.5 space-y-2">
+                    <div className="w-full aspect-square rounded-lg sm:rounded-xl bg-slate-200/80 relative overflow-hidden">
+                      <div className="w-full h-full bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full animate-[shimmer_1.5s_infinite]" />
+                    </div>
+                    <div className="space-y-1.5 pt-1">
+                      <div className="h-3 w-3/4 bg-slate-200 rounded" />
+                      <div className="h-2.5 w-1/2 bg-slate-100 rounded" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="pt-2 flex items-center justify-between border-t border-slate-100">
+                <div className="h-3.5 w-36 bg-slate-100 rounded" />
+                <div className="h-3.5 w-24 bg-slate-200 rounded" />
+              </div>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
+            {/* ========================================================================= */}
+            {/* LEFT COLUMN: YOUTUBE OFFICIAL VIDEO (WITH MATCHING HEADER BRANDING) */}
+            {/* ========================================================================= */}
+            <div className="lg:col-span-6 flex flex-col justify-between bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-lg p-4 sm:p-5 space-y-3.5 h-full">
+              {/* YOUTUBE HEADER BRANDING (Matching Instagram's Header Exactly) */}
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full p-0.5 bg-gradient-to-tr from-red-600 via-rose-500 to-amber-500 shadow-md shrink-0">
+                    <div className="w-full h-full rounded-full bg-white p-0.5 flex items-center justify-center overflow-hidden">
+                      <img
+                        src={instagramProfile.avatarUrl || "/images/bappeda/logo-halut.png"}
+                        alt={youtubeData.channelTitle}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-black text-slate-900 text-sm sm:text-base tracking-tight">
+                        {youtubeData.channelTitle || "BAPPEDA HALUT OFFICIAL"}
+                      </h3>
+                      <span className="w-3.5 h-3.5 rounded-full bg-blue-500 text-white flex items-center justify-center text-[9px] font-black" title="Kanal Resmi Terverifikasi">
+                        ✓
+                      </span>
+                    </div>
+                    <p className="text-[11px] font-medium text-slate-500 line-clamp-1">
+                      Kanal Video Dokumentasi &amp; Siaran Resmi BAPPEDA
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* TRUE 16:9 WIDESCREEN VIDEO FRAME (Never stretched or cropped) */}
+              <div className="relative w-full aspect-video rounded-xl sm:rounded-2xl overflow-hidden bg-slate-950 shadow-md border border-slate-200/80 group/video flex-1">
+                {youtubeData.youtubeId ? (
+                  isPlayingVideo ? (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${youtubeData.youtubeId}?autoplay=1&rel=0&modestbranding=1`}
+                      title={youtubeData.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full h-full border-0 absolute inset-0"
+                    />
+                  ) : (
+                    <div
+                      onClick={() => setIsPlayingVideo(true)}
+                      className="relative w-full h-full cursor-pointer"
+                    >
+                      {/* Video Poster Thumbnail (True 16:9 aspect ratio, 0% squish or crop) */}
+                      <ProgressiveImage
+                        src={`https://img.youtube.com/vi/${youtubeData.youtubeId}/maxresdefault.jpg`}
+                        alt={youtubeData.title}
+                        fallbackSrc="/images/bappeda/default-news-cover.jpg"
+                        className="w-full h-full object-cover group-hover/video:scale-103 transition-transform duration-700 ease-out opacity-95 group-hover/video:opacity-100"
+                        containerClassName="w-full h-full absolute inset-0"
+                      />
+
+                      {/* Subtle Dark Vignette for contrast on video overlay elements */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-slate-950/40" />
+
+                      {/* Big Play Button in Center */}
+                      <div className="absolute inset-0 flex items-center justify-center z-10">
+                        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/70 group-hover/video:scale-110 group-hover/video:bg-red-500 transition-all duration-300 ring-4 ring-white/25">
+                          <Play className="w-6 h-6 sm:w-7 sm:h-7 fill-white ml-0.5" />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                ) : (
+                  /* Fallback if no specific video is set: Official YouTube Channel Card */
+                  <a
+                    href={youtubeData.channelUrl || "https://www.youtube.com/@bappedahalut"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="relative w-full h-full flex flex-col items-center justify-center p-6 text-center bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 group/channel select-none"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                    <div className="relative z-10 space-y-3 max-w-sm flex flex-col items-center">
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-red-600 text-white flex items-center justify-center shadow-xl shadow-red-600/50 group-hover/channel:scale-110 transition-transform">
+                        <Play className="w-7 h-7 fill-white ml-0.5" />
+                      </div>
+                      <div className="space-y-1">
+                        <h4 className="text-white font-extrabold text-sm sm:text-base leading-snug drop-shadow-md">
+                          Kanal Resmi YouTube BAPPEDA
+                        </h4>
+                        <p className="text-slate-300 text-xs line-clamp-2 leading-relaxed font-medium">
+                          Tonton siaran rapat koordinasi, musrenbang, dan warta visual perencanaan daerah.
+                        </p>
+                      </div>
+                      <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md transition">
+                        <span>Buka Kanal YouTube</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </a>
+                )}
+              </div>
+
+              {/* YOUTUBE FOOTER LINK (Matching Instagram's Footer Exactly) */}
+              <div className="pt-2 flex items-center justify-between text-xs text-slate-500 border-t border-slate-100">
+                <span className="text-[11px] truncate max-w-[200px] sm:max-w-xs">
+                  Siaran: <strong className="text-slate-800 font-bold">{youtubeData.title}</strong>
+                </span>
+                <a
+                  href={youtubeData.videoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-red-600 hover:text-red-700 font-bold inline-flex items-center gap-1 text-xs transition shrink-0"
+                >
+                  <span>Tonton di YouTube</span>
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
 
           {/* ========================================================================= */}
           {/* RIGHT COLUMN: INSTAGRAM FEED (2 BALANCED CARDS IN 2-COLS, EQUAL HEIGHT) */}
@@ -358,7 +456,8 @@ export const SocialMediaSection: React.FC = () => {
             </div>
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       {/* ========================================================================= */}
       {/* INSTAGRAM POST DETAIL MODAL (Portaled to document.body to prevent scroll jumping) */}

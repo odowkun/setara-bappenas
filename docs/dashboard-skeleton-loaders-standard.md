@@ -161,4 +161,33 @@ Sebelumnya, saat halaman di-refresh, antarmuka sempat menampilkan fallback stati
    - Begitu data selesai dimuat (`isLoading: false`), card video asli dimunculkan secara instan jika `is_active: true`.
    - Menghapus ketergantungan fallback ke gambar statis lama yang tidak relevan.
 
+---
+
+## 8. Standar Skeleton Loader & Eliminasi Dummy Fallback Beranda
+
+### 8.1. Kanal Publikasi Multimedia & Media Sosial (`SocialMediaSection.tsx`)
+1. **Masalah Dummy Nidji**:
+   - File data tiruan (`socialMediaData.ts`) sebelumnya memuat `youtubeId: "ABs7uaqojsY"` (video klip Rahasia Hati - Nidji) sebagai fallback.
+   - Saat data belum selesai dimuat dari backend atau opsi featured video kosong, komponen sempat menampilkan video Nidji tersebut yang tidak sesuai dengan instansi pemerintah.
+2. **Solusi Skeleton Loader Dua Kolom Simetris**:
+   - Diterapkan state `loading` (default `true`) saat memanggil `socialMediaService.getFeaturedYoutube()` dan Instagram feed.
+   - Kolom kiri (YouTube) dan kolom kanan (Instagram) masing-masing menampilkan placeholder shimmer beranimasi (`animate-pulse`) yang mencerminkan proporsi kartu asli: header avatar akun bulat `w-10 h-10`, frame video 16:9 widescreen pada kiri, dan 2 kotak kartu foto bujur sangkar pada kanan.
+3. **Fallback Terarah Resmi**:
+   - Jika tidak ada `youtubeId` yang disetel pada pengaturan profil instansi, komponen menampilkan kartu kanal resmi BAPPEDA Halmahera Utara (`@bappedahalut`) lengkap dengan tombol tautan langsung ke YouTube resmi, bukan video klip acak.
+
+### 8.2. Kartu Pengumuman Pinned Beranda (`GeospatialSection.tsx`)
+1. **Masalah Flash Renstra Statis**:
+   - Sebelumnya komponen merender teks statis Renstra sebelum respons API pengumuman selesai.
+2. **Solusi Skeleton Loader Gradien**:
+   - Diterapkan state `loadingAnnouncement` (default `true`).
+   - Selama proses fetch, kartu pengumuman merender skeleton loader berlatar gradien biru gelap (`bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900`) beranimasi `animate-pulse`, dengan placeholder judul dan dua tombol aksi.
+
+### 8.3. Indeks Kepuasan Masyarakat (`SatisfactionSurvey.tsx`) & Berita Terbaru (`LatestNewsCarousel.tsx`)
+1. **Eliminasi Flash Nilai Dummy IKM**:
+   - State awal `totalResponden` dan persentase kepuasan (`ikmStats`) diinisialisasi ke 0 dengan state `loadingStats: true`.
+   - Badge responden riil dan angka persentase pada 3 kartu emoji merender skeleton pill shimmer sampai data riil dari database tersinkronisasi.
+2. **Inisialisasi Pemuatan Berita**:
+   - `LatestNewsCarousel.tsx` menginisialisasi `loading: true` secara bawaan agar 4 kartu skeleton loader langsung muncul sejak awal render pertama tanpa flash kotak kosong.
+
+
 

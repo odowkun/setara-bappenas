@@ -18,12 +18,13 @@ export const SatisfactionSurvey: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hoveredCard, setHoveredCard] = useState<SatisfactionLevel>(null);
   const [mounted, setMounted] = useState(false);
-  const [totalResponden, setTotalResponden] = useState<number>(38);
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [totalResponden, setTotalResponden] = useState<number>(0);
 
   const [ikmStats, setIkmStats] = useState({
-    sangat: "61%",
-    cukup: "21%",
-    kurang: "18%",
+    sangat: "0%",
+    cukup: "0%",
+    kurang: "0%",
   });
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export const SatisfactionSurvey: React.FC = () => {
 
   const loadStats = async () => {
     try {
+      setLoadingStats(true);
       const stats = await fetchIkmStats();
       if (stats) {
         setIkmStats({
@@ -49,6 +51,8 @@ export const SatisfactionSurvey: React.FC = () => {
       }
     } catch (err) {
       console.warn("[SatisfactionSurvey] Gagal memuat statistik riil:", err);
+    } finally {
+      setLoadingStats(false);
     }
   };
 
@@ -304,10 +308,14 @@ export const SatisfactionSurvey: React.FC = () => {
                 </p>
               </div>
             </div>
-            <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-950 text-xs font-extrabold shadow-xs shrink-0">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span>{totalResponden} Responden Riil Terdata</span>
-            </div>
+            {loadingStats ? (
+              <div className="h-8 w-44 rounded-full bg-blue-100/80 animate-pulse shrink-0" />
+            ) : (
+              <div className="inline-flex items-center gap-2 self-start sm:self-auto px-3 py-1.5 rounded-full bg-white border border-blue-200 text-blue-950 text-xs font-extrabold shadow-xs shrink-0">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{totalResponden} Responden Riil Terdata</span>
+              </div>
+            )}
           </div>
 
           {/* 3 Satisfaction Cards with Framer Motion Stagger */}
@@ -366,9 +374,13 @@ export const SatisfactionSurvey: React.FC = () => {
                   </p>
 
                   {/* Percentage */}
-                  <p className={`text-4xl sm:text-5xl font-black tracking-tight ${isSelected ? card.percentColor : "text-slate-800"}`}>
-                    {card.percent}
-                  </p>
+                  {loadingStats ? (
+                    <div className="h-10 sm:h-12 w-20 sm:w-24 bg-slate-200/80 rounded-xl animate-pulse mx-auto my-1" />
+                  ) : (
+                    <p className={`text-4xl sm:text-5xl font-black tracking-tight ${isSelected ? card.percentColor : "text-slate-800"}`}>
+                      {card.percent}
+                    </p>
+                  )}
                 </motion.button>
               );
             })}

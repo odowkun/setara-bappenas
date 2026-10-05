@@ -23,7 +23,7 @@ interface NewsCardItem {
 
 export const LatestNewsCarousel: React.FC = () => {
   const [newsItems, setNewsItems] = useState<NewsCardItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchNews = async () => {

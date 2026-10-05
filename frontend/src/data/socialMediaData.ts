@@ -35,15 +35,15 @@ export interface InstagramProfileData {
 
 export const OFFICIAL_YOUTUBE_VIDEO: YouTubeVideoData = {
   id: "yt-1",
-  youtubeId: "ABs7uaqojsY",
-  title: "Forum Koordinasi Penyelenggaraan Perencanaan Pembangunan Daerah BAPPEDA Halmahera Utara",
+  youtubeId: "",
+  title: "Kanal Video Dokumentasi & Siaran Resmi BAPPEDA Halmahera Utara",
   badge: "Siaran Resmi BAPPEDA HALUT",
-  date: "17 September 2026",
-  location: "Ruang Rapat Utama BAPPEDA, Tobelo",
-  description: "Rapat koordinasi dan evaluasi sinkronisasi program prioritas daerah Kabupaten Halmahera Utara menuju integrasi perencanaan yang terpadu, transparan, dan akuntabel.",
+  date: "Terbaru",
+  location: "Tobelo, Kabupaten Halmahera Utara",
+  description: "Ikuti siaran kegiatan resmi, musrenbang, dan warta perencanaan daerah Kabupaten Halmahera Utara melalui kanal YouTube resmi BAPPEDA.",
   channelTitle: "Bappeda Halmahera Utara Official",
-  channelUrl: "https://www.youtube.com/@bappedahalmaherautara",
-  videoUrl: "https://www.youtube.com/watch?v=ABs7uaqojsY",
+  channelUrl: "https://www.youtube.com/@bappedahalut",
+  videoUrl: "https://www.youtube.com/@bappedahalut",
 };
 
 export const OFFICIAL_INSTAGRAM_PROFILE: InstagramProfileData = {
