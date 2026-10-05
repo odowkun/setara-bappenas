@@ -144,4 +144,21 @@ w32tm /unregister; w32tm /register; net start w32time; w32tm /resync /force; Get
   - Variabel sistem `PATH`
 - **Rekomendasi Operasional**: Standar kearsipan resmi mewajibkan dokumen perencanaan (RPJPD, RPJMD, RKPD, dll.) berformat **PDF**. Jika server belum menginstal LibreOffice, admin/operator OPD wajib menyimpan (Save As / Export) dokumen ke format PDF sebelum mengunggah.
 
+### E. Ketahanan Otomatis Pasca Pemadaman Listrik (Zero-Touch Auto-Recovery)
+Ketika server fisik HP ProLiant mati mendadak akibat pemadaman listrik PLN dan hidup kembali, seluruh ekosistem wajib aktif secara otomatis tanpa menunggu login user atau akses remote:
+
+1. **Urutan Pemulihan (`scripts/auto-start-on-boot.bat`)**:
+   - Delay 15 detik untuk stabilisasi network adapter, DNS, dan Starlink/LAN kantor.
+   - Menghidupkan service database MariaDB/MySQL (`net start MySQL_Bappeda`).
+   - Menghidupkan service Cloudflare Tunnel (`net start cloudflared`).
+   - Menjalankan `scripts/reload-pm2.bat` untuk merestart `bappeda-api` (8100) dan `bappeda-fe` (3100).
+2. **Pendaftaran Task Scheduler**:
+   - Nama Task: `Bappeda_AutoStart_OnBoot`
+   - Trigger: `/SC ONSTART` (saat Windows boot, sebelum user login)
+   - Akun: `SYSTEM` (`/RU "SYSTEM"` dengan hak akses tertinggi `/RL HIGHEST`)
+   - Delay: `/DELAY 0000:15`
+3. **Konfigurasi Service Recovery**:
+   Service `MySQL_Bappeda` dan `cloudflared` diatur ke tipe `Automatic` dengan restart otomatis jika terjadi kegagalan/crash.
+
+
 

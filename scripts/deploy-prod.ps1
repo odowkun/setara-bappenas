@@ -147,16 +147,25 @@ if (Test-Path $staticSrc) {
     $global:LASTEXITCODE = 0
 }
 
-# 6. Reload PM2 (Zero-Downtime & Detached via Task Scheduler)
+# 6. Reload PM2 & Setup Zero-Touch Auto-Start on Windows Boot
 Write-Output "[INFO] Memastikan layanan PM2 terupdate dan aktif..."
 $finalReloadBat = if (Test-Path $prodReloadBat) { $prodReloadBat } else { $reloadBat }
 if (Test-Path $finalReloadBat) {
     & cmd.exe /c "`"$finalReloadBat`""
-
-    schtasks /Create /TN "Bappeda_PM2_Service" /TR "cmd.exe /c `"$finalReloadBat`"" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /F | Out-Null
-    schtasks /Run /TN "Bappeda_PM2_Service" | Out-Null
-    Start-Sleep -Seconds 3
 }
+
+# 7. Konfigurasi Ketahanan Otomatis Pasca Pemadaman Listrik (Auto-Recovery on Boot)
+$autoStartBat = Join-Path $prodRoot "scripts\auto-start-on-boot.bat"
+if (Test-Path $autoStartBat) {
+    schtasks /Create /TN "Bappeda_AutoStart_OnBoot" /TR "cmd.exe /c `"$autoStartBat`"" /SC ONSTART /RU "SYSTEM" /RL HIGHEST /DELAY 0000:15 /F | Out-Null
+}
+
+# Pastikan service Windows (MySQL & Cloudflare) diatur ke Automatic
+try {
+    Set-Service -Name "MySQL_Bappeda" -StartupType Automatic -ErrorAction SilentlyContinue
+    Set-Service -Name "cloudflared" -StartupType Automatic -ErrorAction SilentlyContinue
+} catch {}
+Start-Sleep -Seconds 3
 
 Write-Output "=================================================="
 Write-Output "[SUCCESS] DEPLOYMENT BERHASIL! Layanan Bappeda Halut Aktif!"
