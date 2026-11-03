@@ -73,10 +73,16 @@ export const metadata: Metadata = {
   },
   icons: {
     icon: [
+      { url: "/images/bappeda/favicon-48x48.png", sizes: "48x48", type: "image/png" },
+      { url: "/images/bappeda/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/images/bappeda/favicon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/images/bappeda/favicon-bappeda.png", sizes: "512x512", type: "image/png" },
       { url: "/favicon.ico", sizes: "any" },
-      { url: "/images/bappeda/favicon-bappeda.png", type: "image/png" },
     ],
-    apple: "/apple-icon.png",
+    shortcut: "/favicon.ico",
+    apple: [
+      { url: "/apple-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
   verification: {
     google: "o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc",
@@ -138,6 +144,32 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="48x48"
+          href="/images/bappeda/favicon-48x48.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="96x96"
+          href="/images/bappeda/favicon-96x96.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="192x192"
+          href="/images/bappeda/favicon-192x192.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="512x512"
+          href="/images/bappeda/favicon-bappeda.png"
+        />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
         <meta
           name="google-site-verification"
           content="o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc"

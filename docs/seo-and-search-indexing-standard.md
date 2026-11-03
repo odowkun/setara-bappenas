@@ -29,6 +29,7 @@ Sebelum standardisasi ini diterapkan, situs `https://bappeda.halmaherautarakab.g
 ### C. Metadata & Schema.org JSON-LD (`frontend/src/app/layout.tsx`)
 - Mendefinisikan `title`: `"BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah"`.
 - Menghapus penyebutan istilah *"Portal"* dari metadata publik agar penamaan di Google Search (*Site Name Snippet*) identik murni sebagai **BAPPEDA Halmahera Utara**.
+- **Standar Favicon Google Search**: Menyediakan favicon resolusi kelipatan 48px (`48x48`, `96x96`, `192x192`, `512x512`) dan `favicon.ico` multi-resolusi agar bot `Googlebot-Image` merender favicon resmi logo Halut di hasil pencarian Google, menggantikan ikon bola dunia (*generic globe*).
 - Mendefinisikan `robots: { index: true, follow: true, googleBot: { ... } }`.
 - Mendefinisikan URL kanonikal resmi (`alternates.canonical`).
 - Mendefinisikan `verification.google`: `o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc` untuk verifikasi instan Google Search Console.

@@ -12,6 +12,10 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/dashboard/", "/api/"],
       },
+      {
+        userAgent: "Googlebot-Image",
+        allow: ["/", "/images/", "/favicon.ico", "/icon.png", "/apple-icon.png"],
+      },
     ],
     sitemap: `${siteUrl}/sitemap.xml`,
   };
