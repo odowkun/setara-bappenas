@@ -409,14 +409,11 @@ export const Navbar: React.FC = () => {
         <div className="hidden sm:flex items-center">
           <button
             onClick={() => setIsSearchOpen(true)}
-            className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-sm transition group"
-            title="Cari Cepat (Cmd+K)"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 hover:bg-white text-slate-700 text-xs font-semibold border border-slate-200/80 shadow-sm transition group"
+            title="Pencarian"
           >
             <Search className="w-4 h-4 text-blue-600 group-hover:scale-110 transition" />
-            <span className="text-slate-500 pr-1 font-medium">Pencarian</span>
-            <kbd className="hidden xl:inline-block px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-400 bg-slate-100 rounded border border-slate-200">
-              ⌘K
-            </kbd>
+            <span className="text-slate-500 font-medium">Pencarian</span>
           </button>
         </div>
 

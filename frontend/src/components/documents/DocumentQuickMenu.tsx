@@ -5,7 +5,7 @@ import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ArrowRight, ChevronUp, X } from "lucide-react";
+import { ArrowRight, ChevronUp, Search, X } from "lucide-react";
 import { useAccessibility } from "@/context/AccessibilityContext";
 import {
   DOCUMENT_QUICK_CATEGORIES,
@@ -440,10 +440,11 @@ export function DocumentQuickMenu({
                           setIsFloatingOpen(false);
                           setIsSearchOpen(true);
                         }}
-                        className="absolute right-1 px-1.5 py-0.5 text-[9px] font-bold bg-slate-200/70 hover:bg-slate-300 text-slate-600 rounded-md transition cursor-pointer"
-                        title="Buka Dialog Pencarian Lengkap (⌘K)"
+                        className="absolute right-1.5 p-1 bg-slate-200/70 hover:bg-slate-300 text-slate-600 rounded-lg transition cursor-pointer"
+                        title="Buka Dialog Pencarian Lengkap"
+                        aria-label="Cari Dokumen"
                       >
-                        ⌘K
+                        <Search className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </form>

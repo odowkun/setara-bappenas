@@ -50,3 +50,10 @@ Urutan menu pada bilah navigasi utama (Desktop & Mobile):
 - Menggunakan handler state toggle `toggleMobileSubmenu("inovasi")`.
 - Menampilkan chevron dengan rotasi animasi `rotate-180` ketika sub-menu terbuka.
 - Tautan menutup drawer mobile secara otomatis melalui handler `onClick={() => setMobileMenuOpen(false)}`.
+
+---
+
+## 3. Tombol Pencarian Cepat (Search Pill)
+
+- **Desain Minimalis Bersih**: Tombol pencarian pada navbar menggunakan layout pill (`rounded-full`) dengan ikon `Search` dan label *"Pencarian"*.
+- **Pembersihan Shortcut Badge (`⌘K`)**: Badge shortcut keyboard (`⌘K` / `<kbd>`) telah dihapus dari tampilan tombol navbar dan floating menu dokumen agar antarmuka lebih bersih, tidak membingungkan pengguna umum, dan tetap proporsional di seluruh resolusi layar. Fungsi shortcut keyboard global (`Cmd+K` / `Ctrl+K`) tetap aktif di latar belakang melalui `AccessibilityContext`.
