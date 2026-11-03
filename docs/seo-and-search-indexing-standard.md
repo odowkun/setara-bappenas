@@ -27,12 +27,14 @@ Sebelum standardisasi ini diterapkan, situs `https://bappeda.halmaherautarakab.g
 - Mengambil dan mengikutsertakan seluruh artikel berita terbitan dinamis (`/berita/[slug]`) dari REST API backend secara berkala dengan tag frekuensi perubahan (`daily`/`weekly`) dan bobot prioritas SEO (`0.6` hingga `1.0`).
 
 ### C. Metadata & Schema.org JSON-LD (`frontend/src/app/layout.tsx`)
+- Mendefinisikan `title`: `"BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah"`.
+- Menghapus penyebutan istilah *"Portal"* dari metadata publik agar penamaan di Google Search (*Site Name Snippet*) identik murni sebagai **BAPPEDA Halmahera Utara**.
 - Mendefinisikan `robots: { index: true, follow: true, googleBot: { ... } }`.
 - Mendefinisikan URL kanonikal resmi (`alternates.canonical`).
 - Mendefinisikan `verification.google`: `o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc` untuk verifikasi instan Google Search Console.
 - Menyematkan Structured Data Schema.org:
   - `@type: "GovernmentOrganization"`: Mengidentifikasi BAPPEDA Kabupaten Halmahera Utara lengkap dengan logo, gambar cover, dan alamat kantor resmi di Tobelo.
-  - `@type: "WebSite"` dengan fitur `SearchAction` internal.
+  - `@type: "WebSite"`: Memberikan sinyal eksplisit nama situs (*Site Name*) kepada Google: `name: "BAPPEDA Halmahera Utara"` dan `alternateName: ["BAPPEDA Kabupaten Halmahera Utara", "Badan Perencanaan Pembangunan Daerah Halmahera Utara", "Bappeda Halut"]` tanpa kata *"Portal"*.
 
 ---
 

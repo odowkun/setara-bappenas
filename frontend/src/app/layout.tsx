@@ -9,11 +9,11 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bappeda.halmaheraut
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "BAPPEDA Halmahera Utara — Smart Digital Portal & Executive Dashboard",
+    default: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
     template: "%s | BAPPEDA Halmahera Utara",
   },
   description:
-    "Portal resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara. Informasi RKPD, RPJMD, Popeda, Esri GIS Map, & Executive Dashboard.",
+    "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
   keywords: [
     "BAPPEDA Halmahera Utara",
     "Bappeda Halut",
@@ -48,11 +48,11 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   openGraph: {
-    title: "BAPPEDA Halmahera Utara — Smart Digital Portal & Executive Dashboard",
+    title: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
     description:
-      "Portal resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara. Informasi RKPD, RPJMD, Popeda, Esri GIS Map, & Executive Dashboard.",
+      "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
     url: siteUrl,
-    siteName: "BAPPEDA Kabupaten Halmahera Utara",
+    siteName: "BAPPEDA Halmahera Utara",
     images: [
       {
         url: "/images/bappeda/default-news-cover.jpg",
@@ -66,9 +66,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BAPPEDA Halmahera Utara — Smart Digital Portal & Executive Dashboard",
+    title: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
     description:
-      "Portal resmi Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara. Informasi RKPD, RPJMD, Popeda, Esri GIS Map, & Executive Dashboard.",
+      "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
     images: ["/images/bappeda/default-news-cover.jpg"],
   },
   icons: {
@@ -90,12 +90,16 @@ const jsonLd = {
       "@type": "GovernmentOrganization",
       "@id": `${siteUrl}/#organization`,
       name: "BAPPEDA Kabupaten Halmahera Utara",
-      alternateName: "Badan Perencanaan Pembangunan Daerah Halut",
+      alternateName: [
+        "Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara",
+        "Bappeda Halut",
+        "BAPPEDA Halmahera Utara",
+      ],
       url: siteUrl,
       logo: `${siteUrl}/images/bappeda/logo-halut.png`,
       image: `${siteUrl}/images/bappeda/default-news-cover.jpg`,
       description:
-        "Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara - Mengawal Perencanaan, Membangun Masa Depan Halmahera Utara.",
+        "Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara - Mengawal Perencanaan, Membangun Masa Depan Halmahera Utara.",
       address: {
         "@type": "PostalAddress",
         streetAddress: "Jl. Kawasan Pemerintahan, Gamsungi",
@@ -108,7 +112,12 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "Portal Resmi BAPPEDA Halmahera Utara",
+      name: "BAPPEDA Halmahera Utara",
+      alternateName: [
+        "BAPPEDA Kabupaten Halmahera Utara",
+        "Badan Perencanaan Pembangunan Daerah Halmahera Utara",
+        "Bappeda Halut",
+      ],
       publisher: {
         "@id": `${siteUrl}/#organization`,
       },

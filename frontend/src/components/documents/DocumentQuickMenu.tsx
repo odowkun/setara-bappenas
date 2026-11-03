@@ -60,7 +60,7 @@ const DEFAULT_TICKER_ITEMS: TickerItem[] = [
   {
     id: "portal-bappeda",
     title:
-      "Portal Resmi BAPPEDA Kabupaten Halmahera Utara — Pusat Sinkronisasi & Transparansi Perencanaan Terintegrasi",
+      "BAPPEDA Kabupaten Halmahera Utara — Pusat Sinkronisasi & Transparansi Perencanaan Terintegrasi",
     href: "/dokumen",
     tag: "BAPPEDA",
   },

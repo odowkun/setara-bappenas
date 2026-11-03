@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!article) {
     return {
       title: "Berita Daerah — BAPPEDA Halmahera Utara",
-      description: "Portal Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
+      description: "Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
     };
   }
 
@@ -79,13 +79,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   return {
     title: `${article.title} — BAPPEDA Halmahera Utara`,
-    description: description || "Portal Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
+    description: description || "Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
     alternates: {
       canonical: pageUrl,
     },
     openGraph: {
       title: article.title,
-      description: description || "Portal Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
+      description: description || "Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
       url: pageUrl,
       siteName: "BAPPEDA Kabupaten Halmahera Utara",
       locale: "id_ID",
@@ -104,7 +104,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     twitter: {
       card: "summary_large_image",
       title: article.title,
-      description: description || "Portal Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
+      description: description || "Berita & Publikasi Resmi BAPPEDA Kabupaten Halmahera Utara",
       images: [imageUrl],
     },
   };
