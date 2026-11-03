@@ -95,24 +95,78 @@ const jsonLd = {
     {
       "@type": "GovernmentOrganization",
       "@id": `${siteUrl}/#organization`,
-      name: "BAPPEDA Kabupaten Halmahera Utara",
+      name: "Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara",
       alternateName: [
-        "Badan Perencanaan Pembangunan Daerah Kabupaten Halmahera Utara",
-        "Bappeda Halut",
+        "BAPPEDA Kabupaten Halmahera Utara",
         "BAPPEDA Halmahera Utara",
+        "Bappeda Halut",
+        "Bappeda Kab. Halmahera Utara",
       ],
       url: siteUrl,
       logo: `${siteUrl}/images/bappeda/logo-halut.png`,
       image: `${siteUrl}/images/bappeda/default-news-cover.jpg`,
       description:
-        "Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara - Mengawal Perencanaan, Membangun Masa Depan Halmahera Utara.",
+        "Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara adalah lembaga teknis pemerintah daerah di Kabupaten Halmahera Utara, Provinsi Maluku Utara, yang bertanggung jawab dalam merencanakan, mengoordinasikan, serta mengevaluasi kebijakan pembangunan daerah (RPJPD, RPJMD, RKPD), data geospasial (GIS), dan inovasi daerah.",
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Jl. Kawasan Pemerintahan, Gamsungi",
-        addressLocality: "Tobelo",
-        addressRegion: "Maluku Utara",
+        streetAddress: "Jl. Kawasan Pemerintahan, Desa Gamsungi",
+        addressLocality: "Kecamatan Tobelo",
+        addressRegion: "Kabupaten Halmahera Utara, Maluku Utara",
+        postalCode: "97762",
         addressCountry: "ID",
       },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: 1.7289,
+        longitude: 128.0054,
+      },
+      hasMap: `${siteUrl}/gis-peta`,
+      areaServed: {
+        "@type": "AdministrativeArea",
+        name: "Kabupaten Halmahera Utara",
+      },
+      parentOrganization: {
+        "@type": "GovernmentOrganization",
+        name: "Pemerintah Kabupaten Halmahera Utara",
+        url: "https://halmaherautarakab.go.id",
+      },
+      sameAs: [
+        "https://www.instagram.com/bappeda_halut",
+        "https://www.youtube.com/@bappedahalut",
+        "https://halmaherautarakab.go.id",
+      ],
+      knowsAbout: [
+        "Perencanaan Pembangunan Daerah",
+        "RPJPD Halmahera Utara 2025-2045",
+        "RPJMD Kabupaten Halmahera Utara",
+        "RKPD Kabupaten Halmahera Utara",
+        "Musrenbang Kabupaten Halmahera Utara",
+        "Pojok Perencanaan Daerah (POPEDA)",
+        "Sistem Informasi Geospasial Daerah (GIS)",
+        "Satu Data Pembangunan Daerah",
+      ],
+      department: [
+        {
+          "@type": "GovernmentOffice",
+          name: "Sekretariat Bappeda Halmahera Utara",
+        },
+        {
+          "@type": "GovernmentOffice",
+          name: "Bidang Perencanaan, Pengendalian dan Evaluasi Pembangunan Daerah",
+        },
+        {
+          "@type": "GovernmentOffice",
+          name: "Bidang Perekonomian dan Sumber Daya Alam",
+        },
+        {
+          "@type": "GovernmentOffice",
+          name: "Bidang Pembangunan Manusia dan Masyarakat",
+        },
+        {
+          "@type": "GovernmentOffice",
+          name: "Bidang Infrastruktur dan Pengembangan Wilayah",
+        },
+      ],
     },
     {
       "@type": "WebSite",
@@ -170,6 +224,10 @@ export default function RootLayout({
         />
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon" sizes="180x180" href="/apple-icon.png" />
+        <meta name="geo.region" content="ID-MU" />
+        <meta name="geo.placename" content="Tobelo, Halmahera Utara, Maluku Utara" />
+        <meta name="geo.position" content="1.7289;128.0054" />
+        <meta name="ICBM" content="1.7289, 128.0054" />
         <meta
           name="google-site-verification"
           content="o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc"
