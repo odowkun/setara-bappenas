@@ -78,6 +78,9 @@ export const metadata: Metadata = {
     ],
     apple: "/apple-icon.png",
   },
+  verification: {
+    google: "o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc",
+  },
 };
 
 const jsonLd = {
@@ -126,6 +129,10 @@ export default function RootLayout({
   return (
     <html lang="id">
       <head>
+        <meta
+          name="google-site-verification"
+          content="o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc"
+        />
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

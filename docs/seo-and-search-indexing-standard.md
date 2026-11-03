@@ -29,6 +29,7 @@ Sebelum standardisasi ini diterapkan, situs `https://bappeda.halmaherautarakab.g
 ### C. Metadata & Schema.org JSON-LD (`frontend/src/app/layout.tsx`)
 - Mendefinisikan `robots: { index: true, follow: true, googleBot: { ... } }`.
 - Mendefinisikan URL kanonikal resmi (`alternates.canonical`).
+- Mendefinisikan `verification.google`: `o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc` untuk verifikasi instan Google Search Console.
 - Menyematkan Structured Data Schema.org:
   - `@type: "GovernmentOrganization"`: Mengidentifikasi BAPPEDA Kabupaten Halmahera Utara lengkap dengan logo, gambar cover, dan alamat kantor resmi di Tobelo.
   - `@type: "WebSite"` dengan fitur `SearchAction` internal.
@@ -46,3 +47,4 @@ Untuk mempercepat indeksasi dalam 1x24 jam hingga beberapa hari:
    - Minta Dinas Kominfo Halut untuk memasang tautan balik (*inbound link*) menuju `https://bappeda.halmaherautarakab.go.id` dari beranda portal induk `halmaherautarakab.go.id`.
 3. **Cloudflare WAF / Bot Management**:
    - Pastikan fitur *Bot Fight Mode* pada Cloudflare tidak memblokir atau menantang user-agent *Googlebot* terverifikasi.
+
