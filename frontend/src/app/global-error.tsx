@@ -212,7 +212,7 @@ export default function GlobalError({
               fontWeight: 500,
             }}
           >
-            Smart Digital Portal &bull; Sistem Terlindungi
+            BAPPEDA Halmahera Utara &bull; Sistem Terlindungi
           </div>
         </div>
       </body>

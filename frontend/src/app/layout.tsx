@@ -9,8 +9,8 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://bappeda.halmaheraut
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
-    template: "%s | BAPPEDA Halmahera Utara",
+    default: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
+    template: "%s | Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
   },
   description:
     "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
@@ -48,17 +48,17 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   openGraph: {
-    title: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
+    title: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
     description:
       "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
     url: siteUrl,
-    siteName: "BAPPEDA Halmahera Utara",
+    siteName: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
     images: [
       {
         url: "/images/bappeda/default-news-cover.jpg",
         width: 1200,
         height: 630,
-        alt: "BAPPEDA Kabupaten Halmahera Utara",
+        alt: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
       },
     ],
     locale: "id_ID",
@@ -66,7 +66,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah",
+    title: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
     description:
       "Website Resmi Badan Perencanaan Pembangunan Daerah (BAPPEDA) Kabupaten Halmahera Utara. Pusat Informasi RKPD, RPJMD, POPEDA, GIS & Perencanaan Pembangunan Daerah.",
     images: ["/images/bappeda/default-news-cover.jpg"],
@@ -172,10 +172,10 @@ const jsonLd = {
       "@type": "WebSite",
       "@id": `${siteUrl}/#website`,
       url: siteUrl,
-      name: "BAPPEDA Halmahera Utara",
+      name: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara",
       alternateName: [
+        "Bappeda Halmahera Utara",
         "BAPPEDA Kabupaten Halmahera Utara",
-        "Badan Perencanaan Pembangunan Daerah Halmahera Utara",
         "Bappeda Halut",
       ],
       publisher: {

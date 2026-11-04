@@ -207,7 +207,7 @@ export default function DashboardLoadingScreen({
               <Lock className="w-3 h-3 text-emerald-600 shrink-0" />
               <span>Koneksi Terenkripsi</span>
               <span>•</span>
-              <span>Smart Digital Portal</span>
+              <span>BAPPEDA Halmahera Utara</span>
             </>
           )}
         </div>

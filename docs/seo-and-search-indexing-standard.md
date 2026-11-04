@@ -27,8 +27,8 @@ Sebelum standardisasi ini diterapkan, situs `https://bappeda.halmaherautarakab.g
 - Mengambil dan mengikutsertakan seluruh artikel berita terbitan dinamis (`/berita/[slug]`) dari REST API backend secara berkala dengan tag frekuensi perubahan (`daily`/`weekly`) dan bobot prioritas SEO (`0.6` hingga `1.0`).
 
 ### C. Metadata & Schema.org JSON-LD (`frontend/src/app/layout.tsx`)
-- Mendefinisikan `title`: `"BAPPEDA Kabupaten Halmahera Utara — Badan Perencanaan Pembangunan Daerah"`.
-- Menghapus penyebutan istilah *"Portal"* dari metadata publik agar penamaan di Google Search (*Site Name Snippet*) identik murni sebagai **BAPPEDA Halmahera Utara**.
+- Mendefinisikan `title`: `"Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara"`.
+- Menghapus total seluruh penyebutan istilah *"Portal"* dan *"Executive Dashboard"* dari judul, deskripsi, openGraph, dan twitter metadata agar penamaan di Google Search (*Site Name Snippet*) murni dan elegan sebagai **Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara**.
 - **Standar Favicon Google Search**: Menyediakan favicon resolusi kelipatan 48px (`48x48`, `96x96`, `192x192`, `512x512`) dan `favicon.ico` multi-resolusi agar bot `Googlebot-Image` merender favicon resmi logo Halut di hasil pencarian Google, menggantikan ikon bola dunia (*generic globe*).
 - **Standar GEO (Generative Engine Optimization) & Ringkasan AI**:
   - Menyematkan Geo Meta Tags (`geo.region: ID-MU`, `geo.placename: Tobelo, Halmahera Utara`, `geo.position: 1.7289;128.0054`, `ICBM`).
@@ -39,7 +39,7 @@ Sebelum standardisasi ini diterapkan, situs `https://bappeda.halmaherautarakab.g
 - Mendefinisikan `verification.google`: `o6RSSNYJwgTTL7Hfssaslwa4Q1Zrv7E7P3Tge_AYQrc` untuk verifikasi instan Google Search Console.
 - Menyematkan Structured Data Schema.org:
   - `@type: "GovernmentOrganization"`: Mengidentifikasi BAPPEDA Kabupaten Halmahera Utara lengkap dengan logo, gambar cover, dan alamat kantor resmi di Tobelo.
-  - `@type: "WebSite"`: Memberikan sinyal eksplisit nama situs (*Site Name*) kepada Google: `name: "BAPPEDA Halmahera Utara"` dan `alternateName: ["BAPPEDA Kabupaten Halmahera Utara", "Badan Perencanaan Pembangunan Daerah Halmahera Utara", "Bappeda Halut"]` tanpa kata *"Portal"*.
+  - `@type: "WebSite"`: Memberikan sinyal eksplisit nama situs (*Site Name*) kepada Google: `name: "Badan Perencanaan Pembangunan Daerah (Bappeda) Kabupaten Halmahera Utara"` dan `alternateName: ["Bappeda Halmahera Utara", "BAPPEDA Kabupaten Halmahera Utara", "Bappeda Halut"]` tanpa kata *"Portal"* dan *"Executive Dashboard"*.
 
 ---
 
